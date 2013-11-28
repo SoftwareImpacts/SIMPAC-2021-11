@@ -4,7 +4,7 @@
   <body>
     <section name="Download">
 	<p>
-	Download last version : <a href="http://vm2-ubuntu.umrthema.univ-fcomte.fr/repository/org/thema/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">FracGIS ${project.version}</a>
+	Download last version : <a href="http://vm2-ubuntu.umrthema.univ-fcomte.fr/repository/org/thema/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.version}</a>
 	</p>
 	<p>
 	View changelog : <a href="changelog">changelog</a>
