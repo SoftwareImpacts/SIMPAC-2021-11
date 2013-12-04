@@ -4,10 +4,10 @@
 
     <groupId>org.thema</groupId>
     <artifactId>graphab</artifactId>
-    <version>1.2-alpha3</version>
+    <version>1.2-alpha4</version>
     <packaging>jar</packaging>
 
-    <name>graphab</name>
+    <name>Graphab</name>
     <url>http://dev.umrthema.univ-fcomte.fr/graphab/</url>
     <build>
         <plugins>
@@ -27,8 +27,11 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
+                            <Implementation-Title>${project.groupId}.${project.artifactId}</Implementation-Title>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-Vendor>ThéMA</Implementation-Vendor>
                             <SplashScreen-Image>org/thema/graphab/ressources/splash.png</SplashScreen-Image>
-                            <Main-Class>org.thema.graphab.MainFrame</Main-Class>
+                            <Main-Class>${project.groupId}.${project.artifactId}.MainFrame</Main-Class>
                         </manifestEntries>
                     </archive>
 

@@ -1,6 +1,7 @@
-<project name="Graphab">
+<?xml version="1.0"?>
+<project name="${project.name}">
     <bannerLeft>
-        <name>Graphab</name>
+        <name>${project.name}</name>
     </bannerLeft>
     <body>
         <menu name="Project">

@@ -125,7 +125,7 @@ public class CLITools {
                     "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn]\n" +
                     "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
                     "--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
-                    "--addpatch npatch global_indice_name [param1=val ...] gridres=resolution [capa=capa_file] [multi=npatch,size]\n" +
+                    "--addpatch npatch global_indice_name [param1=val ...] [gridres=resolution [capa=capa_file] [multi=npatch,size]]|[pointfile=file.shp [capa=capa_field]]\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "\nmin:inc:max -> val1,val2,val3...");
             return;
@@ -887,7 +887,7 @@ public class CLITools {
         String indName = args.remove(0);
         
         HashMap<String, Object> params = new HashMap<String, Object>();
-        while(!args.get(0).startsWith("gridres=")) {
+        while(!args.get(0).startsWith("gridres=") && !args.get(0).startsWith("pointfile=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
             if(r.isUnique())
@@ -896,24 +896,6 @@ public class CLITools {
                 throw new IllegalArgumentException("No range for indice params in --addpatch");
         }
         
-        double res = Double.parseDouble(args.remove(0).split("=")[1]);
-        File capaFile = null;
-        int nbMulti = 1;
-        int window = 1;
-        while(!args.isEmpty()) {
-            String arg = args.remove(0);
-            if(arg.startsWith("capa=")) {
-                capaFile = new File(arg.split("=")[1]);
-                if(!capaFile.exists()) 
-                    throw new IllegalArgumentException("File " + capaFile + " does not exist.");
-            } else if(arg.startsWith("multi=")) {
-                arg = arg.split("=")[1];
-                nbMulti = Integer.parseInt(arg.split(",")[0]);
-                window = Integer.parseInt(arg.split(",")[1]);
-            }
-        }
-        
-
         GlobalMetric indice = Project.getGlobalMetric(indName);
         if(indice.hasParams()) {
             if(params.isEmpty())
@@ -922,13 +904,44 @@ public class CLITools {
         }
         
         GraphGenerator graph = getGraphs().iterator().next();
+        
+        if(args.get(0).startsWith("gridres=")) {
+            double res = Double.parseDouble(args.remove(0).split("=")[1]);
+            File capaFile = null;
+            int nbMulti = 1;
+            int window = 1;
+            while(!args.isEmpty()) {
+                String arg = args.remove(0);
+                if(arg.startsWith("capa=")) {
+                    capaFile = new File(arg.split("=")[1]);
+                    if(!capaFile.exists()) 
+                        throw new IllegalArgumentException("File " + capaFile + " does not exist.");
+                } else if(arg.startsWith("multi=")) {
+                    arg = arg.split("=")[1];
+                    nbMulti = Integer.parseInt(arg.split(",")[0]);
+                    window = Integer.parseInt(arg.split(",")[1]);
+                }
+            }
 
-        System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
-        TreeMap<Integer, Double> indiceValues = new TreeMap<Integer, Double>();
-        List<DefaultFeature> addPatch = AddPatchResultDialog.addPatchGrid(nbPatch, indice, graph, capaFile, res, nbMulti, window, 
-                                                new TaskMonitor.EmptyMonitor(), indiceValues, null);
+            System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
+            TreeMap<Integer, Double> indiceValues = new TreeMap<Integer, Double>();
+            List<DefaultFeature> addPatch = AddPatchResultDialog.addPatchGrid(nbPatch, indice, graph, capaFile, res, nbMulti, window, 
+                                                    new TaskMonitor.EmptyMonitor(), indiceValues, null);
 
-        AddPatchResultDialog.saveResults(indice, graph, addPatch, indiceValues, res, nbMulti, window);
+            AddPatchResultDialog.saveResults(indice, graph, addPatch, indiceValues, res, nbMulti, window);
+        } else {
+            File pointFile = new File(args.remove(0).split("=")[1]);
+            String capaField = null;
+            if(!args.isEmpty() && args.get(0).startsWith("capa="))
+                capaField = args.remove(0).split("=")[1];
+            
+            System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
+            TreeMap<Integer, Double> indiceValues = new TreeMap<Integer, Double>();
+            List<DefaultFeature> addPatch = AddPatchResultDialog.addPatchShp(nbPatch, indice, graph, pointFile, capaField, 
+                                                    new TaskMonitor.EmptyMonitor(), indiceValues, null);
+            
+            AddPatchResultDialog.saveResults(indice, graph, addPatch, indiceValues, 0, 0, 0);
+        }
         
     }
 

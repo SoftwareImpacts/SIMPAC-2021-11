@@ -137,18 +137,10 @@ public class AddPatchResultDialog extends javax.swing.JDialog {
             @Override
             public void run() {
                 ProgressBar bar = Config.getProgressBar();
-                //bar.setIndeterminate(true);
                 bar.setNote("Add patches...");
-                TaskMonitor mon = new TaskMonitor(AddPatchResultDialog.this, "Add patches", "", 0, 100);
                 try {
-                    
-                    List<DefaultFeature> points = DefaultFeature.loadFeatures(pointFile, false);
                     TreeMap<Integer, Double> indiceValues = new TreeMap<Integer, Double>();
-                    HashMap<Coordinate, Double> testPoints = new HashMap<Coordinate, Double>();
-                    for(Feature f : points)
-                        testPoints.put(f.getGeometry().getCentroid().getCoordinate(), ((Number)f.getAttribute(capaField)).doubleValue());
-                    
-                    List<DefaultFeature> addedPatches = addPatchSimple(nbPatch, testPoints, indice, gen, mon, indiceValues, layers);
+                    List<DefaultFeature> addedPatches = addPatchShp(nbPatch, indice, gen, pointFile, capaField, bar, indiceValues, layers);
                     
                     showResults(indice, gen, addedPatches, indiceValues);
                     saveResults(indice, gen, addedPatches, indiceValues, 0, 0, 0);
@@ -159,9 +151,8 @@ public class AddPatchResultDialog extends javax.swing.JDialog {
                     JOptionPane.showMessageDialog(AddPatchResultDialog.this, ex);
                     closeButtonActionPerformed(null);
                 } finally {
-                    mon.close();
+                    bar.close();
                 }
-                
             }
         }).start();
         
@@ -216,13 +207,13 @@ public class AddPatchResultDialog extends javax.swing.JDialog {
     }
     
     
-    public static List<DefaultFeature> addPatchSimple(int nbPatch, final HashMap<Coordinate, Double> testPoints, final GlobalMetric indice, final GraphGenerator gen, 
-            TaskMonitor mon, TreeMap<Integer, Double> indiceValues, DefaultGroupLayer layers) throws Exception {
+    private static List<DefaultFeature> addPatchSimple(int nbPatch, final HashMap<Coordinate, Double> testPoints, final GlobalMetric indice, final GraphGenerator gen, 
+            ProgressBar mon, TreeMap<Integer, Double> indiceValues, DefaultGroupLayer layers) throws Exception {
         
         Project project = Project.getProject();
 
         mon.setMaximum(nbPatch);
-        mon.popupNow();
+
         List<DefaultFeature> addedPatches = new ArrayList<DefaultFeature>();
             
         double currentInd = new GraphMetricLauncher(indice, true).calcIndice(gen, new EmptyMonitor())[0];
@@ -234,29 +225,7 @@ public class AddPatchResultDialog extends javax.swing.JDialog {
         double capaPoint = 0;
         
         for(int i = 0; i < nbPatch; i++) {
-            
-//            final TreeMapList<Double, Point> pointIndices = new TreeMapList<Double, Point>();
-            //            SimpleParallelTask<Coordinate> task = new SimpleParallelTask<Coordinate>(new ArrayList<Coordinate>(testPoints.keySet()),
-            //                    mon.getSubMonitor(0, 1, 1)) {
-            //                @Override
-            //                protected void executeOne(Coordinate coord) {
-            //                    Point p = new GeometryFactory().createPoint(coord);
-            //
-            //                    try {
-            //                        double indVal = AddPatchTask.addPatchSoft(p, indice, gen, testPoints.get(coord));
-            //                        if(!Double.isNaN(indVal))
-            //                            synchronized(pointIndices) {
-            //                                pointIndices.putValue(indVal, p);
-            //                            }
-            //                    } catch (IOException ex) {
-            //                        throw new RuntimeException(ex);
-            //                    }
-            //
-            //                }
-            //            };
-            //
-            //            new ParallelFExecutor(task).executeAndWait();
-            AddPatchTask task = new AddPatchTask(bestPoint, capaPoint, gen, indice, testPoints, mon.getSubMonitor(0, 1, 1));
+            AddPatchTask task = new AddPatchTask(bestPoint, capaPoint, gen, indice, testPoints, mon.getSubProgress(1));
             ExecutorService.execute(task);
             TreeMapList<Double, Point> pointIndices = task.getResult();
             
@@ -292,6 +261,18 @@ public class AddPatchResultDialog extends javax.swing.JDialog {
         }
 
         return addedPatches;
+    }
+    
+    public static List<DefaultFeature> addPatchShp(int nbPatch, GlobalMetric indice, GraphGenerator gen, File pointFile, String capaField,
+            ProgressBar bar, TreeMap<Integer, Double> indiceValues, DefaultGroupLayer layers) throws Exception {
+
+        List<DefaultFeature> points = DefaultFeature.loadFeatures(pointFile, false);
+        HashMap<Coordinate, Double> testPoints = new HashMap<Coordinate, Double>();
+        for(Feature f : points)
+            testPoints.put(f.getGeometry().getCentroid().getCoordinate(), 
+                    capaField == null ? 1 : ((Number)f.getAttribute(capaField)).doubleValue());
+
+        return addPatchSimple(nbPatch, testPoints, indice, gen, bar, indiceValues, layers);
     }
     
     public static List<DefaultFeature> addPatchGrid(int nbPatch, GlobalMetric indice, GraphGenerator gen, File capaFile, 

@@ -1,3 +1,7 @@
+version 1.2-alpha4 (03/12/2013)
+- previous version cannot load any raster (problem with maven shade plugin and ImageIO)
+- CLI addPatch can be executed on shapefile of point (works also with MPI)
+- hide splash screen in CLI mode
 version 1.2-alpha3 (28/11/2013)
 - project moved to maven
 - move resources
