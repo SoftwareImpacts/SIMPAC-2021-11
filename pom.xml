@@ -4,7 +4,7 @@
 
     <groupId>org.thema</groupId>
     <artifactId>graphab</artifactId>
-    <version>1.2-alpha4</version>
+    <version>1.2-alpha5</version>
     <packaging>jar</packaging>
 
     <name>Graphab</name>
@@ -84,22 +84,17 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>common</artifactId>
-            <version>1.0.18</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>drawshape</artifactId>
-            <version>1.0.20</version>
+            <version>1.1.1</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>graph</artifactId>
-            <version>1.0.10</version>
+            <version>1.1.1</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>msca</artifactId>
-            <version>1.0.8</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -110,6 +105,11 @@
             <groupId>com.googlecode.matrix-toolkits-java</groupId>
             <artifactId>mtj</artifactId>
             <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>drawshape</artifactId>
+            <version>1.1.1</version>
         </dependency>
     </dependencies>
     <repositories>

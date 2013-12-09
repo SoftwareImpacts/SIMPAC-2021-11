@@ -1440,19 +1440,10 @@ public final class Project {
         return features;
     }
 
-//    public RenderedImage getImagePatch() throws IOException {
-//        RenderedImage img = patchImg != null ? patchImg.get() : null;
-//        if(img == null) {
-//            img = IOImage.loadTiff(new File(dir.getAbsolutePath() + File.separator + "patches.tif")).getRenderedImage();
-//            patchImg = new SoftReference<RenderedImage>(img);
-//        }
-//        return img;
-//    }
-
     public synchronized WritableRaster getRasterPatch() throws IOException {
         WritableRaster raster = patchRaster != null ? patchRaster.get() : null;
         if(raster == null) {
-            RenderedImage img = IOImage.loadTiff(new File(dir, "patches.tif")).getRenderedImage();
+            RenderedImage img = IOImage.loadTiffWithoutCRS(new File(dir, "patches.tif")).getRenderedImage();
             if(img.getNumXTiles() == 1 && img.getNumYTiles() == 1)
                 raster = (WritableRaster) img.getTile(0, 0);
             else
@@ -1466,7 +1457,7 @@ public final class Project {
     public synchronized WritableRaster getImageSource() throws IOException {
         WritableRaster raster = srcRaster != null ? srcRaster.get() : null;
         if(raster == null) {
-            Raster r = IOImage.loadTiff(new File(dir, "source.tif")).getRenderedImage().getData();
+            Raster r = IOImage.loadTiffWithoutCRS(new File(dir, "source.tif")).getRenderedImage().getData();
             // on copie le raster dans un writableraster
             raster = r.createCompatibleWritableRaster();
             raster.setRect(r);
@@ -1671,7 +1662,7 @@ public final class Project {
     public GridCoverage2D loadCoverage(File file) throws Exception {
         GridCoverage2D cov;
         if(file.getName().toLowerCase().endsWith(".tif"))
-            cov = IOImage.loadTiff(file);
+            cov = IOImage.loadTiffWithoutCRS(file);
         else
             cov = new RSTGridReader(file).read(null);
 

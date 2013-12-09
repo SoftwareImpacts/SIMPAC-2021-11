@@ -12,6 +12,7 @@
 package org.thema.graphab;
 
 import java.awt.Color;
+import java.awt.GraphicsEnvironment;
 import java.awt.SplashScreen;
 import java.awt.Toolkit;
 import java.io.File;
@@ -65,7 +66,7 @@ import org.thema.graphab.util.SerieFrame;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "1.2-alpha4";
+    public static final String VERSION = "1.2-alpha5";
 
     public static Project project;
     
@@ -1301,7 +1302,8 @@ public class MainFrame extends javax.swing.JFrame {
         // CLI execution
         if(args.length > 0 && !args[0].equals(JavaLoader.NOFORK)) {
             try {
-                SplashScreen.getSplashScreen().close();
+                if(!GraphicsEnvironment.isHeadless())
+                    SplashScreen.getSplashScreen().close();
                 new CLITools().execute(args);
             } catch (Throwable ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);

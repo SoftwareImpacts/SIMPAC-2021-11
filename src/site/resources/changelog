@@ -1,3 +1,7 @@
+version 1.2-alpha5 (09/12/2013)
+- upgrading GeoTools 2.6.3 -> 2.7.5
+- avoid loading of gt-epsg-hsql package, causes crash in some cases with MPI
+- addpatch : add intermediate results in subdir "detail"
 version 1.2-alpha4 (03/12/2013)
 - previous version cannot load any raster (problem with maven shade plugin and ImageIO)
 - CLI addPatch can be executed on shapefile of point (works also with MPI)

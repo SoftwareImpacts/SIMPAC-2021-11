@@ -22,6 +22,7 @@ import org.thema.common.parallel.TaskMonitor;
 import org.thema.common.distribute.ExecutorService;
 import org.thema.common.distribute.ParallelExecutor;
 import org.thema.drawshape.feature.DefaultFeature;
+import org.thema.graphab.addpatch.AddPatchCommand;
 import org.thema.graphab.metric.DeltaMetricTask;
 import org.thema.graphab.metric.GraphMetricLauncher;
 import org.thema.graphab.metric.Metric;
@@ -924,11 +925,9 @@ public class CLITools {
             }
 
             System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
-            TreeMap<Integer, Double> indiceValues = new TreeMap<Integer, Double>();
-            List<DefaultFeature> addPatch = AddPatchResultDialog.addPatchGrid(nbPatch, indice, graph, capaFile, res, nbMulti, window, 
-                                                    new TaskMonitor.EmptyMonitor(), indiceValues, null);
-
-            AddPatchResultDialog.saveResults(indice, graph, addPatch, indiceValues, res, nbMulti, window);
+            AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, capaFile, res, nbMulti, window);
+            addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+            addPatchCmd.saveResults();
         } else {
             File pointFile = new File(args.remove(0).split("=")[1]);
             String capaField = null;
@@ -936,11 +935,9 @@ public class CLITools {
                 capaField = args.remove(0).split("=")[1];
             
             System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
-            TreeMap<Integer, Double> indiceValues = new TreeMap<Integer, Double>();
-            List<DefaultFeature> addPatch = AddPatchResultDialog.addPatchShp(nbPatch, indice, graph, pointFile, capaField, 
-                                                    new TaskMonitor.EmptyMonitor(), indiceValues, null);
-            
-            AddPatchResultDialog.saveResults(indice, graph, addPatch, indiceValues, 0, 0, 0);
+            AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, pointFile, capaField);
+            addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+            addPatchCmd.saveResults();
         }
         
     }
