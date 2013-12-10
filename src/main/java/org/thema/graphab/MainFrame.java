@@ -66,7 +66,7 @@ import org.thema.graphab.util.SerieFrame;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "1.2-alpha5";
+    public static final String VERSION = "1.2-alpha6";
 
     public static Project project;
     
@@ -83,7 +83,6 @@ public class MainFrame extends javax.swing.JFrame {
         mapViewer.putExportButton();
         
         Config.setProgressBar(mapViewer.getProgressBar());
-//        Config.setProgressBar(new MainProgressBar());
         logFrame = new LoggingFrame();
     }
 
@@ -673,7 +672,7 @@ public class MainFrame extends javax.swing.JFrame {
                     for(int i = 0; i < indice.getResultNames().length; i++) {
                         if((nodeEdge & 2) == 2)
                             DefaultFeature.addAttribute("d_" + Project.getDetailName(indice, i) + "_" + dlg.graph.getName(),
-                                dlg.graph.getCostDistance().getPaths(), Double.NaN);
+                                dlg.graph.getLinkset().getPaths(), Double.NaN);
                         if((nodeEdge & 1) == 1)
                             DefaultFeature.addAttribute("d_" + Project.getDetailName(indice, i) + "_" + dlg.graph.getName(),
                                 MainFrame.project.getPatches(), Double.NaN);
@@ -691,7 +690,7 @@ public class MainFrame extends javax.swing.JFrame {
                             }
 
                     if((nodeEdge & 2) == 2)
-                        for(DefaultFeature f : dlg.graph.getCostDistance().getPaths())
+                        for(DefaultFeature f : dlg.graph.getLinkset().getPaths())
                             if(result.keySet().contains(f.getId())) {
                                 Double[] res = result.get(f.getId());
                                 for(int j = 0; j < indice.getResultNames().length; j++)
@@ -703,7 +702,7 @@ public class MainFrame extends javax.swing.JFrame {
                     monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
                 
                     if((nodeEdge & 2) == 2)
-                        MainFrame.project.saveLinks(dlg.graph.getCostDistance().getName());
+                        MainFrame.project.saveLinks(dlg.graph.getLinkset().getName());
                     if((nodeEdge & 1) == 1)
                         MainFrame.project.savePatch();
                     
@@ -742,7 +741,7 @@ public class MainFrame extends javax.swing.JFrame {
 
                 monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
                 try {
-                    MainFrame.project.saveLinks(dlg.graph.getCostDistance().getName());
+                    MainFrame.project.saveLinks(dlg.graph.getLinkset().getName());
                     MainFrame.project.savePatch();
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -854,7 +853,7 @@ public class MainFrame extends javax.swing.JFrame {
 
                 monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
                 try {
-                    MainFrame.project.saveLinks(dlg.graph.getCostDistance().getName());
+                    MainFrame.project.saveLinks(dlg.graph.getLinkset().getName());
                     MainFrame.project.savePatch();
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1202,7 +1201,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         if(indice.calcEdges()) {
             DefaultFeature.addAttribute(indice.getDetailName() + "_" + graph.getName(),
-                graph.getCostDistance().getPaths(), Double.NaN);        
+                graph.getLinkset().getPaths(), Double.NaN);        
             List<Edge> edges = new ArrayList(graph.getGraph().getEdges());
             SimpleParallelTask<Edge> task = new SimpleParallelTask<Edge>(edges, monitor.getSubProgress(edges.size())) {
                 @Override
@@ -1217,48 +1216,13 @@ public class MainFrame extends javax.swing.JFrame {
             new ParallelFExecutor(task).executeAndWait();
             if(task.isCanceled()) {
                 DefaultFeature.removeAttribute(indice.getDetailName() + "_" + graph.getName(),
-                    graph.getCostDistance().getPaths());
+                    graph.getLinkset().getPaths());
                 return true;
             }
         }
 
         return false;
     }
-//    private static List<GraphIndice> getIndices(String arg) {
-//        String[] tokens = arg.split(",");
-//        List<GraphIndice> indices = new ArrayList<GraphIndice>();
-//        for(String name : tokens) {
-//            Matcher match = Pattern.compile("(\\w+)\\((\\w+)=(\\d+\\.?\\d*)\\)").matcher(name);
-//            if(match.find()) {
-//                GlobalMetric ind = Project.getGlobalMetric(match.group(1));
-//                ((ParamIndice)ind).setParams(Collections.singletonMap(match.group(2), Double.parseDouble(match.group(3))));
-//                indices.add(ind);
-//            } else
-//                indices.add(Project.getGlobalMetric(name));
-//        }
-//
-//        return indices;
-//    }
-    
-//    private static void executeCmd(String[] args) throws Exception {
-//
-//        if(args[0].equals("--task")) {
-//            project = Project.loadProject(new File(args[2]));
-//
-//            ObjectInputStream r = new ObjectInputStream(new FileInputStream(args[1]));
-//            ParallelFTask task = (ParallelFTask) r.readObject();
-//            r.close();
-//            
-//            new ParallelFExecutor(task, 8).executeAndWait();
-//            Object res = task.getResult();
-//
-//            ObjectOutputStream os = new ObjectOutputStream(System.out);
-//            os.writeObject(res);
-//            os.close();
-//        } else
-//            new CLITools().execute(args);
-//
-//    }
     
     /**
     * @param args the command line arguments

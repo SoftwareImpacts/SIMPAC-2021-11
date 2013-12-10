@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.pointset;
 
@@ -11,22 +7,22 @@ import org.thema.graphab.links.Linkset;
 
 /**
  *
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class Pointset {
     public static final int AG_NONE = 0;
     public static final int AG_SUM = 1;
 
-    private String name;
-    private Linkset cost;
-    private double maxCost;
-    private int agregType;
+    private final String name;
+    private final Linkset cost;
+    private final double maxCost;
+    private final int agregType;
 
     private transient List<DefaultFeature> features;
 
-    public Pointset(String name, Linkset cost, double maxCost, int agregType) {
+    public Pointset(String name, Linkset linkset, double maxCost, int agregType) {
         this.name = name;
-        this.cost = cost;
+        this.cost = linkset;
         this.maxCost = maxCost;
         this.agregType = agregType;
     }
@@ -39,7 +35,7 @@ public class Pointset {
         this.features = features;
     }
 
-    public Linkset getCost() {
+    public Linkset getLinkset() {
         return cost;
     }
 
@@ -61,7 +57,7 @@ public class Pointset {
     }
 
     public String getInfo() {
-        return "Name : " + name + "\nLinks : " + cost.getName();
+        return "Name : " + name + "\nLinkset : " + cost.getName();
     }
     
 }

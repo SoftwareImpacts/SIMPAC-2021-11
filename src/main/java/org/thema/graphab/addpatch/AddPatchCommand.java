@@ -134,7 +134,7 @@ public class AddPatchCommand {
             int step = i+1;
             capaPoint = testPoints.get(bestPoint.getCoordinate());
             DefaultFeature patch = project.addPatch(bestPoint, capaPoint);
-            gen.getCostDistance().addLinks(patch);
+            gen.getLinkset().addLinks(patch);
             
             patch = new DefaultFeature(patch, true, true);
             patch.addAttribute("Etape", step);
@@ -235,7 +235,7 @@ public class AddPatchCommand {
                 for(Point best : bests) {
                     double capa = capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(best.getX(), best.getY()), new double[1])[0];
                     DefaultFeature patch = project.addPatch(best, capa);
-                    gen.getCostDistance().addLinks(patch);
+                    gen.getLinkset().addLinks(patch);
                     patch = new DefaultFeature(patch, true, true);
                     patch.addAttribute("Etape", step);
                     patch.addAttribute("delta-" + indice.getDetailName(), pointIndices.lastKey());
@@ -307,7 +307,7 @@ public class AddPatchCommand {
         if(capa <= 0)
             return ;
         DefaultFeature patch = project.addPatch(point, capa);
-        gen.getCostDistance().addLinks(patch);
+        gen.getLinkset().addLinks(patch);
         GraphGenerator graph = new GraphGenerator(gen, "");
         double indVal = (new GraphMetricLauncher(indice, true).calcIndice(graph, new TaskMonitor.EmptyMonitor())[0]
                 - indInit) / points.size();
@@ -352,7 +352,7 @@ public class AddPatchCommand {
                 points.removeLast();
             }
                 
-        gen.getCostDistance().removeLinks(patch);
+        gen.getLinkset().removeLinks(patch);
         project.removePatch(patch);
         
     }

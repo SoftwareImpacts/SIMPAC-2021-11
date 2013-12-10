@@ -67,7 +67,7 @@ public class AddPatchTask extends AbstractDistributeTask<TreeMapList<Double, Poi
             if(addedPoint != null && Project.getProject().canCreatePatch(addedPoint)) {
                 // add the new patch to the project and the graph
                 DefaultFeature patch = Project.getProject().addPatch(addedPoint, capaPoint);
-                gen.getCostDistance().addLinks(patch);
+                gen.getLinkset().addLinks(patch);
             }
         } catch (Exception ex) {
             Logger.getLogger(AddPatchTask.class.getName()).log(Level.SEVERE, null, ex);

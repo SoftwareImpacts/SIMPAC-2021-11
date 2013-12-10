@@ -86,7 +86,7 @@ public class FTopoLocalMetric extends LocalMetric {
     
     @Override
     public boolean isAcceptGraph(GraphGenerator graph) {
-        return graph.getCostDistance().getTopology() == Linkset.COMPLETE;
+        return graph.getLinkset().getTopology() == Linkset.COMPLETE;
     }
     
     @Override

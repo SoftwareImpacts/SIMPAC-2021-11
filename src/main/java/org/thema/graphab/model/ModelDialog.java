@@ -474,7 +474,7 @@ public class ModelDialog extends javax.swing.JDialog {
 
         model = new DefaultComboBoxModel();
         for(GraphGenerator g : project.getGraphs())
-            if(g.getCostDistance() == exo.getCost())
+            if(g.getLinkset() == exo.getLinkset())
                 model.addElement(g);
         graphComboBox.setModel(model);
 }//GEN-LAST:event_exoDataComboBoxActionPerformed
@@ -666,7 +666,7 @@ public class ModelDialog extends javax.swing.JDialog {
 //                    }
 //                    TaskMonitor monitor = new TaskMonitor(ModelDialog.this, "Model...", "Loading data...", 0, 100);
 //                    RasterLayer l = DistribModel.extrapolate(project, (Double)resolSpinner.getValue(), vars, coefs,
-//                            alpha, extVars, data.cost.costs, multiAttach, dMax, monitor);
+//                            alpha, extVars, data.linkset.costs, multiAttach, dMax, monitor);
 //                    if(layers == null) {
 //                        layers = new DefaultGroupLayer("Extrapolate");
 //                        project.addLayer(layers);
@@ -691,7 +691,7 @@ public class ModelDialog extends javax.swing.JDialog {
             coefs[i] = model.getCoef(var);
             i++;
         }
-        new ExtrapolateDialog(null, data.getCost(), (Double)dSpinner.getValue(), (Double)pSpinner.getValue(), 
+        new ExtrapolateDialog(null, data.getLinkset(), (Double)dSpinner.getValue(), (Double)pSpinner.getValue(), 
                 vars, coefs, extVars, multiAttach, dMax).setVisible(true);
     }//GEN-LAST:event_extrapolateButtonActionPerformed
 

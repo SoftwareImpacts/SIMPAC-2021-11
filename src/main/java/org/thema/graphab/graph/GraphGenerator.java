@@ -78,8 +78,8 @@ public class GraphGenerator {
                 org.thema.graph.pathfinder.Path path = getPath(n);
                 double d = ((Path)path.getEdges().get(0).getObject()).distToPatch(Project.getPatch(nodeOrigin)) +
                         ((Path)path.getEdges().get(path.getEdges().size()-1).getObject()).distToPatch(Project.getPatch(n));
-                if(getCostDistance().getType_dist() != Linkset.EUCLID) 
-                    d *= getCostDistance().getCosts()[Project.getProject().getPatchCode()] / Project.getProject().getResolution();
+                if(getLinkset().getType_dist() != Linkset.EUCLID) 
+                    d *= getLinkset().getCosts()[Project.getProject().getPatchCode()] / Project.getProject().getResolution();
                 cost -= d;
                 if(cost < 0) cost = 0.0;
             }
@@ -122,9 +122,9 @@ public class GraphGenerator {
     protected transient Graph graph;
     private transient GraphGroupLayer layers;
 
-    public GraphGenerator(String name, Linkset cost, int type, double threshold, boolean intraPatchDist) {
+    public GraphGenerator(String name, Linkset linkset, int type, double threshold, boolean intraPatchDist) {
         this.name = name;
-        this.cost = cost;
+        this.cost = linkset;
         this.type = type;
         this.threshold = threshold;
         this.intraPatchDist = intraPatchDist;
@@ -261,9 +261,9 @@ public class GraphGenerator {
                         c2 = coords[coords.length-1];
 
                     double d = c1.distance(c2);
-                    if(getCostDistance().getType_dist() != Linkset.EUCLID && cost.isCostLength()) {
+                    if(getLinkset().getType_dist() != Linkset.EUCLID && cost.isCostLength()) {
                         Project prj = Project.getProject();
-                        d *= getCostDistance().getCosts()[prj.getPatchCode()] / prj.getResolution();
+                        d *= getLinkset().getCosts()[prj.getPatchCode()] / prj.getResolution();
                     }
                     return d;
                 }
@@ -276,8 +276,8 @@ public class GraphGenerator {
                 if(INTRA_CENTROID && intraPatchDist) {
                     Project prj = Project.getProject();
                     double d = p.distToPatch1() + p.distToPatch2();
-                    if(getCostDistance().getType_dist() != Linkset.EUCLID && cost.isCostLength()) 
-                        w += d * getCostDistance().getCosts()[prj.getPatchCode()] / prj.getResolution();
+                    if(getLinkset().getType_dist() != Linkset.EUCLID && cost.isCostLength()) 
+                        w += d * getLinkset().getCosts()[prj.getPatchCode()] / prj.getResolution();
                 }
                 
                 return w;
@@ -289,64 +289,6 @@ public class GraphGenerator {
 
         return finder;
     }
-
-//    protected DijkstraPathFinder getDistPathFinder(Node startNode, double maxCost) {
-//
-//        DijkstraPathFinder finder = new DijkstraPathFinder(getGraph(), startNode, new EdgeWeighter() {
-//            public double getWeight(Edge e) {
-//                Path p = (Path) e.getObject();
-//                double w = p.getDist();
-//                
-//                if(intraPatchDist)
-//                    w += p.distToPatch1() + p.distToPatch2();
-//                
-//                return w;
-//            }
-//            public double getToGraphWeight(double dist) { return 0; }
-//        }/*, new DijkstraPathFinder.NodeWeighter() {
-//
-//            @Override
-//            public double getWeight(Edge fromEdge, Node n, Edge toEdge) {
-//                if(!intraPatchDist || fromEdge == null)
-//                    return 0;
-//                Feature patch = (Feature) n.getObject();
-//                Path from = (Path) fromEdge.getObject();
-//                Path to = (Path) toEdge.getObject();
-//                Coordinate [] coords = from.getGeometry().getCoordinates();
-//                Coordinate c1 = coords[0];
-//                if(from.getPatch2() == patch)
-//                    c1 = coords[coords.length-1];
-//                coords = to.getGeometry().getCoordinates();
-//                Coordinate c2 = coords[0];
-//                if(to.getPatch2() == patch)
-//                    c2 = coords[coords.length-1];
-//                
-//                double d = c1.distance(c2);
-//                
-//                return d;
-//            }
-//        }*/);
-//
-//        finder.calculate(maxCost);
-//
-//        return finder;
-//    }
-
-//    protected DijkstraPathFinder getFlowPathFinder(Node startNode, double maxCost, final double alpha) {
-//
-//        DijkstraPathFinder finder = new DijkstraPathFinder(getGraph(), startNode, new EdgeWeighter() {
-//            public double getWeight(Edge e) {
-//                return -Math.log(Project.getPatchCapacity(e.getNodeA())*Project.getPatchCapacity(e.getNodeB())
-//                            / Math.pow(Project.getTotalPatchCapacity(), 2))
-//                        + alpha*((Path)e.getObject()).getCost();
-//            }
-//            public double getToGraphWeight(double dist) { return 0; }
-//        });
-//
-//        finder.calculate(maxCost);
-//
-//        return finder;
-//    }
     
     public double getPatchArea() {
         double sum = 0;
@@ -368,7 +310,7 @@ public class GraphGenerator {
 
     public synchronized GraphGroupLayer getLayers() {
         if(layers == null) {
-            layers = new GraphGroupLayer(name, getGraph()) {
+            layers = new GraphGroupLayer(name, getGraph(), MainFrame.project.getCRS()) {
                 CircleStyle circleStyle;
                 {
                     int col = 0;
@@ -495,7 +437,7 @@ public class GraphGenerator {
                     public Collection getFeatures() {
                         return getComponentFeatures();
                     }
-                }, MainFrame.project.getZone(), new FeatureStyle(null, Color.BLACK));
+                }, MainFrame.project.getZone(), new FeatureStyle(null, Color.BLACK), MainFrame.project.getCRS());
 
             if(getGraph().getEdges().size() > 500000)
                 layers.getEdgeLayer().setVisible(false);
@@ -633,7 +575,7 @@ public class GraphGenerator {
         return name;
     }
 
-    public Linkset getCostDistance() {
+    public Linkset getLinkset() {
         return cost;
     }
 
@@ -706,10 +648,4 @@ public class GraphGenerator {
         return builder.getGraph();
     }
 
-//    public GraphGenerator createGraphWithout(Collection idNodes, Collection idEdges) {
-//        GraphGenerator gen = new GraphGenerator("Rem_" + name, cost, type, dist_type, threshold);
-//        gen.graph = dupGraphWithout(idNodes, idEdges);
-//
-//        return gen;
-//    }
 }

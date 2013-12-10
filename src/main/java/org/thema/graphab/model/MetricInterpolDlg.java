@@ -292,7 +292,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                     ProgressBar progressBar = Config.getProgressBar();
                     okButton.setEnabled(false);
                     RasterLayer l = DistribModel.interpolate(Project.getProject(), (Double)resolSpinner.getValue(), varComboBox.getSelectedItem().toString(), 
-                                        Double.parseDouble(alphaTextField.getText()), ((GraphGenerator)graphComboBox.getSelectedItem()).getCostDistance(), 
+                                        Double.parseDouble(alphaTextField.getText()), ((GraphGenerator)graphComboBox.getSelectedItem()).getLinkset(), 
                                         multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), progressBar);
                     progressBar.setNote("Saving");
                     l.setName(rasterNameTextField.getText());

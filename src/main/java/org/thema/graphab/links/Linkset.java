@@ -180,43 +180,43 @@ public class Linkset {
     public String getInfo() {
         ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/links/Bundle");
         
-        String info = bundle.getString("CostPanel.nameLabel.text") + " : " + name;
-        info += "\n" + bundle.getString("CostPanel.topoPanel.border.title") + " : ";
+        String info = bundle.getString("LinksetPanel.nameLabel.text") + " : " + name;
+        info += "\n" + bundle.getString("LinksetPanel.topoPanel.border.title") + " : ";
         if(type == COMPLETE) {
-            info += bundle.getString("CostPanel.completeRadioButton.text");
+            info += bundle.getString("LinksetPanel.completeRadioButton.text");
             if(distMax > 0)
-                info += " " + bundle.getString("CostPanel.distMaxLabel.text") + " " + distMax;
+                info += " " + bundle.getString("LinksetPanel.distMaxLabel.text") + " " + distMax;
         }
         else
-            info += bundle.getString("CostPanel.planarRadioButton.text");
-        info += "\n" + bundle.getString("CostPanel.distPanel.border.title") + " : ";
+            info += bundle.getString("LinksetPanel.planarRadioButton.text");
+        info += "\n" + bundle.getString("LinksetPanel.distPanel.border.title") + " : ";
         switch(type_dist) {
             case EUCLID:
-                info += bundle.getString("CostPanel.euclidRadioButton.text");
+                info += bundle.getString("LinksetPanel.euclidRadioButton.text");
                 break;
             case COST:
-                info += bundle.getString("CostPanel.costRadioButton.text") + "\n";
+                info += bundle.getString("LinksetPanel.costRadioButton.text") + "\n";
                 for(Integer code : Project.getProject().getCodes())
                     info += code + " : " + costs[code] + "\n";
                 break;
             case EXT_COST:
-                info += bundle.getString("CostPanel.rasterRadioButton.text") + "\nFile : " + extCostFile.getAbsolutePath();
+                info += bundle.getString("LinksetPanel.rasterRadioButton.text") + "\nFile : " + extCostFile.getAbsolutePath();
                 break;
         }
         
         if(type_dist != EUCLID) {
-            info += "\n" + bundle.getString("CostPanel.impedancePanel.border.title") + " : ";
+            info += "\n" + bundle.getString("LinksetPanel.impedancePanel.border.title") + " : ";
             if(type_length == COST_LENGTH)
-                info += bundle.getString("CostPanel.costDistRadioButton.text");
+                info += bundle.getString("LinksetPanel.costDistRadioButton.text");
             else
-                info += bundle.getString("CostPanel.lengthRadioButton.text");
+                info += bundle.getString("LinksetPanel.lengthRadioButton.text");
         }
 
         if(realPaths)
-            info += "\n" + bundle.getString("CostPanel.realPathCheckBox.text");
+            info += "\n" + bundle.getString("LinksetPanel.realPathCheckBox.text");
 
         if(type_dist != EUCLID && removeCrossPatch)
-            info += "\n" + bundle.getString("CostPanel.removeCrossPatchCheckBox.text");
+            info += "\n" + bundle.getString("LinksetPanel.removeCrossPatchCheckBox.text");
 
         info += "\n\n# links : " + paths.size();
 

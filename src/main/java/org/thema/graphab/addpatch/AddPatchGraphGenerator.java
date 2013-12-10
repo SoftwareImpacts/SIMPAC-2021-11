@@ -46,7 +46,7 @@ public class AddPatchGraphGenerator extends GraphGenerator {
         graph.getNodes().add(node);
         
         // puis crée les liens
-        HashMap<DefaultFeature, Path> newLinks = getCostDistance().calcNewLinks(patch);
+        HashMap<DefaultFeature, Path> newLinks = getLinkset().calcNewLinks(patch);
         for(DefaultFeature d : newLinks.keySet()) {
             Path path = new Path(patch, d, newLinks.get(d).getCost(), newLinks.get(d).getDist());  
             if(getType() != THRESHOLD || getCost(path) <= getThreshold()) {

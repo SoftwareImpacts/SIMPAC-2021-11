@@ -41,6 +41,9 @@ import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.feature.SchemaException;
 import org.geotools.gce.geotiff.GeoTiffWriter;
 import org.geotools.geometry.Envelope2D;
+import org.geotools.referencing.CRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.Util;
@@ -111,6 +114,8 @@ public final class Project {
     private TreeMap<String, GraphGenerator> graphs;
 
     private Rectangle2D zone;
+    
+    private String wktCRS;
 
     private transient List<DefaultFeature> patches;
     private transient List<Feature> voronoi;
@@ -141,11 +146,12 @@ public final class Project {
         this.minArea = minArea;
         this.simplify = simplify;
         capacityParams = new CapaPatchDialog.CapaPatchParam();
-
-        //GridCoverage2D cov = IOImage.loadTiff(imgFile);
-
+        
         Envelope2D gZone = cov.getEnvelope2D();
         zone = gZone.getBounds2D();
+        CoordinateReferenceSystem crs = cov.getCoordinateReferenceSystem2D();
+        if(crs != null)    
+            wktCRS = crs.toWKT();
 
         TreeMap<Integer, Envelope> envMap = new TreeMap<Integer, Envelope>();
 
@@ -166,7 +172,7 @@ public final class Project {
         }
         resolution = grid2space.getMatrixEntries()[0];
 
-        Envelope2D extZone = new Envelope2D(gZone.getCoordinateReferenceSystem(),
+        Envelope2D extZone = new Envelope2D(crs,
                 gZone.x-resolution, gZone.y-resolution, gZone.width+2*resolution, gZone.height+2*resolution);
 
         TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Vectorizing..."), "", 0, envMap.size());
@@ -216,7 +222,7 @@ public final class Project {
         GridCoverage2D clustCov = covBuilder.getGridCoverage2D();
         new GeoTiffWriter(new File(prjPath, "source.tif")).write(cov, null);
         new GeoTiffWriter(new File(prjPath, "patches.tif")).write(clustCov, null);
-        DefaultFeature.saveFeatures(patches, new File(dir, "patches.shp"));
+        DefaultFeature.saveFeatures(patches, new File(dir, "patches.shp"), crs);
         
         clustCov = null;
         covBuilder = null;
@@ -224,39 +230,11 @@ public final class Project {
         monitor.close();
         Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb small patch removed : " + nbRem);
 
-//        rootLayer = new DefaultGroupLayer(name);
-//
-////        if(debug)
-////            debugLayers = new DefaultGroupLayer("Debug");
-//
-//        rootLayer.addLayerFirst(new FeatureLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Patch"), patches,
-//                new FeatureStyle(Color.BLUE, Color.GRAY)));
-//
-//        linkLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Link_sets"));
-//        rootLayer.addLayerFirst(linkLayers);
-//        
-////        addDebugLayer(new RasterLayer("Patch id", new RasterShape(
-////                rasterPatchs, extZone, new RasterStyle(), true)));
-//        RasterLayer layer = new RasterLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Landscape_map"), new RasterShape(cov.getRenderedImage(), zone));
-//        layer.setVisible(false);
-//        layer.getStyle().setNoDataValue(noData);
-//        rootLayer.addLayerLast(layer);
-//
-////        if(debug)
-////            rootLayer.addLayerLast(debugLayers);
-
-//        WritableRaster voronoiR = debug ? getRasterPatch() : rasterPatchs;
-//        neighborhoodEuclid(voronoiR, simplify);
-
         WritableRaster voronoiR = rasterPatchs;
         neighborhoodEuclid2(voronoiR);
 
         voronoi = (List<Feature>) vectorizeVoronoi(voronoiR);
-        DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"));
-
-//        addDebugLayer(new FeatureLayer("Voronoi-vector", voronoi));
-//        addDebugLayer(new RasterLayer("Voronoi", new RasterShape(
-//                    voronoiR, extZone, new RasterStyle(), true)));
+        DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"), crs);
 
         exoDatas = new TreeMap<String, Pointset>();
 
@@ -273,10 +251,10 @@ public final class Project {
         createLayers();
     }
 
-//    public Links neighborhoodCost(WritableRaster voronoi, Raster code, double [] cost) throws Exception {
+//    public Links neighborhoodCost(WritableRaster voronoi, Raster code, double [] linkset) throws Exception {
 //        ProgressMonitor monitor = new ProgressMonitor(null, "Neighbor", "", 0, voronoi.getHeight());
 //        monitor.setProgress(1);
-//        RasterPathFinder pathfinder = new RasterPathFinder(voronoi, code, cost, grid2space);
+//        RasterPathFinder pathfinder = new RasterPathFinder(voronoi, code, linkset, grid2space);
 //
 //        for(int y = 0; y < voronoi.getHeight(); y++) {
 //            monitor.setProgress(y);
@@ -535,8 +513,7 @@ public final class Project {
 
         monitor.setNote("Saving...");
 
-        DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"));
-        save();
+        DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"), getCRS());
 
         monitor.close();
 
@@ -615,7 +592,7 @@ public final class Project {
             costLinks.put(cost.getName(), cost);
             if(save) {
                 if(cost.isRealPaths())
-                    DefaultFeature.saveFeatures(paths, new File(dir, cost.getName() + "-links.shp"));
+                    DefaultFeature.saveFeatures(paths, new File(dir, cost.getName() + "-links.shp"), getCRS());
                 save(); 
                 saveLinks(cost.getName());
             }
@@ -696,7 +673,7 @@ public final class Project {
 
 //        monitor.setNote("Point outside patch...");
 
-        SpacePathFinder pathFinder = getPathFinder(exoData.getCost());
+        SpacePathFinder pathFinder = getPathFinder(exoData.getLinkset());
 
         int nErr = 0;
         for(DefaultFeature f : features) {
@@ -709,7 +686,7 @@ public final class Project {
                 try {
                     double [] res = pathFinder.calcPathNearestPatch((Point)f.getGeometry());
                     DefaultFeature p = getPatch((int)res[0]);
-                    double cost = exoData.getCost().isCostLength() ? res[1] : res[2];
+                    double cost = exoData.getLinkset().isCostLength() ? res[1] : res[2];
                     f.setAttribute(EXO_IDPATCH, p.getId());
                     f.setAttribute(EXO_COST, cost);
                 } catch(Exception e) {
@@ -726,7 +703,7 @@ public final class Project {
                     for(String attr : attrNames) {
                        double val = ((Number)p.getAttribute(exoData.getName() + "." + attr)).doubleValue();
                        if(Double.isNaN(val)) val = 0;
-                       double dist = exoData.getCost().isCostLength() ? distPatch.get(p).getCost() : distPatch.get(p).getDist();
+                       double dist = exoData.getLinkset().isCostLength() ? distPatch.get(p).getCost() : distPatch.get(p).getDist();
                        double s = 0;
                        if(f.getAttribute(attr) != null)
                           s = ((Number)f.getAttribute(attr)).doubleValue() * Math.exp(-alpha*dist);
@@ -878,7 +855,7 @@ public final class Project {
         ProgressBar progressBar = Config.getProgressBar("Create linkset...");
         
         // calcule le voronoi en distance cout
-//        Links tmpLinks = neighborhoodCost(rPatch, costRaster, cost);
+//        Links tmpLinks = neighborhoodCost(rPatch, costRaster, linkset);
 
         final Vector<Path> links = new Vector<Path>(patches.size() * 4);
         Path.newSetOfPaths();
@@ -1268,7 +1245,7 @@ public final class Project {
         
         if(save) {
             DefaultFeature.saveFeatures(graphGen.getComponentFeatures(),
-                    new File(dir, graphGen.getName() + "-voronoi.shp"));
+                    new File(dir, graphGen.getName() + "-voronoi.shp"), getCRS());
 
             graphGen.setSaved(true);
             save();
@@ -1308,7 +1285,7 @@ public final class Project {
 
     List<String> getGraphLinkAttr(GraphGenerator g) {
         List<String> attrs = new ArrayList<String>();
-        for(String attr : g.getCostDistance().getPaths().get(0).getAttributeNames())
+        for(String attr : g.getLinkset().getPaths().get(0).getAttributeNames())
             if(attr.endsWith("_" + g.getName()))
                 attrs.add(attr);
         return attrs;
@@ -1321,10 +1298,10 @@ public final class Project {
             DefaultFeature.removeAttribute(attr, patches);
 
         for(String attr : getGraphLinkAttr(g))
-            DefaultFeature.removeAttribute(attr, g.getCostDistance().getPaths());
+            DefaultFeature.removeAttribute(attr, g.getLinkset().getPaths());
 
         try {
-            saveLinks(g.getCostDistance().getName());
+            saveLinks(g.getLinkset().getName());
             savePatch();
             save();
         } catch (Exception ex) {
@@ -1529,16 +1506,17 @@ public final class Project {
     }
 
     private void createLayers() {
+        CoordinateReferenceSystem crs = getCRS();
         rootLayer = new DefaultGroupLayer(name, true);
         rootLayer.addLayerFirst(new FeatureLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Patch"), patches,
-                new FeatureStyle(new Color(0x65a252), new Color(0x426f3c))));
+                new FeatureStyle(new Color(0x65a252), new Color(0x426f3c)), crs));
 
         linkLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Link_sets"));
         rootLayer.addLayerFirst(linkLayers);
        
         try {
             RasterLayer l = new RasterLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Landscape_map"), new RasterShape(
-                getImageSource().getParent(), zone, new RasterStyle(), true));
+                getImageSource().getParent(), zone, new RasterStyle(), true), crs);
             l.getStyle().setNoDataValue(noData);
             l.setVisible(false);
             l.setDrawLegend(false);
@@ -1554,7 +1532,7 @@ public final class Project {
         }
 
         Layer l = new FeatureLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Voronoi_links"), 
-                planarLinks.getFeatures(), new LineStyle(new Color(0xbcc3ac)));
+                planarLinks.getFeatures(), new LineStyle(new Color(0xbcc3ac)), crs);
         l.setVisible(false);
         linkLayers.addLayerLast(l);
 
@@ -1576,11 +1554,6 @@ public final class Project {
             l.setVisible(false);
             exoLayers.addLayerLast(l);
         }
-//        // For debugging purpose        
-//        List<Geometry> geoms = new ArrayList<Geometry>();
-//        for(Feature patch : getPatches())
-//            geoms.add(new GeometryFactory().createPoint(getCentroid(patch)));
-//        rootLayer.addLayerFirst(new GeometryLayer("Centroid", new GeometryFactory().buildGeometry(geoms), new PointStyle()));
         
     }
 
@@ -1771,6 +1744,16 @@ public final class Project {
         return space2grid;
     }
 
+    public CoordinateReferenceSystem getCRS() {
+        if(wktCRS != null && !wktCRS.isEmpty())
+            try {
+                return CRS.parseWKT(wktCRS);
+            } catch (FactoryException ex) {
+                Logger.getLogger(Project.class.getName()).log(Level.WARNING, null, ex);
+            }
+        return null;
+    }
+    
     public int getPatchCode() {
         return patchCode;
     }
@@ -1856,7 +1839,7 @@ public final class Project {
     class ExoLayer extends FeatureLayer {
 
         public ExoLayer(String name) {
-            super(name, exoDatas.get(name).getFeatures());
+            super(name, exoDatas.get(name).getFeatures(), null, Project.this.getCRS());
         }
 
         @Override
@@ -1910,12 +1893,12 @@ public final class Project {
 //                    double max = Double.parseDouble(res);
 //                    try {
 //                        DefaultFeature.addAttribute("IFPC", Project.getProject().getPointset(name), Double.NaN);
-//                        RasterPathFinder pathfinder = getRasterPathFinder(exo.getCost());
+//                        RasterPathFinder pathfinder = getRasterPathFinder(exo.getLinkset());
 //                        for(DefaultFeature fexo : Project.getProject().getPointset(name)) {
 //                            double ifpc = 0;
 //                            HashMap<DefaultFeature, Path> dists = pathfinder.calcPaths(fexo.getGeometry().getCentroid().getCoordinate(), max, false);
 //                            for(DefaultFeature patch : dists.keySet()) {
-//                                ifpc += Project.getPatchCapacity(patch) / (dists.get(patch).getCost()+1);
+//                                ifpc += Project.getPatchCapacity(patch) / (dists.get(patch).getLinkset()+1);
 //                            }
 //                            fexo.setAttribute("IFPC", ifpc);
 //                        }
@@ -1961,10 +1944,11 @@ public final class Project {
         
         public LinkLayer(final String name) {
             super(name, new FeatureGetter<Path>() {
-                public Collection<Path> getFeatures() {
-                    return costLinks.get(name).getPaths();
-                }
-            }, zone, new LineStyle(new Color(costLinks.get(name).getTopology() == Linkset.PLANAR ? 0x25372b : 0xb8c45d)));
+                    public Collection<Path> getFeatures() {
+                        return costLinks.get(name).getPaths();
+                    }
+                }, zone, new LineStyle(new Color(costLinks.get(name).getTopology() == Linkset.PLANAR ? 0x25372b : 0xb8c45d)), 
+                Project.this.getCRS());
         }
 
         @Override
@@ -1974,7 +1958,7 @@ public final class Project {
                 public void actionPerformed(ActionEvent e) {
                     List<String> exoNames = new ArrayList<String>();
                     for(Pointset exo : exoDatas.values())
-                        if(exo.getCost().getName().equals(name))
+                        if(exo.getLinkset().getName().equals(name))
                             exoNames.add(exo.getName());
                     if(!exoNames.isEmpty()) {
                         JOptionPane.showMessageDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Links_is_used_by_exogenous_data") +
@@ -1983,7 +1967,7 @@ public final class Project {
                     }
                     List<String> graphNames = new ArrayList<String>();
                     for(GraphGenerator g : getGraphs())
-                        if(g.getCostDistance().getName().equals(name))
+                        if(g.getLinkset().getName().equals(name))
                             graphNames.add(g.getName());
                     int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_links_") + name + " ?" +
                             (!graphNames.isEmpty() ? "\nGraph " + Arrays.deepToString(graphNames.toArray()) + java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("_will_be_removed.") : ""), java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove"), JOptionPane.YES_NO_OPTION);

@@ -51,7 +51,7 @@ public class DiffLocalModel {
             throw new IllegalArgumentException("Works only in multi attachment");
         
         HashMap<Geometry, HashMap<DefaultFeature, Path>> cache = multiAttach ? new HashMap<Geometry, HashMap<DefaultFeature, Path>>() : null;
-        SpacePathFinder pathfinder = multiAttach ? project.getPathFinder(exoData.getCost()) : null;
+        SpacePathFinder pathfinder = multiAttach ? project.getPathFinder(exoData.getLinkset()) : null;
         
         LogisticFunction function = new LogisticFunction(coefs);
         
@@ -87,7 +87,7 @@ public class DiffLocalModel {
                     double sum = 0;
                     double weight = 0;
                     for(DefaultFeature patch : patchDists.keySet()) {
-                        double w = Math.exp(-alpha * (exoData.getCost().isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
+                        double w = Math.exp(-alpha * (exoData.getLinkset().isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
                         sum += ((Number)patch.getAttribute(var)).doubleValue() * w * w;
                         weight += w;
                     }
@@ -175,7 +175,7 @@ public class DiffLocalModel {
                         double sum = 0;
                         double weight = 0;
                         for(DefaultFeature patch : patchDists.keySet()) {
-                            double w = Math.exp(-alpha * (exoData.getCost().isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
+                            double w = Math.exp(-alpha * (exoData.getLinkset().isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
                             sum += ((Number)patch.getAttribute(var)).doubleValue() * w * w;
                             weight += w;
                         }

@@ -128,7 +128,7 @@ public class DistribModel {
         List<DefaultFeature> data = exoData.getFeatures();
 
         HashMap<Geometry, HashMap<DefaultFeature, Path>> cache = multiAttach ? new HashMap<Geometry, HashMap<DefaultFeature, Path>>() : null;
-        SpacePathFinder pathfinder = multiAttach ? project.getPathFinder(exoData.getCost()) : null;
+        SpacePathFinder pathfinder = multiAttach ? project.getPathFinder(exoData.getLinkset()) : null;
 
         a = new double[data.size()][nVar];
         y = new double[data.size()];
@@ -160,7 +160,7 @@ public class DistribModel {
                 double sum = 0;
                 double weight = 0;
                 for(Feature patch : patchDists.keySet()) {
-                    double w = Math.exp(-alpha * (exoData.getCost().isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
+                    double w = Math.exp(-alpha * (exoData.getLinkset().isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
                     sum += ((Number)patch.getAttribute(patchVars.get(j))).doubleValue() * w * w;
                     weight += w;
                 }
@@ -338,7 +338,7 @@ public class DistribModel {
         
         return new RasterLayer("_" + resol, 
                 new RasterShape(raster, new Rectangle2D.Double(minx-resol/2, maxy-h*resol+resol/2, wi*resol, h*resol),
-                new RasterStyle(), true));
+                new RasterStyle(), true), project.getCRS());
     }
     
     public static RasterLayer interpolate(final Project project, final double resol, 
@@ -413,6 +413,6 @@ public class DistribModel {
         
         return new RasterLayer("_" + resol, 
                 new RasterShape(raster, new Rectangle2D.Double(minx-resol/2, maxy-h*resol+resol/2, wi*resol, h*resol),
-                new RasterStyle(), true));
+                new RasterStyle(), true), project.getCRS());
     }
 }

@@ -72,7 +72,7 @@ public class AddPatchMultiMPITask extends AbstractDistributeTask<TreeMapList<Dou
                     if(Project.getProject().canCreatePatch(p)) {
                         // add the new patch to the project and the graph
                         DefaultFeature patch = Project.getProject().addPatch(p, addPoints.get(p));
-                        gen.getCostDistance().addLinks(patch);
+                        gen.getLinkset().addLinks(patch);
                     }
         } catch (Exception ex) {
             Logger.getLogger(AddPatchMultiMPITask.class.getName()).log(Level.SEVERE, null, ex);
@@ -123,7 +123,7 @@ public class AddPatchMultiMPITask extends AbstractDistributeTask<TreeMapList<Dou
         if(capa <= 0)
             return Double.NaN;
         DefaultFeature patch = project.addPatch(point, capa);
-        gen.getCostDistance().addLinks(patch);
+        gen.getLinkset().addLinks(patch);
         GraphGenerator graph = new GraphGenerator(gen, "");
         double indVal = (new GraphMetricLauncher(indice, false).calcIndice(graph, new TaskMonitor.EmptyMonitor())[0]
                 - indInit) / points.size();
@@ -156,7 +156,7 @@ public class AddPatchMultiMPITask extends AbstractDistributeTask<TreeMapList<Dou
             x = point.getX() - windowSize*res;
         }
         
-        gen.getCostDistance().removeLinks(patch);
+        gen.getLinkset().removeLinks(patch);
         project.removePatch(patch);
         
         return indVal;

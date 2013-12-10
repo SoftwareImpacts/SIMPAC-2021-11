@@ -293,7 +293,7 @@ public class ProjectTest {
             // certains calculs ne sont pas testés car trop variables :
             // - les graphes euclidiens avec dist intra taches
             // - les indices de circuit sur les graphes mst
-            if(gen.getCostDistance().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist() || 
+            if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist() || 
                     isCircuit(indName) && gen.getType() == GraphGenerator.MST)
                 continue;
             
@@ -324,7 +324,7 @@ public class ProjectTest {
         int nbGraph = 0;
         GraphMetricLauncher launcher = new GraphMetricLauncher(new DeltaPCMetric(), false);
         for(GraphGenerator gen : refPrj.getGraphs()) {
-            if(gen.getCostDistance().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist())
+            if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist())
                 continue;
             if(!r.getVarNames().contains("d_PCIntra_" + gen.getName())) 
                 continue;

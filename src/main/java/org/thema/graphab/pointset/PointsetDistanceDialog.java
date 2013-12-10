@@ -55,13 +55,13 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
         
         List<GraphGenerator> graphs = new ArrayList<GraphGenerator>();
         for(GraphGenerator g : Project.getProject().getGraphs())
-            if(g.getCostDistance() == exo.getCost())
+            if(g.getLinkset() == exo.getLinkset())
                 graphs.add(g);
 //        graphFlowComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
         graphCostComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
 //        graphCircCostComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
         costComboBox.setModel(new DefaultComboBoxModel(Project.getProject().getLinksets().toArray()));
-        costComboBox.setSelectedItem(exo.getCost());
+        costComboBox.setSelectedItem(exo.getLinkset());
     }
 
 
@@ -254,7 +254,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
 //                                    continue;
 //                                Feature exo2 = exos.get(j);
 //                                Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
-//                                Double dist = finder.getCost(patch2);
+//                                Double dist = finder.getLinkset(patch2);
 //                                if(dist == null)
 //                                    dist = Double.NaN;
 //                                

@@ -6,7 +6,6 @@
 package org.thema.graphab;
 
 import java.io.*;
-import org.thema.graphab.addpatch.AddPatchResultDialog;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.graph.GraphGenerator;
@@ -126,7 +125,7 @@ public class CLITools {
                     "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn]\n" +
                     "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
                     "--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
-                    "--addpatch npatch global_indice_name [param1=val ...] [gridres=resolution [capa=capa_file] [multi=npatch,size]]|[pointfile=file.shp [capa=capa_field]]\n" +
+                    "--addpatch npatch global_indice_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=npatch,size]]|[pointfile=file.shp [capa=capa_field]]\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "\nmin:inc:max -> val1,val2,val3...");
             return;
@@ -302,7 +301,7 @@ public class CLITools {
                     System.out.println(graph.getName());
                     Pointset exoData = null;
                     for(Pointset exo : getExos())
-                        if(exo.getCost() == graph.getCostDistance())
+                        if(exo.getLinkset() == graph.getLinkset())
                             exoData = exo;
 
                     for(String v : vars) {
@@ -589,7 +588,7 @@ public class CLITools {
 
             if(save) {
                 try {
-                    MainFrame.project.saveLinks(graph.getCostDistance().getName());
+                    MainFrame.project.saveLinks(graph.getLinkset().getName());
                     MainFrame.project.savePatch();
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -904,10 +903,8 @@ public class CLITools {
             indice.setParams(params);
         }
         
-        GraphGenerator graph = getGraphs().iterator().next();
-        
         if(args.get(0).startsWith("gridres=")) {
-            double res = Double.parseDouble(args.remove(0).split("=")[1]);
+            Range rangeRes = Range.parse(args.remove(0).split("=")[1]);
             File capaFile = null;
             int nbMulti = 1;
             int window = 1;
@@ -923,21 +920,36 @@ public class CLITools {
                     window = Integer.parseInt(arg.split(",")[1]);
                 }
             }
-
-            System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
-            AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, capaFile, res, nbMulti, window);
-            addPatchCmd.run(new TaskMonitor.EmptyMonitor());
-            addPatchCmd.saveResults();
+            
+            for(GraphGenerator graph : getGraphs()) {
+                if(graph.getLinkset().getTopology() == Linkset.PLANAR) {
+                    System.out.println("Planar graph is not supported : " + graph.getName());
+                    continue;
+                }
+                for(Double res : rangeRes.getValues()) {
+                    System.out.println("Add patches with graph " + graph.getName() + 
+                            " and indice " + indice.getShortName() + " at resolution " + res);
+                    AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, capaFile, res, nbMulti, window);
+                    addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+                    addPatchCmd.saveResults();
+                }
+            }
         } else {
             File pointFile = new File(args.remove(0).split("=")[1]);
             String capaField = null;
             if(!args.isEmpty() && args.get(0).startsWith("capa="))
                 capaField = args.remove(0).split("=")[1];
             
-            System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
-            AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, pointFile, capaField);
-            addPatchCmd.run(new TaskMonitor.EmptyMonitor());
-            addPatchCmd.saveResults();
+            for(GraphGenerator graph : getGraphs()) {
+                if(graph.getLinkset().getTopology() == Linkset.PLANAR) {
+                    System.out.println("Planar graph is not supported : " + graph.getName());
+                    continue;
+                }
+                System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
+                AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, pointFile, capaField);
+                addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+                addPatchCmd.saveResults();
+            }
         }
         
     }
@@ -946,7 +958,7 @@ public class CLITools {
 
         HashMap<Object, Path> links = new HashMap<Object, Path>();
         if(!patch)
-            for(Path link : graph.getCostDistance().getPaths())
+            for(Path link : graph.getLinkset().getPaths())
                 links.put(link.getId(), link);
 
         DeltaAddGraphGenerator deltaGraph = new DeltaAddGraphGenerator(graph,
