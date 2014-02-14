@@ -28,8 +28,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.thema.common.Config;
 import org.thema.common.Util;
 import org.thema.common.io.IOImage;
+import org.thema.common.parallel.ProgressBar;
 import org.thema.common.parallel.TaskMonitor;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.RasterLayer;
@@ -395,10 +397,12 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
                         vars.add(model.getValueAt(i, 0).toString());
                         coefs[i] = (Double)model.getValueAt(i, 1);
                     }
-                    TaskMonitor monitor = new TaskMonitor(ExtrapolateDialog.this, "Model...", "Loading data...", 0, 100);
+                    ProgressBar monitor = Config.getProgressBar("Loading data...");
                     RasterLayer l = DistribModel.extrapolate(project, (Double)resolSpinner.getValue(), vars, coefs,
                             Double.parseDouble(alphaTextField.getText()), extVars, (Linkset)costComboBox.getSelectedItem(),
                             multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), monitor);
+                    if(l == null)
+                        return;
                     l.setName(nameTextField.getText());
                     if(layers == null) {
                         layers = new DefaultGroupLayer("Extrapolate");

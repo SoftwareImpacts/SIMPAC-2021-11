@@ -250,7 +250,7 @@ public class DistribModel {
     public static RasterLayer extrapolate(final Project project, final double resol, 
             final List<String> vars, final double [] coefs, final double alpha,
             final Map<String, GridCoverage2D> extVars, final Linkset cost, final boolean multiAttach,
-            final double dMax, TaskMonitor monitor) throws Throwable {
+            final double dMax, ProgressBar monitor) throws Throwable {
         monitor.setProgress(1);
 
         final int wi = (int)(project.getZone().getWidth() / resol);

@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
-import org.thema.common.TreeMapList;
+import org.thema.common.collection.TreeMapList;
 import org.thema.common.distribute.AbstractDistributeTask;
 import org.thema.common.parallel.ProgressBar;
 import org.thema.common.parallel.TaskMonitor;

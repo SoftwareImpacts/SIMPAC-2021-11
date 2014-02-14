@@ -32,6 +32,11 @@ public class DeltaPCMetric extends AbstractPathMetric {
     }
 
     @Override
+    public boolean isAcceptGraph(GraphGenerator graph) {
+        return !graph.isIntraPatchDist();
+    }
+
+    @Override
     public Double calcPartIndice(PathFinder finder, GraphGenerator g) {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());

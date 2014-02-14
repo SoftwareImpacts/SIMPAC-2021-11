@@ -108,8 +108,8 @@ public class CLITools {
 
     public void execute(String [] arg) throws Throwable {
         if(arg[0].equals("--help")) {
-            System.out.println("Usage :\njava -jar Graphab.jar --metrics\n" +
-                    "java -jar Graphab.jar --project prjfile.xml [-proc n] [-nosave] command1 [command2 ...]\n" +
+            System.out.println("Usage :\njava -jar graphab.jar --metrics\n" +
+                    "java -jar graphab.jar --project prjfile.xml [-proc n] [-nosave] command1 [command2 ...]\n" +
                     "Commands list :\n" +
                     "--show\n" + 
                     "--linkset [complete[=dmax]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max\n" +
@@ -125,7 +125,7 @@ public class CLITools {
                     "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn]\n" +
                     "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
                     "--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
-                    "--addpatch npatch global_indice_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=npatch,size]]|[pointfile=file.shp [capa=capa_field]]\n" +
+                    "--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[pointfile=file.shp [capa=capa_field]]\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "\nmin:inc:max -> val1,val2,val3...");
             return;
@@ -303,7 +303,9 @@ public class CLITools {
                     for(Pointset exo : getExos())
                         if(exo.getLinkset() == graph.getLinkset())
                             exoData = exo;
-
+                    if(exoData == null)
+                        throw new RuntimeException("No available pointset for graph " + graph.getName());
+                    
                     for(String v : vars) {
                         System.out.println(graph.getName() + " : " + v);
 

@@ -4,7 +4,7 @@
 
     <groupId>org.thema</groupId>
     <artifactId>graphab</artifactId>
-    <version>1.2-alpha6</version>
+    <version>1.2-beta</version>
     <packaging>jar</packaging>
 
     <name>Graphab</name>
@@ -84,7 +84,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>common</artifactId>
-            <version>1.1.1</version>
+            <version>1.2.2</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -105,11 +105,17 @@
             <groupId>com.googlecode.matrix-toolkits-java</groupId>
             <artifactId>mtj</artifactId>
             <version>1.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.fommil.netlib</groupId>
+                    <artifactId>all</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>drawshape</artifactId>
-            <version>1.1.4</version>
+            <version>1.1.6</version>
         </dependency>
     </dependencies>
     <repositories>

@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import no.uib.cipr.matrix.DenseLU;
+import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.sparse.*;
 import org.geotools.graph.structure.Edge;
@@ -22,14 +24,22 @@ import org.thema.graphab.graph.GraphGenerator;
  * @author gvuidel
  */
 public class Circuit {
-    GraphGenerator graph;
-    double costR, capaR, capaExp, beta;
-    boolean patch2Ground;
+    private GraphGenerator graph;
+    private double costR, capaR, capaExp, beta;
+    private boolean patch2Ground;
+    
+    /**
+     * for testing native LU decomposition on dense matrix
+     * needs native lib of netlib
+     */
+    private static final boolean dense = false;
 
     private HashMap<Node, Integer> indNodes;
     private HashMap<Node, Graph> compNodes;
+    
     private HashMap<Graph, CompRowMatrix> compMatrix;
     private HashMap<Graph, Preconditioner> compPrecond;
+    private HashMap<Graph, DenseLU> compLU;
     
     public Circuit(GraphGenerator graph) {
         if(graph.getType() == GraphGenerator.MST)
@@ -71,8 +81,11 @@ public class Circuit {
         indNodes = new HashMap<Node, Integer>();
         compNodes = new HashMap<Node, Graph>();
         compMatrix = new HashMap<Graph, CompRowMatrix>();
-        if(!patch2Ground)
+        if(!patch2Ground) {
+            if(dense)
+                compLU = new HashMap<Graph, DenseLU>();
             compPrecond = new HashMap<Graph, Preconditioner>();
+        }
         
         for(Graph comp : graph.getComponents()) {
             int nbNodes = comp.getNodes().size();
@@ -94,16 +107,19 @@ public class Circuit {
                 indices[indNodes.get(edge.getNodeA())].add(indNodes.get(edge.getNodeB()));
                 indices[indNodes.get(edge.getNodeB())].add(indNodes.get(edge.getNodeA()));
             }
+            
+                
+            CompRowMatrix A;
+           
             int [][] tab = new int[nbNodes][];
             for(int i = 0; i < nbNodes; i++) {
                 tab[i] = new int[indices[i].size()];
                 Collections.sort(indices[i]);
                 for(int j = 0; j < tab[i].length; j++)
                     tab[i][j] = (Integer)indices[i].get(j);
-                    
+
             }
-                
-            CompRowMatrix A = new CompRowMatrix(nbNodes, nbNodes, tab);
+            A = new CompRowMatrix(nbNodes, nbNodes, tab);
             
             int i = 0;
             for(Node node : (Collection<Node>)comp.getNodes()) {
@@ -127,9 +143,18 @@ public class Circuit {
             compMatrix.put(comp, A);
             
             if(!patch2Ground) {
-                Preconditioner M = new DiagonalPreconditioner(nbNodes);
-                M.setMatrix(A);
-                compPrecond.put(comp, M);
+                if(dense) {
+                    DenseLU LU = DenseLU.factorize(new DenseMatrix(A));
+                    if(!LU.isSingular())
+                        compLU.put(comp, LU);
+                    else
+                        System.out.println("Singular matrix for component size " + nbNodes);
+                }
+                if(!dense || !compLU.containsKey(comp)){
+                    Preconditioner M = new DiagonalPreconditioner(nbNodes);
+                    M.setMatrix(A);
+                    compPrecond.put(comp, M);
+                }
             }
             
         }
@@ -226,25 +251,16 @@ public class Circuit {
         Z = new DenseVector(nbNodes);
         Z.set(ind1, courant);
         Z.set(ind2, -courant);
-        // Calcule a starting solution U
-        double [] v = new double[nbNodes];
-        Arrays.fill(v, 1);
-        U = new DenseVector(v);
-
-//        CompRowMatrix A = compMatrix.get(comp);
         
-        solve(compMatrix.get(comp), compPrecond.get(comp), Z, U);
-//        // Allocate storage for Conjugate Gradients
-//        IterativeSolver solver = new CG(U);
-//        
-//        solver.setPreconditioner(compPrecond.get(comp));
-//        try {
-//            // Start the solver, and check for problems
-//            solver.solve(A, Z, U);
-//        } catch (IterativeSolverNotConvergedException ex) {
-//            Logger.getLogger(Circuit.class.getName()).log(Level.SEVERE, null, ex);
-//            throw new RuntimeException(ex);
-//        }
+        if(dense && compLU.containsKey(comp)) {
+            U = new DenseVector(solveDense(compLU.get(comp), Z).getData());
+        } else {
+            // Calcule a starting solution U
+            double [] v = new double[nbNodes];
+            Arrays.fill(v, 1);
+            U = new DenseVector(v);
+            solve(compMatrix.get(comp), compPrecond.get(comp), Z, U);
+        }
         
         return U;
     }
@@ -282,25 +298,15 @@ public class Circuit {
         }
         Z.set(ind1, -sumI);
         
-        // Calcule a starting solution U
-        double [] v = new double[nbNodes];
-        Arrays.fill(v, 1);
-        U = new DenseVector(v);
-
-//        CompRowMatrix A = compMatrix.get(comp);
-        
-        solve(compMatrix.get(comp), compPrecond.get(comp), Z, U);
-//        // Allocate storage for Conjugate Gradients
-//        IterativeSolver solver = new CG(U);
-//        
-//        solver.setPreconditioner(compPrecond.get(comp));
-//        try {
-//            // Start the solver, and check for problems
-//            solver.solve(A, Z, U);
-//        } catch (IterativeSolverNotConvergedException ex) {
-//            Logger.getLogger(Circuit.class.getName()).log(Level.SEVERE, null, ex);
-//            throw new RuntimeException(ex);
-//        }
+        if(dense && compLU.containsKey(comp)) {
+            U = new DenseVector(solveDense(compLU.get(comp), Z).getData());
+        } else {
+            // Calcule a starting solution U
+            double [] v = new double[nbNodes];
+            Arrays.fill(v, 1);
+            U = new DenseVector(v);
+            solve(compMatrix.get(comp), compPrecond.get(comp), Z, U);
+        }
 
         return getCourant(comp, U);
     }        
@@ -340,17 +346,6 @@ public class Circuit {
         A.add(ind1, ind1, -1 / (capaR * Math.pow(capa, capaExp)));
         
         solve(A, calcPrecond(A), Z, U);
-//        // Allocate storage for Conjugate Gradients
-//        IterativeSolver solver = new CG(U);
-//        
-//        solver.setPreconditioner(calcPrecond(A));
-//        try {
-//            // Start the solver, and check for problems
-//            solver.solve(A, Z, U);
-//        } catch (IterativeSolverNotConvergedException ex) {
-//            Logger.getLogger(Circuit.class.getName()).log(Level.SEVERE, null, ex);
-//            throw new RuntimeException(ex);
-//        }
 
        return getCourant(comp, U);
         
@@ -369,6 +364,10 @@ public class Circuit {
             Logger.getLogger(Circuit.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
+    }
+    
+    private DenseMatrix solveDense(DenseLU LU, DenseVector Z) {
+        return LU.solve(new DenseMatrix(Z, true));
     }
     
     /**

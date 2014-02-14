@@ -66,7 +66,7 @@ import org.thema.graphab.util.SerieFrame;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "1.2-alpha6";
+    public static final String VERSION = "1.2-alpha7";
 
     public static Project project;
     
@@ -753,6 +753,7 @@ public class MainFrame extends javax.swing.JFrame {
                 
                 monitor.close();
             } catch(Throwable ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                 JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
             }
             }
@@ -794,6 +795,7 @@ public class MainFrame extends javax.swing.JFrame {
                 compLayer.setVisible(true);
                 monitor.close();
             } catch(Throwable ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                 JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
             }
             }

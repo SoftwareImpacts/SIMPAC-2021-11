@@ -1,3 +1,8 @@
+version 1.2-beta (14/02/2014)
+- exclude deltaPC metric for graph with intrapatch distance
+- use MainFrame ProgressBar for extrapolation
+- use common 1.2.x version
+- exclude netlib native lib
 version 1.2-alpha6 (10/12/2013)
 - keep CRS from landscape map in project -> shapefile and raster exports contain correct projection
 - CLI addPatch : execute on each graph and gridres can have multiple values

@@ -25,7 +25,7 @@ import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
-import org.thema.common.TreeMapList;
+import org.thema.common.collection.TreeMapList;
 import org.thema.common.distribute.ExecutorService;
 import org.thema.common.io.IOImage;
 import org.thema.common.parallel.ParallelFExecutor;
@@ -274,7 +274,7 @@ public class AddPatchCommand {
         File dir = getResultDir();
         dir.mkdir();
         FileWriter w = new FileWriter(new File(dir, "addpatch-" + name + ".txt"));
-        w.write("#patch\tDelta indice\n");
+        w.write("#patch\tmetric value\n");
         for(Integer nbP : metricValues.keySet())
             w.write(nbP + "\t" + metricValues.get(nbP) + "\n");
         w.close();
