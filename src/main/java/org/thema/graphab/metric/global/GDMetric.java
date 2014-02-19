@@ -5,7 +5,7 @@
 
 package org.thema.graphab.metric.global;
 
-import org.thema.graph.pathfinder.DijkstraPathFinder;
+import org.geotools.graph.structure.Node;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphGenerator.PathFinder;
 
@@ -18,9 +18,9 @@ public class GDMetric extends AbstractPathMetric {
     @Override
     public Double calcPartIndice(PathFinder finder, GraphGenerator g) {
         double max = 0;
-        for(DijkstraPathFinder.DijkstraNode node : finder.getComputedNodes()) 
-            if(node.cost > max)
-                max = node.cost;
+        for(Node node : finder.getComputedNodes()) 
+            if(finder.getCost(node) > max)
+                max = finder.getCost(node);
         
         return max;
     }

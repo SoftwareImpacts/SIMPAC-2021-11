@@ -27,7 +27,6 @@ public class Path extends DefaultFeature {
 
     private Feature patch1, patch2;
     private double cost;
-    //LineString path;
 
     public Path(Feature patch1, Feature patch2) {
         this(patch1, patch2, 0, 0);
@@ -86,22 +85,22 @@ public class Path extends DefaultFeature {
     public Feature getPatch2() {
         return patch2;
     }
-    
-    public double distToPatch(Feature patch) {
-        if(patch == getPatch1())
-            return distToPatch1();
-        else if(patch == getPatch2())
-            return distToPatch2();
-        else
-            throw new IllegalArgumentException("Unknow patch " + patch.getId() + " for path " + getId());
-    }
-    
-    public double distToPatch1() {
-        return Project.getProject().getCentroid(getPatch1()).distance(getGeometry().getCoordinates()[0]);
-    }
-    public double distToPatch2() {
+
+    public Coordinate getCoordinate(Feature patch) {
         Coordinate[] coords = getGeometry().getCoordinates();
-        return Project.getProject().getCentroid(getPatch2()).distance(coords[coords.length-1]);
+        if(getPatch1() == patch)
+            return coords[0];
+        else
+            return coords[coords.length-1];
+    }
+    
+    public static Feature getCommonPatch(Path p1, Path p2) {
+        if(p1.getPatch1() == p2.getPatch1() || p1.getPatch1() == p2.getPatch2())
+            return p1.getPatch1();
+        if(p1.getPatch2() == p2.getPatch1() || p1.getPatch2() == p2.getPatch2())
+            return p1.getPatch2();
+        
+        throw new RuntimeException("No common patch between path " + p1.getId() + " and " + p2.getId());
     }
 
     public static Path createEuclidPath(Feature patch1, Feature patch2) {

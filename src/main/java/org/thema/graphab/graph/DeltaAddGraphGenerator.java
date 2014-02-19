@@ -19,8 +19,8 @@ import org.thema.drawshape.feature.Feature;
  */
 public class DeltaAddGraphGenerator extends GraphGenerator {
 
-    GraphGenerator gen;
-    Graphable addedElem;
+    private GraphGenerator gen;
+    private Graphable addedElem;
 
     public DeltaAddGraphGenerator(GraphGenerator gen, Collection remIdNodes, Collection remIdEdges) {
         super(gen, "Delta");
@@ -53,8 +53,8 @@ public class DeltaAddGraphGenerator extends GraphGenerator {
 
         if(elem instanceof Edge) {
             Edge e = (Edge) elem;
-            Node nodeA = getNode(((Feature)e.getNodeA().getObject()).getId());
-            Node nodeB = getNode(((Feature)e.getNodeB().getObject()).getId());
+            Node nodeA = getNode((Feature)e.getNodeA().getObject());
+            Node nodeB = getNode((Feature)e.getNodeB().getObject());
             Edge edge = builder.buildEdge(nodeA, nodeB);
             edge.setObject(e.getObject());
             graph.getEdges().add(edge);
@@ -68,7 +68,7 @@ public class DeltaAddGraphGenerator extends GraphGenerator {
             graph.getNodes().add(node);
             for(Object o : n.getEdges()) {
                 Edge e = (Edge) o;
-                Node nodeB = getNode(((DefaultFeature)e.getOtherNode(n).getObject()).getId());
+                Node nodeB = getNode((Feature)e.getOtherNode(n).getObject());
                 if(nodeB == null) // dans le cas où nodeB a aussi été enlevé
                     continue;
                 Edge edge = builder.buildEdge(node, nodeB);
@@ -83,6 +83,8 @@ public class DeltaAddGraphGenerator extends GraphGenerator {
         components = null;
         compFeatures = null;
         
+        pathGraph = null;
+        node2PathNodes = null;
     }
 
     public void reset() {
@@ -104,19 +106,9 @@ public class DeltaAddGraphGenerator extends GraphGenerator {
         components = null;
         compFeatures = null;
         addedElem = null;
-    }
-
-    /**
-     * retourne le node de ce graph correspondant à l'identifiant id
-     * @param n
-     * @return
-     */
-    private Node getNode(Object id) {
-        for(Object n : getGraph().getNodes())
-            if(((Feature)((Graphable)n).getObject()).getId().equals(id))
-                return (Node) n;
-
-        return null;
+        
+        pathGraph = null;
+        node2PathNodes = null;
     }
 
 }

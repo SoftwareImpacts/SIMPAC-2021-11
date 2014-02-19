@@ -4,9 +4,7 @@
  */
 package org.thema.graphab.addpatch;
 
-import org.thema.graphab.graph.GraphGenerator;
 import com.vividsolutions.jts.geom.Point;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,6 +29,10 @@ public class AddPatchGraphGenerator extends GraphGenerator {
         super(gen, "AddPatch");
         this.gen = gen;
         this.addedElem = null;
+                
+        if(gen.isIntraPatchDist())
+            throw new IllegalArgumentException("Intra patch distance not supported");
+        
         graph = gen.dupGraphWithout(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }
     

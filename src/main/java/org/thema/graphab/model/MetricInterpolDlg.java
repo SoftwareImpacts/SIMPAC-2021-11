@@ -298,7 +298,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                     l.setName(rasterNameTextField.getText());
                     l.setRemovable(true);
                     Project.getProject().getAnalysisLayer().addLayerFirst(l);
-                    l.saveRaster(new File(Project.getProject().getProjectDir(), l.getName() + ".tif"));
+                    l.saveRaster(new File(Project.getProject().getDirectory(), l.getName() + ".tif"));
                     progressBar.close();
                 } catch (Throwable ex) {
                     Logger.getLogger(MetricInterpolDlg.class.getName()).log(Level.SEVERE, null, ex);

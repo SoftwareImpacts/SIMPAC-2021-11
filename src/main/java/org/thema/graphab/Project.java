@@ -35,6 +35,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.ProgressMonitor;
+import org.apache.commons.collections.keyvalue.MultiKey;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageBuilder;
 import org.geotools.coverage.grid.GridEnvelope2D;
@@ -47,6 +48,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.Util;
+import org.thema.common.collection.HashMapList;
 import org.thema.common.io.IOImage;
 import org.thema.common.parallel.*;
 import org.thema.drawshape.feature.DefaultFeature;
@@ -78,7 +80,7 @@ import org.thema.graphab.util.RSTGridReader;
  * @author gib
  */
 public final class Project {
-    
+
     public enum Method {GLOBAL, COMP, LOCAL, DELTA}
 
     public static final String CAPA_ATTR = "Capacity";
@@ -131,8 +133,6 @@ public final class Project {
     private transient Ref<WritableRaster> srcRaster;
     private transient Ref<WritableRaster> patchRaster;
     private transient HashMap<File, SoftRef<Raster>> extCostRasters;
-    
-    private transient List<Coordinate> centroids;
 
     public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, int code,
             double noData, boolean con8, double minArea, boolean simplify) throws Exception {
@@ -526,6 +526,10 @@ public final class Project {
         return null;
     }
 
+    public Links getPlanarLinks() {
+        return planarLinks;
+    }
+
     public Linkset getLinkset(String linkName) {
         return costLinks.get(linkName);
     }
@@ -574,35 +578,28 @@ public final class Project {
     }
 
     public void addLinkset(Linkset cost, boolean save) throws Throwable {
-        List<Path> paths;
-        if(cost.getType_dist() == Linkset.EUCLID)
-            paths = calcEuclidLinkset(cost.getTopology() == Linkset.COMPLETE, cost.getDistMax());
-        else if(cost.getType_dist() == Linkset.COST) {
-            Raster rSrc = getImageSource();
-            paths = calcCostLinkset(rSrc, cost.getCosts(), cost.getTopology() == Linkset.COMPLETE, cost.getDistMax(),
-                    cost.isRemoveCrossPatch(), cost.isRealPaths());
-        } else {
-            Raster costRaster = loadExtCostRaster(cost.getExtCostFile());
-            paths = calcCostLinkset(costRaster, null,cost.getTopology() == Linkset.COMPLETE, cost.getDistMax(),
-                    cost.isRemoveCrossPatch(), cost.isRealPaths());
-        }
+        ProgressBar progressBar = Config.getProgressBar();
+        
+        cost.compute(this, progressBar);
 
-        if(paths != null) {
-            cost.setPaths(paths);
-            costLinks.put(cost.getName(), cost);
-            if(save) {
-                if(cost.isRealPaths())
-                    DefaultFeature.saveFeatures(paths, new File(dir, cost.getName() + "-links.shp"), getCRS());
-                save(); 
-                saveLinks(cost.getName());
+        costLinks.put(cost.getName(), cost);
+        if(save) {
+            if(cost.isRealPaths()) {
+                DefaultFeature.saveFeatures(cost.getPaths(), new File(dir, cost.getName() + "-links.shp"), getCRS());
+                cost.saveIntraLinks(getDirectory());
             }
-            if(linkLayers != null) {
-                Layer l = new LinkLayer(cost.getName());
-                if(cost.getTopology() == Linkset.COMPLETE && cost.getDistMax() == 0)
-                    l.setVisible(false);
-                linkLayers.addLayerFirst(l);
-            }
+            save(); 
+            cost.saveLinks(getDirectory());
         }
+        
+        if(linkLayers != null) {
+            Layer l = new LinkLayer(cost.getName());
+            if(cost.getTopology() == Linkset.COMPLETE && cost.getDistMax() == 0)
+                l.setVisible(false);
+            linkLayers.addLayerFirst(l);
+        }
+        
+        progressBar.close();
     }
 
     public void addPointset(Pointset exoData, List<String> attrNames, List<DefaultFeature> features, boolean save) throws Exception, SchemaException {
@@ -808,24 +805,8 @@ public final class Project {
         return simpPatches;
     }
 
-//    private void addDebugLayer(Layer l) {
-//        if(debugLayers != null) {
-//            l.setVisible(false);
-//            debugLayers.addLayerLast(l);
-//        }
-//    }
-
     public final DefaultFeature getPatch(int id) {
         return patches.get(id-1);
-    }
-    
-    public synchronized Coordinate getCentroid(Feature patch) {
-        if(centroids == null) {
-            centroids = new ArrayList<Coordinate>();
-            for(Feature p : getPatches())
-                centroids.add(p.getGeometry().getInteriorPoint().getCoordinate());
-        }
-        return centroids.get((Integer)patch.getId()-1);
     }
 
     public final Feature getVoronoi(int id) {
@@ -848,150 +829,6 @@ public final class Project {
                 if(rasterPatchs.getSample(j, i, 0) == oldCode)
                     ((WritableRaster)rasterPatchs).setSample(j, i, 0, newCode);
 
-    }
-
-    private List<Path> calcCostLinkset(final Raster costRaster, final double [] cost,
-            final boolean allLinks, final double dMax, final boolean removeCrossPath, final boolean realPath) throws Throwable {
-        ProgressBar progressBar = Config.getProgressBar("Create linkset...");
-        
-        // calcule le voronoi en distance cout
-//        Links tmpLinks = neighborhoodCost(rPatch, costRaster, linkset);
-
-        final Vector<Path> links = new Vector<Path>(patches.size() * 4);
-        Path.newSetOfPaths();
-        long start = System.currentTimeMillis();
-
-        ParallelFTask task = new AbstractParallelFTask(progressBar) {
-            @Override
-            protected Object execute(int start, int end) {
-                try {
-                RasterPathFinder pathfinder = new RasterPathFinder(Project.this, costRaster, cost);
-                for(Feature orig : patches.subList(start, end)) {
-                    if(isCanceled())
-                        throw new CancellationException();
-
-                        HashMap<Feature, Path> paths;
-                        if(allLinks) {
-                            //Envelope env = dMax == 0 ? null : orig.getGeometry().buffer(dMax).getEnvelopeInternal();
-                            paths = pathfinder.calcPaths(orig, dMax, realPath, false);
-                        } else {
-                            List<Feature> dests = new ArrayList<Feature>();
-                            for(Integer dId : planarLinks.getNeighbors(orig))
-                                if(((Integer)orig.getId()) < dId)
-                                    dests.add(getPatch(dId));
-
-                            if(dests.isEmpty())
-                                continue;
-
-                            paths = pathfinder.calcPaths(orig, dests);
-                        }
-
-                        for(Feature d : paths.keySet()) {
-                            Path p = paths.get(d);
-                            boolean add = true;
-                            if(removeCrossPath && realPath) {
-                                List lst = getPatchIndex().query(p.getGeometry().getEnvelopeInternal());
-                                for(Object o : lst) {
-                                    Feature f = (Feature) o;
-                                    if(f != orig && f != d && f.getGeometry().intersects(p.getGeometry())) {
-                                        add = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            if(add)
-                                links.add(p);
-                        }
-                   
-                    incProgress(1);
-                }
-
-                } catch(Exception e) {
-                        Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
-                }
-                return null;
-            }
-
-            public int getSplitRange() {
-                return patches.size();
-            }
-            public void finish(Collection results) {
-            }
-            public Object getResult() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        };
-
-        new ParallelFExecutor(task).executeAndWait();
-
-        if(task.isCanceled())
-            return null;
-
-        System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
-        progressBar.close();
-        return links;
-    }
-
-    private List<Path> calcEuclidLinkset(final boolean allLinks, final double dMax) throws Throwable {
-        Path.newSetOfPaths();
-
-        ProgressBar progressBar = Config.getProgressBar("Euclidean distances");
-        
-        final Vector<Path> links = new Vector<Path>(patches.size() * 4);
-        final STRtree index = getPatchIndex();
-        
-        long start = System.currentTimeMillis();
-        ParallelFTask task = new AbstractParallelFTask(progressBar) {
-            @Override
-            protected Object execute(int start, int end) {
-                
-                for(Feature orig : patches.subList(start, end)) {
-                    if(isCanceled())
-                        return null;
-                    if(allLinks) {
-                        List<DefaultFeature> nearPatches = patches;
-                        if(dMax > 0) {
-                            Envelope env = orig.getGeometry().getEnvelopeInternal();
-                            env.expandBy(dMax);
-                            nearPatches = (List<DefaultFeature>)index.query(env);
-                        }
-                        
-                        for(Feature dest : nearPatches)
-                            if(((Integer)orig.getId()) < (Integer)dest.getId()){
-                                Path p = Path.createEuclidPath(orig, dest);
-                                if(dMax == 0 || p.getDist() <= dMax)
-                                    links.add(p);
-                            }
-                    } else
-                        for(Integer dId : planarLinks.getNeighbors(orig)) {
-                            Feature d = getPatch(dId);
-                            if(((Integer)orig.getId()) < dId)
-                                links.add(Path.createEuclidPath(orig, d));
-                        }
-
-                    incProgress(1);
-                }
-                return null;
-            }
-
-            public int getSplitRange() {
-                return patches.size();
-            }
-            public void finish(Collection results) {
-            }
-            public Object getResult() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        };
-
-        new ParallelFExecutor(task).executeAndWait();
-
-        if(task.isCanceled())
-            return null;
-
-        progressBar.close();
-        System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
-        return links;
     }
 
     private List<? extends Feature> vectorizeVoronoi(Raster voronoi) {
@@ -1210,7 +1047,7 @@ public final class Project {
         return costLinks.get(name).getPaths();
     }
 
-    public Collection<DefaultFeature> getPatches() {
+    public List<DefaultFeature> getPatches() {
         return patches;
     }
 
@@ -1301,7 +1138,7 @@ public final class Project {
             DefaultFeature.removeAttribute(attr, g.getLinkset().getPaths());
 
         try {
-            saveLinks(g.getLinkset().getName());
+            g.getLinkset().saveLinks(getDirectory());
             savePatch();
             save();
         } catch (Exception ex) {
@@ -1463,7 +1300,6 @@ public final class Project {
     }
 
     public void savePatch() throws IOException, SchemaException {
-        //DefaultFeature.saveFeatures(patches, new File(dir.getAbsolutePath() + File.separator + "patches.shp"));
         CSVWriter w = new CSVWriter(new FileWriter(dir.getAbsolutePath() + File.separator + "patches.csv"));
         w.writeNext(patches.get(0).getAttributeNames().toArray(new String[0]));
         String [] tab = new String[patches.get(0).getAttributeNames().size()];
@@ -1474,16 +1310,6 @@ public final class Project {
         }
         w.close();
 
-    }
-
-    public void saveLinks(String name) throws IOException, SchemaException {
-        CSVWriter w = new CSVWriter(new FileWriter(dir.getAbsolutePath() + File.separator + name + "-links.csv"));
-        w.writeNext(getPaths(name).get(0).getAttributeNames().toArray(new String[0]));
-        
-        for(Path p : getPaths(name))
-            w.writeNext(Path.serialPath(p));
-        
-        w.close();
     }
 
     public void save() throws IOException {
@@ -1501,7 +1327,7 @@ public final class Project {
         return new File(dir, name + ".xml");
     }
 
-    public File getProjectDir() {
+    public File getDirectory() {
         return dir;
     }
 
@@ -1668,11 +1494,7 @@ public final class Project {
         
         return raster;
     }
-    
-    public File getDirectory() {
-        return dir;
-    }
-    
+
     public static double getArea() {
         return getProject().zone.getWidth()*getProject().zone.getHeight();
     }

@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.*;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.graph.structure.Edge;
+import org.geotools.graph.structure.Node;
 import org.junit.*;
 import static org.junit.Assert.*;
 import org.thema.common.Config;
@@ -54,14 +55,14 @@ public class ProjectTest {
         xstream.alias("Graph", GraphGenerator.class);
         refPrj = (Project) xstream.fromXML(new File("target/test-classes/org/thema/graphab/TestProject.xml"));
         
-        Config.setParallelProc(7);
+        Config.setParallelProc(2);
         
         for(Linkset costDist : refPrj.getLinksets())
-            project.addLinkset(costDist, false);
+            project.addLinkset(costDist, true);
         
         for(GraphGenerator gen : refPrj.getGraphs()) {
             gen.setSaved(false);
-            project.addGraph(gen, false);
+            project.addGraph(gen, true);
         }
     }
 
@@ -100,34 +101,37 @@ public class ProjectTest {
             put("plan_euclid", 399);
             put("plan_cout1", 381);
             put("plan_cout1_len", 381);
-            put("plan_cout10", 305);
+            put("plan_cout10", 304);
             put("plan_cout10_keep_links", 399);
             put("comp_euclid", 11476);
-            put("comp_cout10", 611);
+            put("comp_cout10", 605);
+            put("comp_cout10_all", 11476);
             put("comp_cout10_500", 361);
             put("comp_cout10_500_nopath", 1704); // and keep links
 
         }};
         HashMap<String, Double> sumCosts = new HashMap<String, Double>() {{
-            put("comp_cout10", 325113.491543293);
-            put("comp_cout10_500", 73011.57003450394);
-            put("comp_cout10_500_nopath", 493886.84889149666);
+            put("comp_cout10", 317252.9343452);
+            put("comp_cout10_all", 14145418.8672805);
+            put("comp_cout10_500", 73311.1909156);
+            put("comp_cout10_500_nopath", 493887.4475448);
             put("comp_euclid", 8.273298688911343E7);
-            put("plan_cout1", 27588.819926977158);
-            put("plan_cout10", 58964.78692293167);
-            put("plan_cout10_keep_links", 78962.59125447273);
-            put("plan_cout1_len", 27588.819926977158);
+            put("plan_cout1", 27588.8605768);
+            put("plan_cout10", 58782.0487);
+            put("plan_cout10_keep_links", 78962.696132);
+            put("plan_cout1_len", 27588.8605768);
             put("plan_euclid", 377561.1236639023);
         }};
         HashMap<String, Double> sumDists = new HashMap<String, Double>() {{
-            put("comp_cout10", 1900224.763380032);
-            put("comp_cout10_500", 430544.5940399723);
-            put("comp_cout10_500_nopath", 3755274.651401147);
+            put("comp_cout10", 1858377.81871097);
+            put("comp_cout10_all", 99158916.904384);
+            put("comp_cout10_500", 432229.9450662);
+            put("comp_cout10_500_nopath", 3768785.74029268);
             put("comp_euclid", 8.27329868717217E7);
-            put("plan_cout1", 386340.45020947425);
-            put("plan_cout10", 330809.0860193806);
-            put("plan_cout10_keep_links", 459026.6819401853);
-            put("plan_cout1_len", 386340.45020947425);
+            put("plan_cout1", 386225.769698995);
+            put("plan_cout10", 329736.579306309);
+            put("plan_cout10_keep_links", 459194.940464);
+            put("plan_cout1_len", 386225.769698995);
             put("plan_euclid", 377561.1225223806);
         }};
         
@@ -154,21 +158,21 @@ public class ProjectTest {
             put("graph_plan_euclid", 399);
             put("graph_plan_cout1_len", 381);
             put("graph_plan_cout10_mst", 151);
-            put("graph_plan_cout10_300", 232);
+            put("graph_plan_cout10_300", 231);
             put("graph_comp_euclid_1000", 378);
             put("graph_comp_euclid_1000_nointra", 378);
-            put("graph_comp_cout10", 611);
+            put("graph_comp_cout10", 605);
             put("graph_comp_cout10_500_nopath", 1704); // and keep links
 
         }};
         HashMap<String, Double> sumCosts = new HashMap<String, Double>() {{
-            put("graph_comp_cout10", 325113.491543293);
-            put("graph_comp_cout10_500_nopath", 493886.84889149666);
+            put("graph_comp_cout10", 317252.9343452);
+            put("graph_comp_cout10_500_nopath", 493887.4475448);
             put("graph_comp_euclid_1000", 166109.80953905112);
             put("graph_comp_euclid_1000_nointra", 166109.80953905112);
-            put("graph_plan_cout10_mst", 12503.922990322113);
-            put("graph_plan_cout10_300", 24210.858273029327);
-            put("graph_plan_cout1_len", 386340.4502094745);
+            put("graph_plan_cout10_mst", 12503.94081);
+            put("graph_plan_cout10_300", 24028.0754832);
+            put("graph_plan_cout1_len", 386225.7696989946);
             put("graph_plan_euclid", 377561.1225223807);
         }};
         HashMap<String, Integer> nbComps = new HashMap<String, Integer>() {{
@@ -195,50 +199,66 @@ public class ProjectTest {
     }
     
     @Test
+    public void testIntraPatchDist() {
+        GraphGenerator graph = project.getGraph("graph_comp_cout10");
+        Linkset linkset = project.getLinkset("comp_cout10_all");
+        for(Node node : graph.getNodes()) {
+            GraphGenerator.PathFinder pathFinder = graph.getPathFinder(node);
+            for(Path p : linkset.getPaths()) {
+                if(p.getPatch1().equals(node.getObject())) {
+                    assertTrue("Compare direct link with path with intrapatch between " + node.getObject() + " and " + p.getPatch2(), p.getCost() <= pathFinder.getCost(graph.getNode(p.getPatch2()))*(1+1e-11));
+                } else if(p.getPatch2().equals(node.getObject())) {
+                    assertTrue("Compare direct link with path with intrapatch between " + node.getObject() + " and " + p.getPatch2(), p.getCost() <= pathFinder.getCost(graph.getNode(p.getPatch1()))*(1+1e-11));
+                }
+            }
+        }
+    }
+    
+    @Test
     public void testGlobalIndices() throws Exception {
         HashMap<String, Double> resIndices = new HashMap<String, Double>() {{
-            put("PC_d1000_p0.05_beta1-graph_comp_cout10", 2.650910611113619E-4);
-            put("PC_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 3.288065298587884E-4);
-            put("PC_d1000_p0.05_beta1-graph_comp_euclid_1000_nointra", 9.581715576495827E-5);
-            put("PC_d1000_p0.05_beta1-graph_plan_cout10_300", 2.3798796246929596E-4);            
-            put("PC_d1000_p0.05_beta1-graph_plan_cout10_mst", 2.0496746501147566E-4);
-            put("PC_d1000_p0.05_beta1-graph_plan_cout1_len", 6.711833864673239E-5);
+            put("PC_d1000_p0.05_beta1-graph_comp_cout10", 2.597275864295179E-4);
+            put("PC_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 3.2880609909219453E-4);
+            put("PC_d1000_p0.05_beta1-graph_comp_euclid_1000_nointra", 9.581715576493942E-5);
+            put("PC_d1000_p0.05_beta1-graph_plan_cout10_300", 2.3271157678692673E-4);            
+            put("PC_d1000_p0.05_beta1-graph_plan_cout10_mst", 1.9835638747391063E-4);
+            put("PC_d1000_p0.05_beta1-graph_plan_cout1_len", 6.69054229355518E-5);
 //            put("PC_d1000_p0.05_beta1-graph_plan_euclid", 7.045308587598926E-5);
-            put("S#F_d1000_p0.05_beta1-graph_comp_cout10", 1.4898414270878693E8);
-            put("S#F_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 1.9303219148459563E8);
+            put("S#F_d1000_p0.05_beta1-graph_comp_cout10", 1.452507396441085E8);
+            put("S#F_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 1.9303189629387736E8);
             put("S#F_d1000_p0.05_beta1-graph_comp_euclid_1000_nointra", 3.831238163096813E7);
-            put("S#F_d1000_p0.05_beta1-graph_plan_cout10_300", 1.278656380450999E8);
-            put("S#F_d1000_p0.05_beta1-graph_plan_cout10_mst", 1.0653028960154916E8);
-            put("S#F_d1000_p0.05_beta1-graph_plan_cout1_len", 1.8292474994626906E7);
+            put("S#F_d1000_p0.05_beta1-graph_plan_cout10_300", 1.2430411376651993E8);
+            put("S#F_d1000_p0.05_beta1-graph_plan_cout10_mst", 1.0202141335734332E8);
+            put("S#F_d1000_p0.05_beta1-graph_plan_cout1_len", 1.815613336195109E7);
 //            put("S#F_d1000_p0.05_beta1-graph_plan_euclid", 2.0163399216204323E7);
-            put("E#BC_d1000_p0.05_beta1-graph_comp_cout10", 0.8202177311458566);
-            put("E#BC_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 0.7877841686651839);
-            put("E#BC_d1000_p0.05_beta1-graph_comp_euclid_1000_nointra", 0.7220420460787872);
-            put("E#BC_d1000_p0.05_beta1-graph_plan_cout10_300", 0.8352240466472872);
-            put("E#BC_d1000_p0.05_beta1-graph_plan_cout10_mst", 0.8194939322548981);
-            put("E#BC_d1000_p0.05_beta1-graph_plan_cout1_len", 0.6544387579507804);
+            put("E#BC_d1000_p0.05_beta1-graph_comp_cout10", 0.8198695594806273);
+            put("E#BC_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 0.7872122952172801);
+            put("E#BC_d1000_p0.05_beta1-graph_comp_euclid_1000_nointra", 0.7223037316571634);
+            put("E#BC_d1000_p0.05_beta1-graph_plan_cout10_300", 0.8398772543774017);
+            put("E#BC_d1000_p0.05_beta1-graph_plan_cout10_mst", 0.8204448608776209);
+            put("E#BC_d1000_p0.05_beta1-graph_plan_cout1_len", 0.666567473284984);
 //            put("E#BC_d1000_p0.05_beta1-graph_plan_euclid", 0.6424046501364302);
             put("CCP-graph_comp_cout10", 1.0);
             put("CCP-graph_comp_euclid_1000", 0.3245421246977966);
             put("ECS-graph_comp_cout10", 7931963.045229822);
             put("ECS-graph_comp_euclid_1000", 2574256.1397232935);
-            put("IIC-graph_comp_cout10", 4.303969510306552E-4);
-            put("IIC-graph_comp_cout10_500_nopath", 4.885949077593412E-4);
-            put("IIC-graph_comp_euclid_1000", 1.6148035259807588E-4);
-            put("IIC-graph_plan_cout10_mst", 1.6877947203994617E-4);
-            put("IIC-graph_plan_cout1_len", 3.5384810593776873E-4);
-            put("IIC-graph_plan_euclid", 3.57015587313272E-4);
+            put("IIC-graph_comp_cout10", 4.2943441897345247E-4);
+            put("IIC-graph_comp_cout10_500_nopath", 4.885949077592436E-4);
+            put("IIC-graph_comp_euclid_1000", 1.6148035259804173E-4);
+            put("IIC-graph_plan_cout10_mst", 1.687794720399462E-4);
+            put("IIC-graph_plan_cout1_len", 3.5384810593771507E-4);
+            put("IIC-graph_plan_euclid", 3.5701558731321767E-4);
             put("MSC-graph_comp_cout10", 7931963.045229822);
             put("MSC-graph_comp_euclid_1000", 417471.73922262224);
             put("SLC-graph_comp_cout10", 7931963.045229822);
             put("SLC-graph_comp_euclid_1000", 3735409.177527936);
-            put("GD-graph_comp_cout10", 3272.375139704387);
-            put("GD-graph_comp_cout10_500_nopath", 4173.568296432495);
+            put("GD-graph_comp_cout10", 3290.6959320000024);
+            put("GD-graph_comp_cout10_500_nopath", 4173.5731368000015);
             put("GD-graph_comp_euclid_1000_nointra", 8817.915643013066);
-            put("GD-graph_plan_cout10_mst", 6744.049794439901);
-            put("GD-graph_plan_cout1_len", 22173.360015519687);
+            put("GD-graph_plan_cout10_mst", 6845.8151244);
+            put("GD-graph_plan_cout1_len", 22123.96312195184);
 //            put("GD-graph_plan_euclid", 21114.413062993004);
-            put("H-graph_comp_cout10", 3668.2373015873045);
+            put("H-graph_comp_cout10", 3652.640873015876);
             put("H-graph_comp_cout10_500_nopath", 4567.878860028861);
             put("H-graph_comp_euclid_1000_nointra", 993.4060078810077);
             put("H-graph_plan_cout10_mst", 1047.894318914176);
@@ -310,7 +330,7 @@ public class ProjectTest {
             }
             testIndices.add(indName);
         }
-            
+
         assertEquals("Check all local indices", Project.LOCAL_METRICS.size(), testIndices.size());
             
     }
@@ -322,23 +342,27 @@ public class ProjectTest {
         CSVTabReader r = new CSVTabReader(new File("target/test-classes/org/thema/graphab/patches.csv"));
         r.read("Id");
         int nbGraph = 0;
-        GraphMetricLauncher launcher = new GraphMetricLauncher(new DeltaPCMetric(), false);
+        DeltaPCMetric deltaPC = new DeltaPCMetric();
+        GraphMetricLauncher launcher = new GraphMetricLauncher(deltaPC, false);
+        String startName = "d_" + deltaPC.getDetailName() + "|";
         for(GraphGenerator gen : refPrj.getGraphs()) {
             if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist())
                 continue;
-            if(!r.getVarNames().contains("d_PCIntra_" + gen.getName())) 
-                continue;
+            
+            assertTrue("No deltaPC for graph " + gen.getName(), r.getVarNames().contains(startName + deltaPC.getResultNames()[0] + "_" + gen.getName())) ;
+
             System.out.println("Test deltaPC on " + gen.getName());
             DeltaMetricTask task = new DeltaMetricTask(new TaskMonitor.EmptyMonitor(), gen, launcher, 1);
             ExecutorService.execute(task);
             Map<Object, Double[]> result = task.getResult();
+            assertTrue("No results for deltaPC on graph " + gen.getName(), !result.isEmpty());
             for(Object id : result.keySet()) {
-                double ref = (Double)r.getValue(id, "d_PCIntra_" + gen.getName());
-                assertEquals("d_PCIntra_" + gen.getName() + " id:" + id, ref, result.get(id)[0], 1e-13);
-                ref = (Double)r.getValue(id, "d_PCFlux_" + gen.getName());
-                assertEquals("d_PCFlux_" + gen.getName() + " id:" + id, ref, result.get(id)[1], 1e-13);
-                ref = (Double)r.getValue(id, "d_PCCon_" + gen.getName());
-                assertEquals("d_PCCon_" + gen.getName() + " id:" + id, ref, result.get(id)[2], 1e-13);
+                double ref = (Double)r.getValue(id, startName + deltaPC.getResultNames()[0] + "_" + gen.getName());
+                assertEquals(startName + deltaPC.getResultNames()[0] + "_" + gen.getName() + " id:" + id, ref, result.get(id)[0], 1e-13);
+                ref = (Double)r.getValue(id, startName + deltaPC.getResultNames()[1] + "_" + gen.getName());
+                assertEquals(startName + deltaPC.getResultNames()[1] + "_" + gen.getName() + " id:" + id, ref, result.get(id)[1], 1e-13);
+                ref = (Double)r.getValue(id, startName + deltaPC.getResultNames()[2] + "_" + gen.getName());
+                assertEquals(startName + deltaPC.getResultNames()[2] + "_" + gen.getName() + " id:" + id, ref, result.get(id)[2], 1e-13);
             }
             nbGraph++;
         } 

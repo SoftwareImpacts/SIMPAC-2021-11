@@ -1,7 +1,12 @@
+version 1.2-rc1 (19/02/2014)
+WARNING : first path metric calculation from older project can be slow, due to real intra patch distance calculation
+- intra patch distance is now accurate
+- least cost paths are more accurate (float -> double precision)
+- re include deltaPC metric for graph with intrapatch distance
 version 1.2-beta (14/02/2014)
 - exclude deltaPC metric for graph with intrapatch distance
 - use MainFrame ProgressBar for extrapolation
-- use common 1.2.x version
+- use common 1.2.x version -> move to openmpi 1.7
 - exclude netlib native lib
 version 1.2-alpha6 (10/12/2013)
 - keep CRS from landscape map in project -> shapefile and raster exports contain correct projection

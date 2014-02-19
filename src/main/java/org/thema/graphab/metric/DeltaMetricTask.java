@@ -60,8 +60,7 @@ public class DeltaMetricTask extends AbstractDistributeTask<Map<Object, Double[]
 
         monitor.popupNow();
         monitor.setNote("Etat initial...");
-        DeltaGraphGenerator deltaGen = new DeltaGraphGenerator(gen);
-        init = launcher.calcIndice(deltaGen, null);
+        init = launcher.calcIndice(gen, null);
         monitor.setNote("Delta...");
     }
 
@@ -99,7 +98,7 @@ public class DeltaMetricTask extends AbstractDistributeTask<Map<Object, Double[]
                 } else
                     ind = (init[i] - res[i]) / init[i];
 
-                if(Math.abs(ind) < 1e-15)
+                if(Math.abs(ind) < 1e-14)
                     ind = 0;     
                 delta[i] = ind;
             }

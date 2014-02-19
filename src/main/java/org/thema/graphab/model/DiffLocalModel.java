@@ -113,7 +113,7 @@ public class DiffLocalModel {
             }
         }
         
-        CSVWriter writer = new CSVWriter(new FileWriter(new File(project.getProjectDir(), "sumproba.csv")));
+        CSVWriter writer = new CSVWriter(new FileWriter(new File(project.getDirectory(), "sumproba.csv")));
         
         HashMap<DefaultFeature, Double> sumProbas = new HashMap<DefaultFeature, Double>();
         

@@ -6,6 +6,7 @@
 package org.thema.graphab.pointset;
 
 
+import com.vividsolutions.jts.geom.Coordinate;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -276,13 +277,16 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
 //                        }
 //                    } else 
                     if(costRadioButton.isSelected()) {
+                        final List<Coordinate> dests = new ArrayList<Coordinate>();
+                        for(Feature f : exos)
+                            dests.add(f.getGeometry().getCoordinate());
                         final Linkset costDist = (Linkset) costComboBox.getSelectedItem();
                         IterParallelTask task = new IterParallelTask(exos.size(), mon) {
                             @Override
                             protected void executeOne(Integer ind) {
                                 try {
                                     SpacePathFinder pathFinder = project.getPathFinder(costDist);
-                                    List<Double[]> dist = pathFinder.calcPaths(exos.get(ind).getGeometry().getCoordinate(), exos);
+                                    List<double[]> dist = pathFinder.calcPaths(exos.get(ind).getGeometry().getCoordinate(), dests);
                                     for(int j = 0; j < exos.size(); j++) {
                                         distances[ind][j][0] = dist.get(j)[0];
                                         distances[ind][j][1] = dist.get(j)[1];
@@ -338,7 +342,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                         }
                     }
                     mon.setNote("Saving...");
-                    FileWriter fw = new FileWriter(new File(Project.getProject().getProjectDir(), fileTextField.getText()));
+                    FileWriter fw = new FileWriter(new File(Project.getProject().getDirectory(), fileTextField.getText()));
                     fw.write("Id1\tId2\tDistance\tLength\n");
                     for(int i = 0; i < exos.size(); i++) 
                         for(int j = 0; j < exos.size(); j++)

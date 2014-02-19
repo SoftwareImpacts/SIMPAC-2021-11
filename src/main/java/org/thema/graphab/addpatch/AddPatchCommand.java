@@ -158,7 +158,7 @@ public class AddPatchCommand {
                 DefaultFeature.saveFeatures(debug, new File(dir, "detail_" + step + ".shp"));
             }
 
-            Logger.getLogger(AddPatchResultDialog.class.getName()).log(Level.INFO, 
+            Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, 
                     "Step " + step + " : 1 added patches " + bestPoint.getCoordinate() + " from " + bestPoints.size() + " best points  for " + indice.getShortName() + " = " + pointIndices.lastKey()); 
         }
 
@@ -202,7 +202,7 @@ public class AddPatchCommand {
             double currentInd = new GraphMetricLauncher(indice, true).calcIndice(gen, new TaskMonitor.EmptyMonitor())[0];
             indiceValues.put(0, currentInd);
             
-            Logger.getLogger(AddPatchResultDialog.class.getName()).log(Level.INFO, "Initial " + indice.getShortName() + " : " + currentInd); 
+            Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, "Initial " + indice.getShortName() + " : " + currentInd); 
             List<DefaultFeature> addedPatches = new ArrayList<DefaultFeature>();
             HashMap<Point, Double> lastAddedPoints = new HashMap<Point, Double>();
             for(int i = 0; addedPatches.size() < nbPatch; i++) {
@@ -258,7 +258,7 @@ public class AddPatchCommand {
                     DefaultFeature.saveFeatures(debug, new File(dir, "detail_" + step + ".shp"));
                 }
 
-                Logger.getLogger(AddPatchResultDialog.class.getName()).log(Level.INFO, 
+                Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, 
                         "Step " + step + " : " + bests.size() + " added patches" + " from " + bestPoints.size() + " best points sets  for " + indice.getShortName() + " = " + pointIndices.lastKey()); 
             }
             
@@ -289,10 +289,10 @@ public class AddPatchCommand {
     public File getResultDir() {
         String name = gen.getName() + "_" + indice.getDetailName();
         if(isGridVersion())
-            return new File(Project.getProject().getProjectDir(), "addpatch_n" + nbPatch + "_" + name + 
+            return new File(Project.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
                     "_res" + res + "_multi" + nbMultiPatch + "_" + windowSize);
         else
-            return new File(Project.getProject().getProjectDir(), "addpatch_n" + nbPatch + "_" + name + 
+            return new File(Project.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
                     "_shp" + pointFile.getName());
     }
     

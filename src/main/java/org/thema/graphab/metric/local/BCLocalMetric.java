@@ -12,7 +12,6 @@ import java.util.Map;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.thema.drawshape.feature.Feature;
-import org.thema.graph.pathfinder.DijkstraPathFinder;
 import org.thema.graph.pathfinder.Path;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
@@ -42,16 +41,16 @@ public class BCLocalMetric extends AbstractBCLocalMetric<PathFinder> {
     public HashMap<Object, Double> calcPartIndice(PathFinder finder, GraphGenerator g) {
         HashMap<Object, Double> result = new HashMap<Object, Double>();
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
-        for(DijkstraPathFinder.DijkstraNode node : finder.getComputedNodes()) 
-            if(((Integer)Project.getPatch(finder.getNodeOrigin()).getId()) < (Integer)Project.getPatch(node.node).getId()) {
-                Path path = finder.getPath(node.node);
+        for(Node node : finder.getComputedNodes()) 
+            if(((Integer)Project.getPatch(finder.getNodeOrigin()).getId()) < (Integer)Project.getPatch(node).getId()) {
+                Path path = finder.getPath(node);
                 if(path == null)
                     continue;
-                double v = Math.pow(Project.getPatchCapacity(node.node) * srcCapa, alphaParam.getBeta());
+                double v = Math.pow(Project.getPatchCapacity(node) * srcCapa, alphaParam.getBeta());
                 if(shortDist)
-                    v *= Math.exp(-alphaParam.getAlpha() * node.cost);
+                    v *= Math.exp(-alphaParam.getAlpha() * finder.getCost(node));
                 else
-                    v *= 1 - Math.exp(-alphaParam.getAlpha() * node.cost);
+                    v *= 1 - Math.exp(-alphaParam.getAlpha() * finder.getCost(node));
 
                 List<Node> nodes = path.getNodes();
                 for(int i = 1; i < nodes.size()-1; i++) {

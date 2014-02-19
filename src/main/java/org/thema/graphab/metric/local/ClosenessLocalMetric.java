@@ -29,9 +29,9 @@ public class ClosenessLocalMetric extends LocalMetric {
         PathFinder pathFinder = gen.getPathFinder(node);
         double sum = 0;
         int nb = 0;
-        for(DijkstraPathFinder.DijkstraNode n : pathFinder.getComputedNodes()) 
-            if(n.cost != 0) {
-                sum += n.cost;
+        for(Node n : pathFinder.getComputedNodes()) 
+            if(n != node) {
+                sum += pathFinder.getCost(n);
                 nb++;
             }
         

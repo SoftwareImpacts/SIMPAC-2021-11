@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
-import org.thema.graph.pathfinder.DijkstraPathFinder.DijkstraNode;
+import org.thema.drawshape.feature.Feature;
 import org.thema.graphab.graph.DeltaGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphGenerator.PathFinder;
@@ -32,16 +32,11 @@ public class DeltaPCMetric extends AbstractPathMetric {
     }
 
     @Override
-    public boolean isAcceptGraph(GraphGenerator graph) {
-        return !graph.isIntraPatchDist();
-    }
-
-    @Override
     public Double calcPartIndice(PathFinder finder, GraphGenerator g) {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
-        for(DijkstraNode node : finder.getComputedNodes()) 
-            sum += Math.pow(srcCapa * Project.getPatchCapacity(node.node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*node.cost);
+        for(Node node : finder.getComputedNodes()) 
+            sum += Math.pow(srcCapa * Project.getPatchCapacity(node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*finder.getCost(node));
         
         return sum;
     }
@@ -58,12 +53,14 @@ public class DeltaPCMetric extends AbstractPathMetric {
             Graphable remElem = ((DeltaGraphGenerator)g).getRemovedElem();
             double intra = 0, flux = 0;
             if(remElem instanceof Node) {
-                intra = Math.pow(Project.getPatchCapacity((Node)remElem), 2);// / Math.pow(Project.getArea(), 2);
-                PathFinder pathFinder = ((DeltaGraphGenerator)g).getParentGraph().getPathFinder((Node)remElem);
-                double srcCapa = Project.getPatchCapacity((Node)remElem);
-                for(DijkstraNode node : pathFinder.getComputedNodes()) 
-                    if(node.node != remElem)
-                        flux += Math.pow(srcCapa * Project.getPatchCapacity(node.node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*node.cost);
+                Node remNode = (Node) remElem;
+                intra = Math.pow(Project.getPatchCapacity(remNode), 2);// / Math.pow(Project.getArea(), 2);
+                GraphGenerator parentGraph = ((DeltaGraphGenerator)g).getParentGraph();
+                PathFinder pathFinder = parentGraph.getPathFinder(parentGraph.getNode((Feature) remNode.getObject()));
+                double srcCapa = Project.getPatchCapacity(remNode);
+                for(Node node : pathFinder.getComputedNodes()) 
+                    if(node.getObject() != remNode.getObject())
+                        flux += Math.pow(srcCapa * Project.getPatchCapacity(node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*pathFinder.getCost(node));
                 
                 flux = 2 * flux;// / Math.pow(Project.getArea(), 2);
             }

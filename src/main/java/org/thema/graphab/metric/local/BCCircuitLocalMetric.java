@@ -31,12 +31,10 @@ public class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphGenerator.P
         HashMap<Object, Double> result = new HashMap<Object, Double>();
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         Node n1 = finder.getNodeOrigin();
-        for(DijkstraPathFinder.DijkstraNode n2 : finder.getComputedNodes()) 
-            if(((Integer)Project.getPatch(finder.getNodeOrigin()).getId()) < (Integer)Project.getPatch(n2.node).getId()) {
-                if(n2.cost == 0)
-                    continue;
-                double flow = Math.pow(Project.getPatchCapacity(n2.node) * srcCapa, alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha() * n2.cost);
-                Map<Object, Double> courant = circuit.computeCourant(n1, n2.node, 1);
+        for(Node n2 : finder.getComputedNodes()) 
+            if(((Integer)Project.getPatch(finder.getNodeOrigin()).getId()) < (Integer)Project.getPatch(n2).getId()) {
+                double flow = Math.pow(Project.getPatchCapacity(n2) * srcCapa, alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha() * finder.getCost(n2));
+                Map<Object, Double> courant = circuit.computeCourant(n1, n2, 1);
                 for(Object id : courant.keySet())
                     if(result.containsKey(id))
                         result.put(id, courant.get(id)*flow + result.get(id));

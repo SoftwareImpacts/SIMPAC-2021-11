@@ -24,7 +24,7 @@ public interface SpacePathFinder {
      * destinations dests
      * @return les couts et longueurs des chemins de p vers les destinations
      */
-    public List<Double[]> calcPaths(Coordinate p, List<? extends Feature> dests);
+    public List<double[]> calcPaths(Coordinate p, List<Coordinate> dests);
     /**
      * Calcule les chemins à partir du point p vers tous les patch dont
      * la distance cout est inférieure ou égale à maxCost

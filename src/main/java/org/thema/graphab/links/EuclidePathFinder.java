@@ -34,11 +34,11 @@ public class EuclidePathFinder implements SpacePathFinder {
      * destinations dests
      * @return les distances euclidiennes de p vers les destinations
      */
-    public List<Double[]> calcPaths(Coordinate p, List<? extends Feature> dests) {
-        List<Double[]> distances = new ArrayList<Double[]>();
-        for(Feature dest : dests) {
-            double d = p.distance(dest.getGeometry().getCentroid().getCoordinate());
-            distances.add(new Double[]{d, d});
+    public List<double[]> calcPaths(Coordinate p, List<Coordinate> dests) {
+        List<double[]> distances = new ArrayList<double[]>();
+        for(Coordinate dest : dests) {
+            double d = p.distance(dest);
+            distances.add(new double[]{d, d});
         }
         return distances;
     }

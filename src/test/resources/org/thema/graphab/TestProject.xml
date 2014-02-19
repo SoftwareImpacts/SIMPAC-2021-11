@@ -238,6 +238,31 @@
         <distMax>-1.0</distMax>
       </Linkset>
     </entry>
+    <entry>
+      <string>comp_cout10_all</string>
+      <Linkset>
+        <name>comp_cout10_all</name>
+        <type>1</type>
+        <type__dist>2</type__dist>
+        <type__length>1</type__length>
+        <costs>
+          <double>0.0</double>
+          <double>1.0</double>
+          <double>2.0</double>
+          <double>3.0</double>
+          <double>4.0</double>
+          <double>5.0</double>
+          <double>6.0</double>
+          <double>0.0</double>
+          <double>8.0</double>
+          <double>9.0</double>
+          <double>10.0</double>
+        </costs>
+        <realPaths>false</realPaths>
+        <removeCrossPatch>false</removeCrossPatch>
+        <distMax>0.0</distMax>
+      </Linkset>
+    </entry>
   </costLinks>
   <exoDatas/>
   <graphs>

@@ -294,7 +294,7 @@ public class CLITools {
             for(GraphGenerator graph : getGraphs())
                 vars.retainAll(project.getGraphPatchVar(graph.getName()));
 
-            FileWriter wd = new FileWriter(new File(project.getProjectDir(), "model-" + var + "-dW" + tok[1] + ".txt"));
+            FileWriter wd = new FileWriter(new File(project.getDirectory(), "model-" + var + "-dW" + tok[1] + ".txt"));
             wd.write("Graph\tMetric\tDistWeight\tR2\tAIC\tCoef\n");
             try {
                 for(GraphGenerator graph : getGraphs()) {
@@ -432,7 +432,7 @@ public class CLITools {
         GlobalMetric indice = Project.getGlobalMetric(indName);
         System.out.println("Global metric " + indice.getName());
         
-        FileWriter fw = new FileWriter(new File(project.getProjectDir(), indice.getShortName() + ".txt"));
+        FileWriter fw = new FileWriter(new File(project.getDirectory(), indice.getShortName() + ".txt"));
         fw.write("Graph");
         for(String param : params.keySet())
             fw.write("\t" + param);
@@ -590,7 +590,7 @@ public class CLITools {
 
             if(save) {
                 try {
-                    MainFrame.project.saveLinks(graph.getLinkset().getName());
+                    graph.getLinkset().saveLinks(MainFrame.project.getDirectory());
                     MainFrame.project.savePatch();
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -640,7 +640,7 @@ public class CLITools {
         System.out.println("Global indice " + indice.getName());
         for(GraphGenerator graph : getGraphs()) {
             System.out.println(graph.getName());
-            FileWriter wd = new FileWriter(new File(project.getProjectDir(), "delta-" + indice.getDetailName() + "_" + graph.getName() + ".txt"));
+            FileWriter wd = new FileWriter(new File(project.getDirectory(), "delta-" + indice.getDetailName() + "_" + graph.getName() + ".txt"));
             wd.write("Id");
             for(String name : indice.getResultNames())
                 wd.write("\td_" + name);
@@ -704,8 +704,8 @@ public class CLITools {
         
         for(GraphGenerator graph : getGraphs()) {
             HashSet ids = new HashSet(lstIds);
-            FileWriter w = new FileWriter(new File(project.getProjectDir(), "gtest-" + graph.getName() + "-" + indice.getDetailName() + ".txt"));
-            FileWriter wd = new FileWriter(new File(project.getProjectDir(), "gtest-" + graph.getName() + "-" + indice.getDetailName() + "-detail.txt"));
+            FileWriter w = new FileWriter(new File(project.getDirectory(), "gtest-" + graph.getName() + "-" + indice.getDetailName() + ".txt"));
+            FileWriter wd = new FileWriter(new File(project.getDirectory(), "gtest-" + graph.getName() + "-" + indice.getDetailName() + "-detail.txt"));
             wd.write("Step\tId\t"+indice.getShortName()+"\n");
             w.write("Step\tId\t"+indice.getShortName()+"\n");
 
@@ -850,8 +850,8 @@ public class CLITools {
         
         for(GraphGenerator graph : getGraphs()) {
             HashSet ids = new HashSet(lstIds);
-            FileWriter w = new FileWriter(new File(project.getProjectDir(), "ltest-" + graph.getName() + "-" + indice.getDetailName() + ".txt"));
-            FileWriter wd = new FileWriter(new File(project.getProjectDir(), "ltest-" + graph.getName() + "-" + indice.getDetailName() + "-detail.txt"));
+            FileWriter w = new FileWriter(new File(project.getDirectory(), "ltest-" + graph.getName() + "-" + indice.getDetailName() + ".txt"));
+            FileWriter wd = new FileWriter(new File(project.getDirectory(), "ltest-" + graph.getName() + "-" + indice.getDetailName() + "-detail.txt"));
             wd.write("Step\tId\t"+indice.getShortName()+"\n");
             w.write("Step\tId\t"+indice.getShortName()+"\n");
 

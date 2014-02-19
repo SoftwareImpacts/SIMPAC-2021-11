@@ -35,12 +35,13 @@ public class RasterPathFinder implements SpacePathFinder {
     private final int CON = 8;
     private final int [] X = new int[] {-1, 0, 0, +1, -1, -1, +1, +1};
     private final int [] Y = new int[] {0, -1, +1, 0, -1, +1, -1, +1};
-    private final double [] COST = new double[] {1.0, 1.0, 1.0, 1.0, 1.41421, 1.41421, 1.41421, 1.41421};
-    private final int [] IND;
+    private final double [] COST = new double[] {1.0, 1.0, 1.0, 1.0, 1.4142136, 1.4142136, 1.4142136, 1.4142136};
+    private final int [] IND, IND_ANTE;
 
 
     private int xd, yd, wd, hd;
-    private float [] dist;
+    private double [] dist;
+    private byte [] ante;
 
     private int nUpdateBuf, queueSize, nbNodeAdded;
 
@@ -51,6 +52,7 @@ public class RasterPathFinder implements SpacePathFinder {
         this.cost = cost;
         int w = rasterPatch.getWidth();
         IND = new int[] {-1, -w, +w, +1, -w-1, +w-1, -w+1, +w+1};
+        IND_ANTE = new int[] {+1, +w, -w, -1, w+1, -w+1, +w-1, -w-1};
     }
 
     public RasterPathFinder(Project prj, Raster costRaster) throws IOException {
@@ -61,10 +63,12 @@ public class RasterPathFinder implements SpacePathFinder {
     /**
      * Calcule les distances cout à partir du point p vers tous les 
      * destinations dests
+     * @param p start point
+     * @param dests destination points
      * @return les couts et longueurs des chemins de p vers les destinations
      */
     @Override
-    public List<Double[]> calcPaths(Coordinate p, List<? extends Feature> dests) {
+    public List<double[]> calcPaths(Coordinate p, List<Coordinate> dests) {
         nbNodeAdded = queueSize = 0;
 
         final int w = rasterPatch.getWidth();
@@ -74,21 +78,32 @@ public class RasterPathFinder implements SpacePathFinder {
         int ry = (int)cp.y;
         PriorityQueue<Node> queue = new PriorityQueue<Node>();
 
-        initDistBuf(0, 0, rasterPatch.getWidth(), rasterPatch.getHeight());
+        initDistBuf(rx-100, ry-100, 200, 200);
+        
         // starting node
         Node node = new Node(ry*w+rx, 0);
         queue.add(node);
         setDist(ry*w+rx, 0);
-
-        while(!queue.isEmpty())
-            updateNextNodes(queue);
-
-        List<Double[]> distances = new ArrayList<Double[]>(dests.size());
-        for(Feature dest : dests) {
-            cp = project.getSpace2grid().transform(dest.getGeometry().getCentroid().getCoordinate(), new Coordinate());
+        
+        HashSet<Integer> indDests = new HashSet<Integer>();
+        for(Coordinate dest : dests) {
+            cp = project.getSpace2grid().transform(dest, new Coordinate());
             rx = (int)cp.x;
             ry = (int)cp.y;
-            distances.add(new Double[]{(double)getDist(ry*w+rx), getPath(ry*w+rx).getLength()});
+            indDests.add(ry*w+rx);
+        }
+
+        while(!queue.isEmpty() && !indDests.isEmpty()) {
+            Node n = updateNextNodes(queue);
+            indDests.remove(n.ind);
+        }
+
+        List<double[]> distances = new ArrayList<double[]>(dests.size());
+        for(Coordinate dest : dests) {
+            cp = project.getSpace2grid().transform(dest, new Coordinate());
+            rx = (int)cp.x;
+            ry = (int)cp.y;
+            distances.add(new double[]{(double)getDist(ry*w+rx), getPath(ry*w+rx).getLength()});
         }
         return distances;
     }
@@ -96,6 +111,9 @@ public class RasterPathFinder implements SpacePathFinder {
     /**
      * Calcule les distances cout à partir du point p vers tous les patch dont
      * la distance cout est inférieure ou égale à maxCost
+     * @param p
+     * @param maxCost
+     * @param realPath
      * @return les patch avec le cout et la longueur du chemin
      */
     @Override
@@ -142,7 +160,9 @@ public class RasterPathFinder implements SpacePathFinder {
      * Calcule les chemins à partir de oPatch vers tous les patch dont l'id est supérieur à oPatch
      * si all == false et dont le cout est inférieur ou égal à maxCost
      * @param oPatch
+     * @param maxCost
      * @param realPath
+     * @param all
      * @return
      */
     @Override
@@ -283,7 +303,8 @@ public class RasterPathFinder implements SpacePathFinder {
 
     /**
      * Calc nearest patch from raster coordinate
-     * @param x, y
+     * @param rx
+     * @param ry
      * @return an array with id of nearest patch, cost and dist
      */
     public double[] calcPathNearestPatch(int rx, int ry) {
@@ -379,11 +400,13 @@ public class RasterPathFinder implements SpacePathFinder {
         int w = rasterPatch.getWidth();
         ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
         coords.add(new Coordinate(ind % w + 0.5, ind / w + 0.5));
-        Integer curInd = findMinNode(ind);
-        while(curInd != null) {
+        int curInd = ind;
+        int idAnte = getAnte(ind);
+        while(idAnte != -1) {
+            curInd += IND_ANTE[idAnte];
             Coordinate coord = new Coordinate(curInd % w + 0.5, curInd / w + 0.5);
             coords.add(coord);
-            curInd = findMinNode(curInd);
+            idAnte = getAnte(curInd);
         }
         // simplify linestring
         ArrayList<Coordinate> simpCoords = new ArrayList<Coordinate>();
@@ -403,32 +426,36 @@ public class RasterPathFinder implements SpacePathFinder {
         return line;
     }
 
-    private Integer findMinNode(int node) {
-        float min = getDist(node);
-        Integer best = null;
-        for(int i = 0; i < CON; i++) {
-            if(getDist(node+IND[i]) < min) {
-                best = node+IND[i];
-                min = getDist(node+IND[i]);
-            }
-        }
-        return best;
-    }
+//    private Integer findMinNode(int node) {
+//        double min = getDist(node);
+//        Integer best = null;
+//        for(int i = 0; i < CON; i++) {
+//            if(getDist(node+IND[i]) < min) {
+//                best = node+IND[i];
+//                min = getDist(node+IND[i]);
+//            }
+//        }
+//        return best;
+//    }
 
     private Node updateNextNodes(PriorityQueue<Node> queue) {
-        final Node current = queue.poll();
+        Node current = queue.poll();
+        while(!queue.isEmpty() && current.dist > getDist(current.ind))
+            current = queue.poll();
+        
         final int x = current.ind % rasterPatch.getWidth();
         final int y = current.ind / rasterPatch.getWidth();
         final double currentCost = getCost(x, y);
-
+            
         for(int i = 0; i < CON; i++)
             if(isInside(x + X[i], y + Y[i])) {
                 final double c = getCost(x+X[i], y+Y[i]);
-                final float newCost = (float) (current.dist + COST[i] * (currentCost + c) / 2);
+                final double newCost = current.dist + COST[i] * (currentCost + c) / 2;
                 final int ind = current.ind + IND[i];
                 if(newCost < getDist(ind)) {
                     Node newNode = new Node(ind, newCost);
                     setDist(ind, newCost);
+                    setAnte(ind, (byte)i);
                     queue.add(newNode);
                     nbNodeAdded++;
                     if(queue.size() > queueSize)
@@ -462,24 +489,26 @@ public class RasterPathFinder implements SpacePathFinder {
             w = rasterPatch.getWidth() - x;
         if(y+h > rasterPatch.getHeight())
             h = rasterPatch.getHeight() - y;
-        dist = new float[w*h];
-        Arrays.fill(dist, Float.MAX_VALUE);
+        dist = new double[w*h];
+        ante = new byte[w*h];
+        Arrays.fill(dist, Double.MAX_VALUE);
+        Arrays.fill(ante, (byte)-1);
         xd = x; yd = y;
         wd = w; hd = h;
     }
 
-    private float getDist(int ind) {
+    private double getDist(int ind) {
         int x = getX(ind)-xd;
         int y = getY(ind)-yd;
         if(x < 0 || x >= wd || y < 0 || y >= hd) {
             resizeDistBuf();
-            return Float.MAX_VALUE;
+            return Double.MAX_VALUE;
         } else
             return dist[y*wd+x];
 
     }
 
-    private void setDist(int ind, float val) {
+    private void setDist(int ind, double val) {
         int x = getX(ind)-xd;
         int y = getY(ind)-yd;
         if(x < 0 || x >= wd || y < 0 || y >= hd) {
@@ -487,6 +516,22 @@ public class RasterPathFinder implements SpacePathFinder {
             setDist(ind, val);
         } else
             dist[y*wd+x] = val;
+    }
+    
+    private byte getAnte(int ind) {
+        int x = getX(ind)-xd;
+        int y = getY(ind)-yd;
+        return ante[y*wd+x];
+    }
+
+    private void setAnte(int ind, byte val) {
+        int x = getX(ind)-xd;
+        int y = getY(ind)-yd;
+        if(x < 0 || x >= wd || y < 0 || y >= hd) {
+            resizeDistBuf();
+            setAnte(ind, val);
+        } else
+            ante[y*wd+x] = val;
     }
 
     private void resizeDistBuf() {
@@ -502,24 +547,31 @@ public class RasterPathFinder implements SpacePathFinder {
             w = rasterPatch.getWidth() - x;
         if(y+h > rasterPatch.getHeight())
             h = rasterPatch.getHeight() - y;
-        float [] buf = new float[w*h];
-        Arrays.fill(buf, Float.MAX_VALUE);
+        double [] buf = new double[w*h];
+        Arrays.fill(buf, Double.MAX_VALUE);
         for(int i = 0; i < hd; i++)
             for(int j = 0; j < wd; j++)
                 buf[(i+ yd-y)*w+j+(xd-x)] = dist[i*wd+j];
+        
+        byte [] bufAnte = new byte[w*h];
+        Arrays.fill(bufAnte, (byte)-1);
+        for(int i = 0; i < hd; i++)
+            for(int j = 0; j < wd; j++)
+                bufAnte[(i+ yd-y)*w+j+(xd-x)] = ante[i*wd+j];
 
         xd = x; yd = y;
         wd = w; hd = h;
         dist = buf;
+        ante = bufAnte;
 
 //        System.out.println("New Size (" + wd + "," + hd + ")");
     }
 
     private static class Node implements Comparable<Node>{
         int ind;
-        float dist;
+        double dist;
 
-        public Node(int ind, float dist) {
+        public Node(int ind, double dist) {
             this.ind = ind;
             this.dist = dist;
         }

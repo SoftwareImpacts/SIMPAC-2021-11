@@ -66,7 +66,7 @@ import org.thema.graphab.util.SerieFrame;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "1.2-alpha7";
+    public static final String VERSION = "1.2rc1";
 
     public static Project project;
     
@@ -702,7 +702,7 @@ public class MainFrame extends javax.swing.JFrame {
                     monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
                 
                     if((nodeEdge & 2) == 2)
-                        MainFrame.project.saveLinks(dlg.graph.getLinkset().getName());
+                        dlg.graph.getLinkset().saveLinks(MainFrame.project.getDirectory());
                     if((nodeEdge & 1) == 1)
                         MainFrame.project.savePatch();
                     
@@ -741,7 +741,7 @@ public class MainFrame extends javax.swing.JFrame {
 
                 monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
                 try {
-                    MainFrame.project.saveLinks(dlg.graph.getLinkset().getName());
+                    dlg.graph.getLinkset().saveLinks(MainFrame.project.getDirectory());
                     MainFrame.project.savePatch();
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -855,7 +855,7 @@ public class MainFrame extends javax.swing.JFrame {
 
                 monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
                 try {
-                    MainFrame.project.saveLinks(dlg.graph.getLinkset().getName());
+                    dlg.graph.getLinkset().saveLinks(MainFrame.project.getDirectory());
                     MainFrame.project.savePatch();
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);

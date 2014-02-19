@@ -26,6 +26,8 @@ import org.geotools.graph.structure.Node;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.basic.BasicGraph;
 import org.thema.common.Config;
+import org.thema.common.collection.HashMap2D;
+import org.thema.common.collection.HashMapList;
 import org.thema.common.parallel.ProgressBar;
 import org.thema.drawshape.feature.DefaultFeature;
 import org.thema.drawshape.feature.Feature;
@@ -49,66 +51,83 @@ import org.thema.graphab.Project;
  */
 public class GraphGenerator {
 
-    public final class PathFinder {
+    public class PathFinder {
         Node nodeOrigin;
         DijkstraPathFinder pathfinder;
+        HashMap<Node, DijkstraNode> computedNodes;
 
         public PathFinder(Node nodeOrigin) {
             this(nodeOrigin, Double.NaN);
         }
-        
+
         public PathFinder(Node nodeOrigin, double maxCost) {
             this.nodeOrigin = nodeOrigin;
-            pathfinder = getDijkstraPathFinder(nodeOrigin, maxCost);
-        }
-
-//        /**
-//         * create a flow pathfinder
-//         * @param patchOrigin
-//         * @param alpha
-//         */
-//        public PathFinder(Node nodeOrigin, double maxCost, double alpha) {
-//            this.nodeOrigin = nodeOrigin;
-//            pathfinder = getFlowPathFinder(nodeOrigin, maxCost, alpha);
-//        }
-        
-        public Double getCost(Node n) {
-            Double cost = pathfinder.getCost(n);
-            if(INTRA_CENTROID && intraPatchDist) {
-                org.thema.graph.pathfinder.Path path = getPath(n);
-                double d = ((Path)path.getEdges().get(0).getObject()).distToPatch(Project.getPatch(nodeOrigin)) +
-                        ((Path)path.getEdges().get(path.getEdges().size()-1).getObject()).distToPatch(Project.getPatch(n));
-                if(getLinkset().getType_dist() != Linkset.EUCLID) 
-                    d *= getLinkset().getCosts()[Project.getProject().getPatchCode()] / Project.getProject().getResolution();
-                cost -= d;
-                if(cost < 0) cost = 0.0;
+            pathfinder = getDijkstraPathFinder(getPathNodes(nodeOrigin), maxCost);
+            computedNodes = new HashMap<Node, DijkstraNode>();
+            for(DijkstraPathFinder.DijkstraNode dn : pathfinder.getComputedNodes()) {
+                if(dn.node.getObject() instanceof Node) {
+                    Node node = (Node) dn.node.getObject();
+                    DijkstraNode oldDn = computedNodes.get(node);
+                    if(oldDn == null || dn.cost < oldDn.cost)
+                        computedNodes.put(node, dn);
+                } else
+                    computedNodes.put(dn.node, dn);
             }
-            return cost;
-        }
-        
-        public org.thema.graph.pathfinder.Path getPath(Node n) {
-            return pathfinder.getPath(n);
         }
 
-        public Collection<DijkstraNode> getComputedNodes() {
-            return pathfinder.getComputedNodes();
+        public Double getCost(Node node) {
+            DijkstraNode dn = computedNodes.get(node);
+            if(dn == null)
+                return null;
+            return dn.cost;
         }
-        
+
+        public org.thema.graph.pathfinder.Path getPath(Node node) {
+            org.thema.graph.pathfinder.Path p = pathfinder.getPath(computedNodes.get(node));
+            if(isIntraPatchDist() && p != null) {
+                List<Edge> edges = new ArrayList<Edge>(p.getEdges().size()/2+1);
+                for(Edge e : p.getEdges())
+                    if(e.getObject() instanceof Edge)
+                        edges.add((Edge)e.getObject());
+                p = new org.thema.graph.pathfinder.Path(nodeOrigin, edges);
+            } 
+            return p;
+        }
+
         public Node getNodeOrigin() {
             return nodeOrigin;
+        }
+        
+        public Collection<Node> getComputedNodes() {
+            return computedNodes.keySet();
+        }
+        
+        protected DijkstraPathFinder getDijkstraPathFinder(List<Node> startNodes, double maxCost) {
+            DijkstraPathFinder finder = new DijkstraPathFinder(getPathGraph(), startNodes, new EdgeWeighter() {
+                public double getWeight(Edge e) {
+                    if(e.getObject() instanceof Path) {
+                        return GraphGenerator.this.getCost((Path)e.getObject());
+                    } else if(e.getObject() instanceof Edge) {
+                        return GraphGenerator.this.getCost((Edge)e.getObject());
+                    } else if(intraPatchDist) {
+                        double [] w = (double [])e.getObject();
+                        return getLinkset().isCostLength() ? w[0] : w[1];
+                    } else
+                        throw new RuntimeException("Unknown object in the graph");
+                }
+                public double getToGraphWeight(double dist) { return 0; }
+            });
+
+            finder.calculate(maxCost);
+
+            return finder;
         }
     }
 
     public static final int COMPLETE = 1;
     public static final int THRESHOLD = 2;
     public static final int MST = 3;
-    
-    /**
-     * Si vrai, calcule les chemins en passant par le centroide de la tache sans utiliser de nodeweighter
-     * Si faux, utilise nodeweighter (pose problème en delta car chemin pas forcément optimal)
-     */
-    private static final boolean INTRA_CENTROID = false;
-    
+
     String name;
     Linkset cost;
     int type;
@@ -119,8 +138,9 @@ public class GraphGenerator {
 
     protected transient List<Graph> components;
     protected transient List<DefaultFeature> compFeatures;
-    protected transient Graph graph;
+    protected transient Graph graph, pathGraph;
     private transient GraphGroupLayer layers;
+    protected transient HashMapList<Node, Node> node2PathNodes;
 
     public GraphGenerator(String name, Linkset linkset, int type, double threshold, boolean intraPatchDist) {
         this.name = name;
@@ -159,6 +179,21 @@ public class GraphGenerator {
 
         return graph;
     }
+    
+    protected synchronized Graph getPathGraph() {
+        if(pathGraph == null)
+            createPathGraph();
+
+        return pathGraph;
+    }
+
+    protected List<Node> getPathNodes(Node node) {
+        if(!isIntraPatchDist())
+            return Collections.singletonList(node);
+        getPathGraph();
+        return node2PathNodes.get(node);
+    }
+
 
     public Collection<Node> getNodes() {
         return getGraph().getNodes();
@@ -228,66 +263,6 @@ public class GraphGenerator {
     
     public PathFinder getPathFinder(Node nodeOrigin, double maxCost) {
          return new PathFinder(nodeOrigin, maxCost);
-    }
-
-//    /**
-//     * return a flow pathfinder
-//     * @param patchOrigin
-//     * @param alpha
-//     * @return
-//     */
-//    public PathFinder getFlowPathFinder(Node nodeOrigin, double alpha) {
-//        return new PathFinder(nodeOrigin, Double.NaN, alpha);
-//    }
-    
-    protected DijkstraPathFinder getDijkstraPathFinder(Node startNode, double maxCost) {
-        DijkstraPathFinder.NodeWeighter nodeWeighter = null;
-        if(!INTRA_CENTROID && intraPatchDist)
-            nodeWeighter = new DijkstraPathFinder.NodeWeighter() {
-                @Override
-                public double getWeight(Edge fromEdge, Node n, Edge toEdge) {
-                    if(fromEdge == null)
-                        return 0;
-                    Feature patch = (Feature) n.getObject();
-                    Path from = (Path) fromEdge.getObject();
-                    Path to = (Path) toEdge.getObject();
-                    Coordinate [] coords = from.getGeometry().getCoordinates();
-                    Coordinate c1 = coords[0];
-                    if(from.getPatch2() == patch)
-                        c1 = coords[coords.length-1];
-                    coords = to.getGeometry().getCoordinates();
-                    Coordinate c2 = coords[0];
-                    if(to.getPatch2() == patch)
-                        c2 = coords[coords.length-1];
-
-                    double d = c1.distance(c2);
-                    if(getLinkset().getType_dist() != Linkset.EUCLID && cost.isCostLength()) {
-                        Project prj = Project.getProject();
-                        d *= getLinkset().getCosts()[prj.getPatchCode()] / prj.getResolution();
-                    }
-                    return d;
-                }
-            };
-        DijkstraPathFinder finder = new DijkstraPathFinder(getGraph(), startNode, new EdgeWeighter() {
-            public double getWeight(Edge e) {
-                Path p = (Path) e.getObject();
-                double w = getCost(p);
-
-                if(INTRA_CENTROID && intraPatchDist) {
-                    Project prj = Project.getProject();
-                    double d = p.distToPatch1() + p.distToPatch2();
-                    if(getLinkset().getType_dist() != Linkset.EUCLID && cost.isCostLength()) 
-                        w += d * getLinkset().getCosts()[prj.getPatchCode()] / prj.getResolution();
-                }
-                
-                return w;
-            }
-            public double getToGraphWeight(double dist) { return 0; }
-        }, nodeWeighter);
-
-        finder.calculate(maxCost);
-
-        return finder;
     }
     
     public double getPatchArea() {
@@ -477,6 +452,77 @@ public class GraphGenerator {
         }
 
     }
+    
+    protected void createPathGraph() {
+
+        if(!intraPatchDist) {
+            pathGraph = getGraph();
+            return;
+        }
+        
+        HashMap2D<Node, Coordinate, Node> coord2PathNode = new HashMap2D<Node, Coordinate, Node>(Collections.EMPTY_SET, Collections.EMPTY_SET, null);
+        
+        node2PathNodes = new HashMapList<Node, Node>();
+
+        BasicGraphBuilder gen = new BasicGraphBuilder();
+
+        for(Edge edge : getEdges()) {
+            Path p = (Path) edge.getObject();
+            Coordinate c = p.getCoordinate(p.getPatch1());
+            Node n1 = coord2PathNode.getValue(edge.getNodeA(), c);
+            if(n1 == null) {
+                n1 = gen.buildNode();
+                n1.setObject(edge.getNodeA());
+                gen.addNode(n1);
+                node2PathNodes.putValue(edge.getNodeA(), n1);
+                coord2PathNode.setValue(edge.getNodeA(), c, n1);
+            }
+            c = p.getCoordinate(p.getPatch2());
+            Node n2 = coord2PathNode.getValue(edge.getNodeB(), c);
+            if(n2 == null) {
+                n2 = gen.buildNode();
+                n2.setObject(edge.getNodeB());
+                gen.addNode(n2);
+                node2PathNodes.putValue(edge.getNodeB(), n2);
+                coord2PathNode.setValue(edge.getNodeB(), c, n2);
+            }
+            Edge e = gen.buildEdge(n1, n2);
+            e.setObject(edge);
+            gen.addEdge(e);
+        }
+
+        for(Node node : getNodes()) {
+            // add isolated patch
+            if(!node2PathNodes.containsKey(node)) {
+                Node n = gen.buildNode();
+                n.setObject(node);
+                gen.addNode(n);
+                node2PathNodes.putValue(node, n);
+            } else { // link all nodes of same patch
+                Map<Coordinate, Node> nodes = coord2PathNode.getLine(node);
+                List<Coordinate> coords = new ArrayList<Coordinate>();
+                for(Coordinate c : nodes.keySet())
+                    if(nodes.get(c) != null)
+                        coords.add(c);
+                for(int i = 0; i < coords.size(); i++)
+                    for(int j = i+1; j < coords.size(); j++) {
+                        Coordinate c1 = coords.get(i);
+                        Coordinate c2 = coords.get(j);
+                        Edge e = gen.buildEdge(nodes.get(c1), nodes.get(c2));
+                        double[] costs = cost.getIntraLinkCost(c1, c2);
+                        if(costs == null)
+                            throw new RuntimeException("No intra patch dist for " + node.getObject());
+                        e.setObject(costs);
+                        gen.addEdge(e);
+                    }
+            }
+        }
+
+
+        pathGraph = gen.getGraph();
+
+        //System.out.println("End create path graph");
+    }
 
     protected List<Graph> partition(Graph g) {
         HashSet<Node> nodes = new HashSet<Node>(g.getNodes());
@@ -544,7 +590,7 @@ public class GraphGenerator {
 
     public void calcODMatrix() throws IOException {
         ProgressBar bar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix"), getNodes().size());
-        FileWriter w = new FileWriter(new File(Project.getProject().getProjectDir(), getName() + "-odmatrix.txt"));
+        FileWriter w = new FileWriter(new File(Project.getProject().getDirectory(), getName() + "-odmatrix.txt"));
         Comparator<Node> cmpPatchId = new Comparator<Node>() {
             @Override
             public int compare(Node n1, Node n2) {

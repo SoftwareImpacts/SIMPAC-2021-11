@@ -5,6 +5,7 @@
 
 package org.thema.graphab.graph;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +13,6 @@ import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
-import org.thema.drawshape.feature.Feature;
 
 /**
  *
@@ -20,8 +20,8 @@ import org.thema.drawshape.feature.Feature;
  */
 public class DeltaGraphGenerator extends GraphGenerator {
 
-    GraphGenerator gen;
-    Graphable removedElem;
+    private final GraphGenerator gen;
+    private Graphable removedElem;
 
     private Graph remComp;
     private List<Graph> addComps;
@@ -30,7 +30,6 @@ public class DeltaGraphGenerator extends GraphGenerator {
         super(gen, "Delta");
         this.gen = gen;
         this.removedElem = null;
-//        area = gen.getArea();
         graph = gen.dupGraphWithout(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }
 
@@ -40,23 +39,6 @@ public class DeltaGraphGenerator extends GraphGenerator {
 
     public GraphGenerator getParentGraph() {
         return gen;
-    }
-
-    public void removeElem(Object id) {
-        Graphable elem = null;
-        for(Object n : getGraph().getNodes())
-            if(((Feature)((Graphable)n).getObject()).getId().equals(id)) {
-                elem = (Graphable) n;
-                break;
-            }
-        if(elem == null)
-            for(Object e : getGraph().getEdges())
-                if(((Feature)((Graphable)e).getObject()).getId().equals(id)) {
-                    elem = (Graphable) e;
-                    break;
-                }
-
-        removeElem(elem);
     }
 
     public void removeElem(Graphable elem) {
@@ -79,8 +61,7 @@ public class DeltaGraphGenerator extends GraphGenerator {
             Node n = (Node) elem;
             gr.getNodes().remove(n);
             graph.getNodes().remove(n);
-            for(Object o : n.getEdges()) {
-                Edge e = (Edge) o;
+            for(Edge e : (Collection<Edge>)n.getEdges()) {
                 gr.getEdges().remove(e);
                 graph.getEdges().remove(e);
                 e.getOtherNode(n).remove(e);
@@ -94,6 +75,9 @@ public class DeltaGraphGenerator extends GraphGenerator {
 
         compFeatures = null;
         removedElem = elem;
+        
+        pathGraph = null;
+        node2PathNodes = null;        
     }
 
     public void reset() {
@@ -107,8 +91,7 @@ public class DeltaGraphGenerator extends GraphGenerator {
             Node n = (Node) removedElem;
             graph.getNodes().add(n);
             remComp.getNodes().add(n);
-            for(Object o : n.getEdges()) {
-                Edge e = (Edge) o;
+            for(Edge e : (Collection<Edge>)n.getEdges()) {
                 graph.getEdges().add(e);
                 remComp.getEdges().add(e);
                 e.getOtherNode(n).add(e);
@@ -122,6 +105,9 @@ public class DeltaGraphGenerator extends GraphGenerator {
         removedElem = null;
         remComp = null;
         addComps = null;
+
+        pathGraph = null;
+        node2PathNodes = null;
     }
     
 }

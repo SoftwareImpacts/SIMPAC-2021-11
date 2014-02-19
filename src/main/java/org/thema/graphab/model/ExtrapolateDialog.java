@@ -410,7 +410,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
                     }
                     l.setRemovable(true);
                     layers.addLayerFirst(l);
-                    l.saveRaster(new File(Project.getProject().getProjectDir(), l.getName() + ".tif"));
+                    l.saveRaster(new File(Project.getProject().getDirectory(), l.getName() + ".tif"));
                     monitor.close();
                 } catch (Throwable ex) {
                     Logger.getLogger(ModelDialog.class.getName()).log(Level.SEVERE, null, ex);

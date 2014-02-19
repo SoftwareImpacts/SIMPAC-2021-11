@@ -9,7 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
-import org.thema.graph.pathfinder.DijkstraPathFinder;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphGenerator.PathFinder;
 import org.thema.graphab.Project;
@@ -30,8 +29,8 @@ public class FPCLocalMetric extends LocalMetric {
         double srcCapa = Project.getPatchCapacity(node);
         PathFinder pathFinder = gen.getPathFinder(node);
         double sum = 0;
-        for(DijkstraPathFinder.DijkstraNode n : pathFinder.getComputedNodes()) 
-            sum += Math.exp(-alphaParam.getAlpha() * n.cost) * Math.pow(srcCapa * Project.getPatchCapacity(n.node), alphaParam.getBeta());            
+        for(Node n : pathFinder.getComputedNodes()) 
+            sum += Math.exp(-alphaParam.getAlpha() * pathFinder.getCost(n)) * Math.pow(srcCapa * Project.getPatchCapacity(n), alphaParam.getBeta());            
         
         return sum / Math.pow(Project.getArea(), 2);
     }
