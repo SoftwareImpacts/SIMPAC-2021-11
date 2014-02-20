@@ -85,8 +85,9 @@ public class CLITools {
                     return new Range(Double.parseDouble(tok[0]));
                 else {
                     List<Double> values = new ArrayList<Double>(tok.length);
-                    for(int i = 0; i < tok.length; i++)
-                        values.add(Double.parseDouble(tok[i]));
+                    for(String tok1 : tok) {
+                        values.add(Double.parseDouble(tok1));
+                    }
                     return new Range(values);
                 }
 
