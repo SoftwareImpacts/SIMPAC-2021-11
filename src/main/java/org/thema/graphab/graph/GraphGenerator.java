@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
+ 
 package org.thema.graphab.graph;
 
 import com.vividsolutions.jts.geom.Coordinate;

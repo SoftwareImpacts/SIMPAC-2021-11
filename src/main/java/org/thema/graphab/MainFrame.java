@@ -66,7 +66,7 @@ import org.thema.graphab.util.SerieFrame;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "1.2rc1";
+    public static final String VERSION = "1.3 - Development version";
 
     public static Project project;
     
@@ -108,6 +108,7 @@ public class MainFrame extends javax.swing.JFrame {
         graphMenu = new javax.swing.JMenu();
         costDistMenuItem = new javax.swing.JMenuItem();
         createMenuItem = new javax.swing.JMenuItem();
+        metaPatchMenuItem = new javax.swing.JMenuItem();
         dataMenu = new javax.swing.JMenu();
         calcCapaMenuItem = new javax.swing.JMenuItem();
         importCapaMenuItem = new javax.swing.JMenuItem();
@@ -207,6 +208,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         graphMenu.add(createMenuItem);
+
+        metaPatchMenuItem.setText(bundle.getString("MainFrame.metaPatchMenuItem.text")); // NOI18N
+        metaPatchMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                metaPatchMenuItemActionPerformed(evt);
+            }
+        });
+        graphMenu.add(metaPatchMenuItem);
 
         jMenuBar.add(graphMenu);
 
@@ -399,15 +408,9 @@ public class MainFrame extends javax.swing.JFrame {
             return;
 
         new Thread(new Runnable() {
-
             public void run() {
                 try {
-                    project = Project.loadProject(f, true);
-                    ProgressBar progressBar = Config.getProgressBar("Create layers...");
-                    progressBar.setIndeterminate(true);
-                    mapViewer.setRootLayer(project.getRootLayer());
-                    mapViewer.setTreeLayerVisible(true);
-                    progressBar.close();
+                    loadProject(f);
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Error_while_loading_project") + ex.getLocalizedMessage());
@@ -1088,6 +1091,41 @@ public class MainFrame extends javax.swing.JFrame {
         new MetricInterpolDlg(this, true).setVisible(true);
     }//GEN-LAST:event_interpMetricMenuItemActionPerformed
 
+    private void metaPatchMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_metaPatchMenuItemActionPerformed
+        final GraphGenerator graph = (GraphGenerator) JOptionPane.showInputDialog(this, 
+                "Select graph", "Meta patch project", JOptionPane.PLAIN_MESSAGE, 
+                null, project.getGraphs().toArray(), null);
+        if(graph == null)
+            return;
+        String name = JOptionPane.showInputDialog(this, "Project name");
+        if(name == null)
+            return;
+        final String prjName = name.trim();
+        if(prjName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Empty project name", "", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        final File prjDir = new File(project.getDirectory(), prjName);
+        if(prjDir.exists()) {
+            JOptionPane.showMessageDialog(this, "The project name already exists", "", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    project.createMetaPatchProject(prjName, graph);
+                    loadProject(new File(prjDir, prjName + ".xml"));
+                } catch (Exception ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    JOptionPane.showMessageDialog(MainFrame.this, "Error " + ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }).start();
+          
+    }//GEN-LAST:event_metaPatchMenuItemActionPerformed
+
     
     public void viewMetricResult(GraphGenerator graph, String attr, boolean node, boolean edge) {
         // show the result
@@ -1125,16 +1163,15 @@ public class MainFrame extends javax.swing.JFrame {
         edgeLayer.setVisible(true);
     }
     
-    public synchronized void reloadProject() {
-        try {
-            project = Project.loadProject(project.getProjectFile(), true);
-            mapViewer.setRootLayer(project.getRootLayer());
-            mapViewer.setTreeLayerVisible(true);
-        } catch (Exception ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Error_while_loading_project") + ex.getLocalizedMessage());
-        }
+    public void loadProject(File prjFile) throws Exception {
+        project = Project.loadProject(prjFile, true);
+        ProgressBar progressBar = Config.getProgressBar("Create layers...");
+        progressBar.setIndeterminate(true);
+        mapViewer.setRootLayer(project.getRootLayer());
+        mapViewer.setTreeLayerVisible(true);
+        progressBar.close();
     }
+    
     /**
      * 
      * @param monitor
@@ -1326,6 +1363,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem localIndiceMenuItem;
     private javax.swing.JMenuItem logMenuItem;
     private org.thema.drawshape.ui.MapViewer mapViewer;
+    private javax.swing.JMenuItem metaPatchMenuItem;
     private javax.swing.JMenuItem newProjectMenuItem;
     private javax.swing.JMenuItem openMenuItem;
     private javax.swing.JMenuItem prefMenuItem;

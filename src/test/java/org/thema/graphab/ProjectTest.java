@@ -200,6 +200,7 @@ public class ProjectTest {
     
     @Test
     public void testIntraPatchDist() {
+        System.out.println("Test intra patch distance");
         GraphGenerator graph = project.getGraph("graph_comp_cout10");
         Linkset linkset = project.getLinkset("comp_cout10_all");
         for(Node node : graph.getNodes()) {
@@ -349,7 +350,8 @@ public class ProjectTest {
             if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist())
                 continue;
             
-            assertTrue("No deltaPC for graph " + gen.getName(), r.getVarNames().contains(startName + deltaPC.getResultNames()[0] + "_" + gen.getName())) ;
+            assertTrue("No deltaPC for graph " + gen.getName(), 
+                    r.getVarNames().contains(startName + deltaPC.getResultNames()[0] + "_" + gen.getName())) ;
 
             System.out.println("Test deltaPC on " + gen.getName());
             DeltaMetricTask task = new DeltaMetricTask(new TaskMonitor.EmptyMonitor(), gen, launcher, 1);

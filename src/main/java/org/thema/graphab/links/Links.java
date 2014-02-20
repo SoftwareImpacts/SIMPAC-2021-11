@@ -17,12 +17,10 @@ import org.thema.drawshape.feature.Feature;
  * @author gvuidel
  */
 public class Links {
-    String name;
     List<HashMap<Integer, Path>> conMap;
     List<Path> links;
 
-    public Links(String name, int size) {
-        this.name = name;
+    public Links(int size) {
         conMap = new ArrayList<HashMap<Integer, Path>>(size);
         for(int i = 0; i < size; i++)
             conMap.add(new HashMap<Integer, Path>());
@@ -30,33 +28,32 @@ public class Links {
     }
 
     public Links(String name, List<Path> paths, int size) {
-        this.name = name;
         links = paths;
         conMap = new ArrayList<HashMap<Integer, Path>>(size);
         for(int i = 0; i < size; i++)
             conMap.add(new HashMap<Integer, Path>());
 
         for(Path p : links) {
-            conMap.get(getId(p.getPatch1())).put((Integer)p.getPatch2().getId(), p);
-            conMap.get(getId(p.getPatch2())).put((Integer)p.getPatch1().getId(), p);
+            conMap.get(getInd(p.getPatch1())).put((Integer)p.getPatch2().getId(), p);
+            conMap.get(getInd(p.getPatch2())).put((Integer)p.getPatch1().getId(), p);
         }
     }
 
     public Set<Integer> getNeighbors(Feature f) {
-        return conMap.get(getId(f)).keySet();
+        return conMap.get(getInd(f)).keySet();
     }
 
-    public synchronized void addLink(Feature f1, Feature f2, Path path) {
-        conMap.get(getId(f1)).put((Integer)f2.getId(), path);
-        conMap.get(getId(f2)).put((Integer)f1.getId(), path);
+    public synchronized void addLink(Path path) {
+        conMap.get(getInd(path.getPatch1())).put((Integer)path.getPatch2().getId(), path);
+        conMap.get(getInd(path.getPatch2())).put((Integer)path.getPatch1().getId(), path);
         links.add(path);
     }
 
     public boolean isLinkExist(Feature f1, Feature f2) {
-        return conMap.get(getId(f1)).containsKey(f2.getId());
+        return conMap.get(getInd(f1)).containsKey(f2.getId());
     }
     
-    private int getId(Feature f) {
+    private int getInd(Feature f) {
         return (Integer)f.getId()-1;
     }
 
