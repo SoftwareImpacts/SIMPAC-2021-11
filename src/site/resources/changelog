@@ -1,8 +1,12 @@
+version 1.2-rc2
+- adding cost planar linkset does not throw an error if a patch is surrounded by nodata
+- CLI --graph : add option "nointra"
 version 1.2-rc1 (19/02/2014)
 WARNING : first path metric calculation from older project can be slow, due to real intra patch distance calculation
 - intra patch distance is now accurate
 - least cost paths are more accurate (float -> double precision)
 - re include deltaPC metric for graph with intrapatch distance
+- addpatch cannot be used on graph with intrapatch distance
 version 1.2-beta (14/02/2014)
 - exclude deltaPC metric for graph with intrapatch distance
 - use MainFrame ProgressBar for extrapolation

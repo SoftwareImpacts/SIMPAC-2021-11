@@ -147,6 +147,9 @@ public class GraphGenerator {
         this.cost = linkset;
         this.type = type;
         this.threshold = threshold;
+        // intra patch distance can be used only if linkset contains real paths
+        if(intraPatchDist && !cost.isRealPaths())
+            throw new IllegalArgumentException("Intra patch distances can be used only with a linkset containing real paths");
         this.intraPatchDist = intraPatchDist;
     }
 

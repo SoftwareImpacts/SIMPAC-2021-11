@@ -32,7 +32,6 @@ import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.parallel.TaskMonitor;
 import org.thema.drawshape.feature.DefaultFeature;
 import org.thema.drawshape.feature.Feature;
-import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 
 /**
@@ -206,7 +205,7 @@ public class Linkset {
     
     private synchronized HashMap<MultiKey, double[]> getIntraLinks() {
         if(!isRealPaths())
-            throw new IllegalStateException("Intra patch links needs real paths");
+            throw new IllegalStateException("Intra patch links need real paths");
         
         if(intraLinks == null)
             try {
@@ -336,7 +335,7 @@ public class Linkset {
                     }
                     
                 } catch(Exception e) {
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
+                    throw new RuntimeException(e);
                 }
                 return null;
             }

@@ -31,7 +31,7 @@ public class AddPatchGraphGenerator extends GraphGenerator {
         this.addedElem = null;
                 
         if(gen.isIntraPatchDist())
-            throw new IllegalArgumentException("Intra patch distance not supported");
+            throw new IllegalArgumentException("Intra patch distance is not supported");
         
         graph = gen.dupGraphWithout(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }

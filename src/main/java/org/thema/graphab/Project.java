@@ -26,7 +26,6 @@ import java.lang.ref.SoftReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.iterator.RandomIter;
@@ -35,7 +34,6 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.ProgressMonitor;
-import org.apache.commons.collections.keyvalue.MultiKey;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageBuilder;
 import org.geotools.coverage.grid.GridEnvelope2D;
@@ -48,7 +46,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.Util;
-import org.thema.common.collection.HashMapList;
 import org.thema.common.io.IOImage;
 import org.thema.common.parallel.*;
 import org.thema.drawshape.feature.DefaultFeature;
@@ -175,7 +172,7 @@ public final class Project {
         Envelope2D extZone = new Envelope2D(crs,
                 gZone.x-resolution, gZone.y-resolution, gZone.width+2*resolution, gZone.height+2*resolution);
 
-        TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Vectorizing..."), "", 0, envMap.size());
+        ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Vectorizing..."), envMap.size());
         patches = new ArrayList<DefaultFeature>();
         int i = 0, n = 1, nbRem = 0;
         List<String> attrNames = new ArrayList<String>(Arrays.asList("Id", AREA_ATTR, PERIM_ATTR, CAPA_ATTR));
@@ -201,8 +198,7 @@ public final class Project {
                 nbRem++;
             }
 
-            monitor.setProgress(i++);
-            monitor.setNote("" + i + " / " + envMap.size());
+            monitor.incProgress(1);
             if(monitor.isCanceled())
                 throw new InterruptedException();
         }
@@ -211,7 +207,8 @@ public final class Project {
             throw new IllegalStateException("There is no patch in the map. Check patch code and min area.");
         
         monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
-
+        monitor.setIndeterminate(true);
+        
         GridCoverageBuilder covBuilder = new GridCoverageBuilder();
         covBuilder.setEnvelope(extZone);
         covBuilder.setBufferedImage(new BufferedImage(new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY),
@@ -222,16 +219,18 @@ public final class Project {
         GridCoverage2D clustCov = covBuilder.getGridCoverage2D();
         new GeoTiffWriter(new File(prjPath, "source.tif")).write(cov, null);
         new GeoTiffWriter(new File(prjPath, "patches.tif")).write(clustCov, null);
+        
+        monitor.close();
+        
         DefaultFeature.saveFeatures(patches, new File(dir, "patches.shp"), crs);
         
         clustCov = null;
         covBuilder = null;
 
-        monitor.close();
         Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb small patch removed : " + nbRem);
 
         WritableRaster voronoiR = rasterPatchs;
-        neighborhoodEuclid2(voronoiR);
+        neighborhoodEuclid(voronoiR);
 
         voronoi = (List<Feature>) vectorizeVoronoi(voronoiR);
         DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"), crs);
@@ -250,191 +249,16 @@ public final class Project {
         
         createLayers();
     }
-
-//    public Links neighborhoodCost(WritableRaster voronoi, Raster code, double [] linkset) throws Exception {
-//        ProgressMonitor monitor = new ProgressMonitor(null, "Neighbor", "", 0, voronoi.getHeight());
-//        monitor.setProgress(1);
-//        RasterPathFinder pathfinder = new RasterPathFinder(voronoi, code, linkset, grid2space);
-//
-//        for(int y = 0; y < voronoi.getHeight(); y++) {
-//            monitor.setProgress(y);
-//            monitor.setNote("" + y + " / " + voronoi.getHeight());
-//            if(monitor.isCanceled())
-//                throw new InterruptedException();
-//            for(int x = 0; x < voronoi.getWidth(); x++)
-//                if(voronoi.getSample(x, y, 0) == 0) {
-//                    double [] res = pathfinder.calcPathNearestPatch(x, y);
-//                    voronoi.setSample(x, y, 0, res[0]);
-//                }
-//         }
-//
-//        Links links = createLinks("tmp", voronoi, monitor);
-//
-//        monitor.close();
-//
-//        return links;
-//    }
-
-    private void neighborhoodEuclid(WritableRaster voronoi) throws Exception {
-
-        TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), "", 0, voronoi.getHeight());
-        monitor.setProgress(1);
-        STRtree index = new STRtree();
-        final int NPOINTS = 50;
-        GeometryFactory factory = new GeometryFactory();
-        List<DefaultFeature> simpPatches = patches;
-        if(simplify)
-            simpPatches = simplify();
-        for(Feature f : simpPatches) {
-            Geometry geom = f.getGeometry();
-            if(geom.getNumPoints() > NPOINTS) {
-                for(int i = 0; i < geom.getNumGeometries(); i++) {
-                    Polygon p = (Polygon)geom.getGeometryN(i);
-                    Coordinate [] coords = p.getExteriorRing().getCoordinates();
-                    int ind = 0;
-                    while(ind < coords.length-1) {
-                        LineString line = factory.createLineString(Arrays.copyOfRange(coords, ind,
-                                ind+NPOINTS+1 >= coords.length-1 ? coords.length : ind+NPOINTS+1));
-                        DefaultFeature df = new DefaultFeature(f.getId(), line, null, null);
-                        index.insert(line.getEnvelopeInternal(), df);
-                        ind += NPOINTS;
-                    }
-                    for(int j = 0; j < p.getNumInteriorRing(); j++)
-                        index.insert(p.getInteriorRingN(j).getEnvelopeInternal(),
-                                new DefaultFeature(f.getId(), p.getInteriorRingN(j), null, null));
-                }
-            } else
-                index.insert(geom.getEnvelopeInternal(), f);
-        }
-
-
-        int nbOptim = 0, nb = 0;
-
-        Coordinate c = new Coordinate();
-        Envelope env = new Envelope();
-        List items = null;
-        //HashMap<Feature, Double> distMap = new HashMap<Feature, Double>();
-
-//        WritableRaster voronoi = Raster.createWritableRaster(new BandedSampleModel(
-//                DataBuffer.TYPE_INT, rasterPatchs.getWidth(), rasterPatchs.getHeight(), 1), null);
-//        voronoi.setRect(rasterPatchs);
-
-//                WritableRaster voronoi = ((WritableRaster)rasterPatchs).createWritableChild(0, 0, rasterPatchs.getWidth(), rasterPatchs.getHeight(),
-//                                0, 0, null);
-
-        long time = System.currentTimeMillis();
-
-        for(int y = 0; y < voronoi.getHeight(); y++) {
-            monitor.setProgress(y);
-            monitor.setNote("" + y + " / " + voronoi.getHeight());
-            if(monitor.isCanceled())
-                throw new InterruptedException();
-            for(int x = 0; x < voronoi.getWidth(); x++)
-                if(voronoi.getSample(x, y, 0) == 0) {
-                    nb++;
-                    c.x = x+0.5; c.y = y+0.5;
-                    grid2space.transform(c, c);
-                    Feature nearest = null;
-
-                    //distMap.clear();
-
-                    double dist = 2*resolution;
-                    double min = Double.MAX_VALUE, min2 = Double.MAX_VALUE;
-                    while(nearest == null) {
-                        dist *= 2;
-                        env.init(c);
-                        env.expandBy(dist);
-                        min = dist;
-                        items = index.query(env);
-                        for(Object item : items) {
-                            //Double d =distMap.get((Feature)item);
-                            Double d = null;
-                            if(d == null) {
-                                d = Double.MAX_VALUE;
-                                Geometry geom = ((Feature)item).getGeometry();
-                                if(geom instanceof LineString)
-                                    d = DistanceOp.distancePointLine(c, geom.getCoordinates());
-                                else
-                                    for(int g = 0; g < geom.getNumGeometries(); g++) {
-                                        Polygon poly = ((Polygon)geom.getGeometryN(g));
-                                        double dd = DistanceOp.distancePointLine(c, poly.getExteriorRing().getCoordinates());
-                                        if(dd < d)
-                                            d = dd;
-                                        int n = poly.getNumInteriorRing();
-                                        for(int i = 0; i < n; i++) {
-                                            dd = DistanceOp.distancePointLine(c, poly.getInteriorRingN(i).getCoordinates());
-                                            if(dd < d)
-                                                d = dd;
-                                        }
-                                    }
-
-                            }
-
-                            if(d < min) {
-                                if(nearest != null)
-                                    min2 = min;
-                                min = d;
-                                nearest = (Feature) item;
-                            }
-                            else {
-                                // en cas d'égalité prendre le patch d'id minimum
-                                if(d == min && nearest != null) {
-                                    if((Integer)((Feature)item).getId() < (Integer)nearest.getId())
-                                        nearest = (Feature) item;
-                                }
-                                // on conserve le second patch le plus proche
-                                if(d < min2 && d < dist)
-                                    min2 = d;
-                                //distMap.put((Feature)item, d);
-                            }
-                        }
-
-                    }
-                    double d = (((min2 == Double.MAX_VALUE ? dist : min2) - min) / (2 * resolution));
-                    // on garde une précision au centième pour éviter les problèmes de précisions à 10-15...
-                    d = Math.round(d*100) / 100;
-                    for(int j = 0; j <= d; j++)
-                        //for(int i = (int)-d+j; i <= d-j; i++) {
-                        for(int i = (int)Math.round(-d+j); i <= Math.round(d-j); i++) {
-                            final int xi = x+i;
-                            final int yj = y+j;
-                            if(xi >= 0 && yj >= 0 && xi < voronoi.getWidth() && yj < voronoi.getHeight())
-                                if(voronoi.getSample(xi, yj, 0) == 0) {
-                                    voronoi.setSample(xi, yj, 0, (Integer)nearest.getId());
-                                    nbOptim++;
-                                }
-                        }
-                    nbOptim--;
-
-                }
-        }
-
-
-        System.out.println("Temps calcul : " + (System.currentTimeMillis() - time) / 1000);
-        System.out.println("Nb Optimisé : " + nbOptim + " - normal : " + nb);
-
-        planarLinks = createLinks("Links", voronoi, monitor);
-
-        monitor.setNote("Saving...");
-
-        DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"));
-        save();
-
-        monitor.close();
-
-    }
-    
+   
     // using strtree.nearest
-    private void neighborhoodEuclid2(final WritableRaster voronoi) throws Exception {
-
-        TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), "", 0, voronoi.getHeight());
-        monitor.setProgress(1);
+    private void neighborhoodEuclid(final WritableRaster voronoi) throws Exception {
+        ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), voronoi.getHeight());
         final STRtree index = new STRtree();
         final int NPOINTS = 50;
         final GeometryFactory factory = new GeometryFactory();
         List<DefaultFeature> simpPatches = patches;
         if(simplify)
-            simpPatches = simplify();
+            simpPatches = simplify(patches);
         for(Feature f : simpPatches) {
             Geometry geom = f.getGeometry();
             if(geom.getNumPoints() > NPOINTS) {
@@ -542,7 +366,7 @@ public final class Project {
         return costLinks.values();
     }
 
-    private Links createLinks(String name, Raster voronoiRaster, ProgressMonitor monitor) {
+    private Links createLinks(String name, Raster voronoiRaster, ProgressBar monitor) {
         monitor.setNote("Create link set...");
         monitor.setProgress(0);
 
@@ -786,21 +610,14 @@ public final class Project {
         return patchIndex;
     }
 
-
-
-    private List<DefaultFeature> simplify() {
+    private List<DefaultFeature> simplify(List<DefaultFeature> patches) {
         List<DefaultFeature> simpPatches = new ArrayList<DefaultFeature>();
-        TaskMonitor monitor = new TaskMonitor(null, "Simplify", "", 0, patches.size());
-        int i = 0;
+        ProgressBar monitor = Config.getProgressBar("Simplify", patches.size());
         for(Feature f : patches) {
-            monitor.setProgress(i++);
-            if(monitor.isCanceled()) {
-                return null;
-            }
             simpPatches.add(new DefaultFeature(f.getId(), TopologyPreservingSimplifier.simplify(f.getGeometry(), resolution*1.5), null, null));
+            monitor.incProgress(1);
         }
         monitor.close();
-//        addDebugLayer(new FeatureLayer("Simp patch", simpPatches));
 
         return simpPatches;
     }
@@ -832,8 +649,8 @@ public final class Project {
     }
 
     private List<? extends Feature> vectorizeVoronoi(Raster voronoi) {
+        ProgressBar monitor = Config.getProgressBar("Vectorize voronoi");
         TreeMap<Integer, Envelope> envMap = new TreeMap<Integer, Envelope>();
-
         for(int j = 1; j < voronoi.getHeight()-1; j++)
             for(int i = 1; i < voronoi.getWidth()-1; i++)
                 if(voronoi.getSample(i, j, 0) > 0) {
@@ -845,7 +662,7 @@ public final class Project {
                         env.expandToInclude(i, j);
 
                 }
-
+        monitor.setMaximum(envMap.size());
         for(Envelope env : envMap.values()) {
             env.expandBy(0.5);
             env.translate(0.5, 0.5);
@@ -856,7 +673,9 @@ public final class Project {
             Geometry geom = vectorize(voronoi, envMap.get(id), id);
             geom.apply(grid2space);
             features.add(new DefaultFeature(id, geom, null, null));
+            monitor.incProgress(1);
         }
+        monitor.close();
 
         return features;
     }
@@ -942,7 +761,8 @@ public final class Project {
      * @return  un raster avec un bord d'un pixel de large ayant la valeur -1
      */
     private WritableRaster extractPatch(RenderedImage img, int code, double noData, boolean con8, Map<Integer, Envelope> envMap) {
-        TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_patch"), "", 0, img.getHeight());
+        //TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_patch"), "", 0, img.getHeight());
+        ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_patch"), img.getHeight());
         WritableRaster clust = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_INT, img.getWidth()+2, img.getHeight()+2, 1), null);
         int k = 0;
         TreeSet<Integer> set = new TreeSet<Integer>();

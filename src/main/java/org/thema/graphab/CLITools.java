@@ -115,7 +115,7 @@ public class CLITools {
                     "--show\n" + 
                     "--linkset [complete[=dmax]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
-                    "--graph [threshold=min:inc:max]\n" +
+                    "--graph [nointra] [threshold=min:inc:max]\n" +
                     "--usegraph graph1,...,graphn\n" +
                     "--pointset pointset.shp\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
@@ -357,7 +357,7 @@ public class CLITools {
                     throw new IllegalArgumentException("Only one range can be defined for linkset");
                 rangeCost = cost;
                 dynCodes = codes.getValues();
-                name = tok[0];
+                name = tok[0].replace(',', '_');
             }
         }
         useCosts.clear();
@@ -387,7 +387,12 @@ public class CLITools {
 
     private void batchGraph(List<String> args) throws Exception {
         int type = GraphGenerator.COMPLETE;
+        boolean intra = true;
         Range range = null;
+        if(!args.isEmpty() && args.get(0).equals("nointra")) {
+            intra = false;
+            args.remove(0);
+        }
         if(!args.isEmpty() && args.get(0).startsWith("threshold=")) {
             type = GraphGenerator.THRESHOLD;
             String arg = args.remove(0);
@@ -397,14 +402,14 @@ public class CLITools {
         useGraphs.clear();
         for(Linkset cost : getCosts()) {
             if(type == GraphGenerator.COMPLETE) {
-                GraphGenerator g = new GraphGenerator("comp_" + cost.getName(), cost, type, 0, true);
+                GraphGenerator g = new GraphGenerator("comp_" + cost.getName(), cost, type, 0, intra && cost.isRealPaths());
                 System.out.println("Create graph " + g.getName());
                 project.addGraph(g, save);
                 useGraphs.add(g);
             }
             else
                 for(Double d : range.getValues()) {
-                    GraphGenerator g = new GraphGenerator("thresh_" + d + "_" + cost.getName(), cost, type, d, true);
+                    GraphGenerator g = new GraphGenerator("thresh_" + d + "_" + cost.getName(), cost, type, d, intra && cost.isRealPaths());
                     System.out.println("Create graph " + g.getName());
                     project.addGraph(g, save);
                     useGraphs.add(g);
@@ -927,6 +932,10 @@ public class CLITools {
             for(GraphGenerator graph : getGraphs()) {
                 if(graph.getLinkset().getTopology() == Linkset.PLANAR) {
                     System.out.println("Planar graph is not supported : " + graph.getName());
+                    continue;
+                }
+                if(graph.isIntraPatchDist()) {
+                    System.out.println("Intrapatch distance is not supported : " + graph.getName());
                     continue;
                 }
                 for(Double res : rangeRes.getValues()) {
