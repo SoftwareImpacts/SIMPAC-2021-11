@@ -66,7 +66,6 @@ import org.thema.graphab.util.SerieFrame;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    public static final String VERSION = "1.3 - Development version";
 
     public static Project project;
     
@@ -78,7 +77,7 @@ public class MainFrame extends javax.swing.JFrame {
         setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/org/thema/graphab/ressources/ico64_graphab.png")));
         initComponents();
         setLocationRelativeTo(null);
-        setTitle("Graphab - " + VERSION);
+        setTitle("Graphab - " + getVersion());
         mapViewer.putAddLayerButton();
         mapViewer.putExportButton();
         
@@ -1080,7 +1079,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
         JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle")
-                .getString("MainFrame.AboutMessage"), "Graphab - " + VERSION, JOptionPane.PLAIN_MESSAGE, new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/org/thema/graphab/ressources/ico64_graphab.png"))));
+                .getString("MainFrame.AboutMessage"), "Graphab - " + getVersion(), JOptionPane.PLAIN_MESSAGE, new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/org/thema/graphab/ressources/ico64_graphab.png"))));
     }//GEN-LAST:event_aboutMenuItemActionPerformed
 
     private void logMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logMenuItemActionPerformed
@@ -1261,6 +1260,14 @@ public class MainFrame extends javax.swing.JFrame {
         }
 
         return false;
+    }
+    
+    public static String getVersion() {
+        String version = MainFrame.class.getPackage().getImplementationVersion();
+        if(version == null)
+            return "unpackage version";
+        else
+            return version;
     }
     
     /**

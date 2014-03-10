@@ -184,7 +184,7 @@ public final class Project {
         Envelope2D extZone = new Envelope2D(crs,
                 gZone.x-resolution, gZone.y-resolution, gZone.width+2*resolution, gZone.height+2*resolution);
 
-        TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Vectorizing..."), "", 0, envMap.size());
+        ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Vectorizing..."), envMap.size());
         patches = new ArrayList<DefaultFeature>();
         int i = 0, n = 1, nbRem = 0;
         List<String> attrNames = new ArrayList<String>(PATCH_ATTRS);
@@ -210,8 +210,7 @@ public final class Project {
                 nbRem++;
             }
 
-            monitor.setProgress(i++);
-            monitor.setNote("" + i + " / " + envMap.size());
+            monitor.incProgress(1);
             if(monitor.isCanceled())
                 throw new InterruptedException();
         }
@@ -220,7 +219,8 @@ public final class Project {
             throw new IllegalStateException("There is no patch in the map. Check patch code and min area.");
         
         monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
-
+        monitor.setIndeterminate(true);
+        
         GridCoverageBuilder covBuilder = new GridCoverageBuilder();
         covBuilder.setEnvelope(extZone);
         covBuilder.setBufferedImage(new BufferedImage(new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY),
@@ -287,15 +287,13 @@ public final class Project {
     
     // using strtree.nearest
     private void neighborhoodEuclid(final WritableRaster voronoi) throws Exception {
-
-        TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), "", 0, voronoi.getHeight());
-        monitor.setProgress(1);
+        ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), voronoi.getHeight());
         final STRtree index = new STRtree();
         final int NPOINTS = 50;
         final GeometryFactory factory = new GeometryFactory();
         List<DefaultFeature> simpPatches = patches;
         if(simplify)
-            simpPatches = simplify();
+            simpPatches = simplify(patches);
         for(Feature f : simpPatches) {
             Geometry geom = f.getGeometry();
             if(geom.getNumPoints() > NPOINTS) {
@@ -403,7 +401,7 @@ public final class Project {
         return costLinks.values();
     }
 
-    private Links createLinks(Raster voronoiRaster, ProgressMonitor monitor) {
+    private Links createLinks(Raster voronoiRaster, ProgressBar monitor) {
         monitor.setNote("Create link set...");
         monitor.setProgress(0);
 
@@ -647,17 +645,12 @@ public final class Project {
         return patchIndex;
     }
 
-
-    private List<DefaultFeature> simplify() {
+    private List<DefaultFeature> simplify(List<DefaultFeature> patches) {
         List<DefaultFeature> simpPatches = new ArrayList<DefaultFeature>();
-        TaskMonitor monitor = new TaskMonitor(null, "Simplify", "", 0, patches.size());
-        int i = 0;
+        ProgressBar monitor = Config.getProgressBar("Simplify", patches.size());
         for(Feature f : patches) {
-            monitor.setProgress(i++);
-            if(monitor.isCanceled()) {
-                return null;
-            }
             simpPatches.add(new DefaultFeature(f.getId(), TopologyPreservingSimplifier.simplify(f.getGeometry(), resolution*1.5), null, null));
+            monitor.incProgress(1);
         }
         monitor.close();
 
@@ -691,8 +684,8 @@ public final class Project {
     }
 
     private List<? extends Feature> vectorizeVoronoi(Raster voronoi) {
+        ProgressBar monitor = Config.getProgressBar("Vectorize voronoi");
         TreeMap<Integer, Envelope> envMap = new TreeMap<Integer, Envelope>();
-
         for(int j = 1; j < voronoi.getHeight()-1; j++)
             for(int i = 1; i < voronoi.getWidth()-1; i++)
                 if(voronoi.getSample(i, j, 0) > 0) {
@@ -704,7 +697,7 @@ public final class Project {
                         env.expandToInclude(i, j);
 
                 }
-
+        monitor.setMaximum(envMap.size());
         for(Envelope env : envMap.values()) {
             env.expandBy(0.5);
             env.translate(0.5, 0.5);
@@ -715,7 +708,9 @@ public final class Project {
             Geometry geom = vectorize(voronoi, envMap.get(id), id);
             geom.apply(grid2space);
             features.add(new DefaultFeature(id, geom, null, null));
+            monitor.incProgress(1);
         }
+        monitor.close();
 
         return features;
     }
