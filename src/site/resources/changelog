@@ -1,3 +1,5 @@
+version 1.3.1 (10/03/2014)
+- meta patch : correct bug "This method does not support GeometryCollection"
 version 1.3 (20/02/2014)
 - add meta patch project creation in menu Graph
 version 1.2-rc1 (19/02/2014)

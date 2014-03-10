@@ -52,6 +52,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.GlobalDataStore;
 import org.thema.common.Config;
+import org.thema.common.JTS;
 import org.thema.common.Util;
 import org.thema.common.collection.HashMapList;
 import org.thema.common.io.IOFile;
@@ -1220,7 +1221,7 @@ public final class Project {
                 metaPatch.add(patch.getGeometry());
                 metaVoronoi.add(getVoronoi((Integer)patch.getId()).getGeometry());
             }
-            Geometry patchGeom = new GeometryFactory().buildGeometry(metaPatch);
+            Geometry patchGeom = JTS.flattenGeometryCollection(new GeometryFactory().buildGeometry(metaPatch));
             metaPatches.add(new DefaultFeature(i+1, patchGeom, PATCH_ATTRS, 
                     Arrays.asList(i+1, patchGeom.getArea(), patchGeom.getBoundary().getLength(), capa)));
             Geometry voronoiGeom = CascadedPolygonUnion.union(metaVoronoi);
