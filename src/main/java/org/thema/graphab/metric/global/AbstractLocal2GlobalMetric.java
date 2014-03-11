@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.geotools.graph.structure.Edge;
+import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.Project.Method;
@@ -23,13 +25,21 @@ import org.thema.graphab.metric.local.LocalMetric;
  */
 public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements PreCalcMetric {
 
+    public enum TypeElem {NODE, EDGE}
+    
     private LocalMetric indice;
+    protected TypeElem typeElem;
     private transient List<Double> values;
 
-    public AbstractLocal2GlobalMetric(LocalMetric indice) {
-        if(!indice.calcNodes())
-            throw new IllegalArgumentException("L'indice ne se calcule que sur les noeuds");
-        
+    
+    public AbstractLocal2GlobalMetric(LocalMetric indice, TypeElem type) {
+        typeElem = type;
+        if(typeElem == TypeElem.NODE && !indice.calcNodes())
+            throw new IllegalArgumentException("La métrique locale ne se calcule pas sur les noeuds");
+        if(typeElem == TypeElem.EDGE && !indice.calcEdges())
+            throw new IllegalArgumentException("La métrique locale ne se calcule pas sur les liens");
+        if(typeElem == TypeElem.EDGE && !(indice instanceof PreCalcMetric))
+            throw new IllegalArgumentException("La métrique locale ne peut pas se calculer pas sur les liens");
         this.indice = indice;
     }
 
@@ -38,15 +48,20 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
         if(indice instanceof PreCalcMetric)
             return ((PreCalcMetric)indice).calcPartIndice(param, g);
         else
-            return indice.calcIndice((Node)param, g);
+            return indice.calcIndice((Graphable)param, g);
     }
 
     @Override
     public void endCalc(GraphGenerator g) {
         if(indice instanceof PreCalcMetric) {
             ((PreCalcMetric)indice).endCalc(g);
-            for(Node n : g.getNodes())
-                values.add(indice.calcIndice(n, g));
+            if(typeElem == TypeElem.NODE) {
+                for(Node n : g.getNodes())
+                    values.add(indice.calcIndice(n, g));
+            } else {
+                for(Edge e : g.getEdges())
+                    values.add(indice.calcIndice(e, g));
+            }
         }
     }
 
@@ -100,12 +115,12 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
     
     @Override
     public String getShortName() {
-        return getPrefixShortName() + "#" + indice.getShortName();
+        return getPrefixShortName() + "#" + (typeElem == TypeElem.EDGE ? "e" : "") + indice.getShortName();
     }
 
     @Override
     public String getName() {
-        return getPrefixName() + " " + indice.getName();
+        return getPrefixName() + (typeElem == TypeElem.EDGE ? "(" + typeElem.toString().toLowerCase() + ") " : " ") + indice.getName();
     }
 
     public void setParams(Map<String, Object> params) {

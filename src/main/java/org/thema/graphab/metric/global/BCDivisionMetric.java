@@ -10,15 +10,15 @@ import org.thema.graphab.metric.local.BCLocalMetric;
  *
  * @author gvuidel
  */
-public class BCEntropyMetric {
+public class BCDivisionMetric {
 
-    public static class Node extends EntropyLocal2GlobalMetric {
+    public static class Node extends DivisionLocal2GlobalMetric {
         public Node() {
             super(new BCLocalMetric(), TypeElem.NODE);
         }
     }
     
-    public static class Edge extends EntropyLocal2GlobalMetric {
+    public static class Edge extends DivisionLocal2GlobalMetric {
         public Edge() {
             super(new BCLocalMetric(), TypeElem.EDGE);
         }

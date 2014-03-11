@@ -16,7 +16,7 @@ public class SumLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
 
 
     public SumLocal2GlobalMetric(LocalMetric indice) {
-        super(indice);
+        super(indice, TypeElem.NODE);
     }
 
     @Override

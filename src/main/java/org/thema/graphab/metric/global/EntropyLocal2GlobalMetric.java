@@ -15,8 +15,8 @@ import org.thema.graphab.metric.local.LocalMetric;
 public class EntropyLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
 
 
-    public EntropyLocal2GlobalMetric(LocalMetric indice) {
-        super(indice);
+    public EntropyLocal2GlobalMetric(LocalMetric indice, TypeElem type) {
+        super(indice, type);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class EntropyLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
 
     @Override
     public EntropyLocal2GlobalMetric dupplicate() {
-        return new EntropyLocal2GlobalMetric((LocalMetric)getIndice().dupplicate());
+        return new EntropyLocal2GlobalMetric((LocalMetric)getIndice().dupplicate(), typeElem);
     }
 
     @Override
