@@ -1061,7 +1061,7 @@ public final class Project {
             f.delete();
     }
 
-    private synchronized List<Feature> getVoronoi() {
+    public synchronized List<Feature> getVoronoi() {
         if(voronoi == null)
             try {
                 List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(dir, "voronoi.shp"), "Id", null);

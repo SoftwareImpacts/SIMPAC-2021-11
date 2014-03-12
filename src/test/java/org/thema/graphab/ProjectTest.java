@@ -269,6 +269,11 @@ public class ProjectTest {
             put("NC-graph_plan_cout10_300", 9.0);
             put("NC-graph_comp_euclid_1000", 19.0);
             put("NC-graph_comp_euclid_1000_nointra", 19.0);
+            
+            // test metric
+            put("E#eBC_d1000_p0.05_beta1-graph_comp_cout10", 0.7339459732275027);
+            put("D#BC_d1000_p0.05_beta1-graph_comp_cout10", 0.9736784563148873);
+            put("D#eBC_d1000_p0.05_beta1-graph_comp_cout10", 0.9845967148211576);
         }};
         
         HashSet<String> testIndices = new HashSet<String>();

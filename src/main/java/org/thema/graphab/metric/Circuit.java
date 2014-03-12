@@ -354,7 +354,7 @@ public class Circuit {
     private DenseVector solve(CompRowMatrix A, Preconditioner P, DenseVector Z, DenseVector U) {
         // Allocate storage for Conjugate Gradients
         IterativeSolver solver = new CG(U);
-        
+
         solver.setPreconditioner(P);
         try {
             // Start the solver, and check for problems

@@ -36,6 +36,7 @@ import org.thema.common.swing.LoggingFrame;
 import org.thema.common.swing.PreferencesDialog;
 import org.thema.drawshape.feature.DefaultFeature;
 import org.thema.drawshape.feature.WritableFeature;
+import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.style.CircleStyle;
 import org.thema.drawshape.style.FeatureStyle;
@@ -1116,6 +1117,7 @@ public class MainFrame extends javax.swing.JFrame {
                 try {
                     project.createMetaPatchProject(prjName, graph);
                     loadProject(new File(prjDir, prjName + ".xml"));
+                    ((DefaultGroupLayer)mapViewer.getLayers()).addLayerLast(new FeatureLayer("Patch voronoi", project.getVoronoi(), new FeatureStyle(null, Color.BLACK)));
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, "Error " + ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
