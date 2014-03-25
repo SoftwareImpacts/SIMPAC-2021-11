@@ -27,7 +27,6 @@ import java.lang.ref.SoftReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.iterator.RandomIter;
@@ -35,8 +34,6 @@ import javax.media.jai.iterator.RandomIterFactory;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.ProgressMonitor;
-import org.apache.commons.collections.keyvalue.MultiKey;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageBuilder;
 import org.geotools.coverage.grid.GridCoverageFactory;
@@ -50,17 +47,18 @@ import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.thema.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.JTS;
+import org.thema.common.ProgressBar;
 import org.thema.common.Util;
-import org.thema.common.collection.HashMapList;
 import org.thema.common.io.IOFile;
-import org.thema.common.io.IOImage;
+import org.thema.data.IOImage;
 import org.thema.common.parallel.*;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.Feature;
-import org.thema.drawshape.feature.FeatureGetter;
+import org.thema.common.swing.TaskMonitor;
+import org.thema.data.GlobalDataStore;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
+import org.thema.data.feature.FeatureGetter;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.FeatureLayer;
@@ -658,7 +656,10 @@ public final class Project {
     }
 
     public final DefaultFeature getPatch(int id) {
-        return patches.get(id-1);
+        if(id > 0 && id <= patches.size())
+            return patches.get(id-1);
+        else
+            throw new IllegalArgumentException("Unknown patch id : " + id);
     }
 
     public final Feature getVoronoi(int id) {

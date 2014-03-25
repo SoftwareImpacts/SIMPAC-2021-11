@@ -14,10 +14,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.thema.common.collection.TreeMapList;
-import org.thema.common.distribute.AbstractDistributeTask;
-import org.thema.common.parallel.ProgressBar;
-import org.thema.common.parallel.TaskMonitor;
-import org.thema.drawshape.feature.DefaultFeature;
+import org.thema.parallel.AbstractParallelTask;
+import org.thema.common.ProgressBar;
+import org.thema.common.swing.TaskMonitor;
+import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.GraphMetricLauncher;
@@ -27,7 +27,7 @@ import org.thema.graphab.metric.global.GlobalMetric;
  *
  * @author gvuidel
  */
-public class AddPatchMultiMPITask extends AbstractDistributeTask<TreeMapList<Double, Set<Point>>, TreeMapList<Double, Set<Point>>> 
+public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Double, Set<Point>>, TreeMapList<Double, Set<Point>>> 
                     implements Serializable{
 
     // Patches to be added at init

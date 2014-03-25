@@ -15,7 +15,7 @@ import no.uib.cipr.matrix.sparse.*;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 

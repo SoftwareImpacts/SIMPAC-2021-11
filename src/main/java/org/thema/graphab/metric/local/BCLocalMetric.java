@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.Feature;
 import org.thema.graph.pathfinder.Path;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;

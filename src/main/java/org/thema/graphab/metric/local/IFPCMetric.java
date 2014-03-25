@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.graph.structure.Graphable;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.Feature;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.Project;

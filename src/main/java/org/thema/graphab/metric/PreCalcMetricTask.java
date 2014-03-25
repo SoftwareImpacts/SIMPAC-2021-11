@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.geotools.graph.structure.Node;
-import org.thema.common.distribute.AbstractDistributeTask;
-import org.thema.common.parallel.TaskMonitor;
-import org.thema.drawshape.feature.Feature;
+import org.thema.parallel.AbstractParallelTask;
+import org.thema.common.swing.TaskMonitor;
+import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.PreCalcMetric.TypeParam;
@@ -21,7 +21,7 @@ import org.thema.graphab.metric.PreCalcMetric.TypeParam;
  * 
  * @author gvuidel
  */
-public class PreCalcMetricTask extends AbstractDistributeTask<Void, List> implements Serializable {
+public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implements Serializable {
 
     PreCalcMetric indice;
     double maxCost;

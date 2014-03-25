@@ -7,8 +7,8 @@ package org.thema.graphab.metric;
 
 import java.io.Serializable;
 import java.util.concurrent.CancellationException;
-import org.thema.common.parallel.TaskMonitor;
-import org.thema.common.distribute.ExecutorService;
+import org.thema.common.swing.TaskMonitor;
+import org.thema.parallel.ExecutorService;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.global.GlobalMetric;
 

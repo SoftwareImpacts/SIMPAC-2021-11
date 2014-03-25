@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.Feature;
 import org.thema.graphab.graph.DeltaGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphGenerator.PathFinder;

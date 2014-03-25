@@ -21,17 +21,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.geotools.feature.SchemaException;
-import org.thema.GlobalDataStore;
+import org.thema.data.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.collection.HashMapList;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.ParallelFTask;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.common.ProgressBar;
 import org.thema.common.parallel.SimpleParallelTask;
-import org.thema.common.parallel.TaskMonitor;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.Feature;
+import org.thema.common.swing.TaskMonitor;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 
 /**

@@ -25,17 +25,19 @@ import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.thema.GlobalDataStore;
+import org.thema.data.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.JavaLoader;
+import org.thema.common.ProgressBar;
 import org.thema.common.Util;
-import org.thema.common.distribute.ExecutorService;
+import org.thema.parallel.ExecutorService;
 import org.thema.common.io.tab.CSVTabReader;
 import org.thema.common.parallel.*;
 import org.thema.common.swing.LoggingFrame;
 import org.thema.common.swing.PreferencesDialog;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.WritableFeature;
+import org.thema.common.swing.TaskMonitor;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.WritableFeature;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.style.CircleStyle;
@@ -971,11 +973,6 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             CSVTabReader r = new CSVTabReader(dlg.file);
             r.read(dlg.idField);
-            for(Number id : (Set<Number>)r.getKeySet())
-                if(project.getPatch(id.intValue()) == null) {
-                    JOptionPane.showMessageDialog(this, id +java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("_is_not_a_patch_id"));
-                    return;
-                }
 
             if(r.getKeySet().size() < project.getPatches().size()) {
                 JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Some_patch_ids_are_missing."));

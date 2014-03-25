@@ -30,7 +30,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.thema.common.Config;
-import org.thema.common.io.IOImage;
+import org.thema.data.IOImage;
 
 /**
  *

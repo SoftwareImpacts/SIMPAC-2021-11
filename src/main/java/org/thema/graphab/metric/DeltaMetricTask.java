@@ -9,10 +9,10 @@ import java.io.Serializable;
 import java.util.*;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Graphable;
-import org.thema.common.parallel.TaskMonitor;
-import org.thema.common.distribute.AbstractDistributeTask;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.Feature;
+import org.thema.common.swing.TaskMonitor;
+import org.thema.parallel.AbstractParallelTask;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.DeltaGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
@@ -21,7 +21,7 @@ import org.thema.graphab.graph.GraphGenerator;
  *
  * @author gvuidel
  */
-public class DeltaMetricTask extends AbstractDistributeTask<Map<Object, Double[]>, Map<Object, Double[]>>
+public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>, Map<Object, Double[]>>
         implements Serializable {
 
     String graphName;

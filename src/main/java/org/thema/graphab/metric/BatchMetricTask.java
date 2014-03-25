@@ -14,7 +14,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFTask;
-import org.thema.common.parallel.TaskMonitor;
+import org.thema.common.swing.TaskMonitor;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.MainFrame;

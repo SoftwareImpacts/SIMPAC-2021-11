@@ -10,8 +10,8 @@ import org.geotools.graph.build.basic.BasicGraphBuilder;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
 
 /**
  *

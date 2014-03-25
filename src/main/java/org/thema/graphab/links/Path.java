@@ -10,8 +10,8 @@ import com.vividsolutions.jts.geom.LineString;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.util.DistanceOp;
 

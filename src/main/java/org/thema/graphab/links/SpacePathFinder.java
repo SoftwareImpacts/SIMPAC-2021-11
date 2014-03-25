@@ -10,8 +10,8 @@ import com.vividsolutions.jts.geom.Point;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
 
 /**
  *

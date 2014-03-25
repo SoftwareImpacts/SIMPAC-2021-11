@@ -13,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
 import org.thema.common.Config;
-import org.thema.common.parallel.ProgressBar;
+import org.thema.common.ProgressBar;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;

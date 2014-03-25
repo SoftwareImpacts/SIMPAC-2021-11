@@ -14,8 +14,8 @@ import com.vividsolutions.jts.geom.Point;
 import java.awt.image.Raster;
 import java.io.IOException;
 import java.util.*;
-import org.thema.drawshape.feature.DefaultFeature;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 
 /**

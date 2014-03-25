@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import org.thema.drawshape.feature.Feature;
+import org.thema.data.feature.Feature;
 
 
 /**

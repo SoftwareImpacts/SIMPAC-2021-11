@@ -2,7 +2,7 @@
 package org.thema.graphab.pointset;
 
 import java.util.List;
-import org.thema.drawshape.feature.DefaultFeature;
+import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.links.Linkset;
 
 /**
