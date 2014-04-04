@@ -108,9 +108,6 @@ public class Circuit {
                 indices[indNodes.get(edge.getNodeB())].add(indNodes.get(edge.getNodeA()));
             }
             
-                
-            CompRowMatrix A;
-           
             int [][] tab = new int[nbNodes][];
             for(int i = 0; i < nbNodes; i++) {
                 tab[i] = new int[indices[i].size()];
@@ -119,7 +116,8 @@ public class Circuit {
                     tab[i][j] = (Integer)indices[i].get(j);
 
             }
-            A = new CompRowMatrix(nbNodes, nbNodes, tab);
+            
+            CompRowMatrix A = new CompRowMatrix(nbNodes, nbNodes, tab);
             
             int i = 0;
             for(Node node : (Collection<Node>)comp.getNodes()) {
@@ -246,20 +244,16 @@ public class Circuit {
         if(ind1 == ind2)
             throw new IllegalArgumentException("Circuit impossible : même noeud origine et destination");
         
-        DenseVector U, Z;
         // Z vector is null only the origin patch has current value
-        Z = new DenseVector(nbNodes);
+        DenseVector Z = new DenseVector(nbNodes);
         Z.set(ind1, courant);
         Z.set(ind2, -courant);
         
+        DenseVector U;
         if(dense && compLU.containsKey(comp)) {
             U = new DenseVector(solveDense(compLU.get(comp), Z).getData());
         } else {
-            // Calcule a starting solution U
-            double [] v = new double[nbNodes];
-            Arrays.fill(v, 1);
-            U = new DenseVector(v);
-            solve(compMatrix.get(comp), compPrecond.get(comp), Z, U);
+            U = solve(compMatrix.get(comp), compPrecond.get(comp), Z);
         }
         
         return U;
@@ -285,8 +279,7 @@ public class Circuit {
         int nbNodes = comp.getNodes().size();
         int ind1 = indNodes.get(n1);
         
-        DenseVector U, Z;
-        Z = new DenseVector(nbNodes);
+        DenseVector Z = new DenseVector(nbNodes);
         double sumI = 0;
         for(Node node : (Collection<Node>)comp.getNodes()) {
             int ind = indNodes.get(node);
@@ -298,14 +291,11 @@ public class Circuit {
         }
         Z.set(ind1, -sumI);
         
+        DenseVector U;
         if(dense && compLU.containsKey(comp)) {
             U = new DenseVector(solveDense(compLU.get(comp), Z).getData());
         } else {
-            // Calcule a starting solution U
-            double [] v = new double[nbNodes];
-            Arrays.fill(v, 1);
-            U = new DenseVector(v);
-            solve(compMatrix.get(comp), compPrecond.get(comp), Z, U);
+            U = solve(compMatrix.get(comp), compPrecond.get(comp), Z);
         }
 
         return getCourant(comp, U);
@@ -332,26 +322,26 @@ public class Circuit {
         double capa = Project.getPatchCapacity(n1);
         int ind1 = indNodes.get(n1);
         
-        DenseVector U, Z;
         // Z vector is null only the origin patch has current value
-        Z = new DenseVector(nbNodes);
+        DenseVector Z = new DenseVector(nbNodes);
         Z.set(ind1, Math.pow(capa, beta));
-        // Calcule a starting solution U
-        double [] v = new double[nbNodes];
-        Arrays.fill(v, 1);
-        v[ind1] = Math.pow(capa, beta);
-        U = new DenseVector(v);
 
         CompRowMatrix A = compMatrix.get(comp).copy();
         A.add(ind1, ind1, -1 / (capaR * Math.pow(capa, capaExp)));
         
-        solve(A, calcPrecond(A), Z, U);
+        DenseVector U = solve(A, calcPrecond(A), Z);
 
-       return getCourant(comp, U);
-        
+        return getCourant(comp, U);
     }
     
-    private DenseVector solve(CompRowMatrix A, Preconditioner P, DenseVector Z, DenseVector U) {
+    private DenseVector solve(CompRowMatrix A, Preconditioner P, DenseVector Z) {
+        // Calcule a starting solution U
+        double [] v = new double[Z.size()];
+        Arrays.fill(v, 1);
+        DenseVector U = new DenseVector(v);        
+//        // May be better initial solution      
+//        DenseVector U = new DenseVector(Z);
+        
         // Allocate storage for Conjugate Gradients
         IterativeSolver solver = new CG(U);
 

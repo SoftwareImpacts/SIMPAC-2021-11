@@ -1311,7 +1311,7 @@ public class MainFrame extends javax.swing.JFrame {
         // CLI execution
         if(args.length > 0 && !args[0].equals(JavaLoader.NOFORK)) {
             try {
-                if(!GraphicsEnvironment.isHeadless())
+                if(!GraphicsEnvironment.isHeadless() && SplashScreen.getSplashScreen() != null)
                     SplashScreen.getSplashScreen().close();
                 new CLITools().execute(args);
             } catch (Throwable ex) {

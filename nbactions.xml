@@ -13,6 +13,7 @@
                 <exec.args>-Xmx3g -classpath %classpath org.thema.graphab.MainFrame</exec.args>
                 <exec.executable>java</exec.executable>
                 <skipTests>true</skipTests>
+                <exec.workingdir>/home/gvuidel/data_graphab/extrait1000</exec.workingdir>
             </properties>
         </action>
         <action>
@@ -29,6 +30,7 @@
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
                 <skipTests>true</skipTests>
+                <exec.workingdir>/home/gvuidel/data_graphab/extrait1000</exec.workingdir>
             </properties>
         </action>
         <action>
@@ -44,6 +46,7 @@
                 <exec.args>-Xmx3g -classpath %classpath org.thema.graphab.MainFrame</exec.args>
                 <exec.executable>java</exec.executable>
                 <skipTests>true</skipTests>
+                <exec.workingdir>/home/gvuidel/data_graphab/extrait1000</exec.workingdir>
             </properties>
         </action>
         <action>

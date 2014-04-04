@@ -716,7 +716,7 @@ public final class Project {
         return features;
     }
 
-    private Geometry vectorize(Raster patchs, Envelope env, double val) {
+    public static Geometry vectorize(Raster patchs, Envelope env, double val) {
         GeometryFactory factory = new GeometryFactory();
         List<LineString> lines = new ArrayList<LineString>();
 
@@ -754,7 +754,7 @@ public final class Project {
 
         }
 
-// remove points not needed on straight line
+        // remove points not needed on straight line
         List<Polygon> simpPolys = new ArrayList<Polygon>();
         for(Polygon p : finalPolys) {
             LinearRing [] interior = new LinearRing[p.getNumInteriorRing()];
@@ -766,7 +766,6 @@ public final class Project {
         }
 
         return factory.buildGeometry(simpPolys);
-
     }
 
     /**
@@ -774,7 +773,7 @@ public final class Project {
      * @param coords
      * @return
      */
-    private Coordinate [] simpRing(Coordinate[] coords) {
+    private static Coordinate [] simpRing(Coordinate[] coords) {
         ArrayList<Coordinate> newCoords = new ArrayList<Coordinate>();
         Coordinate prec = coords[coords.length-1], cur = coords[0], next;
         for(int i = 1; i < coords.length; i++) {
@@ -910,23 +909,38 @@ public final class Project {
         return codes;
     }
 
-    public SpacePathFinder getPathFinder(Linkset cost) throws Exception {
-        return cost.getType_dist() == Linkset.EUCLID ?
-            new EuclidePathFinder(this) : getRasterPathFinder(cost);
+    public SpacePathFinder getPathFinder(Linkset linkset) throws Exception {
+        if(linkset.getType_dist() == Linkset.CIRCUIT)
+            throw new IllegalArgumentException("Circuit linkset is not supported");
+        return linkset.getType_dist() == Linkset.EUCLID ?
+            new EuclidePathFinder(this) : getRasterPathFinder(linkset);
     }
     
-    public RasterPathFinder getRasterPathFinder(Linkset cost) throws Exception {
-        switch(cost.getType_dist()) {
-            case Linkset.COST:
-                return new RasterPathFinder(this, getImageSource(), cost.getCosts());
-            case Linkset.EXT_COST:
-                if(cost.getExtCostFile().exists()) {
-                    Raster extRaster = loadExtCostRaster(cost.getExtCostFile());
-                    return new RasterPathFinder(this, extRaster);
-                } else
-                    throw new RuntimeException("Cost raster file " + cost.getExtCostFile() + " not found");
-            default:
-                throw new IllegalArgumentException();
+    public RasterPathFinder getRasterPathFinder(Linkset linkset) throws Exception {
+        if(linkset.getType_dist() != Linkset.COST)
+            throw new IllegalArgumentException();
+        if(linkset.isExtCost()) {
+            if(linkset.getExtCostFile().exists()) {
+                Raster extRaster = loadExtCostRaster(linkset.getExtCostFile());
+                return new RasterPathFinder(this, extRaster);
+            } else
+                throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
+        } else {
+            return new RasterPathFinder(this, getImageSource(), linkset.getCosts());
+        }
+    }
+    
+    public CircuitRaster getRasterCircuit(Linkset linkset) throws Exception {
+        if(linkset.getType_dist() != Linkset.CIRCUIT)
+            throw new IllegalArgumentException();
+        if(linkset.isExtCost()) {
+            if(linkset.getExtCostFile().exists()) {
+                Raster extRaster = loadExtCostRaster(linkset.getExtCostFile());
+                return new CircuitRaster(this, extRaster, true, linkset.isOptimCirc());
+            } else
+                throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
+        } else {
+            return new CircuitRaster(this, getImageSource(), linkset.getCosts(), true, linkset.isOptimCirc());
         }
     }
 

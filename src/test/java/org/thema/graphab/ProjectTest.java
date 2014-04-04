@@ -108,6 +108,7 @@ public class ProjectTest {
             put("comp_cout10_all", 11476);
             put("comp_cout10_500", 361);
             put("comp_cout10_500_nopath", 1704); // and keep links
+            put("plan_circ", 399);
 
         }};
         HashMap<String, Double> sumCosts = new HashMap<String, Double>() {{
@@ -121,6 +122,7 @@ public class ProjectTest {
             put("plan_cout10_keep_links", 78962.696132);
             put("plan_cout1_len", 27588.8605768);
             put("plan_euclid", 377561.1236639023);
+            put("plan_circ", 409.4970877191959);
         }};
         HashMap<String, Double> sumDists = new HashMap<String, Double>() {{
             put("comp_cout10", 1858377.81871097);
@@ -133,6 +135,7 @@ public class ProjectTest {
             put("plan_cout10_keep_links", 459194.940464);
             put("plan_cout1_len", 386225.769698995);
             put("plan_euclid", 377561.1225223806);
+            put("plan_circ", Double.NaN);
         }};
         
         System.out.println("Test addCostDistance");
@@ -144,7 +147,8 @@ public class ProjectTest {
                 sumDist += p.getDist();
             }
             assertEquals("Sum of cost " + costDist.getName(), sumCosts.get(costDist.getName()), sumCost, sumCost*1e-14);
-            assertEquals("Sum of length " + costDist.getName(), sumDists.get(costDist.getName()), sumDist, sumDist*1e-14);
+            if(!Double.isNaN(sumDists.get(costDist.getName())))
+                assertEquals("Sum of length " + costDist.getName(), sumDists.get(costDist.getName()), sumDist, sumDist*1e-14);
         }   
 
     }

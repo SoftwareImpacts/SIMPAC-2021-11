@@ -5,6 +5,8 @@
 
 package org.thema.graphab;
 
+import com.vividsolutions.jts.geom.Geometry;
+import java.awt.image.Raster;
 import java.io.*;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.links.Linkset;
@@ -16,12 +18,19 @@ import org.thema.graphab.model.DistribModel;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.thema.common.JTS;
 import org.thema.common.parallel.ParallelFExecutor;
+import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.parallel.ExecutorService;
 import org.thema.parallel.ParallelExecutor;
 import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
+import org.thema.drawshape.image.RasterShape;
+import org.thema.drawshape.layer.RasterLayer;
+import org.thema.drawshape.style.RasterStyle;
 import org.thema.graphab.addpatch.AddPatchCommand;
+import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.metric.DeltaMetricTask;
 import org.thema.graphab.metric.GraphMetricLauncher;
 import org.thema.graphab.metric.Metric;
@@ -113,8 +122,9 @@ public class CLITools {
                     "java -jar graphab.jar --project prjfile.xml [-proc n] [-nosave] command1 [command2 ...]\n" +
                     "Commands list :\n" +
                     "--show\n" + 
-                    "--linkset [complete[=dmax]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max\n" +
+                    "--linkset [complete[=dmax]] [circuit[=optim]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
+                    "--corridor maxcost=valcost\n" +
                     "--graph [nointra] [threshold=min:inc:max]\n" +
                     "--usegraph graph1,...,graphn\n" +
                     "--pointset pointset.shp\n" +
@@ -192,6 +202,10 @@ public class CLITools {
                 addPatch(args);
             else if(p.equals("--gremove"))
                 remGlobal(args);
+            else if(p.equals("--circuit"))
+                circuit(args);
+            else if(p.equals("--corridor"))
+                corridor(args);
             else if(p.startsWith("--use"))
                 useObj(p, args);
             else if(p.startsWith("--show"))
@@ -337,8 +351,15 @@ public class CLITools {
                 String [] tok = arg.split("=");
                 threshold = Double.parseDouble(tok[1]);
             }
-
         }
+        boolean circuit = false;
+        boolean optimCirc = false;
+        if(args.get(0).startsWith("circuit")) {
+            circuit = true;
+            String arg = args.remove(0);
+            optimCirc = arg.endsWith("=optim");
+        }
+        
         int max = Collections.max(project.getCodes());
         double [] costs = new double[max+1];
         List<Double> dynCodes = null;
@@ -365,7 +386,8 @@ public class CLITools {
             System.out.println("Calc cost " + c);
             for(Double code : dynCodes)
                 costs[code.intValue()] = c;
-            Linkset cost = new Linkset("cost_" + name + "-" + c, type, costs, Linkset.COST_LENGTH, true, false, threshold);
+            Linkset cost = circuit ? new Linkset("circ_" + name + "-" + c, type, costs, null, optimCirc) : 
+                    new Linkset("cost_" + name + "-" + c, type, costs, Linkset.COST_LENGTH, true, false, threshold);
             project.addLinkset(cost, save);
             useCosts.add(cost);
         }
@@ -994,6 +1016,81 @@ public class CLITools {
         }
 
         return values;
+    }
+    
+
+    private void circuit(List<String> args) throws Exception {
+        final double threshold;
+        if(!args.isEmpty() && args.get(0).startsWith("corridor=")) {
+            threshold = Double.parseDouble(args.remove(0).split("=")[1]);
+        } else
+            threshold = 0;
+        for(Linkset link : getCosts()) {
+            if(link.getType_dist() == Linkset.EUCLID)
+                continue;
+            System.out.println("Linkset : " + link.getName());
+            final CircuitRaster circuit = link.isExtCost() ? 
+                    new CircuitRaster(project, project.loadExtCostRaster(link.getExtCostFile()), true, true) :
+                    new CircuitRaster(project, project.getImageSource(), link.getCosts(), true, true);
+                    
+            final File dir = new File(project.getDirectory(), link.getName() + "-circuit");
+            dir.mkdir();
+            final FileWriter fw = new FileWriter(new File(dir, "resistances.csv"));
+            fw.write("Id1,Id2,R\n");
+            final List<DefaultFeature> corridors = new ArrayList<DefaultFeature>();
+            SimpleParallelTask task = new SimpleParallelTask<Path>(link.getPaths()) {
+                @Override
+                protected void executeOne(Path p) {
+                    try {
+                        long t1 = System.currentTimeMillis();
+                        CircuitRaster.ODCircuit odCircuit = circuit.getODCircuit(p.getPatch1(), p.getPatch2());
+                        odCircuit.solve();
+                        long t2 = System.currentTimeMillis();
+                        synchronized(CLITools.this) {
+                            System.out.println(p.getPatch1() + " - " + p.getPatch2() + " : " + odCircuit.getZone());
+                            System.out.print("R : " + odCircuit.getR());
+                            System.out.print(" - cost : " + p.getCost());
+                            System.out.println(" - time : " + (t2 - t1) / 1000.0 + "s");
+                            System.out.println("Err max : " + odCircuit.getErrMax());
+                            fw.write(p.getPatch1() + "," + p.getPatch2() + "," + odCircuit.getR() + "\n");
+                            Raster raster = odCircuit.getCurrentMap();
+                            new RasterLayer("", new RasterShape(raster, JTS.envToRect(odCircuit.getEnvelope()), new RasterStyle(), true))
+                                    .saveRaster(new File(dir, p.getPatch1() + "-" + p.getPatch2() + "-cur.tif"));
+                            if(threshold > 0) {
+                                raster = odCircuit.getCorridorMap(threshold);
+                                new RasterLayer("", new RasterShape(raster, JTS.envToRect(odCircuit.getEnvelope()), new RasterStyle(), true))
+                                        .saveRaster(new File(dir, p.getPatch1() + "-" + p.getPatch2() + "-cor.tif"));
+                                Geometry poly = odCircuit.getCorridor(threshold);
+                                if(!poly.isEmpty())
+                                    corridors.add(new DefaultFeature(p.getPatch1() + "-" + p.getPatch2(), poly));
+                            }
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(CLITools.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            };
+            new ParallelFExecutor(task).executeAndWait();
+            fw.close();
+            if(threshold > 0) 
+                DefaultFeature.saveFeatures(corridors, new File(dir, "corridor-" + threshold + ".shp"));
+        }
+    }
+    
+    private void corridor(List<String> args) throws Exception {
+        if(args.isEmpty() || !args.get(0).startsWith("maxcost=")) 
+            throw new IllegalArgumentException("maxcost option is missing in command --corridor");
+        double maxCost = Double.parseDouble(args.remove(0).split("=")[1]);
+        
+        for(Linkset link : getCosts()) {
+            if(link.getType_dist() == Linkset.EUCLID)
+                continue;
+            System.out.println("Linkset : " + link.getName());
+            List<Feature> corridors = link.computeCorridor(project, null, maxCost);
+            
+            DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
+                    "-corridor-" + maxCost + ".shp"));
+        }
     }
     
     private List<String> readFile(File f) throws IOException {
