@@ -6,7 +6,6 @@
 
 package org.thema.graphab.links;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -19,6 +18,7 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -66,7 +66,9 @@ public final class CircuitRaster {
     
     public ODCircuit getODCircuit(Feature patch1, Feature patch2) {
         
-        Rectangle zone = new Rectangle(0, 0, rasterPatch.getWidth(), rasterPatch.getHeight());
+        Rectangle compZone = new Rectangle(0, 0, rasterPatch.getWidth(), rasterPatch.getHeight());
+        Rectangle zone = compZone;
+        Raster rasterZone = rasterPatch;
         if(optimCirc) {
             Geometry gEnv = new GeometryFactory().toGeometry(patch1.getGeometry().getEnvelopeInternal());
             gEnv.apply(project.getSpace2grid());
@@ -74,13 +76,99 @@ public final class CircuitRaster {
             gEnv = new GeometryFactory().toGeometry(patch2.getGeometry().getEnvelopeInternal());
             gEnv.apply(project.getSpace2grid());
             env.expandToInclude(gEnv.getEnvelopeInternal());
-            env.expandBy(2+env.maxExtent());
-            zone = zone.createIntersection(new Rectangle((int)env.getMinX(), (int)env.getMinY(), (int)env.getWidth(), (int)env.getHeight())).getBounds();
+            boolean connex = false;
+            while(!connex) {
+                env.expandBy(2+env.maxExtent());
+                zone = compZone.createIntersection(new Rectangle((int)env.getMinX(), (int)env.getMinY(), (int)env.getWidth(), (int)env.getHeight())).getBounds();
+                if(zone.equals(compZone))
+                    connex = true;
+                else {
+                    rasterZone = checkConnexity(patch1, patch2, zone);
+                    connex = rasterZone != null;
+                }
+                if(!connex) 
+                    System.out.println("Two patches (" + patch1 + "-" + patch2 + ") are not connected with rect : " + zone + " -> expand rect");
+            }
         }
-        return createCircuit(patch1, patch2, zone);
+        return createCircuit(patch1, patch2, zone, rasterZone);
     }
     
-    private ODCircuit createCircuit(Feature patch1, Feature patch2, Rectangle zone) {
+    private Raster checkConnexity(Feature patch1, Feature patch2, Rectangle zone) {
+        final int id1 = (Integer)patch1.getId();
+        final int id2 = (Integer)patch2.getId();
+        final int w = rasterPatch.getWidth();
+        
+        boolean connex = false;
+        
+        WritableRaster rasterZone = Raster.createBandedRaster(DataBuffer.TYPE_INT, zone.width, zone.height, 1, new java.awt.Point(zone.x, zone.y));
+        for(int x = 0; x < zone.width; x++) {
+            rasterZone.setSample(x+zone.x, zone.y, 0, -1);
+            rasterZone.setSample(x+zone.x, (int)zone.getMaxY()-1, 0, -1);
+        }
+        for(int y = 0; y < zone.height; y++) {
+            rasterZone.setSample(zone.x, y+zone.y, 0, -1);
+            rasterZone.setSample((int)zone.getMaxX()-1, y+zone.y, 0, -1);
+        }
+        
+        LinkedList<Integer> queue = new LinkedList<Integer>();
+        Geometry gEnv = new GeometryFactory().toGeometry(patch1.getGeometry().getEnvelopeInternal());
+        gEnv.apply(project.getSpace2grid());
+        Envelope env = gEnv.getEnvelopeInternal();
+        for(int i = (int)env.getMinY(); i <= env.getMaxY(); i++)
+            for(int j = (int)env.getMinX(); j <= env.getMaxX(); j++)
+                if(rasterPatch.getSample(j, i, 0) == id1) {
+                    queue.add(i*w+j);
+                    rasterZone.setSample(j, i, 0, 1);
+                }
+        
+        final int [] dir, xd, yd;
+        if(con8) {
+            dir = new int[] {-w-1, -w, -w+1, -1, +1, +w-1, +w, +w+1};
+            xd = new int[] {-1, 0, +1, -1, +1, -1, 0, +1};
+            yd = new int[] {-1, -1, -1, 0, 0, +1, +1, +1};
+
+        } else {
+            dir = new int[] {-w, -1, +1, +w};
+            xd = new int[] {0, -1, +1, 0};
+            yd = new int[] {-1, 0, 0, +1};
+        }
+        
+        while(!queue.isEmpty()) {
+            final int ind = queue.poll();
+            final int x = ind % w;
+            final int y = ind / w;
+            rasterZone.setSample(x, y, 0, 1);
+            for(int d = 0; d < dir.length; d++) {
+                int val = rasterPatch.getSample(x+xd[d], y+yd[d], 0);
+                if(val != -1 && rasterZone.getSample(x+xd[d], y+yd[d], 0) == 0) {
+                    rasterZone.setSample(x+xd[d], y+yd[d], 0, 1);
+                    queue.add(ind+dir[d]);
+                    if(val == id2)
+                        connex = true;
+                }
+            }
+        }
+        
+        int nbRem = 0;
+        for(int y = 0; y < zone.height; y++) 
+            for(int x = 0; x < zone.width; x++) {
+                if(rasterZone.getSample(x+zone.x, y+zone.y, 0) == 0) {
+                    rasterZone.setSample(x+zone.x, y+zone.y, 0, -1);
+                    if(rasterPatch.getSample(x+zone.x, y+zone.y, 0) != -1)
+                        nbRem++;
+                }
+            }
+        
+        if(nbRem > 0)
+            System.out.println(nbRem + " pixels are not connected for patches (" + patch1 + "-" + patch2 + ") with rect : " + zone + " -> they are ignored");
+        
+        if(connex)
+            return rasterZone;
+        else
+            return null;
+    }
+    
+    private ODCircuit createCircuit(Feature patch1, Feature patch2, Rectangle zone, Raster rasterZone) {
         final int id1 = (Integer)patch1.getId();
         final int id2 = (Integer)patch2.getId();
         if(id1 == id2)
@@ -98,7 +186,7 @@ public final class CircuitRaster {
                 int ind = y*w+x;
                 if(x == 0 || y == 0 || x == w-1 || y == h-1)
                     img2mat[ind] = -1;
-                else if(rasterPatch.getSample(x+zone.x, y+zone.y, 0) == -1)
+                else if(rasterZone.getSample(x+zone.x, y+zone.y, 0) == -1)
                     img2mat[ind] = -1;
                 else if(rasterPatch.getSample(x+zone.x, y+zone.y, 0) == id1)
                     img2mat[ind] = 0;
@@ -143,7 +231,10 @@ public final class CircuitRaster {
                         cols.add(indMat2);
                 }
                 if(indMat >= 2) {
+                    if(cols.isEmpty())
+                        throw new RuntimeException("Isolated pixel at (" + x + "," + y +")");
                     cols.add(indMat);
+                    
                     int [] col = new int[cols.size()];
                     i = 0;
                     for(Integer ind : cols)
@@ -174,6 +265,8 @@ public final class CircuitRaster {
                 int xf = x + zone.x;
                 int yf = y + zone.y;
                 double c = getCost(xf, yf);
+                if(c <= 0)
+                    throw new RuntimeException("Null or negative resistance is forbidden");
 
                 double sum = 0;
                 for(int d = 0; d < dir.length; d++) {
