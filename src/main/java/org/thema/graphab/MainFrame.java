@@ -1148,7 +1148,7 @@ public class MainFrame extends javax.swing.JFrame {
         GraphMetricLauncher launcher = new GraphMetricLauncher(indice, true);
         List<String> attrNames = new ArrayList<String>();
         for(String name : indice.getResultNames()) {
-            String attr = indice.getDetailName() + "_" + name + "-" + graph.getName();
+            String attr = indice.getDetailName() + "_" + name + "_" + graph.getName();
             DefaultFeature.addAttribute(attr, graph.getComponentFeatures(), Double.NaN);
             attrNames.add(attr);
         }

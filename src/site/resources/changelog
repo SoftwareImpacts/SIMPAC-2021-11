@@ -1,3 +1,6 @@
+version 1.2.1 (18/04/2014)
+- correct bug for component metrics calculation
+- New graph dialog : intra patch was disabled with external cost
 version 1.2-rc2
 - adding cost planar linkset does not throw an error if a patch is surrounded by nodata
 - CLI --graph : add option "nointra"

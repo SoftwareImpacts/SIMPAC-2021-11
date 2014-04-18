@@ -256,8 +256,8 @@ public class NewGraphDialog extends javax.swing.JDialog {
 
     private void costComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_costComboBoxActionPerformed
         Linkset cost = (Linkset) costComboBox.getSelectedItem();
-        intraPatchCheckBox.setSelected(cost.isRealPaths() && !cost.isExtCost());
-        intraPatchCheckBox.setEnabled(cost.isRealPaths() && !cost.isExtCost());
+        intraPatchCheckBox.setSelected(cost.isRealPaths());
+        intraPatchCheckBox.setEnabled(cost.isRealPaths());
     }//GEN-LAST:event_costComboBoxActionPerformed
 
 
