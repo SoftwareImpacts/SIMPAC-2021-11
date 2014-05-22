@@ -20,11 +20,12 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JTextField;
+import org.thema.graphab.Project;
 
 /**
  *
@@ -80,7 +81,7 @@ public class LinksetPanel extends javax.swing.JPanel {
         for(Integer code : treeCodes)
             model.addRow(new Object[] {code, cost != null ? cost[code] : 1.0});
 
-        maxCode = treeCodes.last().intValue();
+        maxCode = treeCodes.last();
     }
 
     public Linkset getLinkset() {
@@ -88,6 +89,10 @@ public class LinksetPanel extends javax.swing.JPanel {
         String name = nameTextField.getText();
         int type;
         double distMax = -1;
+        double coefSlope = 0;
+        if(useDEMCheckBox.isSelected())
+            coefSlope = (Double)coefSlopeSpinner.getValue();
+        
         if(completeRadioButton.isSelected()) {
             type = Linkset.COMPLETE;
             distMax = (Double)dMaxSpinner.getValue();
@@ -102,17 +107,17 @@ public class LinksetPanel extends javax.swing.JPanel {
             cost = new Linkset(name, type, realPathCheckBox.isSelected(), distMax);
         else if(costRadioButton.isSelected()) {
             if(table.getCellEditor() != null)
-            table.getCellEditor().stopCellEditing();
+                table.getCellEditor().stopCellEditing();
             double[] costs = new double[maxCode+1];
             TableModel model = table.getModel();
             for(int i = 0; i < model.getRowCount(); i++)
                 costs[(Integer)model.getValueAt(i, 0)] = (Double)model.getValueAt(i, 1);
             cost = new Linkset(name, type, costs, type_length, realPathCheckBox.isSelected(), 
-                    removeCrossPatchCheckBox.isSelected(), distMax);
+                    removeCrossPatchCheckBox.isSelected(), distMax, coefSlope);
         } else {
             File f = rasterSelectFilePanel.getSelectedFile();
             cost = new Linkset(name, type, type_length, realPathCheckBox.isSelected(), 
-                    removeCrossPatchCheckBox.isSelected(), distMax, f);
+                    removeCrossPatchCheckBox.isSelected(), distMax, f, coefSlope);
         }
 
         return cost;
@@ -155,6 +160,10 @@ public class LinksetPanel extends javax.swing.JPanel {
         rasterSelectFilePanel = new org.thema.common.swing.SelectFilePanel();
         costRadioButton = new javax.swing.JRadioButton();
         rasterRadioButton = new javax.swing.JRadioButton();
+        jPanel1 = new javax.swing.JPanel();
+        useDEMCheckBox = new javax.swing.JCheckBox();
+        jLabel1 = new javax.swing.JLabel();
+        coefSlopeSpinner = new javax.swing.JSpinner();
 
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/links/Bundle"); // NOI18N
         nameLabel.setText(bundle.getString("LinksetPanel.nameLabel.text")); // NOI18N
@@ -308,6 +317,9 @@ public class LinksetPanel extends javax.swing.JPanel {
         rasterSelectFilePanel.setFileDesc(bundle.getString("LinksetPanel.rasterSelectFilePanel.fileDesc")); // NOI18N
         rasterSelectFilePanel.setFileExts(bundle.getString("LinksetPanel.rasterSelectFilePanel.fileExts")); // NOI18N
 
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, rasterRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), rasterSelectFilePanel, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
         buttonGroup1.add(costRadioButton);
         costRadioButton.setText(bundle.getString("LinksetPanel.costRadioButton.text")); // NOI18N
         costRadioButton.addActionListener(new java.awt.event.ActionListener() {
@@ -324,6 +336,44 @@ public class LinksetPanel extends javax.swing.JPanel {
             }
         });
 
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("LinksetPanel.jPanel1.border.title"))); // NOI18N
+
+        useDEMCheckBox.setText(bundle.getString("LinksetPanel.useDEMCheckBox.text")); // NOI18N
+        useDEMCheckBox.setEnabled(false);
+
+        jLabel1.setText(bundle.getString("LinksetPanel.jLabel1.text")); // NOI18N
+
+        coefSlopeSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        coefSlopeSpinner.setEnabled(false);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(useDEMCheckBox)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(coefSlopeSpinner)))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(useDEMCheckBox)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(coefSlopeSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout distPanelLayout = new javax.swing.GroupLayout(distPanel);
         distPanel.setLayout(distPanelLayout);
         distPanelLayout.setHorizontalGroup(
@@ -331,23 +381,25 @@ public class LinksetPanel extends javax.swing.JPanel {
             .addGroup(distPanelLayout.createSequentialGroup()
                 .addGroup(distPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(distPanelLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(costRadioButton))
-                    .addGroup(distPanelLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(euclidRadioButton))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, distPanelLayout.createSequentialGroup()
-                        .addGap(43, 43, 43)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(impedancePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(6, 6, 6))
+                        .addGroup(distPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(distPanelLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(costRadioButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(distPanelLayout.createSequentialGroup()
+                                .addGap(43, 43, 43)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                                .addGap(12, 12, 12)))
+                        .addGroup(distPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(impedancePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(distPanelLayout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(distPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(euclidRadioButton)
                             .addGroup(distPanelLayout.createSequentialGroup()
                                 .addGap(12, 12, 12)
-                                .addComponent(rasterSelectFilePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(rasterSelectFilePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE))
                             .addComponent(rasterRadioButton))))
                 .addContainerGap())
         );
@@ -356,14 +408,15 @@ public class LinksetPanel extends javax.swing.JPanel {
             .addGroup(distPanelLayout.createSequentialGroup()
                 .addComponent(euclidRadioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(costRadioButton)
                 .addGroup(distPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(distPanelLayout.createSequentialGroup()
+                        .addComponent(costRadioButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                     .addGroup(distPanelLayout.createSequentialGroup()
-                        .addGap(41, 41, 41)
-                        .addComponent(impedancePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(impedancePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(rasterRadioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -397,7 +450,7 @@ public class LinksetPanel extends javax.swing.JPanel {
                 .addComponent(topoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(distPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(14, Short.MAX_VALUE))
         );
 
         bindingGroup.bind();
@@ -406,14 +459,16 @@ public class LinksetPanel extends javax.swing.JPanel {
     private void distanceRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_distanceRadioButtonActionPerformed
         lengthRadioButton.setEnabled(!euclidRadioButton.isSelected());
         costDistRadioButton.setEnabled(!euclidRadioButton.isSelected());
-//        removeCrossPatchCheckBox.setSelected(!euclidRadioButton.isSelected());
         removeCrossPatchCheckBox.setEnabled(!euclidRadioButton.isSelected());
+        useDEMCheckBox.setEnabled(!euclidRadioButton.isSelected() && Project.getProject().isDemExist());
+        coefSlopeSpinner.setEnabled(!euclidRadioButton.isSelected() && Project.getProject().isDemExist());
     }//GEN-LAST:event_distanceRadioButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;
+    private javax.swing.JSpinner coefSlopeSpinner;
     private javax.swing.JRadioButton completeRadioButton;
     private javax.swing.JRadioButton costDistRadioButton;
     private javax.swing.JRadioButton costRadioButton;
@@ -422,6 +477,8 @@ public class LinksetPanel extends javax.swing.JPanel {
     private javax.swing.JPanel distPanel;
     private javax.swing.JRadioButton euclidRadioButton;
     private javax.swing.JPanel impedancePanel;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JRadioButton lengthRadioButton;
     private javax.swing.JLabel nameLabel;
@@ -433,6 +490,7 @@ public class LinksetPanel extends javax.swing.JPanel {
     private javax.swing.JCheckBox removeCrossPatchCheckBox;
     private javax.swing.JTable table;
     private javax.swing.JPanel topoPanel;
+    private javax.swing.JCheckBox useDEMCheckBox;
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 

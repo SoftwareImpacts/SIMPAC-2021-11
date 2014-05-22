@@ -116,6 +116,7 @@ public class MainFrame extends javax.swing.JFrame {
         importCapaMenuItem = new javax.swing.JMenuItem();
         addPointDataMenuItem = new javax.swing.JMenuItem();
         addPointMenuItem = new javax.swing.JMenuItem();
+        setDEMMenuItem = new javax.swing.JMenuItem();
         indiceMenu = new javax.swing.JMenu();
         calcIndiceMenuItem = new javax.swing.JMenuItem();
         compIndiceMenuItem = new javax.swing.JMenuItem();
@@ -254,6 +255,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         dataMenu.add(addPointMenuItem);
+
+        setDEMMenuItem.setText(bundle.getString("MainFrame.setDEMMenuItem.text")); // NOI18N
+        setDEMMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                setDEMMenuItemActionPerformed(evt);
+            }
+        });
+        dataMenu.add(setDEMMenuItem);
 
         jMenuBar.add(dataMenu);
 
@@ -1025,7 +1034,7 @@ public class MainFrame extends javax.swing.JFrame {
                                 if(project.getCapacityParams().costName == null) {
                                     double [] costs = new double[project.getCodes().last()+1];
                                     Arrays.fill(costs, 1);
-                                    pathfinder = new RasterPathFinder(project, project.getImageSource(), costs);
+                                    pathfinder = new RasterPathFinder(project, project.getImageSource(), costs, 0);
                                 } else
                                     pathfinder = project.getRasterPathFinder(project.getLinkset(project.getCapacityParams().costName));
 
@@ -1089,20 +1098,12 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_interpMetricMenuItemActionPerformed
 
     private void metaPatchMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_metaPatchMenuItemActionPerformed
-        final GraphGenerator graph = (GraphGenerator) JOptionPane.showInputDialog(this, 
-                "Select graph", "Meta patch project", JOptionPane.PLAIN_MESSAGE, 
-                null, project.getGraphs().toArray(), null);
-        if(graph == null)
+        final MetaPatchDialog dlg = new MetaPatchDialog(this, project.getGraphs());
+        dlg.setVisible(true);
+        if(!dlg.isOk)
             return;
-        String name = JOptionPane.showInputDialog(this, "Project name");
-        if(name == null)
-            return;
-        final String prjName = name.trim();
-        if(prjName.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Empty project name", "", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        final File prjDir = new File(project.getDirectory(), prjName);
+        
+        final File prjDir = new File(project.getDirectory(), dlg.prjName);
         if(prjDir.exists()) {
             JOptionPane.showMessageDialog(this, "The project name already exists", "", JOptionPane.ERROR_MESSAGE);
             return;
@@ -1112,8 +1113,8 @@ public class MainFrame extends javax.swing.JFrame {
             @Override
             public void run() {
                 try {
-                    project.createMetaPatchProject(prjName, graph);
-                    loadProject(new File(prjDir, prjName + ".xml"));
+                    project.createMetaPatchProject(dlg.prjName, dlg.graph, dlg.alpha);
+                    loadProject(new File(prjDir, dlg.prjName + ".xml"));
                     ((DefaultGroupLayer)mapViewer.getLayers()).addLayerLast(new FeatureLayer("Patch voronoi", project.getVoronoi(), new FeatureStyle(null, Color.BLACK)));
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1123,6 +1124,19 @@ public class MainFrame extends javax.swing.JFrame {
         }).start();
           
     }//GEN-LAST:event_metaPatchMenuItemActionPerformed
+
+    private void setDEMMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setDEMMenuItemActionPerformed
+        File f = Util.getFile(".tif|.asc", "DEM raster");
+        if(f == null)
+            return;
+        
+        try {
+            project.setDemFile(f);
+        } catch (IOException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(MainFrame.this, "Error " + ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_setDEMMenuItemActionPerformed
 
     
     public void viewMetricResult(GraphGenerator graph, String attr, boolean node, boolean edge) {
@@ -1374,6 +1388,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem openMenuItem;
     private javax.swing.JMenuItem prefMenuItem;
     private javax.swing.JMenuItem quitMenuItem;
+    private javax.swing.JMenuItem setDEMMenuItem;
     private javax.swing.JPanel statusPanel;
     // End of variables declaration//GEN-END:variables
 

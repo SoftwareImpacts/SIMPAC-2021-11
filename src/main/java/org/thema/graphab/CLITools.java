@@ -387,7 +387,7 @@ public class CLITools {
             for(Double code : dynCodes)
                 costs[code.intValue()] = c;
             Linkset cost = circuit ? new Linkset("circ_" + name + "-" + c, type, costs, null, optimCirc) : 
-                    new Linkset("cost_" + name + "-" + c, type, costs, Linkset.COST_LENGTH, true, false, threshold);
+                    new Linkset("cost_" + name + "-" + c, type, costs, Linkset.COST_LENGTH, true, false, threshold, 0);
             project.addLinkset(cost, save);
             useCosts.add(cost);
         }
@@ -1030,7 +1030,7 @@ public class CLITools {
                 continue;
             System.out.println("Linkset : " + link.getName());
             final CircuitRaster circuit = link.isExtCost() ? 
-                    new CircuitRaster(project, project.loadExtCostRaster(link.getExtCostFile()), true, true) :
+                    new CircuitRaster(project, project.getExtRaster(link.getExtCostFile()), true, true) :
                     new CircuitRaster(project, project.getImageSource(), link.getCosts(), true, true);
                     
             final File dir = new File(project.getDirectory(), link.getName() + "-circuit");

@@ -32,12 +32,16 @@ import org.thema.graphab.Project;
 
 public final class RasterPathFinder implements SpacePathFinder {
 
-    private Raster rasterPatch;
-    private Raster costRaster;
-    private double [] cost;
+    private final Raster rasterPatch;
+    private final Raster costRaster;
+    private final Raster demRaster;
+    
+    private final double [] cost;
+    private final double coefSlope;
 
-    private Project project;
+    private final Project project;
 
+    private final double resolution;
     private final int CON = 8;
     private final int [] X = new int[] {-1, 0, 0, +1, -1, -1, +1, +1};
     private final int [] Y = new int[] {0, -1, +1, 0, -1, +1, -1, +1};
@@ -56,26 +60,32 @@ public final class RasterPathFinder implements SpacePathFinder {
      * @param prj
      * @param codeRaster
      * @param cost
+     * @param coefSlope 0 = ignore slope     
      * @throws IOException 
      */
-    public RasterPathFinder(Project prj, Raster codeRaster, double [] cost) throws IOException {
+    public RasterPathFinder(Project prj, Raster codeRaster, double [] cost, double coefSlope) throws IOException {
         this.project = prj;
         this.rasterPatch = project.getRasterPatch();
         this.costRaster = codeRaster;
         this.cost = cost;
+        this.coefSlope = coefSlope;
         int w = rasterPatch.getWidth();
         IND = new int[] {-1, -w, +w, +1, -w-1, +w-1, -w+1, +w+1};
         IND_ANTE = new int[] {+1, +w, -w, -1, w+1, -w+1, +w-1, -w-1};
+        
+        demRaster = coefSlope != 0 ? project.getDemRaster() : null;
+        resolution = project.getResolution();
     }
 
     /**
      * Create pathfinder from external cost raster
      * @param prj
      * @param costRaster
+     * @param coefSlope 0 = ignore slope
      * @throws IOException 
      */
-    public RasterPathFinder(Project prj, Raster costRaster) throws IOException {
-        this(prj, costRaster, null);
+    public RasterPathFinder(Project prj, Raster costRaster, double coefSlope) throws IOException {
+        this(prj, costRaster, null, coefSlope);
     }
 
     /**
@@ -405,7 +415,8 @@ public final class RasterPathFinder implements SpacePathFinder {
         for(int i = 0; i < CON; i++)
             if(isInside(x + X[i], y + Y[i])) {
                 final double c = getCost(x+X[i], y+Y[i]);
-                final double newCost = current.dist + COST[i] * (currentCost + c) / 2;
+                final double newCost = current.dist + 
+                        (COST[i] * (currentCost + c) / 2) * (1 + (coefSlope != 0 ? getSlope(x, y, i)*coefSlope : 0));
                 final int ind = current.ind + IND[i];
                 if(newCost < getDist(ind)) {
                     Node newNode = new Node(ind, newCost);
@@ -423,7 +434,14 @@ public final class RasterPathFinder implements SpacePathFinder {
     }
 
     private double getCost(int x, int y) {
-        return cost == null ? costRaster.getSampleDouble(x, y, 0) : cost[costRaster.getSample(x, y, 0)];
+        return cost == null ? 
+                costRaster.getSampleDouble(x, y, 0) 
+                : cost[costRaster.getSample(x, y, 0)];
+    }
+    
+    private double getSlope(int x, int y, int dir) {
+        return Math.abs(demRaster.getSampleDouble(x+X[dir], y+Y[dir], 0) - demRaster.getSampleDouble(x, y, 0)) 
+                / (COST[dir] * resolution);
     }
 
     private int getX(int ind) {

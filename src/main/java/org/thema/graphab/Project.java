@@ -125,6 +125,8 @@ public final class Project {
     private Rectangle2D zone;
     
     private String wktCRS;
+    
+    private File demFile;
 
     private transient List<DefaultFeature> patches;
     private transient List<Feature> voronoi;
@@ -134,12 +136,12 @@ public final class Project {
     private transient DefaultGroupLayer rootLayer, linkLayers, exoLayers, graphLayers, analysisLayers;
     private transient STRtree patchIndex;
 
-    private transient double totalPatchArea, totalPatchCapacity;
+    private transient double totalPatchCapacity;
 
     private transient HashMap<Integer, Integer> removedCodes;
     private transient Ref<WritableRaster> srcRaster;
     private transient Ref<WritableRaster> patchRaster;
-    private transient HashMap<File, SoftRef<Raster>> extCostRasters;
+    private transient HashMap<File, SoftRef<Raster>> extRasters;
 
     public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, int code,
             double noData, boolean con8, double minArea, boolean simplify) throws Exception {
@@ -921,12 +923,12 @@ public final class Project {
             throw new IllegalArgumentException();
         if(linkset.isExtCost()) {
             if(linkset.getExtCostFile().exists()) {
-                Raster extRaster = loadExtCostRaster(linkset.getExtCostFile());
-                return new RasterPathFinder(this, extRaster);
+                Raster extRaster = getExtRaster(linkset.getExtCostFile());
+                return new RasterPathFinder(this, extRaster, linkset.getCoefSlope());
             } else
                 throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
         } else {
-            return new RasterPathFinder(this, getImageSource(), linkset.getCosts());
+            return new RasterPathFinder(this, getImageSource(), linkset.getCosts(), linkset.getCoefSlope());
         }
     }
     
@@ -935,7 +937,7 @@ public final class Project {
             throw new IllegalArgumentException();
         if(linkset.isExtCost()) {
             if(linkset.getExtCostFile().exists()) {
-                Raster extRaster = loadExtCostRaster(linkset.getExtCostFile());
+                Raster extRaster = getExtRaster(linkset.getExtCostFile());
                 return new CircuitRaster(this, extRaster, true, linkset.isOptimCirc());
             } else
                 throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
@@ -1192,7 +1194,7 @@ public final class Project {
         fw.close();
     }
 
-    public void createMetaPatchProject(String prjName, GraphGenerator graph) throws Exception {
+    public void createMetaPatchProject(String prjName, GraphGenerator graph, double alpha) throws Exception {
         File dir = new File(getDirectory(), prjName);
         dir.mkdir();
         IOFile.copyFile(new File(getDirectory(), "source.tif"), new File(dir, "source.tif"));
@@ -1227,7 +1229,15 @@ public final class Project {
             double capa = 0;
             for(Node n : (Collection<Node>)comp.getNodes()) {
                 DefaultFeature patch = (DefaultFeature)n.getObject();
-                capa += getPatchCapacity(patch);
+                if(alpha > 0) {
+                    GraphGenerator.PathFinder pathfinder = graph.getPathFinder(n);
+                    for(Node n2 : (Collection<Node>)comp.getNodes()) {
+//                        if(n == n2)
+//                            continue;
+                        capa += getPatchCapacity(n2)*Math.exp(-alpha*pathfinder.getCost(n2)) / comp.getNodes().size();
+                    }
+                } else
+                    capa += getPatchCapacity(patch);
                 metaPatch.add(patch.getGeometry());
                 metaVoronoi.add(getVoronoi((Integer)patch.getId()).getGeometry());
             }
@@ -1393,10 +1403,12 @@ public final class Project {
     }
 
 
-    public GridCoverage2D loadCoverage(File file) throws Exception {
+    public GridCoverage2D loadCoverage(File file) throws IOException {
         GridCoverage2D cov;
         if(file.getName().toLowerCase().endsWith(".tif"))
             cov = IOImage.loadTiffWithoutCRS(file);
+        else if(file.getName().toLowerCase().endsWith(".asc"))
+            cov = IOImage.loadArcGrid(file);
         else
             cov = new RSTGridReader(file).read(null);
 
@@ -1413,18 +1425,18 @@ public final class Project {
         return cov;
     }
     
-    public synchronized Raster loadExtCostRaster(File file) throws Exception {
+    public synchronized Raster getExtRaster(File file) throws IOException {
         Raster raster = null;
         
-        if(extCostRasters == null)
-            extCostRasters = new HashMap<File, SoftRef<Raster>>();
-        if(extCostRasters.containsKey(file))
-            raster = extCostRasters.get(file).get();
+        if(extRasters == null)
+            extRasters = new HashMap<File, SoftRef<Raster>>();
+        if(extRasters.containsKey(file))
+            raster = extRasters.get(file).get();
         
         if(raster == null) {
             raster = loadCoverage(file).getRenderedImage().getData();
             raster = raster.createTranslatedChild(1, 1);
-            extCostRasters.put(file, new SoftRef<Raster>(raster));
+            extRasters.put(file, new SoftRef<Raster>(raster));
         }
         
         return raster;
@@ -1476,6 +1488,28 @@ public final class Project {
     public void setCapacity(DefaultFeature patch, double capa) {
         patch.setAttribute(Project.CAPA_ATTR, capa);
         totalPatchCapacity = 0;
+    }
+
+    public Raster getDemRaster() throws IOException {
+        if(demFile.isAbsolute())
+            return getExtRaster(demFile);
+        else 
+            return getExtRaster(new File(Project.getProject().getDirectory(), demFile.getPath()));
+    }
+    
+    public void setDemFile(File demFile) throws IOException {
+        String prjPath = Project.getProject().getDirectory().getAbsolutePath();
+        if(demFile.getAbsolutePath().startsWith(prjPath)) 
+            this.demFile = new File(demFile.getAbsolutePath().substring(prjPath.length()+1));
+        else 
+            this.demFile = demFile.getAbsoluteFile();
+        // try loading DEM
+        getDemRaster();
+        save();
+    }
+    
+    public boolean isDemExist() {
+        return demFile != null;
     }
     
     public double getResolution() {

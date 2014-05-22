@@ -67,6 +67,7 @@ public class Linkset {
     private double [] costs;
     private boolean realPaths;
     private boolean removeCrossPatch;
+    private double coefSlope;
 
     private double distMax;
     
@@ -87,7 +88,8 @@ public class Linkset {
      * @param removeCrossPatch
      * @param distMax 
      */
-    public Linkset(String name, int type, double[] costs, int type_length, boolean realPaths, boolean removeCrossPatch, double distMax) {
+    public Linkset(String name, int type, double[] costs, int type_length, boolean realPaths, 
+            boolean removeCrossPatch, double distMax, double coefSlope) {
         this.name = name;
         this.type = type;
         this.type_dist = COST;
@@ -96,6 +98,7 @@ public class Linkset {
         this.realPaths = realPaths;
         this.removeCrossPatch = removeCrossPatch;
         this.distMax = distMax;
+        this.coefSlope = coefSlope;
     }
 
     /**
@@ -126,7 +129,8 @@ public class Linkset {
      * @param distMax
      * @param extCostFile 
      */
-    public Linkset(String name, int type, int type_length, boolean realPaths, boolean removeCrossPatch, double distMax, File extCostFile) {
+    public Linkset(String name, int type, int type_length, boolean realPaths, 
+            boolean removeCrossPatch, double distMax, File extCostFile, double coefSlope) {
         this.name = name;
         this.type = type;
         this.type_dist = COST;
@@ -134,6 +138,7 @@ public class Linkset {
         this.realPaths = realPaths;
         this.removeCrossPatch = removeCrossPatch;
         this.distMax = distMax;
+        this.coefSlope = coefSlope;
         
         String prjPath = Project.getProject().getDirectory().getAbsolutePath();
         if(extCostFile.getAbsolutePath().startsWith(prjPath)) 
@@ -182,6 +187,14 @@ public class Linkset {
         return removeCrossPatch;
     }
 
+    public boolean isUseSlope() {
+        return coefSlope != 0;
+    }
+
+    public double getCoefSlope() {
+        return coefSlope;
+    }
+    
     public int getTopology() {
         return type;
     }
@@ -299,6 +312,8 @@ public class Linkset {
                     for(Integer code : Project.getProject().getCodes())
                         info += code + " : " + costs[code] + "\n";
                 }       
+                if(isUseSlope())
+                    info += "Use slope : " + coefSlope + "\n";
                 break;
         }
         
@@ -563,7 +578,7 @@ public class Linkset {
         long start = System.currentTimeMillis();
         final CircuitRaster circuit = costs != null ? 
                     new CircuitRaster(prj, prj.getImageSource(), costs, true, optimCirc)
-                    : new CircuitRaster(prj, prj.loadExtCostRaster(getExtCostFile()), true, optimCirc);
+                    : new CircuitRaster(prj, prj.getExtRaster(getExtCostFile()), true, optimCirc);
         ParallelFTask task;
         task = new AbstractParallelFTask(progressBar) {
             @Override
