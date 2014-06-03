@@ -18,7 +18,11 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Filter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.swing.*;
 import org.geotools.graph.structure.Edge;
@@ -1288,6 +1292,23 @@ public class MainFrame extends javax.swing.JFrame {
     */
     public static void main(String args[]) {
 
+        // Disable logging of FileSystemPreferences
+        // Causes a lot of logs in parallel environments
+        Logger globalLogger = Logger.getLogger("");
+        Handler[] handlers = globalLogger.getHandlers();
+        for(Handler handler : handlers) {
+            if(handler instanceof ConsoleHandler)
+                globalLogger.removeHandler(handler);
+        }
+        ConsoleHandler h = new ConsoleHandler();
+        h.setFilter(new Filter() {
+            @Override
+            public boolean isLoggable(LogRecord record) {
+                return !record.getSourceClassName().equals("java.util.prefs.FileSystemPreferences");
+            }
+        });
+        globalLogger.addHandler(h);
+        
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             public void uncaughtException(Thread t, Throwable e) {
                 Logger.getLogger("").log(Level.SEVERE, null, e);

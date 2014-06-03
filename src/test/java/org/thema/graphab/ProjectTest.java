@@ -320,7 +320,7 @@ public class ProjectTest {
             if(gen == null)
                 throw new RuntimeException("Graph not found for : " + varName);
             
-            // certains calculs ne sont pas testés car trop variables :
+            // certains calculs ne sont pas testés car trop variables ou interdit :
             // - les graphes euclidiens avec dist intra taches
             // - les indices de circuit sur les graphes mst
             if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist() || 
