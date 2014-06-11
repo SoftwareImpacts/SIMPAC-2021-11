@@ -122,7 +122,7 @@ public class CLITools {
                     "java -jar graphab.jar --project prjfile.xml [-proc n] [-nosave] command1 [command2 ...]\n" +
                     "Commands list :\n" +
                     "--show\n" + 
-                    "--linkset [complete[=dmax]] [circuit[=optim]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max\n" +
+                    "--linkset [complete[=dmax]] [circuit[=optim]] [slope=coef] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
                     "--corridor maxcost=valcost\n" +
                     "--graph [nointra] [threshold=min:inc:max]\n" +
@@ -359,6 +359,12 @@ public class CLITools {
             String arg = args.remove(0);
             optimCirc = arg.endsWith("=optim");
         }
+        double coefSlope = 0;
+        if(args.get(0).startsWith("slope=")) {
+            String arg = args.remove(0);
+            String [] tok = arg.split("=");
+            coefSlope = Double.parseDouble(tok[1]);
+        }
         
         int max = Collections.max(project.getCodes());
         double [] costs = new double[max+1];
@@ -386,8 +392,8 @@ public class CLITools {
             System.out.println("Calc cost " + c);
             for(Double code : dynCodes)
                 costs[code.intValue()] = c;
-            Linkset cost = circuit ? new Linkset("circ_" + name + "-" + c, type, costs, null, optimCirc) : 
-                    new Linkset("cost_" + name + "-" + c, type, costs, Linkset.COST_LENGTH, true, false, threshold, 0);
+            Linkset cost = circuit ? new Linkset("circ_" + name + "-" + c, type, costs, null, optimCirc, coefSlope) : 
+                    new Linkset("cost_" + name + "-" + c, type, costs, Linkset.COST_LENGTH, true, false, threshold, coefSlope);
             project.addLinkset(cost, save);
             useCosts.add(cost);
         }
@@ -1030,8 +1036,8 @@ public class CLITools {
                 continue;
             System.out.println("Linkset : " + link.getName());
             final CircuitRaster circuit = link.isExtCost() ? 
-                    new CircuitRaster(project, project.getExtRaster(link.getExtCostFile()), true, true) :
-                    new CircuitRaster(project, project.getImageSource(), link.getCosts(), true, true);
+                    new CircuitRaster(project, project.getExtRaster(link.getExtCostFile()), true, true, link.getCoefSlope()) :
+                    new CircuitRaster(project, project.getImageSource(), link.getCosts(), true, true, link.getCoefSlope());
                     
             final File dir = new File(project.getDirectory(), link.getName() + "-circuit");
             dir.mkdir();

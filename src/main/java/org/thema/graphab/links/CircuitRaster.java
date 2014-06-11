@@ -42,26 +42,33 @@ import org.thema.graphab.Project;
  */
 public final class CircuitRaster {
     
-    private Raster rasterPatch;
-    private Raster costRaster;
-    private double [] cost;
+    private final Raster rasterPatch;
+    private final Raster costRaster;
+    private final Raster demRaster;
+    private final double [] cost;
+    private final double coefSlope;
     
-    private boolean con8 = false;
-    private boolean optimCirc = false;
+    private final boolean con8;
+    private final boolean optimCirc;
     
-    private Project project;
+    private final double resolution;
+    private final Project project;
     
-    public CircuitRaster(Project prj, Raster codeRaster, double [] cost, boolean con8, boolean optimCirc) throws IOException {
+    public CircuitRaster(Project prj, Raster codeRaster, double [] cost, boolean con8, boolean optimCirc, double coefSlope) throws IOException {
         this.project = prj;
         this.rasterPatch = project.getRasterPatch();
         this.costRaster = codeRaster;
         this.cost = cost;
+        this.coefSlope = coefSlope;
         this.con8 = con8;
         this.optimCirc = optimCirc;
+        
+        demRaster = coefSlope != 0 ? project.getDemRaster() : null;
+        resolution = project.getResolution();
     }
 
-    public CircuitRaster(Project prj, Raster costRaster, boolean con8, boolean fullImg) throws IOException {
-        this(prj, costRaster, null, con8, fullImg);
+    public CircuitRaster(Project prj, Raster costRaster, boolean con8, boolean optimCirc, double coefSlope) throws IOException {
+        this(prj, costRaster, null, con8, optimCirc, coefSlope);
     }
     
     public ODCircuit getODCircuit(Feature patch1, Feature patch2) {
@@ -272,7 +279,7 @@ public final class CircuitRaster {
                 for(int d = 0; d < dir.length; d++) {
                     int indMat2 = img2mat[indImg + dir[d]];
                     if(indMat2 != -1 && indMat2 != indMat) {
-                        double r = (getCost(xf+xd[d], yf+yd[d]) + c)*wd[d]/2;
+                        double r = (getCost(xf+xd[d], yf+yd[d]) + c)*wd[d]/2 * (1 + (coefSlope != 0 ? getSlope(xf, yf, xd[d], yd[d], wd[d])*coefSlope : 0));
                         A.add(indMat, indMat2, -1/r);
                         sum += 1/r;
                     }
@@ -307,6 +314,11 @@ public final class CircuitRaster {
     private double getCost(int x, int y) {
         return cost == null ? costRaster.getSampleDouble(x, y, 0) : cost[costRaster.getSample(x, y, 0)];
     }       
+    
+    private double getSlope(int x, int y, int xd, int yd, double wd) {
+        return Math.abs(demRaster.getSampleDouble(x+xd, y+yd, 0) - demRaster.getSampleDouble(x, y, 0)) 
+                / (wd * resolution);
+    }
     
     public final class ODCircuit {
         private Rectangle zone;

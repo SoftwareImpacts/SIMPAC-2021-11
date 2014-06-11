@@ -10,7 +10,6 @@ import au.com.bytecode.opencsv.CSVWriter;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.index.strtree.STRtree;
@@ -87,6 +86,7 @@ public class Linkset {
      * @param realPaths
      * @param removeCrossPatch
      * @param distMax 
+     * @param coefSlope 
      */
     public Linkset(String name, int type, double[] costs, int type_length, boolean realPaths, 
             boolean removeCrossPatch, double distMax, double coefSlope) {
@@ -128,6 +128,7 @@ public class Linkset {
      * @param removeCrossPatch
      * @param distMax
      * @param extCostFile 
+     * @param coefSlope 
      */
     public Linkset(String name, int type, int type_length, boolean realPaths, 
             boolean removeCrossPatch, double distMax, File extCostFile, double coefSlope) {
@@ -155,8 +156,9 @@ public class Linkset {
      * @param costs
      * @param extCostFile
      * @param optimCirc
+     * @param coefSlope 
      */
-    public Linkset(String name, int type, double[] costs, File extCostFile, boolean optimCirc) {
+    public Linkset(String name, int type, double[] costs, File extCostFile, boolean optimCirc, double coefSlope) {
         if(costs != null && extCostFile != null)
             throw new IllegalArgumentException();
         this.name = name;
@@ -169,6 +171,7 @@ public class Linkset {
         this.realPaths = false;
         this.removeCrossPatch = false;
         this.optimCirc = optimCirc;
+        this.coefSlope = coefSlope;
     }
 
     public double getDistMax() {
@@ -577,8 +580,8 @@ public class Linkset {
         Path.newSetOfPaths();
         long start = System.currentTimeMillis();
         final CircuitRaster circuit = costs != null ? 
-                    new CircuitRaster(prj, prj.getImageSource(), costs, true, optimCirc)
-                    : new CircuitRaster(prj, prj.getExtRaster(getExtCostFile()), true, optimCirc);
+                    new CircuitRaster(prj, prj.getImageSource(), costs, true, optimCirc, coefSlope)
+                    : new CircuitRaster(prj, prj.getExtRaster(getExtCostFile()), true, optimCirc, coefSlope);
         ParallelFTask task;
         task = new AbstractParallelFTask(progressBar) {
             @Override

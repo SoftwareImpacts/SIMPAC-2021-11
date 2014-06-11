@@ -938,11 +938,11 @@ public final class Project {
         if(linkset.isExtCost()) {
             if(linkset.getExtCostFile().exists()) {
                 Raster extRaster = getExtRaster(linkset.getExtCostFile());
-                return new CircuitRaster(this, extRaster, true, linkset.isOptimCirc());
+                return new CircuitRaster(this, extRaster, true, linkset.isOptimCirc(), linkset.getCoefSlope());
             } else
                 throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
         } else {
-            return new CircuitRaster(this, getImageSource(), linkset.getCosts(), true, linkset.isOptimCirc());
+            return new CircuitRaster(this, getImageSource(), linkset.getCosts(), true, linkset.isOptimCirc(), linkset.getCoefSlope());
         }
     }
 

@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.thema.graphab;
 
 import com.thoughtworks.xstream.XStream;
@@ -29,25 +25,35 @@ import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
 
 /**
- *
- * @author gvuidel
+ * Test Project class
+ * @author Gilles Vuidel
  */
 public class ProjectTest {
     
-    static GridCoverage2D coverage;
-    static Project project, refPrj;
+    /** source coverage */
+    private static GridCoverage2D coverage;
+    /** Project created in /tmp */
+    private static Project project;
+    /** Reference project */
+    private static Project refPrj;
     
-    public ProjectTest() {
-    }
 
+    /**
+     * Initialize test
+     * Create the test project, linksets and graphs
+     * @throws Throwable 
+     */
     @BeforeClass
     public static void setUpClass() throws Throwable {
+        // init 2 threads
         Config.setNodeClass(ProjectTest.class);
+        Config.setParallelProc(2);
         // load all metrics
         Project.loadPluginMetric(ProjectTest.class.getClassLoader());
         coverage = IOImage.loadTiff(new File("target/test-classes/org/thema/graphab/source.tif"));
         project = new Project("test", new File("/tmp"), coverage, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), 1, Double.NaN, false, 0, false);
         MainFrame.project = project;
+        // Load project references
         XStream xstream = new XStream();
         xstream.alias("Project", Project.class);
         xstream.alias("Pointset", Pointset.class);
@@ -55,32 +61,24 @@ public class ProjectTest {
         xstream.alias("Graph", GraphGenerator.class);
         refPrj = (Project) xstream.fromXML(new File("target/test-classes/org/thema/graphab/TestProject.xml"));
         
-        Config.setParallelProc(2);
-        
+        // create linksets
         for(Linkset costDist : refPrj.getLinksets())
             project.addLinkset(costDist, true);
         
+        // create graphs
         for(GraphGenerator gen : refPrj.getGraphs()) {
             gen.setSaved(false);
             project.addGraph(gen, true);
         }
     }
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
 
+    /**
+     * Check patch number and sizes
+     * @throws Exception 
+     */
     @Test
     public void testConstructor() throws Exception {
-        
         assertEquals("Number of patches", 152, project.getPatches().size());
         double area = 0;
         for(Feature patch : project.getPatches())
@@ -93,10 +91,10 @@ public class ProjectTest {
     }
 
     /**
-     * Test of addLinkset method, of class Project.
+     * Test addLinkset method.
      */
     @Test
-    public void testAddCostDistance() throws Throwable {
+    public void testAddLinkset() throws Throwable {
         HashMap<String, Integer> nbLinks = new HashMap<String, Integer>() {{
             put("plan_euclid", 399);
             put("plan_cout1", 381);
@@ -154,7 +152,7 @@ public class ProjectTest {
     }
 
     /**
-     * Test of addGraph method, of class Project.
+     * Test addGraph method.
      */
     @Test
     public void testAddGraph() throws Exception {
@@ -202,6 +200,9 @@ public class ProjectTest {
         }
     }
     
+    /**
+     * Check intra patch distances
+     */
     @Test
     public void testIntraPatchDist() {
         System.out.println("Test intra patch distance");
@@ -219,6 +220,10 @@ public class ProjectTest {
         }
     }
     
+    /**
+     * Test all global metrics
+     * @throws Exception 
+     */
     @Test
     public void testGlobalIndices() throws Exception {
         HashMap<String, Double> resIndices = new HashMap<String, Double>() {{
@@ -301,6 +306,10 @@ public class ProjectTest {
         
     }
     
+    /**
+     * Test all local metrics
+     * @throws Throwable 
+     */
     @Test
     public void testLocalIndices() throws Throwable {
         CSVTabReader r = new CSVTabReader(new File("target/test-classes/org/thema/graphab/patches.csv"));
@@ -341,13 +350,18 @@ public class ProjectTest {
             testIndices.add(indName);
         }
 
+        // check if all metrics have been tested
         assertEquals("Check all local indices", Project.LOCAL_METRICS.size(), testIndices.size());
             
     }
 
+    /**
+     * Test delta metrics
+     * @throws Throwable 
+     */
     @Test
     public void testDeltaIndice() throws Throwable {
-        System.out.println("deltaIndice");
+        System.out.println("delta metric");
         
         CSVTabReader r = new CSVTabReader(new File("target/test-classes/org/thema/graphab/patches.csv"));
         r.read("Id");
@@ -378,7 +392,7 @@ public class ProjectTest {
             nbGraph++;
         } 
         
-        assertTrue("Delta aucun graphe testé", nbGraph > 0);  
+        assertTrue("Delta no graph tested", nbGraph > 0);  
     }
     
     private static boolean isCircuit(String s) {

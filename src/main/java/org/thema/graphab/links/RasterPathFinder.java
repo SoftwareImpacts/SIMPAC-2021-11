@@ -12,7 +12,6 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 import java.awt.image.BandedSampleModel;
-import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferDouble;
 import java.awt.image.Raster;
@@ -26,7 +25,7 @@ import org.thema.graphab.Project;
  * This class is not thread safe.<br/>
  * Create one instance for each thread
  * 
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 
 
