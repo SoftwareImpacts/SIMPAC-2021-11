@@ -136,7 +136,7 @@ public class CLITools {
                     "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn]\n" +
                     "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
                     "--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
-                    "--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[pointfile=file.shp [capa=capa_field]]\n" +
+                    "--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[patchfile=file.shp [capa=capa_field]]\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "\nmin:inc:max -> val1,val2,val3...");
             return;
@@ -923,7 +923,7 @@ public class CLITools {
         String indName = args.remove(0);
         
         HashMap<String, Object> params = new HashMap<String, Object>();
-        while(!args.get(0).startsWith("gridres=") && !args.get(0).startsWith("pointfile=")) {
+        while(!args.get(0).startsWith("gridres=") && !args.get(0).startsWith("patchfile=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
             if(r.isUnique())
@@ -975,7 +975,7 @@ public class CLITools {
                 }
             }
         } else {
-            File pointFile = new File(args.remove(0).split("=")[1]);
+            File patchFile = new File(args.remove(0).split("=")[1]);
             String capaField = null;
             if(!args.isEmpty() && args.get(0).startsWith("capa="))
                 capaField = args.remove(0).split("=")[1];
@@ -986,7 +986,7 @@ public class CLITools {
                     continue;
                 }
                 System.out.println("Add patches with graph " + graph.getName() + " and indice " + indice.getShortName());
-                AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, pointFile, capaField);
+                AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, patchFile, capaField);
                 addPatchCmd.run(new TaskMonitor.EmptyMonitor());
                 addPatchCmd.saveResults();
             }

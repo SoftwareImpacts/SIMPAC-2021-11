@@ -14,6 +14,7 @@ import org.thema.data.IOImage;
 import org.thema.common.io.tab.CSVTabReader;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.Feature;
+import org.thema.graphab.addpatch.AddPatchCommand;
 import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.DeltaMetricTask;
@@ -23,6 +24,7 @@ import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
+import org.thema.graphab.metric.global.PCMetric;
 
 /**
  * Test Project class
@@ -50,9 +52,11 @@ public class ProjectTest {
         Config.setParallelProc(2);
         // load all metrics
         Project.loadPluginMetric(ProjectTest.class.getClassLoader());
+
         coverage = IOImage.loadTiff(new File("target/test-classes/org/thema/graphab/source.tif"));
         project = new Project("test", new File("/tmp"), coverage, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), 1, Double.NaN, false, 0, false);
         MainFrame.project = project;
+        
         // Load project references
         XStream xstream = new XStream();
         xstream.alias("Project", Project.class);
@@ -293,7 +297,7 @@ public class ProjectTest {
                 indName = indName.substring(0, indName.indexOf("_"));
             GlobalMetric indice = Project.getGlobalMetric(indName);
             indice.setParamFromDetailName(varName.substring(0, varName.indexOf("-")));
-            GraphGenerator gen = refPrj.getGraph(varName.substring(varName.indexOf("-")+1));
+            GraphGenerator gen = project.getGraph(varName.substring(varName.indexOf("-")+1));
             GraphMetricLauncher launcher = new GraphMetricLauncher(indice, true);
             Double[] res = launcher.calcIndice(gen, new TaskMonitor.EmptyMonitor());
             double err = 1e-12;
@@ -395,7 +399,84 @@ public class ProjectTest {
         assertTrue("Delta no graph tested", nbGraph > 0);  
     }
     
+    /**
+     * Test add patch
+     * @throws Throwable 
+     */
+    @Test
+    public void testAddPatch() throws Throwable {
+        PCMetric indice = new PCMetric();
+        indice.setParams(1000, 0.05, 1);
+        AddPatchCommand addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_cout10_500_nopath"), null, 1000, 1, 1);
+        addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+        double[] metric = new double[] {
+            3.2880609909219464E-4,
+            3.310670270101464E-4,
+            3.3247253389400165E-4,
+            3.3321668359908647E-4,
+            3.3377521178276566E-4,
+            3.342367536836475E-4,
+            3.34660961733302E-4,
+            3.3507512044854415E-4,
+            3.3522097708321225E-4,
+            3.353572949243866E-4,
+            3.354917552276591E-4};
+        for(int i = 0; i < metric.length; i++) {
+            assertEquals("Add grid point patch", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
+        }
+        
+        reloadProject();
+        
+        addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_cout10_500_nopath"), 
+                new File("target/test-classes/org/thema/graphab/patch_alea.shp"), null);
+        addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+        metric = new double[] {
+            3.288060990921947E-4,
+            3.318280601637511E-4,
+            3.337111357954791E-4,
+            3.3475535460807815E-4,
+            3.35787430334884E-4,
+            3.361066228947054E-4,
+            3.363812858721702E-4,
+            3.3660585153397004E-4,
+            3.367396334795461E-4,
+            3.36848613338119E-4,
+            3.3694048774752193E-4};
+        for(int i = 0; i < metric.length; i++) {
+            assertEquals("Add geometry patch shapefile", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
+        }
+        
+        reloadProject();
+        
+        addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_cout10_500_nopath"), 
+                new File("target/test-classes/org/thema/graphab/point_alea.shp"), null);
+        addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+        metric = new double[] {
+            3.288060990921945E-4,
+            3.317128734737994E-4,
+            3.335155232091921E-4,
+            3.342935746157495E-4,
+            3.3460310195571757E-4,
+            3.3482556544645883E-4,
+            3.350232848996763E-4,
+            3.3514876007901677E-4,
+            3.352531327668829E-4,
+            3.352938746508512E-4,
+            3.353309445926464E-4 };
+        for(int i = 0; i < metric.length; i++) {
+            assertEquals("Add point patch shapefile", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
+        }
+        
+        reloadProject();
+    }
+    
+    
     private static boolean isCircuit(String s) {
         return s.equals("BCCirc") || s.equals("CBC") || s.equals("CF") || s.equals("PCF");
+    }
+    
+    private static void reloadProject() throws Exception {
+        project = Project.loadProject(new File("/tmp/test.xml"), false);
+        MainFrame.project = project;
     }
 }

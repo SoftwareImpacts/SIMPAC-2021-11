@@ -7,6 +7,7 @@
 package org.thema.graphab.addpatch;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import java.awt.geom.Point2D;
@@ -25,19 +26,22 @@ import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
-import org.thema.common.collection.TreeMapList;
-import org.thema.parallel.ExecutorService;
-import org.thema.data.IOImage;
-import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.ProgressBar;
+import org.thema.common.collection.TreeMapList;
+import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
+import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
+import org.thema.drawshape.image.RasterShape;
+import org.thema.drawshape.layer.RasterLayer;
+import org.thema.drawshape.style.RasterStyle;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.GraphMetricLauncher;
 import org.thema.graphab.metric.global.GlobalMetric;
+import org.thema.parallel.ExecutorService;
 
 /**
  *
@@ -57,8 +61,8 @@ public class AddPatchCommand {
     private int nbMultiPatch;
     private int windowSize;
     
-    // Point file parameters
-    private File pointFile;
+    // Shape file parameters
+    private File shapeFile;
     private String capaField;
     
     
@@ -76,16 +80,16 @@ public class AddPatchCommand {
         this.windowSize = windowSize;
     }
 
-    public AddPatchCommand(int nbPatch, GlobalMetric indice, GraphGenerator gen, File pointFile, String capaField) {
+    public AddPatchCommand(int nbPatch, GlobalMetric indice, GraphGenerator gen, File shapeFile, String capaField) {
         this.nbPatch = nbPatch;
         this.indice = indice;
         this.gen = gen;
-        this.pointFile = pointFile;
+        this.shapeFile = shapeFile;
         this.capaField = capaField;
     }
     
     public boolean isGridVersion() {
-        return pointFile == null;
+        return shapeFile == null;
     }
     
     public void run(ProgressBar bar) throws Exception {
@@ -106,7 +110,7 @@ public class AddPatchCommand {
         return metricValues;
     }
     
-    private List<DefaultFeature> addPatchSimple(HashMap<Coordinate, Double> testPoints,  
+    private List<DefaultFeature> addPatchSimple(HashMap<Geometry, Double> testGeoms,  
             ProgressBar mon, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws Exception {
         
         Project project = Project.getProject();
@@ -120,36 +124,36 @@ public class AddPatchCommand {
         mon.incProgress(1);
         Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, "Initial " + indice.getShortName() + " : " + currentInd); 
         
-        Point bestPoint = null;
-        double capaPoint = 0;
+        Geometry bestGeom = null;
+        double capa = 0;
         
         for(int i = 0; i < nbPatch; i++) {
-            AddPatchTask task = new AddPatchTask(bestPoint, capaPoint, gen, indice, testPoints, mon.getSubProgress(1));
+            AddPatchTask task = new AddPatchTask(bestGeom, capa, gen, indice, testGeoms, mon.getSubProgress(1));
             ExecutorService.execute(task);
-            TreeMapList<Double, Point> pointIndices = task.getResult();
+            TreeMapList<Double, Geometry> patchIndices = task.getResult();
             
-            List<Point> bestPoints = pointIndices.lastEntry().getValue();
-            bestPoint = bestPoints.get((int)(Math.random()*bestPoints.size()));
+            List<Geometry> bestGeoms = patchIndices.lastEntry().getValue();
+            bestGeom = bestGeoms.get((int)(Math.random()*bestGeoms.size()));
 
             int step = i+1;
-            capaPoint = testPoints.get(bestPoint.getCoordinate());
-            DefaultFeature patch = project.addPatch(bestPoint, capaPoint);
+            capa = testGeoms.get(bestGeom);
+            DefaultFeature patch = project.addPatch(bestGeom, capa);
             gen.getLinkset().addLinks(patch);
             
             patch = new DefaultFeature(patch, true, true);
             patch.addAttribute("Etape", step);
-            patch.addAttribute("delta-" + indice.getDetailName(), pointIndices.lastKey()-currentInd);
-            patch.addAttribute(indice.getDetailName(), pointIndices.lastKey());
+            patch.addAttribute("delta-" + indice.getDetailName(), patchIndices.lastKey()-currentInd);
+            patch.addAttribute(indice.getDetailName(), patchIndices.lastKey());
             addedPatches.add(patch);
             
-            indiceValues.put(addedPatches.size(), pointIndices.lastKey());
-            currentInd = pointIndices.lastKey();
+            indiceValues.put(addedPatches.size(), patchIndices.lastKey());
+            currentInd = patchIndices.lastKey();
             
             if(saveDetail) {
                 List<DefaultFeature> debug = new ArrayList<DefaultFeature>();
-                for(Double val : pointIndices.keySet())
-                    for(Point p : pointIndices.get(val)) {
-                        debug.add(new DefaultFeature(p.getX()+","+p.getY()+" - " + (step), p, Arrays.asList("Etape", indice.getDetailName()), 
+                for(Double val : patchIndices.keySet())
+                    for(Geometry g : patchIndices.get(val)) {
+                        debug.add(new DefaultFeature(g.getCentroid().getX()+","+g.getCentroid().getY()+" - " + (step), g, Arrays.asList("Etape", indice.getDetailName()), 
                                 Arrays.asList(step, val)));
                     }
                 File dir = getResultDir();
@@ -159,20 +163,20 @@ public class AddPatchCommand {
             }
 
             Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, 
-                    "Step " + step + " : 1 added patches " + bestPoint.getCoordinate() + " from " + bestPoints.size() + " best points  for " + indice.getShortName() + " = " + pointIndices.lastKey()); 
+                    "Step " + step + " : 1 added patches " + bestGeom.getCoordinate() + " from " + bestGeoms.size() + " best points  for " + indice.getShortName() + " = " + patchIndices.lastKey()); 
         }
 
         return addedPatches;
     }
     
     private List<DefaultFeature> addPatchShp(ProgressBar bar, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws Exception {
-        List<DefaultFeature> points = DefaultFeature.loadFeatures(pointFile, false);
-        HashMap<Coordinate, Double> testPoints = new HashMap<Coordinate, Double>();
+        List<DefaultFeature> points = DefaultFeature.loadFeatures(shapeFile, false);
+        HashMap<Geometry, Double> testGeoms = new HashMap<Geometry, Double>();
         for(Feature f : points)
-            testPoints.put(f.getGeometry().getCentroid().getCoordinate(), 
+            testGeoms.put(f.getGeometry(), 
                     capaField == null ? 1 : ((Number)f.getAttribute(capaField)).doubleValue());
 
-        return addPatchSimple(testPoints, bar, indiceValues, saveDetail);
+        return addPatchSimple(testGeoms, bar, indiceValues, saveDetail);
     }
     
     private List<DefaultFeature> addPatchGrid(ProgressBar mon, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws Exception {
@@ -189,13 +193,19 @@ public class AddPatchCommand {
             if(capaFile != null)
                 capaCov = capaFile.getName().toLowerCase().endsWith(".tif") ? IOImage.loadTiff(capaFile) : IOImage.loadArcGrid(capaFile);
             
+            if(nbMultiPatch <= 1) {
+                GeometryFactory geomFactory = new GeometryFactory();
+                HashMap<Geometry, Double> testPoints = new HashMap<Geometry, Double>();
+                for(double y = rect.getMinY()+res/2; y < rect.getMaxY(); y += res) 
+                    for(double x = rect.getMinX()+res/2; x < rect.getMaxX(); x += res) 
+                        testPoints.put(geomFactory.createPoint(new Coordinate(x, y)), capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(x, y), new double[1])[0]);
+                return addPatchSimple(testPoints, mon, indiceValues, saveDetail);
+            }
+            
             HashMap<Coordinate, Double> testPoints = new HashMap<Coordinate, Double>();
             for(double y = rect.getMinY()+res/2; y < rect.getMaxY(); y += res) 
                 for(double x = rect.getMinX()+res/2; x < rect.getMaxX(); x += res) 
                     testPoints.put(new Coordinate(x, y), capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(x, y), new double[1])[0]);
-            
-            if(nbMultiPatch <= 1) 
-                return addPatchSimple(testPoints, mon, indiceValues, saveDetail);
             
             // sinon on continue avec la version multipatch
             mon.setMaximum((int)(nbPatch*rect.getWidth()/res*rect.getHeight()/res));
@@ -284,6 +294,8 @@ public class AddPatchCommand {
         DefaultFeature.saveFeatures(newGraph.getLinks(), new File(dir, "links-" + name + ".shp"));
         newGraph.getLayers().getEdgeLayer().exportToShapefile(new File(dir, "topo-links-" + name + ".shp"));
         
+        new RasterLayer("", new RasterShape(Project.getProject().getImageSource(), Project.getProject().getZone(), new RasterStyle(), true), Project.getProject().getCRS())
+                .saveRaster(new File(dir, "landuse.tif"));
     }
     
     public File getResultDir() {
@@ -293,7 +305,7 @@ public class AddPatchCommand {
                     "_res" + res + "_multi" + nbMultiPatch + "_" + windowSize);
         else
             return new File(Project.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
-                    "_shp" + pointFile.getName());
+                    "_shp" + shapeFile.getName());
     }
     
     private static void addPatchWindow(final LinkedList<Point> points, final GlobalMetric indice, final GraphGenerator gen, final GridCoverage2D capaCov, 
@@ -353,7 +365,7 @@ public class AddPatchCommand {
             }
                 
         gen.getLinkset().removeLinks(patch);
-        project.removePatch(patch);
+        project.removePointPatch(patch);
         
     }
     

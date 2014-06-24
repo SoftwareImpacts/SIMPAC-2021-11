@@ -7,6 +7,7 @@ package org.thema.graphab.links;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import java.util.ArrayList;
@@ -50,23 +51,34 @@ public class EuclidePathFinder implements SpacePathFinder {
      * @param realPath
      * @return 
      */
+    @Override
     public HashMap<DefaultFeature, Path> calcPaths(Coordinate p, double maxCost, boolean realPath) {
+        return calcPaths(new GeometryFactory().createPoint(p), maxCost, realPath);
+    }
+    
+    /**
+     * TODO ne crée pas le chemin réel quand realPath = true 
+     * @param geom
+     * @param maxCost
+     * @param realPath
+     * @return 
+     */
+    @Override
+    public HashMap<DefaultFeature, Path> calcPaths(Geometry geom, double maxCost, boolean realPath) {
         Collection<DefaultFeature> nearPatches = project.getPatches();
         if(maxCost > 0) {
-            Envelope env = new Envelope(p);
+            Envelope env = new Envelope(geom.getEnvelopeInternal());
             env.expandBy(maxCost);
             nearPatches = (List<DefaultFeature>)project.getPatchIndex().query(env);
         }
        
-        Point point = new GeometryFactory().createPoint(p);
-        DefaultFeature pointPatch = new DefaultFeature(p.toString(), point);
+        DefaultFeature geomPatch = new DefaultFeature(geom.getCentroid().getCoordinate().toString(), geom);
         HashMap<DefaultFeature, Path> paths = new HashMap<DefaultFeature, Path>();
-
         for(DefaultFeature patch : nearPatches) {
-            double d = patch.getGeometry().distance(point);
-            if(maxCost == 0 || d <= maxCost)
-                paths.put(patch, new Path(pointPatch, patch, d, d));
-
+            double d = patch.getGeometry().distance(geom);
+            if(maxCost == 0 || d <= maxCost) {
+                paths.put(patch, new Path(geomPatch, patch, d, d));
+            }
         }
         
         return paths;

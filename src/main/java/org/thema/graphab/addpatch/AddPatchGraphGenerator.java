@@ -4,6 +4,7 @@
  */
 package org.thema.graphab.addpatch;
 
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,9 +14,9 @@ import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
-import org.thema.graphab.links.Path;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.Path;
 
 /**
  *
@@ -36,13 +37,13 @@ public class AddPatchGraphGenerator extends GraphGenerator {
         graph = gen.dupGraphWithout(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }
     
-    public void addPatch(Point p, double capa) throws Exception {
+    public void addPatch(Geometry geom, double capa) throws Exception {
         if(addedElem != null)
             throw new IllegalStateException("Graph already contains an added element");
         
         BasicGraphBuilder builder = new BasicGraphBuilder();
         // crée le noeud
-        DefaultFeature patch = Project.getProject().createPointPatch(p, capa);
+        DefaultFeature patch = Project.getProject().createPatch(geom, capa);
         Node node = builder.buildNode();
         node.setObject(patch);
         graph.getNodes().add(node);
@@ -53,12 +54,12 @@ public class AddPatchGraphGenerator extends GraphGenerator {
             Path path = new Path(patch, d, newLinks.get(d).getCost(), newLinks.get(d).getDist());  
             if(getType() != THRESHOLD || getCost(path) <= getThreshold()) {
                 Node nodeB = null;
-                for(Node n : (Collection<Node>)getGraph().getNodes())
+                for(Node n : (Collection<Node>)getGraph().getNodes()) {
                     if(((Feature)n.getObject()).getId().equals(d.getId())) {
                         nodeB = n;
                         break;
                     }
-
+                }
                 Edge edge = builder.buildEdge(node, nodeB);
                 edge.setObject(path);
                 node.add(edge);
@@ -74,7 +75,6 @@ public class AddPatchGraphGenerator extends GraphGenerator {
     }
     
     public void reset() {
-
         graph.getNodes().remove(addedElem);
 
         for(Object o : addedElem.getEdges()) {
@@ -86,7 +86,6 @@ public class AddPatchGraphGenerator extends GraphGenerator {
         components = null;
         compFeatures = null;
         addedElem = null;
-
     }
    
 

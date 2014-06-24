@@ -1551,20 +1551,20 @@ public final class Project {
         return getImageSource().getSample((int)cg.x, (int)cg.y, 0) != noData;
     }
 
-    public DefaultFeature createPointPatch(Point point, double capa) {
+    public DefaultFeature createPatch(Geometry geom, double capa) {
         List<String> attrNames = new ArrayList<String>(PATCH_ATTRS);
         List attrs = new ArrayList(Arrays.asList(new Double[attrNames.size()]));
         attrs.set(attrNames.indexOf(CAPA_ATTR), capa);
         attrs.set(attrNames.indexOf(AREA_ATTR), resolution*resolution);
         attrs.set(attrNames.indexOf(PERIM_ATTR), resolution*4);
-        return new DefaultFeature(patches.size()+1, point, attrNames, attrs);
+        return new DefaultFeature(patches.size()+1, geom, attrNames, attrs);
     }
     
     public synchronized DefaultFeature addPatch(Point point, double capa) throws IOException {
         // tester si pas dans un patch ou touche un patch
         if(!canCreatePatch(point))
             throw new IllegalArgumentException("Patch already exist at the same position : " + point.toString());
-        DefaultFeature patch = createPointPatch(point, capa);
+        DefaultFeature patch = createPatch(point, capa);
         int id = (Integer)patch.getId();
         Coordinate cg = space2grid.transform(point.getCoordinate(), new Coordinate());
         // on passe les raster en strong reference pour qu'ils ne puissent pas être supprimé
@@ -1577,7 +1577,57 @@ public final class Project {
         patches.add(patch);
         return patch;
     }
+    
+    public synchronized DefaultFeature addPatch(Geometry geom, double capa) throws IOException {
+        if(geom instanceof Point) { // pas sûr que ce soit utile...
+            return addPatch((Point) geom, capa);
+        }
+        // tester si pas dans un patch ou touche un patch
+        if(!canCreatePatch(geom))
+            throw new IllegalArgumentException("Patch already exist at the same position");
+                    
+        DefaultFeature patch = createPatch(geom, capa);
+        int id = (Integer)patch.getId();
+        // on passe les raster en strong reference pour qu'ils ne puissent pas être supprimé
+        patchRaster = new StrongRef<WritableRaster>(getRasterPatch());
+        srcRaster = new StrongRef<WritableRaster>(getImageSource());
 
+        GeometryFactory geomFactory = geom.getFactory();
+        Geometry geomGrid = getSpace2grid().transform(geom);
+        Envelope env = geomGrid.getEnvelopeInternal();
+        for(double y = (int)env.getMinY() + 0.5; y <= Math.ceil(env.getMaxY()); y++) {
+            for(double x = (int)env.getMinX() + 0.5; x <= Math.ceil(env.getMaxX()); x++) {
+                Point p = geomFactory.createPoint(new Coordinate(x, y));
+                if(geomGrid.contains(p)) {
+                    getRasterPatch().setSample((int)x, (int)y, 0, id);
+                    getImageSource().setSample((int)x, (int)y, 0, patchCode);
+                }
+            }
+        }
+        patches.add(patch);
+        return patch;
+    }
+
+    public boolean canCreatePatch(Geometry geom) throws IOException {
+        if(geom instanceof Point) {// pas sûr que ce soit utile...
+            return canCreatePatch((Point) geom);
+        }
+        // tester si pas dans un patch ou touche un patch
+        GeometryFactory geomFactory = geom.getFactory();
+        Geometry geomGrid = getSpace2grid().transform(geom);
+        Envelope env = geomGrid.getEnvelopeInternal();
+        for(double y = (int)env.getMinY() + 0.5; y <= Math.ceil(env.getMaxY()); y++) {
+            for(double x = (int)env.getMinX() + 0.5; x <= Math.ceil(env.getMaxX()); x++) {
+                Point p = geomFactory.createPoint(new Coordinate(x, y));
+                if(geomGrid.contains(p)) {
+                    if(!canCreatePatch((Point)getGrid2space().transform(p)))
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
+    
     public boolean canCreatePatch(Point p) throws IOException {
         if(!isInZone(p.getX(), p.getY()))
             return false;
@@ -1603,7 +1653,9 @@ public final class Project {
         return true;
     }
     
-    public synchronized void removePatch(Feature patch) throws IOException {
+    public synchronized void removePointPatch(Feature patch) throws IOException {
+        if(!(patch.getGeometry() instanceof Point))
+            throw new IllegalArgumentException("Cannot remove patch with geometry different of Point");
         Coordinate cg = space2grid.transform(patch.getGeometry().getCoordinate(), new Coordinate());
         if(getImageSource().getSample((int)cg.x, (int)cg.y, 0) != patchCode)
             throw new RuntimeException("No patch to remove at " + patch.getGeometry());

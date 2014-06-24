@@ -6,6 +6,7 @@
 package org.thema.graphab.links;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,6 +32,14 @@ public interface SpacePathFinder {
      * @return
      */
     public HashMap<DefaultFeature, Path> calcPaths(Coordinate p, double maxCost, boolean realPath);
+    
+    /**
+     * Calcule les chemins à partir de la géométrie geom vers tous les patch dont
+     * la distance cout est inférieure ou égale à maxCost
+     * @param geom can be Point or Polygonal
+     * @return
+     */
+    public HashMap<DefaultFeature, Path> calcPaths(Geometry geom, double maxCost, boolean realPath);
 
     /**
      * Calcule les chemins à partir de oPatch vers tous les patch dont l'id est supérieur à oPatch

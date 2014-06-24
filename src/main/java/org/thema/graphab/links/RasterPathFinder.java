@@ -11,6 +11,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygonal;
 import java.awt.image.BandedSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferDouble;
@@ -98,7 +99,8 @@ public final class RasterPathFinder implements SpacePathFinder {
     
     /**
      * Initialize pathfinder from origin (rx, ry) in raster coordinate
-     * @param coord 
+     * @param rx
+     * @param ry
      */
     private void initCoord(int rx, int ry) {
         queue = new PriorityQueue<Node>();
@@ -109,6 +111,34 @@ public final class RasterPathFinder implements SpacePathFinder {
         Node node = new Node(ry*w+rx, 0);
         queue.add(node);
         setDist(ry*w+rx, 0);
+    }
+    
+    /**
+     * Initialize pathfinder from geom
+     * @param geom must be polygonal
+     * @throws IllegalArgumentException if geom is not polygonal
+     */
+    private void initGeom(Geometry geom) {    
+        if(!(geom instanceof Polygonal))
+            throw new IllegalArgumentException("Geometry must be polygonal");
+        final int w = rasterPatch.getWidth();
+        GeometryFactory geomFactory = geom.getFactory();
+        Geometry geomGrid = project.getSpace2grid().transform(geom);
+        Envelope env = geomGrid.getEnvelopeInternal();
+        queue = new PriorityQueue<Node>();
+        for(double y = (int)env.getMinY() + 0.5; y <= Math.ceil(env.getMaxY()); y++) {
+            for(double x = (int)env.getMinX() + 0.5; x <= Math.ceil(env.getMaxX()); x++) {
+                if(geomGrid.contains(geomFactory.createPoint(new Coordinate(x, y)))) {
+                    queue.add(new Node((int)y*w+(int)x, 0));
+                }
+            }
+        }
+
+        initDistBuf((int)env.getMinX()-100, (int)env.getMinY()-100, (int)env.getWidth()+200, (int)env.getHeight()+200);
+
+        // initialisation des distances à zéro pour l'ensemble de la géométrie
+        for(Node n : queue)
+            setDist(n.ind, 0);
     }
 
     /**
@@ -184,21 +214,19 @@ public final class RasterPathFinder implements SpacePathFinder {
         return distances;
     }
     
-    /**
-     * Calcule les distances cout à partir du point p vers tous les patch dont
-     * la distance cout est inférieure ou égale à maxCost
-     * @param p
-     * @param maxCost
-     * @param realPath
-     * @return les patch avec le cout et la longueur du chemin
-     */
     @Override
     public HashMap<DefaultFeature, Path> calcPaths(Coordinate p, double maxCost, boolean realPath) {
-
-        initCoord(p);
-
-        DefaultFeature pointPatch = new DefaultFeature(p.toString(), new GeometryFactory().createPoint(p));
+        return calcPaths(new GeometryFactory().createPoint(p), maxCost, realPath);
+    }
+    
+    @Override
+    public HashMap<DefaultFeature, Path> calcPaths(Geometry geom, double maxCost, boolean realPath) {
+        if(geom instanceof Point)
+            initCoord(((Point)geom).getCoordinate());
+        else
+            initGeom(geom);
         
+        DefaultFeature geomPatch = new DefaultFeature(geom.getCentroid().getCoordinate().toString(), geom);
         HashMap<DefaultFeature, Path> paths = new HashMap<DefaultFeature, Path>();
         while(!queue.isEmpty()) {
             Node current = updateNextNodes(queue);
@@ -210,15 +238,14 @@ public final class RasterPathFinder implements SpacePathFinder {
                 if(!paths.keySet().contains(dest)) {
                     LineString line = getPath(current.ind);
                     if(realPath)
-                        paths.put(dest, new Path(pointPatch, dest, current.dist, line));
+                        paths.put(dest, new Path(geomPatch, dest, current.dist, line));
                     else
-                        paths.put(dest, new Path(pointPatch, dest, current.dist, line.getLength()));
+                        paths.put(dest, new Path(geomPatch, dest, current.dist, line.getLength()));
                 }
             }
         }
 
         return paths;
-
     }
 
     /**

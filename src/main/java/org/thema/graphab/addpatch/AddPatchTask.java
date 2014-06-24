@@ -4,8 +4,7 @@
  */
 package org.thema.graphab.addpatch;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import java.awt.geom.Point2D;
 import java.io.Serializable;
@@ -15,45 +14,45 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
-import org.thema.common.collection.TreeMapList;
-import org.thema.parallel.AbstractParallelTask;
 import org.thema.common.ProgressBar;
+import org.thema.common.collection.TreeMapList;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.GraphMetricLauncher;
 import org.thema.graphab.metric.global.GlobalMetric;
+import org.thema.parallel.AbstractParallelTask;
 
 /**
  *
  * @author gvuidel
  */
-public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Point>, TreeMapList<Double, Point>> 
+public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geometry>, TreeMapList<Double, Geometry>> 
                     implements Serializable{
 
     // Patch to be added at init
-    Point addedPoint;
-    double capaPoint;
+    Geometry addedGeom;
+    double capaGeom;
     
-    HashMap<Coordinate, Double> testPoints;
-    List<Coordinate> points;
+    HashMap<Geometry, Double> testGeoms;
+    List<Geometry> geoms;
     GlobalMetric indice;
     String graphName;
     
     transient GraphGenerator gen;
-    transient TreeMapList<Double, Point> result;
+    transient TreeMapList<Double, Geometry> result;
 
-    public AddPatchTask(Point addedPoint, double capaPoint, GraphGenerator gen, GlobalMetric indice, 
-            HashMap<Coordinate, Double> testPoints, ProgressBar monitor) {
+    public AddPatchTask(Geometry addedGeom, double capaGeom, GraphGenerator gen, GlobalMetric indice, 
+            HashMap<Geometry, Double> testGeoms, ProgressBar monitor) {
         super(monitor);
-        this.addedPoint = addedPoint;
-        this.capaPoint = capaPoint;
+        this.addedGeom = addedGeom;
+        this.capaGeom = capaGeom;
         this.indice = indice;
         this.gen = gen;
         this.graphName = gen.getName();
-        this.testPoints = testPoints;
-        points = new ArrayList<Coordinate>(testPoints.keySet());
+        this.testGeoms = testGeoms;
+        geoms = new ArrayList<Geometry>(testGeoms.keySet());
     }
 
     @Override
@@ -63,9 +62,9 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Point
         try {
             // si il y a un patch à ajouter et qu'il n'a pas encore été ajouté
             // utile seulement pour MPI
-            if(addedPoint != null && Project.getProject().canCreatePatch(addedPoint)) {
+            if(addedGeom != null && Project.getProject().canCreatePatch(addedGeom)) {
                 // add the new patch to the project and the graph
-                DefaultFeature patch = Project.getProject().addPatch(addedPoint, capaPoint);
+                DefaultFeature patch = Project.getProject().addPatch(addedGeom, capaGeom);
                 gen.getLinkset().addLinks(patch);
             }
         } catch (Exception ex) {
@@ -75,14 +74,13 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Point
     }
 
     @Override
-    public TreeMapList<Double, Point> execute(int start, int end) {
-        TreeMapList<Double, Point> results = new TreeMapList<Double, Point>();
-        for(Coordinate coord : points.subList(start, end)) {
-            Point p = new GeometryFactory().createPoint(coord);
+    public TreeMapList<Double, Geometry> execute(int start, int end) {
+        TreeMapList<Double, Geometry> results = new TreeMapList<Double, Geometry>();
+        for(Geometry geom : geoms.subList(start, end)) {
             try {
-                double indVal = addPatchSoft(p, indice, gen, testPoints.get(coord));
+                double indVal = addPatchSoft(geom, indice, gen, testGeoms.get(geom));
                 if(!Double.isNaN(indVal))
-                    results.putValue(indVal, p);
+                    results.putValue(indVal, geom);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -91,21 +89,21 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Point
     }
 
     @Override
-    public void gather(TreeMapList<Double, Point> results) {
+    public void gather(TreeMapList<Double, Geometry> results) {
         if(result == null)
-            result = new TreeMapList<Double, Point>();
+            result = new TreeMapList<Double, Geometry>();
         for(Double val : results.keySet())
-            for(Point p : results.get(val))
-                result.putValue(val, p);
+            for(Geometry g : results.get(val))
+                result.putValue(val, g);
     }
     
     @Override
     public int getSplitRange() {
-        return testPoints.size();
+        return testGeoms.size();
     }
     
     @Override
-    public TreeMapList<Double, Point> getResult() {
+    public TreeMapList<Double, Geometry> getResult() {
         return result;
     }
     
@@ -114,15 +112,15 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Point
         return addPatchSoft(point, indice, gen, capa);
     }
     
-    public static double addPatchSoft(Point point, GlobalMetric indice, GraphGenerator gen, double capa) throws Exception {
+    public static double addPatchSoft(Geometry geom, GlobalMetric indice, GraphGenerator gen, double capa) throws Exception {
         Project project = Project.getProject();
-        if(!project.canCreatePatch(point))
+        if(!project.canCreatePatch(geom))
             return Double.NaN;
 
         if(capa <= 0)
             return Double.NaN;
         AddPatchGraphGenerator graph = new AddPatchGraphGenerator(new GraphGenerator(gen, ""));
-        graph.addPatch(point, capa);
+        graph.addPatch(geom, capa);
 
         double indVal = new GraphMetricLauncher(indice, false).calcIndice(graph, new TaskMonitor.EmptyMonitor())[0];
         

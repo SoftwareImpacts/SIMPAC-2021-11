@@ -772,8 +772,8 @@ public class Linkset {
         if(type == PLANAR)
             throw new IllegalStateException("Planar topology is not supported !");
         SpacePathFinder pathfinder = Project.getProject().getPathFinder(this);
-        HashMap<DefaultFeature, Path> newPaths = pathfinder.calcPaths(patch.getGeometry().getCentroid().getCoordinate(), distMax, realPaths);
-        newPaths.remove(patch);
+        HashMap<DefaultFeature, Path> newPaths = pathfinder.calcPaths(patch.getGeometry(), distMax, realPaths);
+        newPaths.remove(patch); // a priori inutile
         return newPaths;
     }
     /**

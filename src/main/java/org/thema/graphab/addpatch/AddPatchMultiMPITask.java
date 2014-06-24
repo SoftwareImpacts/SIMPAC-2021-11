@@ -157,7 +157,7 @@ public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Doubl
         }
         
         gen.getLinkset().removeLinks(patch);
-        project.removePatch(patch);
+        project.removePointPatch(patch);
         
         return indVal;
     }
