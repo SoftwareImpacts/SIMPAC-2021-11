@@ -128,7 +128,7 @@ public class AddPatchCommand {
         double capa = 0;
         
         for(int i = 0; i < nbPatch; i++) {
-            AddPatchTask task = new AddPatchTask(bestGeom, capa, gen, indice, testGeoms, mon.getSubProgress(1));
+            AddPatchTask task = new AddPatchTask(bestGeom, capa, gen.getName(), indice, testGeoms, mon.getSubProgress(1));
             ExecutorService.execute(task);
             TreeMapList<Double, Geometry> patchIndices = task.getResult();
             
@@ -148,6 +148,13 @@ public class AddPatchCommand {
             
             indiceValues.put(addedPatches.size(), patchIndices.lastKey());
             currentInd = patchIndices.lastKey();
+            
+            // check if we obtain the same result after adding the patch "truly"
+            double test = new GraphMetricLauncher(indice).calcIndice(new GraphGenerator(gen, ""), null)[0];
+            if(Math.abs(test - currentInd) > 1e-10) {
+//                throw new RuntimeException("Error incoherence");
+                System.err.println("PB " + currentInd + " - " + test);
+            }
             
             if(saveDetail) {
                 List<DefaultFeature> debug = new ArrayList<DefaultFeature>();
@@ -308,7 +315,7 @@ public class AddPatchCommand {
                     "_shp" + shapeFile.getName());
     }
     
-    private static void addPatchWindow(final LinkedList<Point> points, final GlobalMetric indice, final GraphGenerator gen, final GridCoverage2D capaCov, 
+    private static void addPatchWindow(final LinkedList<Point> points, final GlobalMetric indice, GraphGenerator gen, final GridCoverage2D capaCov, 
             final double indInit, double res, int nbMultiPatch, int windowSize,
             final TreeMapList<Double, Set<Point>> pointIndices, int level) throws Exception {
         Project project = Project.getProject();
@@ -320,7 +327,7 @@ public class AddPatchCommand {
             return ;
         DefaultFeature patch = project.addPatch(point, capa);
         gen.getLinkset().addLinks(patch);
-        GraphGenerator graph = new GraphGenerator(gen, "");
+        final GraphGenerator graph = new GraphGenerator(gen, "");
         double indVal = (new GraphMetricLauncher(indice, true).calcIndice(graph, new TaskMonitor.EmptyMonitor())[0]
                 - indInit) / points.size();
         pointIndices.putValue(indVal, new HashSet<Point>(points));
@@ -344,7 +351,7 @@ public class AddPatchCommand {
                 @Override
                 protected void executeOne(Point p) {
                     try {
-                        double indVal = AddPatchTask.addPatchSoft(p, indice, gen, capaCov);
+                        double indVal = AddPatchTask.addPatchSoft(p, indice, graph, capaCov);
                         if(!Double.isNaN(indVal)) {
                             HashSet<Point> pointSet = new HashSet<Point>(points);
                             pointSet.add(p);

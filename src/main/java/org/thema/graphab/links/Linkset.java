@@ -760,12 +760,12 @@ public class Linkset {
      */
     public void addLinks(DefaultFeature patch) throws Exception {
         HashMap<DefaultFeature, Path> links = calcNewLinks(patch);
-        for(DefaultFeature d : links.keySet()) 
+        for(DefaultFeature d : links.keySet()) {
             if(realPaths)
                 paths.add(new Path(patch, d, links.get(d).getCost(), (LineString)links.get(d).getGeometry(), paths.get(0).getAttributeNames()));      
             else
                 paths.add(new Path(patch, d, links.get(d).getCost(), links.get(d).getDist(), paths.get(0).getAttributeNames()));      
-        
+        }
     }
     
     public HashMap<DefaultFeature, Path> calcNewLinks(DefaultFeature patch) throws Exception {
@@ -773,7 +773,7 @@ public class Linkset {
             throw new IllegalStateException("Planar topology is not supported !");
         SpacePathFinder pathfinder = Project.getProject().getPathFinder(this);
         HashMap<DefaultFeature, Path> newPaths = pathfinder.calcPaths(patch.getGeometry(), distMax, realPaths);
-        newPaths.remove(patch); // a priori inutile
+        newPaths.remove(patch); 
         return newPaths;
     }
     /**

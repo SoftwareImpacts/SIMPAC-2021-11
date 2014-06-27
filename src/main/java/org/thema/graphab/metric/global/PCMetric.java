@@ -8,7 +8,6 @@ package org.thema.graphab.metric.global;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.geotools.graph.structure.Node;
-import org.thema.graph.pathfinder.DijkstraPathFinder.DijkstraNode;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphGenerator.PathFinder;
@@ -27,9 +26,9 @@ public class PCMetric extends AbstractPathMetric {
     public Double calcPartIndice(PathFinder finder, GraphGenerator g) {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
-        for(Node node : finder.getComputedNodes()) 
+        for(Node node : finder.getComputedNodes()) {
             sum += Math.pow(srcCapa * Project.getPatchCapacity(node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*finder.getCost(node));
-            
+        }
         return sum;
     }
 

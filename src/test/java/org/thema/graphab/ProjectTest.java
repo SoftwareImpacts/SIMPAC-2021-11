@@ -66,11 +66,16 @@ public class ProjectTest {
         refPrj = (Project) xstream.fromXML(new File("target/test-classes/org/thema/graphab/TestProject.xml"));
         
         // create linksets
-        for(Linkset costDist : refPrj.getLinksets())
+        for(Linkset costDist : refPrj.getLinksets()) {
+//            if(costDist.getName().contains("plan_circ"))
+//                continue;
             project.addLinkset(costDist, true);
+        }
         
         // create graphs
         for(GraphGenerator gen : refPrj.getGraphs()) {
+//            if(gen.getName().contains("plan_circ"))
+//                continue;
             gen.setSaved(false);
             project.addGraph(gen, true);
         }
@@ -118,12 +123,12 @@ public class ProjectTest {
             put("comp_cout10_all", 14145418.8672805);
             put("comp_cout10_500", 73311.1909156);
             put("comp_cout10_500_nopath", 493887.4475448);
-            put("comp_euclid", 8.273298688911343E7);
+            put("comp_euclid", 8.27329868717217E7);
             put("plan_cout1", 27588.8605768);
             put("plan_cout10", 58782.0487);
             put("plan_cout10_keep_links", 78962.696132);
             put("plan_cout1_len", 27588.8605768);
-            put("plan_euclid", 377561.1236639023);
+            put("plan_euclid", 377561.1225223806);
             put("plan_circ", 409.4970877191959);
         }};
         HashMap<String, Double> sumDists = new HashMap<String, Double>() {{
@@ -407,6 +412,7 @@ public class ProjectTest {
     public void testAddPatch() throws Throwable {
         PCMetric indice = new PCMetric();
         indice.setParams(1000, 0.05, 1);
+        
         AddPatchCommand addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_cout10_500_nopath"), null, 1000, 1, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
         double[] metric = new double[] {
@@ -465,6 +471,72 @@ public class ProjectTest {
             3.353309445926464E-4 };
         for(int i = 0; i < metric.length; i++) {
             assertEquals("Add point patch shapefile", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
+        }
+        
+        reloadProject();
+        indice.setParams(10000, 0.05, 1);
+        addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"), null, 1000, 1, 1);
+        addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+        addPatchCmd.saveResults();
+        metric = new double[] {
+            3.1948198846500254E-4,
+            4.56556038211144E-4,
+            4.6650788677922423E-4,
+            4.7528040102511954E-4,
+            4.827634893607471E-4,
+            4.903433825337935E-4,
+            4.942381096877162E-4,
+            4.961944710793439E-4,
+            4.97448888004178E-4,
+            4.984450259964978E-4,
+            4.993149630772023E-4};
+        
+        for(Integer i : addPatchCmd.getMetricValues().keySet()) {
+            assertEquals("Add euclidean grid point patch", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
+        }
+        
+        reloadProject();
+        indice.setParams(10000, 0.05, 1);
+        addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"), null, 1000, 2, 1);
+        addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+        addPatchCmd.saveResults();
+        metric = new double[] {
+            3.194819884650025E-4,
+            4.565560382111441E-4,
+            0,
+            4.786124884466496E-4,
+            4.876118464369523E-4,
+            0,
+            4.961994164379232E-4,
+            5.000687271718898E-4,
+            5.03269544241578E-4,
+            0,
+            5.086599949425309E-4};
+        
+        for(Integer i : addPatchCmd.getMetricValues().keySet()) {
+            assertEquals("Add euclidean multi grid point patch", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
+        }
+        
+        reloadProject();
+        indice.setParams(10000, 0.05, 1);
+        addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"),
+                new File("target/test-classes/org/thema/graphab/patch_alea.shp"), null);
+        addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+        addPatchCmd.saveResults();
+        metric = new double[] {
+            3.194819884650025E-4,
+            4.708707205256025E-4,
+            4.764749735090871E-4,
+            4.7917863404543267E-4,
+            4.8170680260761414E-4,
+            4.8286242596010006E-4,
+            4.838637168600206E-4,
+            4.8446112987159936E-4,
+            4.8504081895647566E-4,
+            4.855894339519803E-4,
+            4.8608219644911147E-4};
+        for(Integer i : addPatchCmd.getMetricValues().keySet()) {
+            assertEquals("Add euclidean polygon patch", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
         }
         
         reloadProject();

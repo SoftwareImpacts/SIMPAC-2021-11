@@ -1563,7 +1563,7 @@ public final class Project {
     public synchronized DefaultFeature addPatch(Point point, double capa) throws IOException {
         // tester si pas dans un patch ou touche un patch
         if(!canCreatePatch(point))
-            throw new IllegalArgumentException("Patch already exist at the same position : " + point.toString());
+            throw new IllegalArgumentException("Patch already exists at the same position : " + point.toString());
         DefaultFeature patch = createPatch(point, capa);
         int id = (Integer)patch.getId();
         Coordinate cg = space2grid.transform(point.getCoordinate(), new Coordinate());
@@ -1575,6 +1575,7 @@ public final class Project {
         getImageSource().setSample((int)cg.x, (int)cg.y, 0, patchCode);
         
         patches.add(patch);
+        patchIndex = null;
         return patch;
     }
     
@@ -1605,6 +1606,7 @@ public final class Project {
             }
         }
         patches.add(patch);
+        patchIndex = null;
         return patch;
     }
 

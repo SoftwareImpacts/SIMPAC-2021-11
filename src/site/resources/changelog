@@ -1,3 +1,5 @@
+version 1.3.13 (26/06/2014)
+- addpatch : erroneous results with euclidean linkset without real paths or with thresholded euclidean linkset in multi mode
 version 1.3.12 (24/06/2014)
 - addpatch : create polygonal patch with polygonal shapefile
 - addpatch : save the landuse.tif for creating a new project

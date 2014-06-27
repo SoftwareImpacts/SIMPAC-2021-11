@@ -6,7 +6,11 @@
 package org.thema.graphab.links;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.linearref.LengthIndexedLine;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -104,11 +108,27 @@ public class Path extends DefaultFeature {
     }
 
     public static Path createEuclidPath(Feature patch1, Feature patch2) {
+        Geometry g1 = patch1.getGeometry();
+        Geometry g2 = patch2.getGeometry();
+        LineString path;
+        if(g1 instanceof Point || g2 instanceof Point) {
+            if(g1 instanceof Point && g2 instanceof Point) {
+                path = g1.getFactory().createLineString(new Coordinate[] {
+                    g1.getCoordinate(), g2.getCoordinate()});
+            } else {
+                Geometry g = g1 instanceof Point ? g2 : g1;
+                Point p = (Point) (g1 instanceof Point ? g1 : g2);
+                LengthIndexedLine linearRef = new LengthIndexedLine(g.getBoundary());
+                Coordinate c = linearRef.extractPoint(linearRef.project(p.getCoordinate()));
+                path = g1.getFactory().createLineString(new Coordinate[] {
+                    p.getCoordinate(), c});
+            }
+        } else {
+            Coordinate [] coords = DistanceOp.nearestPoints(g1, g2);    
+            path = g1.getFactory().createLineString(coords);
+        }
 
-        Coordinate [] coords = DistanceOp.nearestPoints(patch1.getGeometry(), patch2.getGeometry());
-        LineString path = patch1.getGeometry().getFactory().createLineString(coords);
-        float dist = (float) path.getLength();
-
+        double dist = path.getLength();
         return new Path(patch1, patch2, dist, path);
     }
 

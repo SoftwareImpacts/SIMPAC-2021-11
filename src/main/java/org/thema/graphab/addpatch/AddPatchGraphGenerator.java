@@ -60,6 +60,8 @@ public class AddPatchGraphGenerator extends GraphGenerator {
                         break;
                     }
                 }
+                if(nodeB == null)
+                    throw new IllegalStateException("Graph does not contain the patch node : " + d.getId());
                 Edge edge = builder.buildEdge(node, nodeB);
                 edge.setObject(path);
                 node.add(edge);

@@ -45,7 +45,6 @@ public class EuclidePathFinder implements SpacePathFinder {
     }
     
     /**
-     * TODO ne crée pas le chemin réel quand realPath = true 
      * @param p
      * @param maxCost
      * @param realPath
@@ -57,7 +56,6 @@ public class EuclidePathFinder implements SpacePathFinder {
     }
     
     /**
-     * TODO ne crée pas le chemin réel quand realPath = true 
      * @param geom
      * @param maxCost
      * @param realPath
@@ -77,7 +75,10 @@ public class EuclidePathFinder implements SpacePathFinder {
         for(DefaultFeature patch : nearPatches) {
             double d = patch.getGeometry().distance(geom);
             if(maxCost == 0 || d <= maxCost) {
-                paths.put(patch, new Path(geomPatch, patch, d, d));
+                if(realPath)
+                    paths.put(patch, Path.createEuclidPath(geomPatch, patch));
+                else
+                    paths.put(patch, new Path(geomPatch, patch, d, d));
             }
         }
         

@@ -43,14 +43,13 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
     transient GraphGenerator gen;
     transient TreeMapList<Double, Geometry> result;
 
-    public AddPatchTask(Geometry addedGeom, double capaGeom, GraphGenerator gen, GlobalMetric indice, 
+    public AddPatchTask(Geometry addedGeom, double capaGeom, String graphName, GlobalMetric indice, 
             HashMap<Geometry, Double> testGeoms, ProgressBar monitor) {
         super(monitor);
         this.addedGeom = addedGeom;
         this.capaGeom = capaGeom;
         this.indice = indice;
-        this.gen = gen;
-        this.graphName = gen.getName();
+        this.graphName = graphName;
         this.testGeoms = testGeoms;
         geoms = new ArrayList<Geometry>(testGeoms.keySet());
     }
@@ -58,7 +57,6 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
     @Override
     public void init() {
         super.init();
-        gen = Project.getProject().getGraph(graphName);
         try {
             // si il y a un patch à ajouter et qu'il n'a pas encore été ajouté
             // utile seulement pour MPI
@@ -71,6 +69,8 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
             Logger.getLogger(AddPatchTask.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
+        
+        gen = new GraphGenerator(Project.getProject().getGraph(graphName), "");
     }
 
     @Override
@@ -119,9 +119,9 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
 
         if(capa <= 0)
             return Double.NaN;
-        AddPatchGraphGenerator graph = new AddPatchGraphGenerator(new GraphGenerator(gen, ""));
+        AddPatchGraphGenerator graph = new AddPatchGraphGenerator(gen);
         graph.addPatch(geom, capa);
-
+        
         double indVal = new GraphMetricLauncher(indice, false).calcIndice(graph, new TaskMonitor.EmptyMonitor())[0];
         
         return indVal;
