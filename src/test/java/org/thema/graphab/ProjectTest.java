@@ -477,7 +477,6 @@ public class ProjectTest {
         indice.setParams(10000, 0.05, 1);
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"), null, 1000, 1, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
-        addPatchCmd.saveResults();
         metric = new double[] {
             3.1948198846500254E-4,
             4.56556038211144E-4,
@@ -499,7 +498,6 @@ public class ProjectTest {
         indice.setParams(10000, 0.05, 1);
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"), null, 1000, 2, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
-        addPatchCmd.saveResults();
         metric = new double[] {
             3.194819884650025E-4,
             4.565560382111441E-4,
@@ -522,7 +520,6 @@ public class ProjectTest {
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"),
                 new File("target/test-classes/org/thema/graphab/patch_alea.shp"), null);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
-        addPatchCmd.saveResults();
         metric = new double[] {
             3.194819884650025E-4,
             4.708707205256025E-4,
