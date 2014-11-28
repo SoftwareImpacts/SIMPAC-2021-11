@@ -55,6 +55,7 @@ public class ProjectTest {
 
         coverage = IOImage.loadTiff(new File("target/test-classes/org/thema/graphab/source.tif"));
         project = new Project("test", new File("/tmp"), coverage, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), 1, Double.NaN, false, 0, false);
+//        project = Project.loadProject(new File("/tmp/test.xml"), true);
         MainFrame.project = project;
         
         // Load project references
@@ -67,15 +68,11 @@ public class ProjectTest {
         
         // create linksets
         for(Linkset costDist : refPrj.getLinksets()) {
-//            if(costDist.getName().contains("plan_circ"))
-//                continue;
             project.addLinkset(costDist, true);
         }
         
         // create graphs
         for(GraphGenerator gen : refPrj.getGraphs()) {
-//            if(gen.getName().contains("plan_circ"))
-//                continue;
             gen.setSaved(false);
             project.addGraph(gen, true);
         }
@@ -101,6 +98,7 @@ public class ProjectTest {
 
     /**
      * Test addLinkset method.
+     * Check the number of links, sum of costs and sum of distances
      */
     @Test
     public void testAddLinkset() throws Throwable {
@@ -145,7 +143,7 @@ public class ProjectTest {
             put("plan_circ", Double.NaN);
         }};
         
-        System.out.println("Test addCostDistance");
+        System.out.println("Test addLinkset");
         for(Linkset costDist : refPrj.getLinksets()) {
             assertEquals("Nb links " + costDist.getName(), nbLinks.get(costDist.getName()), costDist.getPaths().size(), 0);
             double sumCost = 0, sumDist = 0;
@@ -154,14 +152,16 @@ public class ProjectTest {
                 sumDist += p.getDist();
             }
             assertEquals("Sum of cost " + costDist.getName(), sumCosts.get(costDist.getName()), sumCost, sumCost*1e-14);
-            if(!Double.isNaN(sumDists.get(costDist.getName())))
+            if(!Double.isNaN(sumDists.get(costDist.getName()))) {
                 assertEquals("Sum of length " + costDist.getName(), sumDists.get(costDist.getName()), sumDist, sumDist*1e-14);
+            }
         }   
 
     }
 
     /**
      * Test addGraph method.
+     * Check the number of links, sum of costs and the number of components
      */
     @Test
     public void testAddGraph() throws Exception {
@@ -201,8 +201,9 @@ public class ProjectTest {
         for(GraphGenerator gen : refPrj.getGraphs()) {
             assertEquals("Nb links " + gen.getName(), nbLinks.get(gen.getName()), gen.getEdges().size(), 0);
             double sumCost = 0;
-            for(Edge edge : gen.getEdges())
+            for(Edge edge : gen.getEdges()) {
                 sumCost += gen.getCost(edge);
+            }
             assertEquals("Sum costs " + gen.getName(), sumCosts.get(gen.getName()), sumCost, sumCost*1e-14);
             //System.out.println("put(\"" + gen.getName() + "\", " + sumCost + ");");
             assertEquals("Nb components " + gen.getName(), nbComps.get(gen.getName()), gen.getComponents().size(), 0);
@@ -292,9 +293,10 @@ public class ProjectTest {
             put("E#eBC_d1000_p0.05_beta1-graph_comp_cout10", 0.7339459732275027);
             put("D#BC_d1000_p0.05_beta1-graph_comp_cout10", 0.9736784563148873);
             put("D#eBC_d1000_p0.05_beta1-graph_comp_cout10", 0.9845967148211576);
+            put("PCCirc_d1000_p0.05_beta1-graph_comp_cout10", 0.00133658324001119);
         }};
         
-        HashSet<String> testIndices = new HashSet<String>();
+        HashSet<String> testIndices = new HashSet<>();
         for(String varName : resIndices.keySet()) {
             System.out.println("Test global indice : " + varName);
             String indName = varName.substring(0, varName.indexOf("-"));
@@ -305,7 +307,7 @@ public class ProjectTest {
             GraphGenerator gen = project.getGraph(varName.substring(varName.indexOf("-")+1));
             GraphMetricLauncher launcher = new GraphMetricLauncher(indice, true);
             Double[] res = launcher.calcIndice(gen, new TaskMonitor.EmptyMonitor());
-            double err = 1e-12;
+            double err = 1e-10;
             assertEquals("Indice " + indice.getDetailName() + "-" + gen.getName(), resIndices.get(indice.getDetailName() + "-" + gen.getName()), 
                     res[0], res[0]*err);
             testIndices.add(indName);
@@ -323,7 +325,7 @@ public class ProjectTest {
     public void testLocalIndices() throws Throwable {
         CSVTabReader r = new CSVTabReader(new File("target/test-classes/org/thema/graphab/patches.csv"));
         r.read("Id");
-        HashSet<String> testIndices = new HashSet<String>();
+        HashSet<String> testIndices = new HashSet<>();
         
         for(String varName : r.getVarNames()) {
             // pour les attributs Area, Perim et Capacity et les delta métriques
@@ -346,7 +348,7 @@ public class ProjectTest {
                 continue;
             
             System.out.println("Test local indice : " + varName);
-            double err = indName.equals("CBC") ? 1e-3 : isCircuit(indName) ? 1e-4 : 1e-11;
+            double err = indName.equals("CBC") ? 1e-3 : isCircuit(indName) ? 1e-4 : 1e-9;
             LocalMetric indice = Project.getLocalMetric(indName);
             indice.setParamFromDetailName(varName.replace("_"+gen.getName(), ""));
             MainFrame.calcLocalIndice(new TaskMonitor.EmptyMonitor(), gen, indice, Double.NaN);

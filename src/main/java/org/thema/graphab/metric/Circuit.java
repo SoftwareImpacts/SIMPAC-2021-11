@@ -42,20 +42,13 @@ public class Circuit {
     private HashMap<Graph, DenseLU> compLU;
     
     public Circuit(GraphGenerator graph) {
-        if(graph.getType() == GraphGenerator.MST)
-            throw new IllegalArgumentException("No circuit in MST graph");
-        
-        this.graph = graph;
-        this.costR = 1;
-        this.capaR = 0;
-        this.capaExp = 0;
-        this.beta = 0;
-        this.patch2Ground = false;
-        
-        init();
+        this(graph, 0);
     }
     
     public Circuit(GraphGenerator graph, double beta) {
+        if(graph.getType() == GraphGenerator.MST) {
+            throw new IllegalArgumentException("No circuit in MST graph");
+        }
         this.graph = graph;
         this.costR = 1;
         this.capaR = 0;
@@ -193,10 +186,13 @@ public class Circuit {
      * @return 
      */
     public double computeR(Node n1, Node n2) {
+        if(n1 == n2) {
+            return 0;
+        }
         DenseVector U = solveCircuit(n1, n2, 1);
-        if(U == null)
+        if(U == null) {
             return Double.POSITIVE_INFINITY;
-        
+        }
         int ind1 = indNodes.get(n1);
         int ind2 = indNodes.get(n2);
         // La différence de potentiel (U) est égal à R car I = 1
@@ -260,22 +256,84 @@ public class Circuit {
     }
     
     /**
-     * Calcule le courant traversé dans chaque élément du graphe 
-     * Chaque noeud émet du courant sauf n1 qui récupère tout le courant
+     * NE PAS UTILISER RESULTAT TROP APPROXIMATIF
+     * Calcule les résistances entre 1 noeud du graphe et tous les autres.
+     * Calcul beaucoup plus rapide que {@link #computeR()} mais très approximatif...
+     * @param n1 noeud recevant tout le courant
+     * @return la résistance entre chaque noeud et n1
+     */
+    public Map<Node, Double> computeRs(Node n1) {
+        DenseVector U = solveCircuit(n1);
+        if(U == null) {
+            return Collections.EMPTY_MAP;
+        }
+
+        HashMap<Node, Double> mapR = new HashMap<>();
+        mapR.put(n1, 0.0);
+        
+        for(Node n2 : (Collection<Node>)compNodes.get(n1).getNodes()) {
+            if(mapR.containsKey(n2)) {
+                continue;
+            }
+            calcR(n2, U, mapR);
+        }
+
+        return mapR;
+    }     
+    
+    private double calcR(Node n1, DenseVector U, HashMap<Node, Double> mapR) {
+        if(mapR.containsKey(n1)) {
+            return mapR.get(n1);
+        }
+        int ind1 = indNodes.get(n1);
+        double r = 0;
+        List<Edge> edges = n1.getEdges();
+        for(Edge edge : edges) {
+            Node n2 = edge.getOtherNode(n1);
+            int ind2 = indNodes.get(n2);
+            if(U.get(ind1) - U.get(ind2) > 0)  {// si le courant part vers cet edge
+                r += 1 / (calcR(n2, U, mapR) + graph.getCost(edge));
+            }
+            
+        }
+        mapR.put(n1, 1 / r);
+        return 1 / r;
+    }
+    
+    /**
+     * Calcule le courant traversé dans chaque élément du graphe.
+     * Chaque noeud émet du courant (=capacity^beta) sauf n1 qui récupère tout le courant
      * Cette version est une approximation de computeCourant(n1, n2) qui évite 
      * de calculer toutes les paires.
      * @param n1 noeud récepteur du courant
      * @return le courant traversé dans les liens et les noeuds
      */
     public Map<Object, Double> computeCourantTo(Node n1) {
+        DenseVector U = solveCircuit(n1);
+        if(U == null)
+            return Collections.EMPTY_MAP;
+        Graph comp = compNodes.get(n1);
+        return getCourant(comp, U);
+    }        
+    
+    /**
+     * Résoud le circuit quand n1 reçoit le courant émis par tous les autres noeuds.
+     * Chaque noeud émet un courant égal à capacity^beta sauf n1 qui récupère tout le courant
+     * Cette version est une approximation de solveCircuit(n1, n2) qui évite 
+     * de calculer toutes les paires.
+     * @param n1 noeud récepteur du courant
+     * @return vecteur contenant le potentiel en chaque noeud de la composante
+     * null si n1 est un noeud isolé
+     */
+    private DenseVector solveCircuit(Node n1) {
         if(patch2Ground)
             throw new IllegalStateException("Calcul du courant impossible avec patch2Ground");
         
         Graph comp = compNodes.get(n1);   
         // si c'est un noeud isolé
-        if(comp == null)
-            return Collections.EMPTY_MAP;
-        
+        if(comp == null) {
+            return null;
+        }
         int nbNodes = comp.getNodes().size();
         int ind1 = indNodes.get(n1);
         
@@ -298,7 +356,7 @@ public class Circuit {
             U = solve(compMatrix.get(comp), compPrecond.get(comp), Z);
         }
 
-        return getCourant(comp, U);
+        return U;
     }        
     
     /**
@@ -344,7 +402,6 @@ public class Circuit {
         
         // Allocate storage for Conjugate Gradients
         IterativeSolver solver = new CG(U);
-
         solver.setPreconditioner(P);
         try {
             // Start the solver, and check for problems

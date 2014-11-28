@@ -1881,7 +1881,7 @@ public final class Project {
     static {
         GLOBAL_METRICS = new ArrayList(Arrays.asList(new SumLocal2GlobalMetric(new FLocalMetric()), new PCMetric(), new IICMetric(), new CCPMetric(),
                 new MSCMetric(), new SLCMetric(), new ECSMetric(), new GDMetric(), new HMetric(), new NCMetric(),
-                new DeltaPCMetric()/*, new EntropyLocal2GlobalIndice(new BCLocalMetric())*/));
+                new DeltaPCMetric()/*, new EntropyLocal2GlobalIndice(new BCLocalMetric()), new PCCircMetric()*/));
         LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new FPCLocalMetric(),
                 new DgLocalMetric(), new CCLocalMetric(), new ClosenessLocalMetric(), new ConCorrLocalMetric(),
                 new EccentricityLocalMetric()/*, new IFPCIndice(), new BCCircuitLocalIndice(),

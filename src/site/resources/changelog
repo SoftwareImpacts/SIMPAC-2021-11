@@ -1,3 +1,6 @@
+version 1.3.14 (28/11/2014)
+- add PCCirc global metric
+- add OD matrix circuit menu item in graph context menu
 version 1.3.13 (26/06/2014)
 - addpatch : erroneous results with euclidean linkset without real paths or with thresholded euclidean linkset in multi mode
 version 1.3.12 (24/06/2014)

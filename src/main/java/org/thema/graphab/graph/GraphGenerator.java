@@ -44,6 +44,7 @@ import org.thema.graphab.links.Linkset;
 import org.thema.graphab.MainFrame;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.Project;
+import org.thema.graphab.metric.Circuit;
 
 /**
  *
@@ -313,27 +314,13 @@ public class GraphGenerator {
                     getEdgeLayer().setStyle(edgeStyle);
                     nodeStyle = new FeatureStyle(new Color(0x951012), new Color(0x212d19));
                 }
+                
                 @Override
                 public JPopupMenu getContextMenu() {
-                    JPopupMenu menu = super.getContextMenu();
-                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove")) {
-
-                        public void actionPerformed(ActionEvent e) {
-                            int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_graph_") + name + " ?", java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove"), JOptionPane.YES_NO_OPTION);
-                            if(res != JOptionPane.YES_OPTION)
-                                return;
-
-                            MainFrame.project.removeGraph(name);
-                        }
-                    });
-
-                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties")) {
-                        public void actionPerformed(ActionEvent e) {
-                            JOptionPane.showMessageDialog(null, getInfo());
-                        }
-                    });
+                    JPopupMenu menu = super.getContextMenu();       
 
                     menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix")) {
+                        @Override
                         public void actionPerformed(ActionEvent e) {
                             new Thread(new Runnable() {
                                 @Override
@@ -349,43 +336,40 @@ public class GraphGenerator {
                         }
                     });
                     
-//                    menu.add(new AbstractAction("Circuit OD") {
-//                        public void actionPerformed(ActionEvent e) {
-//                            ArrayList<Node> nodes = new ArrayList<Node>(getGraph().getNodes());
-//                            Collections.shuffle(nodes);
-//                            HashMap<Feature, Counter> flows = new BCsCircuitODLocalIndice().performCircuitOD(GraphGenerator.this, nodes.get(0), nodes.get(1));
-//                            DefaultFeature.addAttribute("circuit", getLinks(), null);
-//                            for(Path p : getLinks())
-//                                p.setAttribute("circuit", flows.get(p).getCount());
-//
-//                            DefaultFeature.addAttribute("circuit", getPatches(), null);
-//                            for(DefaultFeature f : getPatches())
-//                                f.setAttribute("circuit", flows.get(f).getCount());
-//                            
-//
-//                        }
-//                    });
-//                    menu.add(new AbstractAction("Circuit O") {
-//                        public void actionPerformed(ActionEvent e) {
-//
-//                            BCCircuitOLocalIndice indice = new BCCircuitOLocalIndice();
-//                            new ParamEditorDialog(null, indice).setVisible(true);
-//                            String res = JOptionPane.showInputDialog("ID patch origin", 1);
-//                            if(res == null)
-//                                return;
-//                            int id = Integer.parseInt(res);
-//                            HashMap<Feature, BCCircuitOLocalIndice.Counter> flows = indice.performCircuitO(GraphGenerator.this, GraphGenerator.this.getNode(Project.getProject().getPatch(id)));
-//                            DefaultFeature.addAttribute(indice.getDetailName(), getLinks(), null);
-//                            for(Path p : getLinks())
-//                                p.setAttribute(indice.getDetailName(), flows.get(p).getCount());
-//
-//                            DefaultFeature.addAttribute(indice.getDetailName(), getPatches(), null);
-//                            for(DefaultFeature f : getPatches())
-//                                f.setAttribute(indice.getDetailName(), flows.get(f).getCount());
-//                            
-//
-//                        }
-//                    });
+                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix_circuit")) {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        calcODMatrixCircuit();
+                                    } catch (Exception ex) {
+                                        Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                                        JOptionPane.showMessageDialog(null, "Error : " + ex);
+                                    }
+                                }
+                            }).start();
+                        }
+                    });
+                    
+                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove")) {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_graph_") + name + " ?", java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove"), JOptionPane.YES_NO_OPTION);
+                            if(res != JOptionPane.YES_OPTION)
+                                return;
+
+                            MainFrame.project.removeGraph(name);
+                        }
+                    });
+
+                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties")) {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            JOptionPane.showMessageDialog(null, getInfo());
+                        }
+                    });
 
                     return menu;
                 }
@@ -412,6 +396,7 @@ public class GraphGenerator {
 
             }; 
             FeatureLayer fl = new FeatureLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Components"), new FeatureGetter() {
+                    @Override
                     public Collection getFeatures() {
                         return getComponentFeatures();
                     }
@@ -427,7 +412,7 @@ public class GraphGenerator {
 
     protected void createGraph() {
         BasicGraphBuilder gen = new BasicGraphBuilder();
-        HashMap<DefaultFeature, Node> patchNodes = new HashMap<DefaultFeature, Node>();
+        HashMap<DefaultFeature, Node> patchNodes = new HashMap<>();
         for(DefaultFeature p : Project.getProject().getPatches()) {
             Node n = gen.buildNode();
             n.setObject(p);
@@ -617,6 +602,40 @@ public class GraphGenerator {
         }
         w.close();
         bar.close();
+    }
+    
+    public void calcODMatrixCircuit() throws IOException {
+        ProgressBar bar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix_circuit"), getNodes().size());
+        Comparator<Node> cmpPatchId = new Comparator<Node>() {
+            @Override
+            public int compare(Node n1, Node n2) {
+                return ((Comparable)Project.getPatch(n1).getId()).compareTo(Project.getPatch(n2).getId());
+            }
+        };
+        TreeSet<Node> nodes = new TreeSet<>(cmpPatchId);
+        nodes.addAll(getNodes());
+        Circuit circuit = new Circuit(this);
+        try(FileWriter w = new FileWriter(new File(Project.getProject().getDirectory(), getName() + "-odmatrix-circuit.txt"))) {
+            w.write("ID");
+            for (Node n1 : nodes) {
+                w.write("\t" + Project.getPatch(n1).getId());
+            }
+            for (Node n1 : nodes) {
+                w.write("\n" + Project.getPatch(n1).getId());
+//                Map<Node, Double> mapR = circuit.computeRs(n1);
+                for (Node n2 : nodes) {
+                    double r = circuit.computeR(n1, n2);
+//                    double r = Double.POSITIVE_INFINITY;
+//                    if(mapR.containsKey(n2))
+//                        r = mapR.get(n2);
+                    w.write("\t" + r);
+                }
+                bar.incProgress(1);
+            }
+        } finally {
+            bar.close();
+        }
+        
     }
     
     @Override
