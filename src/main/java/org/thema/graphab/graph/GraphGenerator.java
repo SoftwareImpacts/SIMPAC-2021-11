@@ -220,9 +220,39 @@ public class GraphGenerator {
 
         return null;
     }
+    
+    /**
+     * Attention version très lente
+     * Parcours tous les noeuds pour trouver le bon
+     * @param patchId
+     * @return 
+     */
+    public Node getNode(Integer patchId) {
+        for(Node n : getNodes()) {
+            if(((Feature)n.getObject()).getId().equals(patchId)) {
+                return n;
+            }
+        }
+        throw new NoSuchElementException("Patch id : " + patchId);
+    }
+    
+    /**
+     * Attention version très lente
+     * Parcours tous les noeuds pour trouver le bon
+     * @param linkId
+     * @return 
+     */
+    public Edge getEdge(String linkId) {
+        for(Edge e : getEdges()) {
+            if(((Feature)e.getObject()).getId().equals(linkId)) {
+                return e;
+            }
+        }
+        throw new NoSuchElementException("Link id : " + linkId);
+    }
 
     public List<Path> getLinks() {
-        ArrayList<Path> links = new ArrayList<Path>();
+        ArrayList<Path> links = new ArrayList<>();
         for(Edge e : getEdges())
             links.add((Path)e.getObject());
         

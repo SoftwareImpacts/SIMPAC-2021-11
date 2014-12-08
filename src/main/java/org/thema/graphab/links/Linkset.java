@@ -142,11 +142,11 @@ public class Linkset {
         this.coefSlope = coefSlope;
         
         String prjPath = Project.getProject().getDirectory().getAbsolutePath();
-        if(extCostFile.getAbsolutePath().startsWith(prjPath)) 
+        if(extCostFile.getAbsolutePath().startsWith(prjPath)) {
             this.extCostFile = new File(extCostFile.getAbsolutePath().substring(prjPath.length()+1));
-        else 
+        } else {
             this.extCostFile = extCostFile.getAbsoluteFile();
-
+        }
     }
     
     /**
@@ -159,8 +159,9 @@ public class Linkset {
      * @param coefSlope 
      */
     public Linkset(String name, int type, double[] costs, File extCostFile, boolean optimCirc, double coefSlope) {
-        if(costs != null && extCostFile != null)
+        if(costs != null && extCostFile != null) {
             throw new IllegalArgumentException();
+        }
         this.name = name;
         this.type = type;
         this.type_dist = CIRCUIT;
@@ -226,10 +227,11 @@ public class Linkset {
     }
 
     public File getExtCostFile() {
-        if(extCostFile.isAbsolute())
+        if(extCostFile.isAbsolute()) {
             return extCostFile;
-        else 
+        } else {
             return new File(Project.getProject().getDirectory(), extCostFile.getPath());
+        }
     }
 
     /**
@@ -245,21 +247,22 @@ public class Linkset {
      * @return 
      */
     public synchronized List<Path> getPaths() {
-        if(paths == null) 
+        if(paths == null)  {
             try {
                 loadPaths(Project.getProject(), new TaskMonitor.EmptyMonitor());
             } catch (IOException ex) {
                 Logger.getLogger(Linkset.class.getName()).log(Level.SEVERE, null, ex);
             }
-        
+        }
         return paths;
     }
     
     public double[] getIntraLinkCost(Coordinate c1, Coordinate c2) {
-        if(c1.compareTo(c2) < 0)
+        if(c1.compareTo(c2) < 0) {
             return getIntraLinks().get(new MultiKey(c1, c2));
-        else
+        } else {
             return getIntraLinks().get(new MultiKey(c2, c1));
+        }
     }
     
     public double[] getIntraLinkCost(Path p1, Path p2) {
@@ -270,16 +273,16 @@ public class Linkset {
     }
     
     private synchronized HashMap<MultiKey, double[]> getIntraLinks() {
-        if(!isRealPaths())
+        if(!isRealPaths()) {
             throw new IllegalStateException("Intra patch links need real paths");
-        
-        if(intraLinks == null)
+        }
+        if(intraLinks == null) {
             try {
                 loadIntraLinks(Project.getProject().getDirectory());
-            } catch (Exception ex) {
+            } catch (IOException ex) {
                 Logger.getLogger(Linkset.class.getName()).log(Level.SEVERE, null, ex);
             }
-        
+        }
         return intraLinks;
     }
 
@@ -355,7 +358,7 @@ public class Linkset {
      * @param progressBar
      * @throws Throwable 
      */
-    public void compute(Project prj, ProgressBar progressBar) throws Throwable {
+    public void compute(Project prj, ProgressBar progressBar) throws IOException {
         progressBar.setNote("Create linkset " + getName());
         
         if(getType_dist() == Linkset.EUCLID) {
@@ -367,8 +370,9 @@ public class Linkset {
         }
         progressBar.reset();
         progressBar.setNote("Create intra links...");
-        if(isRealPaths())
+        if(isRealPaths()) {
             calcIntraLinks(prj, progressBar);
+        }
     }
     
     /**
@@ -379,9 +383,9 @@ public class Linkset {
      * @return list of features where id equals id path and geometry is a polygon or multipolygon
      */
     public List<Feature> computeCorridor(final Project prj, ProgressBar progressBar, final double maxCost) {
-        if(getType_dist() == Linkset.EUCLID) 
+        if(getType_dist() == Linkset.EUCLID) {
             throw new IllegalArgumentException("Euclidean linkset is not supported for corridor");
-        
+        }
         final List<Feature> corridors = Collections.synchronizedList(new ArrayList<Feature>(getPaths().size()));
         
         ParallelFTask task = new SimpleParallelTask<Path>(getPaths(), progressBar) {
@@ -389,17 +393,18 @@ public class Linkset {
             protected void executeOne(Path path) {
                 try {
                     Geometry corridor;
-                    if(getType_dist() == Linkset.COST)
+                    if(getType_dist() == Linkset.COST) {
                         corridor = calcCostCorridor(prj, path, maxCost);
-                    else
+                    } else {
                         corridor = calcCircuitCorridor(prj, path, maxCost);
-                    if(!corridor.isEmpty())
+                    }
+                    if(!corridor.isEmpty()) {
                         corridors.add(new DefaultFeature(path.getId(), corridor));
-                } catch (Exception ex) {
+                    }
+                } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
             }
-
         };
         
         new ParallelFExecutor(task).executeAndWait();
@@ -407,15 +412,16 @@ public class Linkset {
         return corridors;
     }
     
-    private Geometry calcCircuitCorridor(Project prj, Path path, double maxCost) throws Exception {
+    private Geometry calcCircuitCorridor(Project prj, Path path, double maxCost) throws IOException {
         CircuitRaster circuit = prj.getRasterCircuit(this);
         CircuitRaster.ODCircuit odCircuit = circuit.getODCircuit(path.getPatch1(), path.getPatch2());
         return odCircuit.getCorridor(maxCost);
     }
 
-    private Geometry calcCostCorridor(Project prj, Path path, double maxCost) throws Exception {
-        if(path.getCost() > maxCost)
+    private Geometry calcCostCorridor(Project prj, Path path, double maxCost) throws IOException {
+        if(path.getCost() > maxCost) {
             return new GeometryFactory().buildGeometry(Collections.EMPTY_LIST);
+        }
         RasterPathFinder pathfinder = prj.getRasterPathFinder(this);
         Raster r1 = pathfinder.getDistRaster(path.getPatch1(), maxCost);
         Raster r2 = pathfinder.getDistRaster(path.getPatch2(), maxCost);
@@ -424,19 +430,20 @@ public class Linkset {
         final int id1 = (Integer)path.getPatch1().getId();
         final int id2 = (Integer)path.getPatch2().getId();
         WritableRaster corridor = Raster.createBandedRaster(DataBuffer.TYPE_BYTE, rect.width, rect.height, 1, new Point(rect.x, rect.y));
-        for(int y = rect.y; y < rect.getMaxY(); y++)
+        for(int y = rect.y; y < rect.getMaxY(); y++) {
             for(int x = rect.x; x < rect.getMaxX(); x++) {
                 int id = prj.getRasterPatch().getSample(x, y, 0);
                 if(id != id1 && id != id2 &&
-                        r1.getSampleDouble(x, y, 0)+r2.getSampleDouble(x, y, 0) <= maxCost)
+                        r1.getSampleDouble(x, y, 0)+r2.getSampleDouble(x, y, 0) <= maxCost) {
                     corridor.setSample(x, y, 0, 1);
+                }
             }
-        
+        }
         Geometry geom =  Project.vectorize(corridor, JTS.rectToEnv(rect), 1);
         return prj.getGrid2space().transform(geom);
     }
     
-    private void calcCostLinkset(final Project prj, ProgressBar progressBar) throws Throwable {
+    private void calcCostLinkset(final Project prj, ProgressBar progressBar) {
         final boolean allLinks = getTopology() == Linkset.COMPLETE;
         final List<Path> links = Collections.synchronizedList(new ArrayList<Path>(prj.getPatches().size() * 4));
         Path.newSetOfPaths();
@@ -448,22 +455,22 @@ public class Linkset {
                 try {
                     RasterPathFinder pathfinder = prj.getRasterPathFinder(Linkset.this);
                     for(Feature orig : prj.getPatches().subList(start, end)) {
-                        if(isCanceled())
+                        if(isCanceled()) {
                             throw new CancellationException();
-                        
+                        }
                         HashMap<Feature, Path> paths;
                         if(allLinks) {
-                            //Envelope env = dMax == 0 ? null : orig.getGeometry().buffer(dMax).getEnvelopeInternal();
                             paths = pathfinder.calcPaths(orig, getDistMax(), isRealPaths(), false);
                         } else {
-                            List<Feature> dests = new ArrayList<Feature>();
-                            for(Integer dId : prj.getPlanarLinks().getNeighbors(orig))
-                                if(((Integer)orig.getId()) < dId)
+                            List<Feature> dests = new ArrayList<>();
+                            for(Integer dId : prj.getPlanarLinks().getNeighbors(orig)) {
+                                if(((Integer)orig.getId()) < dId) {
                                     dests.add(prj.getPatch(dId));
-
-                            if(dests.isEmpty())
+                                }
+                            }
+                            if(dests.isEmpty()) {
                                 continue;
-
+                            }
                             paths = pathfinder.calcPaths(orig, dests);
                         }
 
@@ -480,40 +487,41 @@ public class Linkset {
                                     }
                                 }
                             }
-                            if(add)
+                            if(add) {
                                 links.add(p);
-                        }
-                        
+                            }
+                        }  
                         incProgress(1);
                     }
-                    
-                } catch(Exception e) {
+                } catch(IOException e) {
                     throw new RuntimeException(e);
                 }
                 return null;
             }
-
+            @Override
             public int getSplitRange() {
                 return prj.getPatches().size();
             }
+            @Override
             public void finish(Collection results) {
             }
+            @Override
             public Object getResult() {
-                throw new UnsupportedOperationException("Not supported yet.");
+                throw new UnsupportedOperationException("Not supported.");
             }
         };
 
         new ParallelFExecutor(task).executeAndWait();
 
-        if(task.isCanceled())
+        if(task.isCanceled()) {
             return ;
-
+        }
         System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
         
         paths = links;
     }
 
-    private void calcEuclidLinkset(final Project prj, ProgressBar progressBar) throws Throwable {
+    private void calcEuclidLinkset(final Project prj, ProgressBar progressBar) {
         final boolean allLinks = getTopology() == Linkset.COMPLETE;
         
         Path.newSetOfPaths();
@@ -524,8 +532,7 @@ public class Linkset {
         long start = System.currentTimeMillis();
         ParallelFTask task = new AbstractParallelFTask(progressBar) {
             @Override
-            protected Object execute(int start, int end) {
-                
+            protected Object execute(int start, int end) {   
                 for(Feature orig : prj.getPatches().subList(start, end)) {
                     if(isCanceled())
                         return null;
@@ -555,11 +562,14 @@ public class Linkset {
                 return null;
             }
 
+            @Override
             public int getSplitRange() {
                 return prj.getPatches().size();
             }
+            @Override
             public void finish(Collection results) {
             }
+            @Override
             public Object getResult() {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
@@ -567,14 +577,14 @@ public class Linkset {
 
         new ParallelFExecutor(task).executeAndWait();
 
-        if(task.isCanceled())
+        if(task.isCanceled()) {
             return ;
-        
+        }
         System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
         paths = links;
     }
     
-    private void calcCircuitLinkset(final Project prj, ProgressBar progressBar) throws Throwable {
+    private void calcCircuitLinkset(final Project prj, ProgressBar progressBar) throws IOException {
         final boolean allLinks = getTopology() == Linkset.COMPLETE;
         final List<Path> links = Collections.synchronizedList(new ArrayList<Path>(prj.getPatches().size() * 4));
         Path.newSetOfPaths();
@@ -582,195 +592,195 @@ public class Linkset {
         final CircuitRaster circuit = costs != null ? 
                     new CircuitRaster(prj, prj.getImageSource(), costs, true, optimCirc, coefSlope)
                     : new CircuitRaster(prj, prj.getExtRaster(getExtCostFile()), true, optimCirc, coefSlope);
-        ParallelFTask task;
-        task = new AbstractParallelFTask(progressBar) {
+        ParallelFTask task = new AbstractParallelFTask(progressBar) {
             @Override
             protected Object execute(int start, int end) {
-                try {
-                    for(Feature orig : prj.getPatches().subList(start, end)) {
-                        if(isCanceled())
-                            throw new CancellationException();
-                        
-                        if(allLinks) {
-                            for(Feature patch : prj.getPatches())
-                                if((Integer)orig.getId() < (Integer)patch.getId()) {
-                                    double r = circuit.getODCircuit(orig, patch).getR();
-                                    links.add(new Path(orig, patch, r, Double.NaN));
-                                }
-                        } else {
-                            for(Integer dId : prj.getPlanarLinks().getNeighbors(orig))
-                                if(((Integer)orig.getId()) < dId) {
-                                    double r = circuit.getODCircuit(orig, prj.getPatch(dId)).getR();
-                                    links.add(new Path(orig, prj.getPatch(dId), r, Double.NaN));
-                                }
-                        }
-                        
-                        incProgress(1);
+                for(Feature orig : prj.getPatches().subList(start, end)) {
+                    if(isCanceled()) {
+                        throw new CancellationException();
                     }
-                    
-                } catch(Exception e) {
-                    throw new RuntimeException(e);
+                    if(allLinks) {
+                        for(Feature patch : prj.getPatches())
+                            if((Integer)orig.getId() < (Integer)patch.getId()) {
+                                double r = circuit.getODCircuit(orig, patch).getR();
+                                links.add(new Path(orig, patch, r, Double.NaN));
+                            }
+                    } else {
+                        for(Integer dId : prj.getPlanarLinks().getNeighbors(orig))
+                            if(((Integer)orig.getId()) < dId) {
+                                double r = circuit.getODCircuit(orig, prj.getPatch(dId)).getR();
+                                links.add(new Path(orig, prj.getPatch(dId), r, Double.NaN));
+                            }
+                    }
+
+                    incProgress(1);
                 }
+                    
                 return null;
             }
-
+            @Override
             public int getSplitRange() {
                 return prj.getPatches().size();
             }
+            @Override
             public void finish(Collection results) {
             }
+            @Override
             public Object getResult() {
-                throw new UnsupportedOperationException("Not supported yet.");
+                throw new UnsupportedOperationException("Not supported.");
             }
         };
 
         new ParallelFExecutor(task).executeAndWait();
 
-        if(task.isCanceled())
+        if(task.isCanceled()) {
             return ;
-
+        }
         System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
         
         paths = links;
     }
 
     private void calcIntraLinks(final Project prj, ProgressBar progressBar) {
-        final HashMapList<Feature, Path> mapLinks = new HashMapList<Feature, Path>();
+        final HashMapList<Feature, Path> mapLinks = new HashMapList<>();
         for(Path p : paths) {
             mapLinks.putValue(p.getPatch1(), p);
             mapLinks.putValue(p.getPatch2(), p);
         }
         
-        final HashMap<MultiKey, double[]> mapIntraLinks = new HashMap<MultiKey, double[]>();
-        SimpleParallelTask<Feature> task = new SimpleParallelTask<Feature>(new ArrayList<Feature>(mapLinks.keySet()), progressBar) {
+        final HashMap<MultiKey, double[]> mapIntraLinks = new HashMap<>();
+        SimpleParallelTask<Feature> task = new SimpleParallelTask<Feature>(new ArrayList<>(mapLinks.keySet()), progressBar) {
             @Override
             protected void executeOne(Feature patch) {
                 SpacePathFinder pathFinder;
                 try {
                     pathFinder = prj.getPathFinder(Linkset.this);
-                } catch (Exception ex) {
+                } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
 
                 List<Path> links = mapLinks.get(patch);
-                HashSet<Coordinate> pointSet = new HashSet<Coordinate>();
+                HashSet<Coordinate> pointSet = new HashSet<>();
                 for(Path link : links) {
                     pointSet.add(link.getCoordinate(patch));
                 }
                 
-                List<Coordinate> pointList = new ArrayList<Coordinate>(pointSet);
+                List<Coordinate> pointList = new ArrayList<>(pointSet);
                 for(int i = 0; i < pointList.size()-1; i++) { 
                     Coordinate c1 = pointList.get(i);
 
                     List<Coordinate> dests = pointList.subList(i+1, pointList.size());
                     List<double[]> values = pathFinder.calcPaths(c1, dests);
-                    for(int k = 0; k < values.size(); k++) 
+                    for(int k = 0; k < values.size(); k++) {
                         synchronized(mapIntraLinks) {
-                            if(c1.compareTo(dests.get(k)) < 0)
+                            if(c1.compareTo(dests.get(k)) < 0) {
                                 mapIntraLinks.put(new MultiKey(c1, dests.get(k)), values.get(k));
-                            else
+                            } else {
                                 mapIntraLinks.put(new MultiKey(dests.get(k), c1), values.get(k));
+                            }
                         }
+                    }
                 }
                 
             }
         };
         
         new ParallelFExecutor(task).executeAndWait();
-        if(task.isCanceled()) 
+        if(task.isCanceled())  {
             return;
+        }
         intraLinks = mapIntraLinks;
     }
 
     public void loadPaths(Project prj, ProgressBar mon) throws IOException {
         File fCSV = new File(prj.getDirectory(), name + "-links.csv");
-        CSVReader r = new CSVReader(new FileReader(fCSV));
-        String [] attrNames = r.readNext();
-        Path.newSetOfPaths(Arrays.asList(attrNames).subList(4, attrNames.length));
-        HashMap<Object, Path> map = new HashMap<Object, Path>();
-        String [] tab;
-        while((tab = r.readNext()) != null) {
-            Path p = Path.deserialPath(tab, prj);
-            map.put(p.getId(), p);
+        HashMap<Object, Path> map = new HashMap<>();
+        try (CSVReader r = new CSVReader(new FileReader(fCSV))) {
+            String [] attrNames = r.readNext();
+            Path.newSetOfPaths(Arrays.asList(attrNames).subList(4, attrNames.length));
+            String [] tab;
+            while((tab = r.readNext()) != null) {
+                Path p = Path.deserialPath(tab, prj);
+                map.put(p.getId(), p);
+            }
         }
-        r.close();
 
         if(realPaths) {
             List<DefaultFeature> features = GlobalDataStore.getFeatures(
                     new File(prj.getDirectory(), name + "-links.shp"), "Id", mon);
 
-            for(DefaultFeature f : features)
+            for(DefaultFeature f : features) {
                 map.get(f.getId()).setGeometry(f.getGeometry());
-
+            }
         }
 
-        paths = new ArrayList<Path>(map.values());
+        paths = new ArrayList<>(map.values());
     }
     
     public void saveLinks(File dir) throws IOException, SchemaException {
-        CSVWriter w = new CSVWriter(new FileWriter(new File(dir, name + "-links.csv")));
-        w.writeNext(getPaths().get(0).getAttributeNames().toArray(new String[0]));
-        
-        for(Path p : getPaths())
-            w.writeNext(Path.serialPath(p));
-        
-        w.close();
+        try (CSVWriter w = new CSVWriter(new FileWriter(new File(dir, name + "-links.csv")))) {
+            w.writeNext(getPaths().get(0).getAttributeNames().toArray(new String[0]));
+            for(Path p : getPaths()) {
+                w.writeNext(Path.serialPath(p));
+            }
+        }
     }
     
-    private void loadIntraLinks(File dir) throws Exception {
+    private void loadIntraLinks(File dir) throws IOException {
         File fCSV = new File(dir, name + "-links-intra.csv");
         if(!fCSV.exists()) {
             calcIntraLinks(Project.getProject(), Config.getProgressBar("Compute intra links"));
             saveIntraLinks(dir);
         }
-        CSVReader r = new CSVReader(new FileReader(fCSV));
-        r.readNext();
-        intraLinks = new HashMap<MultiKey, double[]>();
-        String [] tab;
-        while((tab = r.readNext()) != null) {
-            String[] ordinates = tab[0].split("-");
-            Coordinate c0 = new Coordinate(Double.parseDouble(ordinates[0]), Double.parseDouble(ordinates[1]));
-            ordinates = tab[1].split("-");
-            Coordinate c1 = new Coordinate(Double.parseDouble(ordinates[0]), Double.parseDouble(ordinates[1]));
-            intraLinks.put(new MultiKey(c0, c1), new double[]{Double.parseDouble(tab[2]), Double.parseDouble(tab[3])});
+        try (CSVReader r = new CSVReader(new FileReader(fCSV))) {
+            r.readNext();
+            intraLinks = new HashMap<>();
+            String [] tab;
+            while((tab = r.readNext()) != null) {
+                String[] ordinates = tab[0].split("-");
+                Coordinate c0 = new Coordinate(Double.parseDouble(ordinates[0]), Double.parseDouble(ordinates[1]));
+                ordinates = tab[1].split("-");
+                Coordinate c1 = new Coordinate(Double.parseDouble(ordinates[0]), Double.parseDouble(ordinates[1]));
+                intraLinks.put(new MultiKey(c0, c1), new double[]{Double.parseDouble(tab[2]), Double.parseDouble(tab[3])});
+            }
         }
-        r.close();
     }
 
     public void saveIntraLinks(File dir) throws IOException {
         File fCSV = new File(dir, name + "-links-intra.csv");
-        CSVWriter w = new CSVWriter(new FileWriter(fCSV));
-        w.writeNext(new String[]{"Coord1", "Coord2", "Cost", "Length"});
-        
-        for(MultiKey key : intraLinks.keySet()) {
-            double [] val = intraLinks.get(key);
-            Coordinate c0 = (Coordinate) key.getKey(0);
-            Coordinate c1 = (Coordinate) key.getKey(1);
-            w.writeNext(new String[]{c0.x + "-" + c0.y, c1.x + "-" + c1.y, ""+val[0], ""+val[1]});
+        try (CSVWriter w = new CSVWriter(new FileWriter(fCSV))) {
+            w.writeNext(new String[]{"Coord1", "Coord2", "Cost", "Length"});
+            
+            for(MultiKey key : intraLinks.keySet()) {
+                double [] val = intraLinks.get(key);
+                Coordinate c0 = (Coordinate) key.getKey(0);
+                Coordinate c1 = (Coordinate) key.getKey(1);
+                w.writeNext(new String[]{c0.x + "-" + c0.y, c1.x + "-" + c1.y, ""+val[0], ""+val[1]});
+            }
         }
-        
-        w.close();
     }
     
     /**
      * Add links for the patch
      * The patch have to be added in the project before (Project.addPatch)
      * @param patch must be point geometry
-     * @throws Exception 
+     * @throws IOException 
      */
-    public void addLinks(DefaultFeature patch) throws Exception {
+    public void addLinks(DefaultFeature patch) throws IOException {
         HashMap<DefaultFeature, Path> links = calcNewLinks(patch);
         for(DefaultFeature d : links.keySet()) {
-            if(realPaths)
+            if(realPaths) {
                 paths.add(new Path(patch, d, links.get(d).getCost(), (LineString)links.get(d).getGeometry(), paths.get(0).getAttributeNames()));      
-            else
+            } else {
                 paths.add(new Path(patch, d, links.get(d).getCost(), links.get(d).getDist(), paths.get(0).getAttributeNames()));      
+            }
         }
     }
     
-    public HashMap<DefaultFeature, Path> calcNewLinks(DefaultFeature patch) throws Exception {
-        if(type == PLANAR)
+    public HashMap<DefaultFeature, Path> calcNewLinks(DefaultFeature patch) throws IOException {
+        if(type == PLANAR) {
             throw new IllegalStateException("Planar topology is not supported !");
+        }
         SpacePathFinder pathfinder = Project.getProject().getPathFinder(this);
         HashMap<DefaultFeature, Path> newPaths = pathfinder.calcPaths(patch.getGeometry(), distMax, realPaths);
         newPaths.remove(patch); 

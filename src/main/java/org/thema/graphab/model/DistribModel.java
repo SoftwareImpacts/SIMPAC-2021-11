@@ -13,12 +13,15 @@ import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.math.FunctionEvaluationException;
+import org.apache.commons.math.MathException;
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
@@ -123,7 +126,7 @@ public class DistribModel {
         return getCoef(varName) * stdVar.getEntry(getVarNames().indexOf(varName));
     }
     
-    public String estimModel(TaskMonitor monitor) throws Exception {
+    public String estimModel(TaskMonitor monitor) throws IOException, MathException {
         monitor.setProgress(1);
         List<DefaultFeature> data = exoData.getFeatures();
 
@@ -132,19 +135,19 @@ public class DistribModel {
 
         a = new double[data.size()][nVar];
         y = new double[data.size()];
-        varNames = new ArrayList<String>();
+        varNames = new ArrayList<>();
         int i = 0;
         for(Feature f : data) {
             Coordinate coord = f.getGeometry().getCentroid().getCoordinate();
             y[i] = ((Number)f.getAttribute(varName)).doubleValue();
-            if(y[i] != 0 && y[i] != 1)
+            if(y[i] != 0 && y[i] != 1) {
                 throw new IllegalArgumentException("Variable " + varName + " : values must be 0 or 1.");
-            
+            }
             HashMap<DefaultFeature, Path> patchDists = new HashMap<DefaultFeature, Path>();
             if(multiAttach) {
-                if(costCache != null)
+                if(costCache != null) {
                     patchDists = costCache.get(f.getGeometry());
-                else {
+                } else {
                     patchDists = pathfinder.calcPaths(coord, dMax, false);
                     cache.put(f.getGeometry(), patchDists);
                 }

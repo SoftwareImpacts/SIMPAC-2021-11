@@ -14,6 +14,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.feature.SchemaException;
 import org.thema.common.ProgressBar;
 import org.thema.common.collection.TreeMapList;
 import org.thema.common.parallel.ParallelFExecutor;
@@ -92,8 +94,8 @@ public class AddPatchCommand {
         return shapeFile == null;
     }
     
-    public void run(ProgressBar bar) throws Exception {
-        metricValues = new TreeMap<Integer, Double>();
+    public void run(ProgressBar bar) throws IOException, SchemaException {
+        metricValues = new TreeMap<>();
         
         if(isGridVersion()) {
             addedPatches = addPatchGrid(bar, metricValues, saveDetail);
@@ -111,13 +113,13 @@ public class AddPatchCommand {
     }
     
     private List<DefaultFeature> addPatchSimple(HashMap<Geometry, Double> testGeoms,  
-            ProgressBar mon, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws Exception {
+            ProgressBar mon, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws IOException, SchemaException {
         
         Project project = Project.getProject();
 
         mon.setMaximum(nbPatch);
 
-        List<DefaultFeature> addedPatches = new ArrayList<DefaultFeature>();
+        List<DefaultFeature> addedPatches = new ArrayList<>();
             
         double currentInd = new GraphMetricLauncher(indice, true).calcIndice(gen, new TaskMonitor.EmptyMonitor())[0];
         indiceValues.put(0, currentInd);
@@ -157,7 +159,7 @@ public class AddPatchCommand {
             }
             
             if(saveDetail) {
-                List<DefaultFeature> debug = new ArrayList<DefaultFeature>();
+                List<DefaultFeature> debug = new ArrayList<>();
                 for(Double val : patchIndices.keySet())
                     for(Geometry g : patchIndices.get(val)) {
                         debug.add(new DefaultFeature(g.getCentroid().getX()+","+g.getCentroid().getY()+" - " + (step), g, Arrays.asList("Etape", indice.getDetailName()), 
@@ -176,17 +178,17 @@ public class AddPatchCommand {
         return addedPatches;
     }
     
-    private List<DefaultFeature> addPatchShp(ProgressBar bar, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws Exception {
+    private List<DefaultFeature> addPatchShp(ProgressBar bar, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws IOException, SchemaException  {
         List<DefaultFeature> points = DefaultFeature.loadFeatures(shapeFile, false);
-        HashMap<Geometry, Double> testGeoms = new HashMap<Geometry, Double>();
-        for(Feature f : points)
+        HashMap<Geometry, Double> testGeoms = new HashMap<>();
+        for(Feature f : points) {
             testGeoms.put(f.getGeometry(), 
                     capaField == null ? 1 : ((Number)f.getAttribute(capaField)).doubleValue());
-
+        }
         return addPatchSimple(testGeoms, bar, indiceValues, saveDetail);
     }
     
-    private List<DefaultFeature> addPatchGrid(ProgressBar mon, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws Exception {
+    private List<DefaultFeature> addPatchGrid(ProgressBar mon, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws IOException, SchemaException  {
         
         Project project = Project.getProject();
         Rectangle2D rect = project.getZone();
@@ -197,12 +199,12 @@ public class AddPatchCommand {
         
         GridCoverage2D capaCov = null;
         try {
-            if(capaFile != null)
+            if(capaFile != null) {
                 capaCov = capaFile.getName().toLowerCase().endsWith(".tif") ? IOImage.loadTiff(capaFile) : IOImage.loadArcGrid(capaFile);
-            
+            }
             if(nbMultiPatch <= 1) {
                 GeometryFactory geomFactory = new GeometryFactory();
-                HashMap<Geometry, Double> testPoints = new HashMap<Geometry, Double>();
+                HashMap<Geometry, Double> testPoints = new HashMap<>();
                 for(double y = rect.getMinY()+res/2; y < rect.getMaxY(); y += res) 
                     for(double x = rect.getMinX()+res/2; x < rect.getMaxX(); x += res) 
                         testPoints.put(geomFactory.createPoint(new Coordinate(x, y)), capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(x, y), new double[1])[0]);
@@ -220,8 +222,8 @@ public class AddPatchCommand {
             indiceValues.put(0, currentInd);
             
             Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, "Initial " + indice.getShortName() + " : " + currentInd); 
-            List<DefaultFeature> addedPatches = new ArrayList<DefaultFeature>();
-            HashMap<Point, Double> lastAddedPoints = new HashMap<Point, Double>();
+            List<DefaultFeature> addedPatches = new ArrayList<>();
+            HashMap<Point, Double> lastAddedPoints = new HashMap<>();
             for(int i = 0; addedPatches.size() < nbPatch; i++) {
                 int step = i+1;
                 TreeMapList<Double, Set<Point>> pointIndices;
@@ -229,11 +231,11 @@ public class AddPatchCommand {
                 if(ExecutorService.isMPIExecutor()) {
                     AddPatchMultiMPITask task = new AddPatchMultiMPITask(
                             lastAddedPoints, gen, indice, currentInd, res, nbMultiPatch, windowSize, 
-                            new ArrayList<Coordinate>(testPoints.keySet()), capaCov, mon.getSubProgress(1));
+                            new ArrayList<>(testPoints.keySet()), capaCov, mon.getSubProgress(1));
                     ExecutorService.execute(task);
                     pointIndices = task.getResult();
                 } else {
-                    pointIndices = new TreeMapList<Double, Set<Point>>();
+                    pointIndices = new TreeMapList<>();
                     for(Coordinate coord : testPoints.keySet()) {
                         if(mon.isCanceled())
                             throw new CancellationException();
@@ -264,7 +266,7 @@ public class AddPatchCommand {
                 indiceValues.put(addedPatches.size(), currentInd);
                 
                 if(saveDetail) {
-                    List<DefaultFeature> debug = new ArrayList<DefaultFeature>();
+                    List<DefaultFeature> debug = new ArrayList<>();
                     for(Point p : bests) 
                         debug.add(new DefaultFeature(p.getX()+","+p.getY()+" - " + (step), p, Arrays.asList("Etape", indice.getDetailName()), 
                                 Arrays.asList(step, currentInd)));
@@ -281,20 +283,22 @@ public class AddPatchCommand {
             
             return addedPatches;
         } finally {
-            if(capaCov != null)
+            if(capaCov != null) {
                 capaCov.dispose(true);
+            }
         }
     }
     
-    public void saveResults() throws Exception {
+    public void saveResults() throws IOException, SchemaException {
         String name = gen.getName() + "_" + indice.getDetailName();
         File dir = getResultDir();
         dir.mkdir();
-        FileWriter w = new FileWriter(new File(dir, "addpatch-" + name + ".txt"));
-        w.write("#patch\tmetric value\n");
-        for(Integer nbP : metricValues.keySet())
-            w.write(nbP + "\t" + metricValues.get(nbP) + "\n");
-        w.close();
+        try (FileWriter w = new FileWriter(new File(dir, "addpatch-" + name + ".txt"))) {
+            w.write("#patch\tmetric value\n");
+            for(Integer nbP : metricValues.keySet()) {
+                w.write(nbP + "\t" + metricValues.get(nbP) + "\n");
+            }
+        }
 
         DefaultFeature.saveFeatures(addedPatches, new File(dir, "addpatch-" + name + ".shp"));
         GraphGenerator newGraph = new GraphGenerator(gen, "");
@@ -307,36 +311,39 @@ public class AddPatchCommand {
     
     public File getResultDir() {
         String name = gen.getName() + "_" + indice.getDetailName();
-        if(isGridVersion())
+        if(isGridVersion()) {
             return new File(Project.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
                     "_res" + res + "_multi" + nbMultiPatch + "_" + windowSize);
-        else
+        } else {
             return new File(Project.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
                     "_shp" + shapeFile.getName());
+        }
     }
     
     private static void addPatchWindow(final LinkedList<Point> points, final GlobalMetric indice, GraphGenerator gen, final GridCoverage2D capaCov, 
             final double indInit, double res, int nbMultiPatch, int windowSize,
-            final TreeMapList<Double, Set<Point>> pointIndices, int level) throws Exception {
+            final TreeMapList<Double, Set<Point>> pointIndices, int level) throws IOException {
         Project project = Project.getProject();
         Point point = points.getLast();
-        if(!project.canCreatePatch(point))
+        if(!project.canCreatePatch(point)) {
             return ;
+        }
         double capa = capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(point.getX(), point.getY()), new double[1])[0];
-        if(capa <= 0)
+        if(capa <= 0) {
             return ;
+        }
         DefaultFeature patch = project.addPatch(point, capa);
         gen.getLinkset().addLinks(patch);
         final GraphGenerator graph = new GraphGenerator(gen, "");
         double indVal = (new GraphMetricLauncher(indice, true).calcIndice(graph, new TaskMonitor.EmptyMonitor())[0]
                 - indInit) / points.size();
-        pointIndices.putValue(indVal, new HashSet<Point>(points));
+        pointIndices.putValue(indVal, new HashSet<>(points));
         
         // si c'est le premier voisinage on ne calcule que la moitié (à partir du centre) 
         // sinon on calcule pour tout le voisinage (peut être amélioré mais pas évident)
         double x = point.getX() - (level != nbMultiPatch ? windowSize*res : 0);
         double y = point.getY() - (level != nbMultiPatch ? windowSize*res : 0);
-        List<Point> coords = new ArrayList<Point>();
+        List<Point> coords = new ArrayList<>();
         for(; y <= point.getY()+windowSize*res; y += res) {
             for(; x <= point.getX()+windowSize*res; x += res)
                 if(x != point.getX() || y != point.getY())
@@ -346,7 +353,7 @@ public class AddPatchCommand {
         }
         
         // si il ne reste qu'un voisinage à tester on le fait en soft pour le paralléliser sinon on récurre
-        if(level == 2)       
+        if(level == 2) {     
             new ParallelFExecutor(new SimpleParallelTask<Point>(coords) {
                 @Override
                 protected void executeOne(Point p) {
@@ -364,13 +371,13 @@ public class AddPatchCommand {
                     }
                 }
             }).executeAndWait();
-        else // sinon on récurre
+        } else { // sinon on récurre
            for(Point p : coords) {
                 points.addLast(p);
                 addPatchWindow(points, indice, gen, capaCov, indInit, res, nbMultiPatch, windowSize, pointIndices, level-1);
                 points.removeLast();
             }
-                
+        } 
         gen.getLinkset().removeLinks(patch);
         project.removePointPatch(patch);
         

@@ -27,6 +27,7 @@ import java.lang.ref.SoftReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.iterator.RandomIter;
@@ -144,7 +145,7 @@ public final class Project {
     private transient HashMap<File, SoftRef<Raster>> extRasters;
 
     public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, int code,
-            double noData, boolean con8, double minArea, boolean simplify) throws Exception {
+            double noData, boolean con8, double minArea, boolean simplify) throws IOException, SchemaException {
 
         this.name = name;
         dir = prjPath;
@@ -159,10 +160,10 @@ public final class Project {
         Envelope2D gZone = cov.getEnvelope2D();
         zone = gZone.getBounds2D();
         CoordinateReferenceSystem crs = cov.getCoordinateReferenceSystem2D();
-        if(crs != null)    
+        if(crs != null)   {  
             wktCRS = crs.toWKT();
-
-        TreeMap<Integer, Envelope> envMap = new TreeMap<Integer, Envelope>();
+        }
+        TreeMap<Integer, Envelope> envMap = new TreeMap<>();
 
         WritableRaster rasterPatchs = extractPatch(cov.getRenderedImage(), (int)patchCode, noData, con8, envMap);      
 
@@ -185,9 +186,9 @@ public final class Project {
                 gZone.x-resolution, gZone.y-resolution, gZone.width+2*resolution, gZone.height+2*resolution);
 
         ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Vectorizing..."), envMap.size());
-        patches = new ArrayList<DefaultFeature>();
-        int i = 0, n = 1, nbRem = 0;
-        List<String> attrNames = new ArrayList<String>(PATCH_ATTRS);
+        patches = new ArrayList<>();
+        int n = 1, nbRem = 0;
+        List<String> attrNames = new ArrayList<>(PATCH_ATTRS);
 
         for(Integer id : envMap.keySet()) {
             Geometry g = geomFac.toGeometry(envMap.get(id));
@@ -211,13 +212,14 @@ public final class Project {
             }
 
             monitor.incProgress(1);
-            if(monitor.isCanceled())
-                throw new InterruptedException();
+            if(monitor.isCanceled()) {
+                throw new CancellationException();
+            }
         }
 
-        if(patches.isEmpty())
+        if(patches.isEmpty()) {
             throw new IllegalStateException("There is no patch in the map. Check patch code and min area.");
-        
+        }
         monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
         monitor.setIndeterminate(true);
         
@@ -245,13 +247,13 @@ public final class Project {
         voronoi = (List<Feature>) vectorizeVoronoi(voronoiR);
         DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"), crs);
 
-        exoDatas = new TreeMap<String, Pointset>();
+        exoDatas = new TreeMap<>();
 
-        graphs = new TreeMap<String, GraphGenerator>();
+        graphs = new TreeMap<>();
 
-        costLinks = new TreeMap<String, Linkset>();
+        costLinks = new TreeMap<>();
         
-        removedCodes = new HashMap<Integer, Integer>();
+        removedCodes = new HashMap<>();
         
         MainFrame.project = this;
         
@@ -280,20 +282,21 @@ public final class Project {
         zone = prj.zone;
         wktCRS = prj.wktCRS;
         
-        costLinks = new TreeMap<String, Linkset>();
-        exoDatas = new TreeMap<String, Pointset>();
-        graphs = new TreeMap<String, GraphGenerator>();
+        costLinks = new TreeMap<>();
+        exoDatas = new TreeMap<>();
+        graphs = new TreeMap<>();
     }
     
     // using strtree.nearest
-    private void neighborhoodEuclid(final WritableRaster voronoi) throws Exception {
+    private void neighborhoodEuclid(final WritableRaster voronoi) throws IOException, SchemaException {
         ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), voronoi.getHeight());
         final STRtree index = new STRtree();
         final int NPOINTS = 50;
         final GeometryFactory factory = new GeometryFactory();
         List<DefaultFeature> simpPatches = patches;
-        if(simplify)
+        if(simplify) {
             simpPatches = simplify(patches);
+        }
         for(Feature f : simpPatches) {
             Geometry geom = f.getGeometry();
             if(geom.getNumPoints() > NPOINTS) {
@@ -436,7 +439,7 @@ public final class Project {
         return links;
     }
 
-    public void addLinkset(Linkset cost, boolean save) throws Throwable {
+    public void addLinkset(Linkset cost, boolean save) throws IOException, SchemaException {
         ProgressBar progressBar = Config.getProgressBar();
         
         cost.compute(this, progressBar);
@@ -461,26 +464,28 @@ public final class Project {
         progressBar.close();
     }
 
-    public void addPointset(Pointset exoData, List<String> attrNames, List<DefaultFeature> features, boolean save) throws Exception, SchemaException {
+    public void addPointset(Pointset exoData, List<String> attrNames, List<DefaultFeature> features, boolean save) throws SchemaException, IOException {
         for(Feature f : features){
             Coordinate c = f.getGeometry().getCoordinate();
-            if(!zone.contains(c.x, c.y))
+            if(!zone.contains(c.x, c.y)) {
                 throw new RuntimeException("Point outside zone !");
+            }
         }
 
-        attrNames = new ArrayList<String>(attrNames);
+        attrNames = new ArrayList<>(attrNames);
         attrNames.remove(Project.EXO_IDPATCH);
         attrNames.remove(Project.EXO_COST);
 
         if(exoData.isAgreg()) {
-            for(String attr : attrNames)
+            for(String attr : attrNames) {
                 DefaultFeature.addAttribute(exoData.getName() + "." + attr, patches, Double.NaN);
+            }
             DefaultFeature.addAttribute(exoData.getName() + ".NbPoint", patches, 0);
         }
 
         // recréé les features avec les 2 attributs en plus
-        List<DefaultFeature> tmpLst = new ArrayList<DefaultFeature>(features.size());
-        List<String> attrs = new ArrayList<String>(attrNames);
+        List<DefaultFeature> tmpLst = new ArrayList<>(features.size());
+        List<String> attrs = new ArrayList<>(attrNames);
         attrs.add(Project.EXO_IDPATCH);
         attrs.add(Project.EXO_COST);
         for(Feature f : features) {
@@ -582,7 +587,7 @@ public final class Project {
 //                }
 //            }
 
-        List<DefaultFeature> exoFeatures = new ArrayList<DefaultFeature>();
+        List<DefaultFeature> exoFeatures = new ArrayList<>();
         for(DefaultFeature f : features)
             if(((Number)f.getAttribute(EXO_IDPATCH)).intValue() > 0)
                 exoFeatures.add(f);
@@ -602,8 +607,9 @@ public final class Project {
         }
         monitor.close();
 
-        if(nErr > 0)
+        if(nErr > 0) {
             JOptionPane.showMessageDialog(null, nErr + " points have been removed -> no path found.");
+        }
     }
 
     public synchronized DefaultGroupLayer getRootLayer() {
@@ -911,42 +917,46 @@ public final class Project {
         return codes;
     }
 
-    public SpacePathFinder getPathFinder(Linkset linkset) throws Exception {
+    public SpacePathFinder getPathFinder(Linkset linkset) throws IOException {
         if(linkset.getType_dist() == Linkset.CIRCUIT)
             throw new IllegalArgumentException("Circuit linkset is not supported");
         return linkset.getType_dist() == Linkset.EUCLID ?
             new EuclidePathFinder(this) : getRasterPathFinder(linkset);
     }
     
-    public RasterPathFinder getRasterPathFinder(Linkset linkset) throws Exception {
-        if(linkset.getType_dist() != Linkset.COST)
+    public RasterPathFinder getRasterPathFinder(Linkset linkset) throws IOException {
+        if(linkset.getType_dist() != Linkset.COST) {
             throw new IllegalArgumentException();
+        }
         if(linkset.isExtCost()) {
             if(linkset.getExtCostFile().exists()) {
                 Raster extRaster = getExtRaster(linkset.getExtCostFile());
                 return new RasterPathFinder(this, extRaster, linkset.getCoefSlope());
-            } else
+            } else {
                 throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
+            }
         } else {
             return new RasterPathFinder(this, getImageSource(), linkset.getCosts(), linkset.getCoefSlope());
         }
     }
     
-    public CircuitRaster getRasterCircuit(Linkset linkset) throws Exception {
-        if(linkset.getType_dist() != Linkset.CIRCUIT)
+    public CircuitRaster getRasterCircuit(Linkset linkset) throws IOException {
+        if(linkset.getType_dist() != Linkset.CIRCUIT) {
             throw new IllegalArgumentException();
+        }
         if(linkset.isExtCost()) {
             if(linkset.getExtCostFile().exists()) {
                 Raster extRaster = getExtRaster(linkset.getExtCostFile());
                 return new CircuitRaster(this, extRaster, true, linkset.isOptimCirc(), linkset.getCoefSlope());
-            } else
+            } else {
                 throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
+            }
         } else {
             return new CircuitRaster(this, getImageSource(), linkset.getCosts(), true, linkset.isOptimCirc(), linkset.getCoefSlope());
         }
     }
 
-    public void addGraph(GraphGenerator graphGen, boolean save) throws Exception {
+    public void addGraph(GraphGenerator graphGen, boolean save) throws IOException, SchemaException {
         ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Create_graph..."));
         progressBar.setIndeterminate(true);
         graphs.put(graphGen.getName(), graphGen);
@@ -1329,7 +1339,7 @@ public final class Project {
         
     }
 
-    public static synchronized Project loadProject(File file, boolean all) throws Exception {
+    public static synchronized Project loadProject(File file, boolean all) throws IOException {
         
         XStream xstream = new XStream();
         xstream.alias("Project", Project.class);
@@ -1342,10 +1352,10 @@ public final class Project {
         xstream.alias("org.thema.graphab.CostDistance", Linkset.class);
         xstream.alias("org.thema.graphab.GraphGenerator", GraphGenerator.class);
         
-        FileReader fr = new FileReader(file) ;
-
-        Project prj = (Project) xstream.fromXML(fr);
-        fr.close();
+        Project prj;
+        try (FileReader fr = new FileReader(file)) {
+            prj = (Project) xstream.fromXML(fr);
+        }
 
         prj.dir = file.getAbsoluteFile().getParentFile();
         
@@ -1353,7 +1363,7 @@ public final class Project {
                 100*(2+prj.costLinks.size()) + 10*prj.exoDatas.size());
         List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(prj.dir, "patches.shp"), 
                 "Id", monitor.getSubProgress(100));
-        prj.patches = new ArrayList<DefaultFeature>(features);
+        prj.patches = new ArrayList<>(features);
         for(DefaultFeature f : features)
             prj.patches.set((Integer)f.getId()-1, f);
 

@@ -17,6 +17,7 @@ import java.awt.Cursor;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -29,6 +30,7 @@ import javax.swing.JOptionPane;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.feature.SchemaException;
 import org.thema.common.Config;
 import org.thema.data.IOImage;
 
@@ -495,7 +497,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
 
     }
 
-    public Project createProject() throws Throwable {
+    public Project createProject() throws IOException, SchemaException {
         File prjPath = new File(prjPathTextField.getText());
         prjPath.mkdir();
 

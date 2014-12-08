@@ -2,6 +2,7 @@ package org.thema.graphab;
 
 import com.thoughtworks.xstream.XStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.graph.structure.Edge;
@@ -36,17 +37,15 @@ public class ProjectTest {
     private static GridCoverage2D coverage;
     /** Project created in /tmp */
     private static Project project;
-    /** Reference project */
-    private static Project refPrj;
     
 
     /**
      * Initialize test
      * Create the test project, linksets and graphs
-     * @throws Throwable 
+     * @throws Exception 
      */
     @BeforeClass
-    public static void setUpClass() throws Throwable {
+    public static void setUpClass() throws Exception {
         // init 2 threads
         Config.setNodeClass(ProjectTest.class);
         Config.setParallelProc(2);
@@ -59,12 +58,12 @@ public class ProjectTest {
         MainFrame.project = project;
         
         // Load project references
-        XStream xstream = new XStream();
+        XStream xstream = new XStream(); 
         xstream.alias("Project", Project.class);
         xstream.alias("Pointset", Pointset.class);
         xstream.alias("Linkset", Linkset.class);
         xstream.alias("Graph", GraphGenerator.class);
-        refPrj = (Project) xstream.fromXML(new File("target/test-classes/org/thema/graphab/TestProject.xml"));
+        Project refPrj = (Project) xstream.fromXML(new File("target/test-classes/org/thema/graphab/TestProject.xml"));
         
         // create linksets
         for(Linkset costDist : refPrj.getLinksets()) {
@@ -144,7 +143,7 @@ public class ProjectTest {
         }};
         
         System.out.println("Test addLinkset");
-        for(Linkset costDist : refPrj.getLinksets()) {
+        for(Linkset costDist : project.getLinksets()) {
             assertEquals("Nb links " + costDist.getName(), nbLinks.get(costDist.getName()), costDist.getPaths().size(), 0);
             double sumCost = 0, sumDist = 0;
             for(Path p : costDist.getPaths()) {
@@ -198,7 +197,7 @@ public class ProjectTest {
 
         }};
         System.out.println("Test addGraph");
-        for(GraphGenerator gen : refPrj.getGraphs()) {
+        for(GraphGenerator gen : project.getGraphs()) {
             assertEquals("Nb links " + gen.getName(), nbLinks.get(gen.getName()), gen.getEdges().size(), 0);
             double sumCost = 0;
             for(Edge edge : gen.getEdges()) {
@@ -334,19 +333,21 @@ public class ProjectTest {
             String indName = varName.substring(0, varName.indexOf("_"));
             
             GraphGenerator gen = null;
-            for(String grName : refPrj.getGraphNames()) 
-                if(varName.endsWith("_"+grName))
-                    gen = refPrj.getGraph(grName);
-            if(gen == null)
+            for(String grName : project.getGraphNames()) {
+                if(varName.endsWith("_"+grName)) {
+                    gen = project.getGraph(grName);
+                }
+            }
+            if(gen == null) {
                 throw new RuntimeException("Graph not found for : " + varName);
-            
+            }
             // certains calculs ne sont pas testés car trop variables ou interdit :
             // - les graphes euclidiens avec dist intra taches
             // - les indices de circuit sur les graphes mst
             if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist() || 
-                    isCircuit(indName) && gen.getType() == GraphGenerator.MST)
+                    isCircuit(indName) && gen.getType() == GraphGenerator.MST) {
                 continue;
-            
+            }
             System.out.println("Test local indice : " + varName);
             double err = indName.equals("CBC") ? 1e-3 : isCircuit(indName) ? 1e-4 : 1e-9;
             LocalMetric indice = Project.getLocalMetric(indName);
@@ -380,10 +381,10 @@ public class ProjectTest {
         DeltaPCMetric deltaPC = new DeltaPCMetric();
         GraphMetricLauncher launcher = new GraphMetricLauncher(deltaPC, false);
         String startName = "d_" + deltaPC.getDetailName() + "|";
-        for(GraphGenerator gen : refPrj.getGraphs()) {
-            if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist())
+        for(GraphGenerator gen : project.getGraphs()) {
+            if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist()) {
                 continue;
-            
+            }
             assertTrue("No deltaPC for graph " + gen.getName(), 
                     r.getVarNames().contains(startName + deltaPC.getResultNames()[0] + "_" + gen.getName())) ;
 

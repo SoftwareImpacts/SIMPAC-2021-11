@@ -47,8 +47,9 @@ public class DeltaGraphGenerator extends GraphGenerator {
         for(Iterator<Graph> it = getComponents().iterator(); it.hasNext() && gr == null; ) {
             Graph g = it.next();
             if(elem instanceof Edge && g.getEdges().contains(elem) ||
-                    elem instanceof Node && g.getNodes().contains(elem))
+                    elem instanceof Node && g.getNodes().contains(elem)) {
                 gr = g;
+            }
         }
 
         if(elem instanceof Edge) {

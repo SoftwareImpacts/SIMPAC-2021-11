@@ -24,27 +24,32 @@ import org.thema.graphab.graph.GraphGenerator;
 public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>, Map<Object, Double[]>>
         implements Serializable {
 
-    String graphName;
-    GraphMetricLauncher launcher;
+    private String graphName;
+    private GraphMetricLauncher launcher;
 
-    List ids;
-    Double[] init;
+    private List ids;
+    private Double[] init;
 
-    transient Map<Object, Double[]> result;
+    private transient GraphGenerator gen;
+    private transient Map<Object, Double[]> result;
 
     public DeltaMetricTask(TaskMonitor monitor, GraphGenerator gen, GraphMetricLauncher launcher, int nodeEdge) {
         super(monitor);
+        this.gen = gen;
         this.graphName = gen.getName();
         this.launcher = launcher;
 
         ids = new ArrayList();
-        if((nodeEdge & 1) == 1)
-            for(Object n : gen.getGraph().getNodes())
+        if((nodeEdge & 1) == 1) {
+            for(Object n : gen.getGraph().getNodes()) {
                 ids.add(((DefaultFeature)((Graphable)n).getObject()).getId());
-        if((nodeEdge & 2) == 2)
-            for(Object n : gen.getGraph().getEdges())
+            }
+        }
+        if((nodeEdge & 2) == 2) {
+            for(Object n : gen.getGraph().getEdges()) {
                 ids.add(((DefaultFeature)((Graphable)n).getObject()).getId());
-
+            }
+        }
         monitor.popupNow();
         monitor.setNote("Etat initial...");
         DeltaGraphGenerator deltaGen = new DeltaGraphGenerator(gen);
@@ -54,6 +59,7 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
     
     public DeltaMetricTask(TaskMonitor monitor, GraphGenerator gen, GraphMetricLauncher launcher, List ids) {
         super(monitor);
+        this.gen = gen;
         this.graphName = gen.getName();
         this.launcher = launcher;
         this.ids = ids;
@@ -65,12 +71,21 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
     }
 
     @Override
+    public void init() {
+        super.init(); 
+        // useful for MPI mode, cause gen is transient
+        if(gen == null) {
+            gen = Project.getProject().getGraph(graphName);
+        }
+    }
+
+    @Override
     public Map<Object, Double[]> execute(int start, int end) {
         HashSet felems = new HashSet(ids.subList(start, end));
 
-        DeltaGraphGenerator deltaGen = new DeltaGraphGenerator(Project.getProject().getGraph(graphName));
+        DeltaGraphGenerator deltaGen = new DeltaGraphGenerator(gen);
         Graph graph = deltaGen.getGraph();
-        List<Graphable> elems = new ArrayList<Graphable>(felems.size());
+        List<Graphable> elems = new ArrayList<>(felems.size());
         for(Object n : graph.getNodes())
             if(felems.contains(((Feature)((Graphable)n).getObject()).getId()))
                 elems.add((Graphable)n);
@@ -78,12 +93,12 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
             if(felems.contains(((Feature)((Graphable)n).getObject()).getId()))
                 elems.add((Graphable)n);
 
-        Map<Object, Double[]> results = new HashMap<Object, Double[]>();
+        Map<Object, Double[]> results = new HashMap<>();
 
         for(Graphable elem : elems) {
-            if(isCanceled())
+            if(isCanceled()) {
                 return null;
-
+            }
             deltaGen.removeElem(elem);
             Double[] res = launcher.calcIndice(deltaGen, new TaskMonitor.EmptyMonitor());
             DefaultFeature f = (DefaultFeature)elem.getObject();
@@ -91,15 +106,17 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
             for(int i = 0; i < init.length; i++) {
                 double ind;
                 if(init[i] == null) {
-                    if(init[init.length-1] != null)
+                    if(init[init.length-1] != null) {
                         ind = res[i] / init[init.length-1];
-                    else
+                    } else {
                         ind = res[i];
-                } else
+                    }
+                } else {
                     ind = (init[i] - res[i]) / init[i];
-
-                if(Math.abs(ind) < 1e-14)
+                }
+                if(Math.abs(ind) < 1e-14) {
                     ind = 0;     
+                }
                 delta[i] = ind;
             }
 
@@ -118,8 +135,9 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
 
     @Override
     public void gather(Map<Object, Double[]> partRes) {
-        if(result == null)
-            result = new HashMap<Object, Double[]>();
+        if(result == null) {
+            result = new HashMap<>();
+        }
         result.putAll(partRes);
     }
 
