@@ -5,7 +5,6 @@
  
 package org.thema.graphab.graph;
 
-import com.sun.javafx.scene.control.skin.VirtualFlow;
 import com.vividsolutions.jts.geom.Coordinate;
 import java.io.IOException;
 import java.util.logging.Level;
