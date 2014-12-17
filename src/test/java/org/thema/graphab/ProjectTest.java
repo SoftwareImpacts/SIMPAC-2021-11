@@ -2,7 +2,6 @@ package org.thema.graphab;
 
 import com.thoughtworks.xstream.XStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.graph.structure.Edge;

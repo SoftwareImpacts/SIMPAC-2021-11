@@ -981,10 +981,12 @@ public final class Project {
     }
 
     public List<String> getGraphPatchAttr(String graphName) {
-        List<String> attrs = new ArrayList<String>();
-        for(String attr : patches.get(0).getAttributeNames())
-            if(attr.endsWith("_" + graphName))
+        List<String> attrs = new ArrayList<>();
+        for(String attr : patches.get(0).getAttributeNames()) {
+            if(attr.endsWith("_" + graphName)) {
                 attrs.add(attr);
+            }
+        }
         return attrs;
     }
 
@@ -994,49 +996,59 @@ public final class Project {
      * @return list of detailed name metrics calculated for graph graphName
      */
     public List<String> getGraphPatchVar(String graphName) {
-        List<String> attrs = new ArrayList<String>();
-        for(String attr : patches.get(0).getAttributeNames())
-            if(attr.endsWith("_" + graphName))
+        List<String> attrs = new ArrayList<>();
+        for(String attr : patches.get(0).getAttributeNames()) {
+            if(attr.endsWith("_" + graphName)) {
                 attrs.add(attr.substring(0, attr.length() - graphName.length() - 1));
+            }
+        }
         return attrs;
     }
 
     List<String> getGraphLinkAttr(GraphGenerator g) {
-        List<String> attrs = new ArrayList<String>();
-        for(String attr : g.getLinkset().getPaths().get(0).getAttributeNames())
-            if(attr.endsWith("_" + g.getName()))
+        List<String> attrs = new ArrayList<>();
+        for(String attr : g.getLinkset().getPaths().get(0).getAttributeNames()) {
+            if(attr.endsWith("_" + g.getName())) {
                 attrs.add(attr);
+            }
+        }
         return attrs;
     }
 
     public void removeGraph(final String name) {
         GraphGenerator g = graphs.remove(name);
 
-        for(String attr : getGraphPatchAttr(name))
+        for(String attr : getGraphPatchAttr(name)) {
             DefaultFeature.removeAttribute(attr, patches);
+        }
 
-        for(String attr : getGraphLinkAttr(g))
+        for(String attr : getGraphLinkAttr(g)) {
             DefaultFeature.removeAttribute(attr, g.getLinkset().getPaths());
+        }
 
         try {
             g.getLinkset().saveLinks(getDirectory());
             savePatch();
             save();
-        } catch (Exception ex) {
+        } catch (IOException | SchemaException ex) {
             Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         FileFilter filter = new FileFilter() {
+            @Override
             public boolean accept(File f) {
                 return f.getName().startsWith(name + "-voronoi.") && f.getName().length()-3 == (name + "-voronoi.").length();
             }
         };
-        for(File f : dir.listFiles(filter))
+        for(File f : dir.listFiles(filter)) {
             f.delete();
+        }
 
-        for(Layer l : new ArrayList<Layer>(graphLayers.getLayers()))
-            if(l.getName().equals(name))
+        for(Layer l : new ArrayList<>(graphLayers.getLayers())) {
+            if(l.getName().equals(name)) {
                 graphLayers.removeLayer(l);
+            }
+        }
     }
 
     public Collection<GraphGenerator> getGraphs() {
@@ -1044,7 +1056,14 @@ public final class Project {
     }
     
     public GraphGenerator getGraph(String name) {
-        return graphs.get(name);
+        if(graphs.containsKey(name)) {
+            return graphs.get(name);
+        }
+        if(name.contains("!")) {
+            String[] split = name.split("!");
+            return new GraphGenerator(graphs.get(split[0]), split[1], split[2]);
+        }
+        throw new IllegalArgumentException("Unknown graph " + name);
     }
     
     public Set<String> getGraphNames() {
@@ -1204,7 +1223,7 @@ public final class Project {
         fw.close();
     }
 
-    public void createMetaPatchProject(String prjName, GraphGenerator graph, double alpha) throws Exception {
+    public void createMetaPatchProject(String prjName, GraphGenerator graph, double alpha) throws IOException, SchemaException {
         File dir = new File(getDirectory(), prjName);
         dir.mkdir();
         IOFile.copyFile(new File(getDirectory(), "source.tif"), new File(dir, "source.tif"));
@@ -1229,13 +1248,13 @@ public final class Project {
                 newRaster, new Envelope2D(getCRS() != null ? getCRS() : DefaultGeographicCRS.WGS84, zone));
         new GeoTiffWriter(new File(dir, "patches.tif")).write(gridCov, null);
         
-        List<DefaultFeature> metaPatches = new ArrayList<DefaultFeature>();
-        List<DefaultFeature> metaVoronois = new ArrayList<DefaultFeature>();
+        List<DefaultFeature> metaPatches = new ArrayList<>();
+        List<DefaultFeature> metaVoronois = new ArrayList<>();
         // create patches and voronoi features
         for(int i = 0; i < components.size(); i++) {
             Graph comp = components.get(i);
-            List<Geometry> metaPatch = new ArrayList<Geometry>();
-            List<Geometry> metaVoronoi = new ArrayList<Geometry>();
+            List<Geometry> metaPatch = new ArrayList<>();
+            List<Geometry> metaVoronoi = new ArrayList<>();
             double capa = 0;
             for(Node n : (Collection<Node>)comp.getNodes()) {
                 DefaultFeature patch = (DefaultFeature)n.getObject();

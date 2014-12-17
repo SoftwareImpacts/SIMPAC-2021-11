@@ -42,7 +42,6 @@ public class DeltaGraphGenerator extends GraphGenerator {
     }
 
     public void removeElem(Graphable elem) {
-        
         Graph gr = null;
         for(Iterator<Graph> it = getComponents().iterator(); it.hasNext() && gr == null; ) {
             Graph g = it.next();

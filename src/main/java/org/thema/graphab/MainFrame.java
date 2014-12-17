@@ -13,11 +13,13 @@ package org.thema.graphab;
 
 import java.awt.Color;
 import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
 import java.awt.SplashScreen;
 import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Filter;
 import java.util.logging.Handler;
@@ -71,7 +73,7 @@ import org.thema.graphab.util.SerieFrame;
 
 /**
  *
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class MainFrame extends javax.swing.JFrame {
 
@@ -409,7 +411,7 @@ public class MainFrame extends javax.swing.JFrame {
 
                    mapViewer.setRootLayer(project.getRootLayer());
                    mapViewer.setTreeLayerVisible(true);
-                } catch (Exception ex) {
+                } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Error") + ex.getLocalizedMessage());
                 }
@@ -430,7 +432,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     loadProject(f);
-                } catch (Exception ex) {
+                } catch (IOException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Error_while_loading_project") + ex.getLocalizedMessage());
                 }
@@ -458,7 +460,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     project.addLinkset(panel.getLinkset(), true);
-                } catch (Exception ex) {
+                } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
                 }
@@ -483,7 +485,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     project.addGraph(new GraphGenerator(dlg.name, dlg.cost, dlg.type, dlg.threshold, dlg.intraPatchDist), true);
-                } catch (Exception ex) {
+                } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
                 }
@@ -507,7 +509,6 @@ public class MainFrame extends javax.swing.JFrame {
             } else {
                 features = DefaultFeature.loadFeatures(dlg.file, dlg.xAttr, dlg.yAttr, dlg.idAttr);
             }
-
         } catch (IOException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured_while_loading_data_!\n") + ex.getLocalizedMessage());
@@ -529,7 +530,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     project.addPointset(ddlg.exoData, dlg.zAttrs, features, true);
-                } catch (Exception ex) {
+                } catch (SchemaException | IOException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
                 }
@@ -548,21 +549,16 @@ public class MainFrame extends javax.swing.JFrame {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    long start = System.currentTimeMillis();
-                    GraphMetricLauncher launcher = new GraphMetricLauncher(dlg.indice, true);
-                    TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_metrics..."), "", 0, 100);
-                    Double[]val = launcher.calcIndice(dlg.graph, monitor);
-                    String res = dlg.indice.getDetailName() + " : " + Arrays.deepToString(val) + "\n";;
+                long start = System.currentTimeMillis();
+                GraphMetricLauncher launcher = new GraphMetricLauncher(dlg.indice, true);
+                TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_metrics..."), "", 0, 100);
+                Double[]val = launcher.calcIndice(dlg.graph, monitor);
+                String res = dlg.indice.getDetailName() + " : " + Arrays.deepToString(val) + "\n";;
 
-                    monitor.close();
-                    System.out.println(res);
-                    System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
-                    JOptionPane.showMessageDialog(MainFrame.this, new JScrollPane(new JTextArea(res, 10, 40)));
-                } catch(Exception ex) {
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-                    JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
-                }
+                monitor.close();
+                System.out.println(res);
+                System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
+                JOptionPane.showMessageDialog(MainFrame.this, new JScrollPane(new JTextArea(res, 10, 40)));
             }
         }).start();
     }//GEN-LAST:event_calcIndiceMenuItemActionPerformed
@@ -586,30 +582,30 @@ public class MainFrame extends javax.swing.JFrame {
                 TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_metrics..."), "",
                     0, 100);
                 GlobalMetric indice = dlg.indice;
-                try {
-                    BatchMetricTask task = new BatchMetricTask(monitor, dlg.distName, dlg.distAbs, 
-                        dlg.min, dlg.inc, dlg.max, launcher, dlg.intraPatchDist);
 
-                    new ParallelFExecutor(task).executeAndWait();
-                
-                    if(task.isCanceled()) {
-                        return;
-                    }
-                    SortedMap<Double, Double[]> results = task.getResult();
-                    XYSeriesCollection series = new XYSeriesCollection();
-                    for(int j = 0; j < indice.getResultNames().length; j++) {
-                        XYSeries serie = new XYSeries(indice.getName());
-                        for(Double x : results.keySet())
-                            serie.add(x, results.get(x)[j]);
-                        series.addSeries(serie);
-                    }
-                    SerieFrame frm = new SerieFrame(indice.getDetailName(),
-                            series, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Threshold"), "");
-                    frm.pack();
-                    frm.setLocationRelativeTo(MainFrame.this);
-                    frm.setVisible(true);
+                BatchMetricTask task = new BatchMetricTask(monitor, dlg.distName, dlg.distAbs, 
+                    dlg.min, dlg.inc, dlg.max, launcher, dlg.intraPatchDist);
 
-                    monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
+                new ParallelFExecutor(task).executeAndWait();
+
+                if(task.isCanceled()) {
+                    return;
+                }
+                SortedMap<Double, Double[]> results = task.getResult();
+                XYSeriesCollection series = new XYSeriesCollection();
+                for(int j = 0; j < indice.getResultNames().length; j++) {
+                    XYSeries serie = new XYSeries(indice.getName());
+                    for(Double x : results.keySet())
+                        serie.add(x, results.get(x)[j]);
+                    series.addSeries(serie);
+                }
+                SerieFrame frm = new SerieFrame(indice.getDetailName(),
+                        series, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Threshold"), "");
+                frm.pack();
+                frm.setLocationRelativeTo(MainFrame.this);
+                frm.setVisible(true);
+
+                monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
                 
 //                    FileWriter w = new FileWriter(new File(MainFrame.project.getProjectFile().getParentFile(),
 //                            dlg.distName + "-" + dlg.min + "-" + dlg.inc + "-" + dlg.max + "-" + dlg.indice.getDetailName() + ".txt"));
@@ -626,10 +622,7 @@ public class MainFrame extends javax.swing.JFrame {
 //                        w.write("\n");
 //                    }
 //                    w.close();
-                } catch (Exception ex) {
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-                    JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured_while_saving") + ex.getLocalizedMessage());
-                }
+        
                 monitor.close();
 
             }
@@ -714,7 +707,7 @@ public class MainFrame extends javax.swing.JFrame {
                     // show the result
                     viewMetricResult(dlg.graph, "d_" + Project.getDetailName(indice, 0) + "_" + dlg.graph.getName(), 
                             (nodeEdge & 1) == 1, (nodeEdge & 2) == 2);
-                } catch (Exception ex) {
+                } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
                 }
@@ -753,7 +746,7 @@ public class MainFrame extends javax.swing.JFrame {
                 viewMetricResult(dlg.graph, dlg.indice.getDetailName() + "_" + dlg.graph.getName(), dlg.indice.calcNodes(), dlg.indice.calcEdges());
                 
                 monitor.close();
-            } catch(Exception ex) {
+            } catch(IOException | SchemaException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                 JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
             }
@@ -791,7 +784,7 @@ public class MainFrame extends javax.swing.JFrame {
                         new FeatureAttributeIterator<Number>(dlg.graph.getComponentFeatures(), attrs.get(0)))));
                 compLayer.setVisible(true);
                 monitor.close();
-            } catch(Exception ex) {
+            } catch(IOException | SchemaException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                 JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
             }
@@ -859,7 +852,8 @@ public class MainFrame extends javax.swing.JFrame {
                 MainFrame.project.savePatch();
 
                 monitor.close();
-            } catch(Exception ex) {
+            } catch(IOException | SchemaException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                 JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
             }
             }
@@ -882,8 +876,7 @@ public class MainFrame extends javax.swing.JFrame {
          new Thread(new Runnable() {
             @Override
             public void run() {
-            try {
-                int n = (int)((dlg.max - dlg.min) / dlg.inc) + 1;
+               int n = (int)((dlg.max - dlg.min) / dlg.inc) + 1;
                
                TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_global_metric_") + dlg.indice.getName(), "", 0,
                         n*100);
@@ -901,7 +894,7 @@ public class MainFrame extends javax.swing.JFrame {
                             if(isCanceled())
                                 return null;
                             GlobalMetric indice = (GlobalMetric)dlg.indice.dupplicate();
-                            TreeMap<Double, Double[]> result = new TreeMap<Double, Double[]>();
+                            TreeMap<Double, Double[]> result = new TreeMap<>();
                             Map<String, Object> params = indice.getParams();
                             for(int i = start; i < end; i++) {
                                 double p = steps.get(i);
@@ -952,10 +945,6 @@ public class MainFrame extends javax.swing.JFrame {
                 frm.pack();
                 frm.setLocationRelativeTo(MainFrame.this);
                 frm.setVisible(true);
-
-            } catch(Exception ex) {
-                JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
-            }
             }
         }).start();
     }//GEN-LAST:event_batchParamGlobalMenuItemActionPerformed
@@ -982,7 +971,7 @@ public class MainFrame extends javax.swing.JFrame {
             project.savePatch();
             r.dispose();
             JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Data_imported"));
-        } catch (Exception ex) {
+        } catch (IOException | HeadlessException | SchemaException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, ex);
         }
@@ -1060,7 +1049,7 @@ public class MainFrame extends javax.swing.JFrame {
                     project.savePatch();
                     project.save();
 
-                } catch (Exception ex) {      
+                } catch (IOException | SchemaException ex) {      
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, ex);
                 } finally {
@@ -1103,10 +1092,10 @@ public class MainFrame extends javax.swing.JFrame {
                     project.createMetaPatchProject(dlg.prjName, dlg.graph, dlg.alpha);
                     loadProject(new File(prjDir, dlg.prjName + ".xml"));
                     ((DefaultGroupLayer)mapViewer.getLayers()).addLayerLast(new FeatureLayer("Patch voronoi", project.getVoronoi(), new FeatureStyle(null, Color.BLACK)));
-                } catch (Exception ex) {
+                } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, "Error " + ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
+                } 
             }
         }).start();
           
@@ -1340,9 +1329,19 @@ public class MainFrame extends javax.swing.JFrame {
             }
             System.exit(0);
         }
-        
-        
+            
         // Default execution (UI)
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                if(e instanceof CancellationException) {
+                    JOptionPane.showMessageDialog(null, "Execution has been cancelled");
+                } else {
+                    Logger.getLogger("").log(Level.SEVERE, null, e);
+                    JOptionPane.showMessageDialog(null, "An error has occurred : " + e);
+                }
+            }
+        });
         PreferencesDialog.initLanguage();
 
         try {  // Set System L&F

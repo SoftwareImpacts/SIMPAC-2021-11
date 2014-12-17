@@ -51,10 +51,7 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
             }
         }
         monitor.popupNow();
-        monitor.setNote("Etat initial...");
-        DeltaGraphGenerator deltaGen = new DeltaGraphGenerator(gen);
-        init = launcher.calcIndice(deltaGen, null);
-        monitor.setNote("Delta...");
+        calcInit();
     }
     
     public DeltaMetricTask(TaskMonitor monitor, GraphGenerator gen, GraphMetricLauncher launcher, List ids) {
@@ -63,8 +60,11 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
         this.graphName = gen.getName();
         this.launcher = launcher;
         this.ids = ids;
-
         monitor.popupNow();
+        calcInit();
+    }
+    
+    private void calcInit() {
         monitor.setNote("Etat initial...");
         init = launcher.calcIndice(gen, null);
         monitor.setNote("Delta...");
@@ -73,7 +73,7 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
     @Override
     public void init() {
         super.init(); 
-        // useful for MPI mode, cause gen is transient
+        // useful for MPI mode, cause gen is transient, not serialized
         if(gen == null) {
             gen = Project.getProject().getGraph(graphName);
         }
@@ -86,12 +86,16 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
         DeltaGraphGenerator deltaGen = new DeltaGraphGenerator(gen);
         Graph graph = deltaGen.getGraph();
         List<Graphable> elems = new ArrayList<>(felems.size());
-        for(Object n : graph.getNodes())
-            if(felems.contains(((Feature)((Graphable)n).getObject()).getId()))
+        for(Object n : graph.getNodes()) {
+            if(felems.contains(((Feature)((Graphable)n).getObject()).getId())) {
                 elems.add((Graphable)n);
-        for(Object n : graph.getEdges())
-            if(felems.contains(((Feature)((Graphable)n).getObject()).getId()))
+            }
+        }
+        for(Object n : graph.getEdges()) {
+            if(felems.contains(((Feature)((Graphable)n).getObject()).getId())) {
                 elems.add((Graphable)n);
+            }
+        }
 
         Map<Object, Double[]> results = new HashMap<>();
 

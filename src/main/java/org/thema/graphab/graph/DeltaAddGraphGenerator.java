@@ -10,7 +10,6 @@ import org.geotools.graph.build.basic.BasicGraphBuilder;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
-import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 
 /**
@@ -31,23 +30,28 @@ public class DeltaAddGraphGenerator extends GraphGenerator {
 
     public void addElem(Object id) {
 
-        if(addedElem != null)
+        if(addedElem != null) {
             throw new IllegalStateException("Graph already contains an added element");
+        }
         
         Graphable elem = null;
-        for(Object n : gen.getGraph().getNodes())
+        for(Object n : gen.getGraph().getNodes()) {
             if(((Feature)((Graphable)n).getObject()).getId().equals(id)) {
                 elem = (Graphable) n;
                 break;
             }
-        if(elem == null)
-            for(Object e : gen.getGraph().getEdges())
+        }
+        if(elem == null) {
+            for(Object e : gen.getGraph().getEdges()) {
                 if(((Feature)((Graphable)e).getObject()).getId().equals(id)) {
                     elem = (Graphable) e;
                     break;
                 }
-        if(elem == null)
+            }
+        }
+        if(elem == null) {
             throw new IllegalArgumentException("Unknown elem id : " + id);
+        }
 
         BasicGraphBuilder builder = new BasicGraphBuilder();
 
@@ -69,8 +73,9 @@ public class DeltaAddGraphGenerator extends GraphGenerator {
             for(Object o : n.getEdges()) {
                 Edge e = (Edge) o;
                 Node nodeB = getNode((Feature)e.getOtherNode(n).getObject());
-                if(nodeB == null) // dans le cas où nodeB a aussi été enlevé
+                if(nodeB == null) { // dans le cas où nodeB a aussi été enlevé
                     continue;
+                }
                 Edge edge = builder.buildEdge(node, nodeB);
                 edge.setObject(e.getObject());
                 graph.getEdges().add(edge);

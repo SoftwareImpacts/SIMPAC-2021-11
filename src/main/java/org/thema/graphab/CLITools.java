@@ -20,7 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.math.MathException;
 import org.geotools.feature.SchemaException;
-import org.geotools.graph.structure.Graphable;
 import org.thema.common.JTS;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
@@ -33,7 +32,6 @@ import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.drawshape.style.RasterStyle;
 import org.thema.graphab.addpatch.AddPatchCommand;
-import org.thema.graphab.graph.DeltaGraphGenerator;
 import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.metric.DeltaMetricTask;
 import org.thema.graphab.metric.GraphMetricLauncher;
@@ -733,10 +731,11 @@ public class CLITools {
         while(!args.get(0).startsWith("obj=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
-            if(r.isUnique())
+            if(r.isUnique()) {
                 params.put(tok[0], r.min);
-            else
+            } else {
                 throw new IllegalArgumentException("No range for indice params in --gtest");
+            }
         }
         // obj=patch|link
         boolean patch = args.remove(0).split("=")[1].equals("patch");
@@ -750,8 +749,9 @@ public class CLITools {
         GlobalMetric indice = Project.getGlobalMetric(indName);
         
         if(indice.hasParams()) {
-            if(params.isEmpty())
+            if(params.isEmpty()) {
                 throw new IllegalArgumentException("Params for " + indice.getName() + " not found in --gtest");
+            }
             indice.setParams(params);
         }
         GraphMetricLauncher launcher = new GraphMetricLauncher(indice, maxCost, true);
@@ -816,10 +816,11 @@ public class CLITools {
             for(int i = 0; i < nParam && !args.isEmpty(); i++) {
                 String [] tok = args.remove(0).split("=");
                 Range r = Range.parse(tok[1]);
-                if(r.isUnique())
+                if(r.isUnique()) {
                     params.put(tok[0], r.min);
-                else
+                } else {
                     throw new IllegalArgumentException("No range for indice params in --gtest");
+                }
             }
 
             indice.setParams(params);
@@ -829,13 +830,15 @@ public class CLITools {
         List linkIds = new ArrayList();
         if(args.get(0).startsWith("patch=")) {
             String [] toks = args.remove(0).split("=")[1].split(",");
-            for(String tok : toks)
+            for(String tok : toks) {
                 patchIds.add(Integer.parseInt(tok));
+            }
         } else if(args.get(0).startsWith("fpatch=")) {
             File f = new File(args.remove(0).split("=")[1]);
             List<String> ids = readFile(f);
-            for(String id : ids)
+            for(String id : ids) {
                 patchIds.add(Integer.parseInt(id));
+            }
         }
         if(!args.isEmpty() && args.get(0).startsWith("link=")) {
             String [] toks = args.remove(0).split("=")[1].split(",");
@@ -846,21 +849,17 @@ public class CLITools {
             linkIds.addAll(ids);
         }
         
-        
-        
         GraphMetricLauncher launcher = new GraphMetricLauncher(indice, maxCost, true);
         System.out.println("Global indice " + indice.getDetailName());
         for(GraphGenerator graph : getGraphs()) {
             System.out.println("Graph " + graph.getName());
-            DeltaAddGraphGenerator deltaGraph = new DeltaAddGraphGenerator(graph,
-                    patchIds, linkIds);
+            GraphGenerator deltaGraph = new GraphGenerator(graph, patchIds, linkIds);
             System.out.println("Remove " + (graph.getNodes().size()-deltaGraph.getNodes().size()) + " patches and " +
                     (graph.getEdges().size()-deltaGraph.getEdges().size()) + " links");
             Double[] res = launcher.calcIndice(deltaGraph, new TaskMonitor.EmptyMonitor());     
 
             System.out.println(indName + " : " + res[0] + "\n");
         }
-        
     }
     
     private void addLocal(List<String> args) throws IOException {
@@ -964,10 +963,12 @@ public class CLITools {
         System.out.println("Global metric " + indice.getDetailName());
         for(GraphGenerator graph : getGraphs()) {
             System.out.println("Graph " + graph.getName());
+            List remIds = new ArrayList();
+            GraphGenerator gr = graph;
             try (FileWriter wd = new FileWriter(new File(project.getDirectory(), "rem" + (patch ? "patch" : "link") + "-" + indice.getDetailName() + "_" + graph.getName() + ".txt"))) {
                 wd.write("Step\tId\t" + indice.getShortName() + "\n");
                 for(int step = 1; step <= nElem; step++) {
-                    DeltaMetricTask deltaTask = new DeltaMetricTask(new TaskMonitor.EmptyMonitor(), graph, launcher, patch ? 1 : 2);
+                    DeltaMetricTask deltaTask = new DeltaMetricTask(new TaskMonitor.EmptyMonitor(), gr, launcher, patch ? 1 : 2);
                     ExecutorService.execute(deltaTask);
                     Map<Object, Double[]> result = deltaTask.getResult();
                     double max = Double.NEGATIVE_INFINITY;
@@ -981,20 +982,14 @@ public class CLITools {
                     }
                     double init = deltaTask.getInit()[0];
                     double metric = init - (max * init);
+                    remIds.add(bestId);
                     if(step == 1) {
                         wd.write("0\tnull\t" + init + "\n");
                     }
                     wd.write(step + "\t" + bestId + "\t" + metric + "\n");
                     wd.flush();
                     System.out.println("Remove elem " + bestId + " with metric value " + metric);
-                    graph = new DeltaGraphGenerator(graph);
-                    Graphable elem;
-                    if(patch) {
-                        elem = graph.getNode((Integer)bestId);
-                    } else {
-                        elem = graph.getEdge((String)bestId);
-                    }
-                    ((DeltaGraphGenerator)graph).removeElem(elem);
+                    gr = new GraphGenerator(graph, patch ? remIds : Collections.EMPTY_LIST, !patch ? remIds : Collections.EMPTY_LIST);
                 }
             }
         } 

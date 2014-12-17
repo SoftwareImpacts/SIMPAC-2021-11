@@ -5,6 +5,7 @@
  
 package org.thema.graphab.graph;
 
+import com.sun.javafx.scene.control.skin.VirtualFlow;
 import com.vividsolutions.jts.geom.Coordinate;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -53,9 +54,9 @@ import org.thema.graphab.metric.Circuit;
 public class GraphGenerator {
 
     public class PathFinder {
-        Node nodeOrigin;
-        DijkstraPathFinder pathfinder;
-        HashMap<Node, DijkstraNode> computedNodes;
+        private Node nodeOrigin;
+        private DijkstraPathFinder pathfinder;
+        private HashMap<Node, DijkstraNode> computedNodes;
 
         public PathFinder(Node nodeOrigin) {
             this(nodeOrigin, Double.NaN);
@@ -64,32 +65,37 @@ public class GraphGenerator {
         public PathFinder(Node nodeOrigin, double maxCost) {
             this.nodeOrigin = nodeOrigin;
             pathfinder = getDijkstraPathFinder(getPathNodes(nodeOrigin), maxCost);
-            computedNodes = new HashMap<Node, DijkstraNode>();
+            computedNodes = new HashMap<>();
             for(DijkstraPathFinder.DijkstraNode dn : pathfinder.getComputedNodes()) {
                 if(dn.node.getObject() instanceof Node) {
                     Node node = (Node) dn.node.getObject();
                     DijkstraNode oldDn = computedNodes.get(node);
-                    if(oldDn == null || dn.cost < oldDn.cost)
+                    if(oldDn == null || dn.cost < oldDn.cost) {
                         computedNodes.put(node, dn);
-                } else
+                    }
+                } else {
                     computedNodes.put(dn.node, dn);
+                }
             }
         }
 
         public Double getCost(Node node) {
             DijkstraNode dn = computedNodes.get(node);
-            if(dn == null)
+            if(dn == null) {
                 return null;
+            }
             return dn.cost;
         }
 
         public org.thema.graph.pathfinder.Path getPath(Node node) {
             org.thema.graph.pathfinder.Path p = pathfinder.getPath(computedNodes.get(node));
             if(isIntraPatchDist() && p != null) {
-                List<Edge> edges = new ArrayList<Edge>(p.getEdges().size()/2+1);
-                for(Edge e : p.getEdges())
-                    if(e.getObject() instanceof Edge)
+                List<Edge> edges = new ArrayList<>(p.getEdges().size()/2+1);
+                for(Edge e : p.getEdges()) {
+                    if(e.getObject() instanceof Edge) {
                         edges.add((Edge)e.getObject());
+                    }
+                }
                 p = new org.thema.graph.pathfinder.Path(nodeOrigin, edges);
             } 
             return p;
@@ -105,6 +111,7 @@ public class GraphGenerator {
         
         protected DijkstraPathFinder getDijkstraPathFinder(List<Node> startNodes, double maxCost) {
             DijkstraPathFinder finder = new DijkstraPathFinder(getPathGraph(), startNodes, new EdgeWeighter() {
+                @Override
                 public double getWeight(Edge e) {
                     if(e.getObject() instanceof Path) {
                         return GraphGenerator.this.getCost((Path)e.getObject());
@@ -113,10 +120,14 @@ public class GraphGenerator {
                     } else if(intraPatchDist) {
                         double [] w = (double [])e.getObject();
                         return getLinkset().isCostLength() ? w[0] : w[1];
-                    } else
+                    } else {
                         throw new RuntimeException("Unknown object in the graph");
+                    }
                 }
-                public double getToGraphWeight(double dist) { return 0; }
+                @Override
+                public double getToGraphWeight(double dist) { 
+                    return 0; 
+                }
             });
 
             finder.calculate(maxCost);
@@ -129,13 +140,13 @@ public class GraphGenerator {
     public static final int THRESHOLD = 2;
     public static final int MST = 3;
 
-    String name;
-    Linkset cost;
-    int type;
-    double threshold;
-    boolean intraPatchDist;
+    private String name;
+    private Linkset cost;
+    private int type;
+    private double threshold;
+    private boolean intraPatchDist;
 
-    boolean saved = false;
+    private boolean saved = false;
 
     protected transient List<Graph> components;
     protected transient List<DefaultFeature> compFeatures;
@@ -149,8 +160,9 @@ public class GraphGenerator {
         this.type = type;
         this.threshold = threshold;
         // intra patch distance can be used only if linkset contains real paths
-        if(intraPatchDist && !cost.isRealPaths())
+        if(intraPatchDist && !cost.isRealPaths()) {
             throw new IllegalArgumentException("Intra patch distances can be used only with a linkset containing real paths");
+        }
         this.intraPatchDist = intraPatchDist;
     }
 
@@ -162,6 +174,19 @@ public class GraphGenerator {
         this.intraPatchDist = gen.intraPatchDist;
     }
     
+    public GraphGenerator(GraphGenerator gen, Collection remIdNodes, Collection remIdEdges) {
+        this(gen, Arrays.deepToString(remIdNodes.toArray()), Arrays.deepToString(remIdEdges.toArray()));
+    }
+    
+    public GraphGenerator(GraphGenerator gen, String remIdNodes, String remIdEdges) {
+        this.name = gen.name + "!" + remIdNodes + "!" + remIdEdges;
+        this.cost = gen.cost;
+        this.type = gen.type;
+        this.threshold = gen.threshold;
+        this.intraPatchDist = gen.intraPatchDist;
+        this.graph = dupGraphWithout(stringToList(remIdNodes, true), stringToList(remIdEdges, false));
+    }
+            
     protected GraphGenerator() {}
     protected GraphGenerator(GraphGenerator gen, int indComp) {
         name = gen.name;
@@ -710,22 +735,24 @@ public class GraphGenerator {
                 info += bundle.getString("NewGraphDialog.mstRadioButton.text");
                 break;
         }
-        if(intraPatchDist)
+        if(intraPatchDist) {
             info += "\n\n" + bundle.getString("NewGraphDialog.intraPatchCheckBox.text");
+        }
         
         info += "\n\n# edges : " + getGraph().getEdges().size();
         
         return info;
     }
     
-    public Graph dupGraphWithout(Collection idNodes, Collection idEdges) {
+    public final Graph dupGraphWithout(Collection idNodes, Collection idEdges) {
         Graph g = getGraph();
 
         BasicGraphBuilder builder = new BasicGraphBuilder();
-        HashMap<Node, Node> mapNodes = new HashMap<Node, Node>();
+        HashMap<Node, Node> mapNodes = new HashMap<>();
         for(Node node : (Collection<Node>)g.getNodes()) {
-            if(idNodes.contains(((Feature)node.getObject()).getId()))
+            if(idNodes.contains(((Feature)node.getObject()).getId())) {
                 continue;
+            }
             Node n = builder.buildNode();
             n.setID(node.getID());
             n.setObject(node.getObject());
@@ -734,10 +761,12 @@ public class GraphGenerator {
         }
 
         for(Edge edge : (Collection<Edge>)g.getEdges()) {
-            if(idEdges.contains(((Feature)edge.getObject()).getId()))
+            if(idEdges.contains(((Feature)edge.getObject()).getId())) {
                 continue;
-            if(!mapNodes.containsKey(edge.getNodeA()) || !mapNodes.containsKey(edge.getNodeB()))
+            }
+            if(!mapNodes.containsKey(edge.getNodeA()) || !mapNodes.containsKey(edge.getNodeB())) {
                 continue;
+            }
             Edge e = builder.buildEdge(mapNodes.get(edge.getNodeA()), mapNodes.get(edge.getNodeB()));
             e.setID(edge.getID());
             e.setObject(edge.getObject());
@@ -746,4 +775,22 @@ public class GraphGenerator {
         return builder.getGraph();
     }
 
+    private List stringToList(String sArray, boolean patch) {
+        String[] split = sArray.replace("[", "").replace("]", "").split(",");
+        List lst = new ArrayList();
+        for(String s : split) {
+            if(s.trim().isEmpty()) {
+                continue;
+            }
+            if(patch) {
+                // for patch id
+                int id = Integer.parseInt(s.trim());
+                lst.add(id);
+            } else {
+                // for link id
+                lst.add(s.trim());
+            }
+        }
+        return lst;
+    }
 }
