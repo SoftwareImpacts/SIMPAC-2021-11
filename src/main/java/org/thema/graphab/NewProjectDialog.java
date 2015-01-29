@@ -41,13 +41,13 @@ import org.thema.data.IOImage;
 public class NewProjectDialog extends javax.swing.JDialog {
 
     private static final int NBPANEL = 3;
-    int indPanel;
+    private int indPanel;
 
     public boolean isOk = false;
 
-    TreeSet<Integer> codes;
-    File imgFile;
-    GridCoverage2D coverage;
+    private TreeSet<Integer> codes;
+    private File imgFile;
+    private GridCoverage2D coverage;
 
 
     /** Creates new form NewProjectDialog */
@@ -59,9 +59,18 @@ public class NewProjectDialog extends javax.swing.JDialog {
         setPanel(0);
 
         prjNameTextField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) { update(); }
-            public void removeUpdate(DocumentEvent e) { update();  }
-            public void insertUpdate(DocumentEvent e) { update();  }
+            @Override
+            public void changedUpdate(DocumentEvent e) { 
+                update(); 
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) { 
+                update();  
+            }
+            @Override
+            public void insertUpdate(DocumentEvent e) { 
+                update();  
+            }
             private void update() {
                 String rep = prjPathTextField.getText();
                 rep = rep.substring(0, rep.lastIndexOf(File.separator)+1);
@@ -341,8 +350,9 @@ public class NewProjectDialog extends javax.swing.JDialog {
 }//GEN-LAST:event_prevButtonActionPerformed
 
     private void nextButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextButtonActionPerformed
-        if(validatePanel())
+        if(validatePanel()) {
             setPanel(nextPanel());
+        }
 }//GEN-LAST:event_nextButtonActionPerformed
 
     private void endButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_endButtonActionPerformed
@@ -357,26 +367,30 @@ public class NewProjectDialog extends javax.swing.JDialog {
         JFileChooser fileDlg = new JFileChooser(prjPathTextField.getText());
         fileDlg.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
-        if(fileDlg.showOpenDialog(this) == JFileChooser.CANCEL_OPTION)
+        if(fileDlg.showOpenDialog(this) == JFileChooser.CANCEL_OPTION) {
             return;
+        }
 
         prjPathTextField.setText(fileDlg.getSelectedFile().getPath() + File.separator + prjNameTextField.getText());
     }//GEN-LAST:event_selectPathButtonActionPerformed
 
     private void imgSelectFilePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imgSelectFilePanelActionPerformed
         imgFile = imgSelectFilePanel.getSelectedFile();
-        if(imgFile == null)
+        if(imgFile == null) {
             return;
+        }
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
-            if(imgFile.getName().toLowerCase().endsWith(".tif"))
+            if(imgFile.getName().toLowerCase().endsWith(".tif")) {
                 coverage = IOImage.loadTiff(imgFile);
-            else
+            } else {
                 coverage = new RSTGridReader(imgFile).read(null);
+            }
             
             int dataType = coverage.getRenderedImage().getSampleModel().getDataType();
-            if(dataType == DataBuffer.TYPE_DOUBLE || dataType == DataBuffer.TYPE_FLOAT)
+            if(dataType == DataBuffer.TYPE_DOUBLE || dataType == DataBuffer.TYPE_FLOAT) {
                 throw new RuntimeException("Image data type is not integer type");
+            }
             
             codes = getCodes(coverage);
             codeComboBox.setModel(new DefaultComboBoxModel(codes.toArray()));
@@ -385,7 +399,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
             noDataComboBox.setModel(model);
             noDataComboBox.setSelectedIndex(0);
 
-        } catch (Exception ex) {
+        } catch (IOException | RuntimeException ex) {
             Logger.getLogger(NewProjectDialog.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, "Error while loading image file\n" + ex.getLocalizedMessage());
             imgSelectFilePanel.setSelectedFile(null);
@@ -395,14 +409,16 @@ public class NewProjectDialog extends javax.swing.JDialog {
 }//GEN-LAST:event_imgSelectFilePanelActionPerformed
 
     public static TreeSet<Integer> getCodes(GridCoverage2D cov) {
-        HashSet<Integer> codes = new HashSet<Integer>();
+        HashSet<Integer> codes = new HashSet<>();
         RenderedImage img = cov.getRenderedImage();
         RandomIter r = RandomIterFactory.create(img, null);
-        for(int y = 0; y < img.getHeight(); y++)
-            for(int x = 0; x < img.getWidth(); x++)
+        for(int y = 0; y < img.getHeight(); y++) {
+            for(int x = 0; x < img.getWidth(); x++) {
                 codes.add(r.getSample(x, y, 0));
+            }
+        }
 
-        return new TreeSet<Integer>(codes);
+        return new TreeSet<>(codes);
     }
 
     private boolean validatePanel() {
@@ -438,8 +454,9 @@ public class NewProjectDialog extends javax.swing.JDialog {
                     if(fRep.list().length > 0) {
                         if(JOptionPane.showConfirmDialog(this,
                                 "Project directory is not empty\nDo you want to continue ?",
-                                "Warning", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION)
+                                "Warning", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
                             return false;
+                        }
                     }
                 }
                 return true;
@@ -449,9 +466,10 @@ public class NewProjectDialog extends javax.swing.JDialog {
                     return false;
                 }
                 double noData = noDataComboBox.getSelectedIndex() == 0 ? Double.NaN : ((Number)noDataComboBox.getSelectedItem()).doubleValue();
-                TreeSet<Integer> newCodes = new TreeSet<Integer>(codes);
-                if(!Double.isNaN(noData))
+                TreeSet<Integer> newCodes = new TreeSet<>(codes);
+                if(!Double.isNaN(noData)) {
                     newCodes.remove((int)noData);
+                }
                 panel3.setCodes(newCodes, null);
 
             default:
@@ -464,9 +482,12 @@ public class NewProjectDialog extends javax.swing.JDialog {
     private int nextPanel() {
         int ind = indPanel+1;
 
-
-        if(ind < 0) ind = 0;
-        if(ind >= NBPANEL) ind = NBPANEL-1;
+        if(ind < 0) {
+            ind = 0;
+        }
+        if(ind >= NBPANEL) {
+            ind = NBPANEL-1;
+        }
 
         return ind;
     }
@@ -474,9 +495,12 @@ public class NewProjectDialog extends javax.swing.JDialog {
     private int prevPanel() {
         int ind = indPanel-1;
 
-
-        if(ind < 0) ind = 0;
-        if(ind >= NBPANEL) ind = NBPANEL-1;
+        if(ind < 0) {
+            ind = 0;
+        }
+        if(ind >= NBPANEL) {
+            ind = NBPANEL-1;
+        }
 
         return ind;
     }
@@ -507,8 +531,9 @@ public class NewProjectDialog extends javax.swing.JDialog {
         double minArea = (Double)minAreaSpinner.getValue() * 10000;
         boolean con8 = con8RadioButton.isSelected();
         double noData = noDataComboBox.getSelectedIndex() == 0 ? Double.NaN : ((Number)noDataComboBox.getSelectedItem()).doubleValue();
-        if(!Double.isNaN(noData))
+        if(!Double.isNaN(noData)) {
             codes.remove((int)noData);
+        }
 
         Project prj = new Project(prjNameTextField.getText(), prjPath, coverage, codes, code, noData, con8, minArea, simplifyCheckBox.isSelected());
 
