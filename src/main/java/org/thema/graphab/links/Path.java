@@ -9,7 +9,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.linearref.LengthIndexedLine;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +26,7 @@ public class Path extends DefaultFeature {
     public static final String COST_ATTR = "Dist";
     public static final String DIST_ATTR = "DistM";
     private static List<String> DEFAULT_ATTR_NAMES = Arrays.asList("ID1", "ID2", COST_ATTR, DIST_ATTR);
-    private static List<String> ATTR_NAMES = new ArrayList<String>(DEFAULT_ATTR_NAMES);
+    private static List<String> ATTR_NAMES = new ArrayList<>(DEFAULT_ATTR_NAMES);
 
     private Feature patch1, patch2;
     private double cost;
@@ -51,8 +50,9 @@ public class Path extends DefaultFeature {
         this.patch2 = patch2;
         this.cost = cost;
         
-        for(int i = 4; i < attrNames.size(); i++)
+        for(int i = 4; i < attrNames.size(); i++) {
             this.addAttribute(attrNames.get(i), null);
+        }
     }
 
     public Path(Feature patch1, Feature patch2, double cost, LineString path) {
@@ -66,8 +66,9 @@ public class Path extends DefaultFeature {
         this.patch2 = patch2;
         this.cost = cost;
         
-        for(int i = 4; i < attrNames.size(); i++)
+        for(int i = 4; i < attrNames.size(); i++) {
             this.addAttribute(attrNames.get(i), null);
+        }
     }
 
     private Path(Feature f) {
@@ -92,17 +93,22 @@ public class Path extends DefaultFeature {
 
     public Coordinate getCoordinate(Feature patch) {
         Coordinate[] coords = getGeometry().getCoordinates();
-        if(getPatch1() == patch)
+        if(getPatch1() == patch) {
             return coords[0];
-        else
+        } else {
             return coords[coords.length-1];
+        }
     }
     
+    
+    
     public static Feature getCommonPatch(Path p1, Path p2) {
-        if(p1.getPatch1() == p2.getPatch1() || p1.getPatch1() == p2.getPatch2())
+        if(p1.getPatch1() == p2.getPatch1() || p1.getPatch1() == p2.getPatch2()) {
             return p1.getPatch1();
-        if(p1.getPatch2() == p2.getPatch1() || p1.getPatch2() == p2.getPatch2())
+        }
+        if(p1.getPatch2() == p2.getPatch1() || p1.getPatch2() == p2.getPatch2()) {
             return p1.getPatch2();
+        }
         
         throw new RuntimeException("No common patch between path " + p1.getId() + " and " + p2.getId());
     }
@@ -141,10 +147,10 @@ public class Path extends DefaultFeature {
     }
 
     public static void newSetOfPaths() {
-        ATTR_NAMES = new ArrayList<String>(DEFAULT_ATTR_NAMES);
+        ATTR_NAMES = new ArrayList<>(DEFAULT_ATTR_NAMES);
     }
     public static void newSetOfPaths(List<String> attrNames) {
-        ATTR_NAMES = new ArrayList<String>(DEFAULT_ATTR_NAMES);
+        ATTR_NAMES = new ArrayList<>(DEFAULT_ATTR_NAMES);
         ATTR_NAMES.addAll(attrNames);
     }
 
@@ -154,8 +160,9 @@ public class Path extends DefaultFeature {
         elems[1] = p.patch2.getId().toString();
         elems[2] = String.valueOf(p.getCost());//String.format("%g", p.getCost());
         elems[3] = String.valueOf(p.getDist());//String.format("%g", p.getDist());
-        for(int i = 4; i < p.getAttributeNames().size(); i++)
+        for(int i = 4; i < p.getAttributeNames().size(); i++) {
             elems[i] = p.getAttribute(i).toString();
+        }
         return elems;
     }
 
@@ -165,8 +172,9 @@ public class Path extends DefaultFeature {
         double cost = Double.parseDouble(line[2]);
         double dist = Double.parseDouble(line[3]);
         Path p = new Path(patch1, patch2, cost, dist);
-        for(int i = 4; i < line.length; i++)
+        for(int i = 4; i < line.length; i++) {
             p.addAttribute(ATTR_NAMES.get(i), Double.parseDouble(line[i]));
+        }
         return p;
     }
 }

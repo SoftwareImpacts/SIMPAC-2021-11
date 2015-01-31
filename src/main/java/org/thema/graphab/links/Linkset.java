@@ -12,7 +12,9 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.index.strtree.STRtree;
+import com.vividsolutions.jts.linearref.LengthIndexedLine;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
@@ -36,6 +38,7 @@ import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.ParallelFTask;
 import org.thema.common.ProgressBar;
+import org.thema.common.collection.HashMap2D;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
@@ -205,8 +208,9 @@ public class Linkset {
 
     public int getType_dist() {
         // compatibilité < 1.3
-        if(type_dist == 3)
+        if(type_dist == 3) {
             return COST;
+        }
         return type_dist;
     }
 
@@ -792,7 +796,51 @@ public class Linkset {
      * @param patch 
      */
     public void removeLinks(DefaultFeature patch) {
-        while(paths.get(paths.size()-1).getPatch1().equals(patch))
+        while(paths.get(paths.size()-1).getPatch1().equals(patch)) {
             paths.remove(paths.size()-1);
+        }
+    }
+    
+    /**
+     * Extract for each path the number of pixels for each cost
+     * @param prj the project
+     * @return a 2D map (Path, cost) -> #pixels
+     * @throws IOException 
+     */
+    public HashMap2D<Path, Double, Integer> extractCostFromPath(Project prj) throws IOException {
+        if(!isRealPaths()) {
+            throw new IllegalStateException("Linkset must have real path.");
+        }
+        if(getType_dist() != COST) {
+            throw new IllegalStateException("Linkset must have cost from landscape.");
+        }
+        AffineTransformation trans = prj.getSpace2grid();
+        WritableRaster land = prj.getImageSource();
+        
+        Set<Double> costSet = new TreeSet<>();
+        for(double c : costs) {
+            costSet.add(c);
+        }
+        HashMap2D<Path, Double, Integer> map = new HashMap2D<>(getPaths(), costSet, 0);
+        
+        for(Path p : getPaths()) {                
+            Set<Coordinate> pixels = new HashSet<>();
+            Geometry g = trans.transform(p.getGeometry());
+            LengthIndexedLine index = new LengthIndexedLine(g);
+            for(int l = 0; l <= g.getLength(); l++) {
+                Coordinate c = index.extractPoint(l);
+                pixels.add(new Coordinate((int)c.x, (int)c.y));
+            }
+            // end point
+            Coordinate c = index.extractPoint(index.getEndIndex());
+            pixels.add(new Coordinate((int)c.x, (int)c.y));
+            
+            for(Coordinate pixel : pixels) {
+                double cost = costs[land.getSample((int)pixel.x, (int)pixel.y, 0)];
+                map.setValue(p, cost, map.getValue(p, cost) + 1);
+            }
+        }
+        
+        return map;
     }
 }

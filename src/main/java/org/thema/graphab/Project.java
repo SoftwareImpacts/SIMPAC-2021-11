@@ -52,6 +52,7 @@ import org.thema.common.Config;
 import org.thema.common.JTS;
 import org.thema.common.ProgressBar;
 import org.thema.common.Util;
+import org.thema.common.collection.HashMap2D;
 import org.thema.common.io.IOFile;
 import org.thema.data.IOImage;
 import org.thema.common.parallel.*;
@@ -1383,48 +1384,52 @@ public final class Project {
         List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(prj.dir, "patches.shp"), 
                 "Id", monitor.getSubProgress(100));
         prj.patches = new ArrayList<>(features);
-        for(DefaultFeature f : features)
+        for(DefaultFeature f : features) {
             prj.patches.set((Integer)f.getId()-1, f);
+        }
 
         File fCSV = new File(prj.dir, "patches.csv");
         if(fCSV.exists()) {
-
-            CSVReader r = new CSVReader(new FileReader(fCSV));
-            List<String> attrNames = new ArrayList<String>(Arrays.asList(r.readNext()));
-
-            String [] tab = r.readNext();
-            while(tab != null) {
-                int id = Integer.parseInt(tab[0]);
-                DefaultFeature f = prj.getPatch(id);
-                List values = new ArrayList();
-                values.add(id);
-                for(int i = 1; i < tab.length; i++)
-                    values.add(Double.parseDouble(tab[i]));
-
-                prj.patches.set(id-1, new DefaultFeature(f.getId(),
-                        f.getGeometry(), attrNames, values));
-                tab = r.readNext();
+            try (CSVReader r = new CSVReader(new FileReader(fCSV))) {
+                List<String> attrNames = new ArrayList<>(Arrays.asList(r.readNext()));
+                
+                String [] tab = r.readNext();
+                while(tab != null) {
+                    int id = Integer.parseInt(tab[0]);
+                    DefaultFeature f = prj.getPatch(id);
+                    List values = new ArrayList();
+                    values.add(id);
+                    for(int i = 1; i < tab.length; i++) {
+                        values.add(Double.parseDouble(tab[i]));
+                    }
+                    
+                    prj.patches.set(id-1, new DefaultFeature(f.getId(),
+                            f.getGeometry(), attrNames, values));
+                    tab = r.readNext();
+                }
             }
-            r.close();
         }
 
         features = GlobalDataStore.getFeatures(new File(prj.dir, "links.shp"), "Id", monitor.getSubProgress(100));
-        List<Path> paths = new ArrayList<Path>(features.size());
-        for(Feature f : features)
+        List<Path> paths = new ArrayList<>(features.size());
+        for(Feature f : features) {
             paths.add(Path.loadPath(f, prj));
+        }
 
         prj.planarLinks = new Links("Links", paths, prj.patches.size());
 
-        if(all)
-            for(Linkset cost : prj.costLinks.values())
+        if(all) {
+            for(Linkset cost : prj.costLinks.values()) {
                 cost.loadPaths(prj, monitor.getSubProgress(100));
+            }
+        }
 
         for(String name : prj.exoDatas.keySet()) {
             prj.exoDatas.get(name).setFeatures(GlobalDataStore.getFeatures(
                     new File(prj.dir,"Exo-" + name + ".shp"), "Id", monitor.getSubProgress(10)));
         }
         
-        prj.removedCodes = new HashMap<Integer, Integer>();
+        prj.removedCodes = new HashMap<>();
 
         monitor.close();
         
@@ -1434,22 +1439,26 @@ public final class Project {
 
     public GridCoverage2D loadCoverage(File file) throws IOException {
         GridCoverage2D cov;
-        if(file.getName().toLowerCase().endsWith(".tif"))
+        if(file.getName().toLowerCase().endsWith(".tif")) {
             cov = IOImage.loadTiffWithoutCRS(file);
-        else if(file.getName().toLowerCase().endsWith(".asc"))
+        } else if(file.getName().toLowerCase().endsWith(".asc")) {
             cov = IOImage.loadArcGrid(file);
-        else
+        } else {
             cov = new RSTGridReader(file).read(null);
+        }
 
         GridEnvelope2D grid = cov.getGridGeometry().getGridRange2D();
         Envelope2D env = cov.getEnvelope2D();
         double res = env.getWidth() / grid.getWidth();
-        if(res != resolution)
+        if(res != resolution) {
             throw new IllegalArgumentException(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Resolution_does_not_match."));
-        if(env.getWidth() != zone.getWidth() || env.getHeight() != zone.getHeight())
+        }
+        if(env.getWidth() != zone.getWidth() || env.getHeight() != zone.getHeight()) {
             throw new IllegalArgumentException(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Raster_extent_does_not_match."));
-        if(Math.abs(env.getX() - zone.getX()) > res || Math.abs(env.getY() - zone.getY()) > res)
+        }
+        if(Math.abs(env.getX() - zone.getX()) > res || Math.abs(env.getY() - zone.getY()) > res) {
             throw new IllegalArgumentException(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Raster_position_does_not_match."));
+        }
 
         return cov;
     }
@@ -1457,15 +1466,17 @@ public final class Project {
     public synchronized Raster getExtRaster(File file) throws IOException {
         Raster raster = null;
         
-        if(extRasters == null)
-            extRasters = new HashMap<File, SoftRef<Raster>>();
-        if(extRasters.containsKey(file))
+        if(extRasters == null) {
+            extRasters = new HashMap<>();
+        }
+        if(extRasters.containsKey(file)) {
             raster = extRasters.get(file).get();
+        }
         
         if(raster == null) {
             raster = loadCoverage(file).getRenderedImage().getData();
             raster = raster.createTranslatedChild(1, 1);
-            extRasters.put(file, new SoftRef<Raster>(raster));
+            extRasters.put(file, new SoftRef<>(raster));
         }
         
         return raster;
@@ -1486,8 +1497,9 @@ public final class Project {
     public static double getTotalPatchCapacity() {
         if(MainFrame.project.totalPatchCapacity == 0) {
             double sum = 0;
-            for(Feature f : MainFrame.project.getPatches())
+            for(Feature f : MainFrame.project.getPatches()) {
                 sum += ((Number)f.getAttribute(Project.CAPA_ATTR)).doubleValue();
+            }
             MainFrame.project.totalPatchCapacity = sum;
         }
 
@@ -1520,18 +1532,20 @@ public final class Project {
     }
 
     public Raster getDemRaster() throws IOException {
-        if(demFile.isAbsolute())
+        if(demFile.isAbsolute()) {
             return getExtRaster(demFile);
-        else 
+        } else {
             return getExtRaster(new File(Project.getProject().getDirectory(), demFile.getPath()));
+        }
     }
     
     public void setDemFile(File demFile) throws IOException {
         String prjPath = Project.getProject().getDirectory().getAbsolutePath();
-        if(demFile.getAbsolutePath().startsWith(prjPath)) 
+        if(demFile.getAbsolutePath().startsWith(prjPath)) { 
             this.demFile = new File(demFile.getAbsolutePath().substring(prjPath.length()+1));
-        else 
+        } else {
             this.demFile = demFile.getAbsoluteFile();
+        }
         // try loading DEM
         getDemRaster();
         save();
@@ -1554,12 +1568,13 @@ public final class Project {
     }
 
     public CoordinateReferenceSystem getCRS() {
-        if(wktCRS != null && !wktCRS.isEmpty())
+        if(wktCRS != null && !wktCRS.isEmpty()) {
             try {
                 return CRS.parseWKT(wktCRS);
             } catch (FactoryException ex) {
                 Logger.getLogger(Project.class.getName()).log(Level.WARNING, null, ex);
             }
+        }
         return null;
     }
     
@@ -1574,14 +1589,15 @@ public final class Project {
      * @return
      */
     public boolean isInZone(double x, double y) throws IOException {
-        if(!zone.contains(x, y))
+        if(!zone.contains(x, y)) {
             return false;
+        }
         Coordinate cg = space2grid.transform(new Coordinate(x, y), new Coordinate());
         return getImageSource().getSample((int)cg.x, (int)cg.y, 0) != noData;
     }
 
     public DefaultFeature createPatch(Geometry geom, double capa) {
-        List<String> attrNames = new ArrayList<String>(PATCH_ATTRS);
+        List<String> attrNames = new ArrayList<>(PATCH_ATTRS);
         List attrs = new ArrayList(Arrays.asList(new Double[attrNames.size()]));
         attrs.set(attrNames.indexOf(CAPA_ATTR), capa);
         attrs.set(attrNames.indexOf(AREA_ATTR), resolution*resolution);
@@ -1591,14 +1607,15 @@ public final class Project {
     
     public synchronized DefaultFeature addPatch(Point point, double capa) throws IOException {
         // tester si pas dans un patch ou touche un patch
-        if(!canCreatePatch(point))
+        if(!canCreatePatch(point)) {
             throw new IllegalArgumentException("Patch already exists at the same position : " + point.toString());
+        }
         DefaultFeature patch = createPatch(point, capa);
         int id = (Integer)patch.getId();
         Coordinate cg = space2grid.transform(point.getCoordinate(), new Coordinate());
         // on passe les raster en strong reference pour qu'ils ne puissent pas être supprimé
-        patchRaster = new StrongRef<WritableRaster>(getRasterPatch());
-        srcRaster = new StrongRef<WritableRaster>(getImageSource());
+        patchRaster = new StrongRef<>(getRasterPatch());
+        srcRaster = new StrongRef<>(getImageSource());
         removedCodes.put(id, getImageSource().getSample((int)cg.x, (int)cg.y, 0));
         getRasterPatch().setSample((int)cg.x, (int)cg.y, 0, id);
         getImageSource().setSample((int)cg.x, (int)cg.y, 0, patchCode);
@@ -1613,14 +1630,15 @@ public final class Project {
             return addPatch((Point) geom, capa);
         }
         // tester si pas dans un patch ou touche un patch
-        if(!canCreatePatch(geom))
+        if(!canCreatePatch(geom)) {
             throw new IllegalArgumentException("Patch already exist at the same position");
+        }
                     
         DefaultFeature patch = createPatch(geom, capa);
         int id = (Integer)patch.getId();
         // on passe les raster en strong reference pour qu'ils ne puissent pas être supprimé
-        patchRaster = new StrongRef<WritableRaster>(getRasterPatch());
-        srcRaster = new StrongRef<WritableRaster>(getImageSource());
+        patchRaster = new StrongRef<>(getRasterPatch());
+        srcRaster = new StrongRef<>(getImageSource());
 
         GeometryFactory geomFactory = geom.getFactory();
         Geometry geomGrid = getSpace2grid().transform(geom);
@@ -1651,8 +1669,9 @@ public final class Project {
             for(double x = (int)env.getMinX() + 0.5; x <= Math.ceil(env.getMaxX()); x++) {
                 Point p = geomFactory.createPoint(new Coordinate(x, y));
                 if(geomGrid.contains(p)) {
-                    if(!canCreatePatch((Point)getGrid2space().transform(p)))
+                    if(!canCreatePatch((Point)getGrid2space().transform(p))) {
                         return false;
+                    }
                 }
             }
         }
@@ -1660,39 +1679,53 @@ public final class Project {
     }
     
     public boolean canCreatePatch(Point p) throws IOException {
-        if(!isInZone(p.getX(), p.getY()))
+        if(!isInZone(p.getX(), p.getY())) {
             return false;
+        }
         Coordinate cg = space2grid.transform(p.getCoordinate(), new Coordinate());
-        if(getRasterPatch().getSample((int)cg.x, (int)cg.y, 0) > 0)
+        if(getRasterPatch().getSample((int)cg.x, (int)cg.y, 0) > 0) {
             return false;
-        if(con8 && getRasterPatch().getSample((int)cg.x-1, (int)cg.y-1, 0) > 0)
+        }
+        if(con8 && getRasterPatch().getSample((int)cg.x-1, (int)cg.y-1, 0) > 0) {
             return false;
-        if(getRasterPatch().getSample((int)cg.x-1, (int)cg.y, 0) > 0)
+        }
+        if(getRasterPatch().getSample((int)cg.x-1, (int)cg.y, 0) > 0) {
             return false;
-        if(con8 && getRasterPatch().getSample((int)cg.x-1, (int)cg.y+1, 0) > 0)
+        }
+        if(con8 && getRasterPatch().getSample((int)cg.x-1, (int)cg.y+1, 0) > 0) {
             return false;
-        if(getRasterPatch().getSample((int)cg.x, (int)cg.y-1, 0) > 0)
+        }
+        if(getRasterPatch().getSample((int)cg.x, (int)cg.y-1, 0) > 0) {
             return false;
-        if(getRasterPatch().getSample((int)cg.x, (int)cg.y+1, 0) > 0)
+        }
+        if(getRasterPatch().getSample((int)cg.x, (int)cg.y+1, 0) > 0) {
             return false;
-        if(con8 && getRasterPatch().getSample((int)cg.x+1, (int)cg.y-1, 0) > 0)
+        }
+        if(con8 && getRasterPatch().getSample((int)cg.x+1, (int)cg.y-1, 0) > 0) {
             return false;
-        if(getRasterPatch().getSample((int)cg.x+1, (int)cg.y, 0) > 0)
+        }
+        if(getRasterPatch().getSample((int)cg.x+1, (int)cg.y, 0) > 0) {
             return false;
-        if(con8 && getRasterPatch().getSample((int)cg.x+1, (int)cg.y+1, 0) > 0)
+        }
+        if(con8 && getRasterPatch().getSample((int)cg.x+1, (int)cg.y+1, 0) > 0) {
             return false;
+        }
+        
         return true;
     }
     
     public synchronized void removePointPatch(Feature patch) throws IOException {
-        if(!(patch.getGeometry() instanceof Point))
+        if(!(patch.getGeometry() instanceof Point)) {
             throw new IllegalArgumentException("Cannot remove patch with geometry different of Point");
+        }
         Coordinate cg = space2grid.transform(patch.getGeometry().getCoordinate(), new Coordinate());
-        if(getImageSource().getSample((int)cg.x, (int)cg.y, 0) != patchCode)
+        if(getImageSource().getSample((int)cg.x, (int)cg.y, 0) != patchCode) {
             throw new RuntimeException("No patch to remove at " + patch.getGeometry());
+        }
         int id = (Integer)patch.getId();
-        if(id != patches.size())
+        if(id != patches.size()) {
             throw new RuntimeException("The patch to remove is not the last one - id : " + patch.getId());
+        }
         getImageSource().setSample((int)cg.x, (int)cg.y, 0, removedCodes.remove(id));
         getRasterPatch().setSample((int)cg.x, (int)cg.y, 0, 0);
         patches.remove(patches.size()-1);
@@ -1709,83 +1742,67 @@ public final class Project {
         public JPopupMenu getContextMenu() {
             JPopupMenu menu = super.getContextMenu();
             menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Export_all")) {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     GraphGenerator gen = (GraphGenerator) JOptionPane.showInputDialog(null,
                             java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Select_graph"), java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Export..."), JOptionPane.PLAIN_MESSAGE,
                             null, getGraphs().toArray(), null);
-                    if(gen == null)
+                    if(gen == null) {
                         return;
+                    }
                     File f = Util.getFileSave(".csv");
-                    if(f == null)
+                    if(f == null) {
                         return;
-                    try { 
-                        CSVWriter w = new CSVWriter(new FileWriter(f));
-                        List<DefaultFeature> exoData = getPointset(name).getFeatures();
-                        List<String> attrNames = new ArrayList<String>(exoData.get(0).getAttributeNames());
+                    }
+
+                    try (CSVWriter w = new CSVWriter(new FileWriter(f))) {
+                        List<DefaultFeature> exoData = getPointset(getName()).getFeatures();
+                        List<String> attrNames = new ArrayList<>(exoData.get(0).getAttributeNames());
                         attrNames.addAll(getPatches().iterator().next().getAttributeNames());
                         attrNames.addAll(gen.getComponentFeatures().get(0).getAttributeNames());
                         w.writeNext(attrNames.toArray(new String[attrNames.size()]));
                         String [] attrs = new String[attrNames.size()];
                         for(Feature exo : exoData) {
                             int n = exo.getAttributeNames().size();
-                            for(int i = 0; i < n; i++)
+                            for(int i = 0; i < n; i++) {
                                 attrs[i] = exo.getAttribute(i).toString();
+                            }
                             Feature patch = getPatch((Integer)exo.getAttribute(EXO_IDPATCH));
-                            for(int i = 0; i < patch.getAttributeNames().size(); i++)
+                            for(int i = 0; i < patch.getAttributeNames().size(); i++) {
                                 attrs[i+n] = patch.getAttribute(i).toString();
+                            }
                             n += patch.getAttributeNames().size();
                             Feature comp = gen.getComponentFeature(patch);
-                            for(int i = 0; i < comp.getAttributeNames().size(); i++)
+                            for(int i = 0; i < comp.getAttributeNames().size(); i++) {
                                 attrs[i+n] = comp.getAttribute(i).toString();
+                            }
                             w.writeNext(attrs);
                         }
-
-                        w.close();
-                    } catch (Exception ex) {
+                    } catch (IOException ex) {
                         Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                 }
             });
-//            menu.add(new AbstractAction("IFPC") {
-//                public void actionPerformed(ActionEvent e) {
-//                    Pointset exo = exoDatas.get(name);
-//                    String res = JOptionPane.showInputDialog("Distance/Cost max :", 100);
-//                    if(res == null || res.isEmpty())
-//                        return;
-//                    double max = Double.parseDouble(res);
-//                    try {
-//                        DefaultFeature.addAttribute("IFPC", Project.getProject().getPointset(name), Double.NaN);
-//                        RasterPathFinder pathfinder = getRasterPathFinder(exo.getLinkset());
-//                        for(DefaultFeature fexo : Project.getProject().getPointset(name)) {
-//                            double ifpc = 0;
-//                            HashMap<DefaultFeature, Path> dists = pathfinder.calcPaths(fexo.getGeometry().getCentroid().getCoordinate(), max, false);
-//                            for(DefaultFeature patch : dists.keySet()) {
-//                                ifpc += Project.getPatchCapacity(patch) / (dists.get(patch).getLinkset()+1);
-//                            }
-//                            fexo.setAttribute("IFPC", ifpc);
-//                        }
-//                    } catch (IOException ex) {
-//                        Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
-//                    }
-//                }
-//            });
 
             menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DISTANCE MATRIX")) {
+                @Override
                 public void actionPerformed(ActionEvent e) {
-                    new PointsetDistanceDialog(null, exoDatas.get(name)).setVisible(true);
+                    new PointsetDistanceDialog(null, exoDatas.get(getName())).setVisible(true);
                 }
             });
 
             menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove...")) {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_dataset_") + name + " ?");
-                    if(res != JOptionPane.YES_OPTION)
+                    if(res != JOptionPane.YES_OPTION) {
                         return;
+                    }
                     try {
-                        removeExoDataset(name);
+                        removeExoDataset(getName());
                         exoLayers.removeLayer(ExoLayer.this);
-                    } catch (Exception ex) {
+                    } catch (IOException | SchemaException ex) {
                         Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
@@ -1793,8 +1810,9 @@ public final class Project {
             });
 
             menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties...")) {
+                @Override
                 public void actionPerformed(ActionEvent e) {
-                    JOptionPane.showMessageDialog(null, exoDatas.get(name).getInfo());
+                    JOptionPane.showMessageDialog(null, exoDatas.get(getName()).getInfo());
                 }
             });
             return menu;
@@ -1807,6 +1825,7 @@ public final class Project {
         
         public LinkLayer(final String name) {
             super(name, new FeatureGetter<Path>() {
+                    @Override
                     public Collection<Path> getFeatures() {
                         return costLinks.get(name).getPaths();
                     }
@@ -1818,42 +1837,62 @@ public final class Project {
         public JPopupMenu getContextMenu() {
             JPopupMenu menu = super.getContextMenu();
             menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove...")) {
+                @Override
                 public void actionPerformed(ActionEvent e) {
-                    List<String> exoNames = new ArrayList<String>();
-                    for(Pointset exo : exoDatas.values())
-                        if(exo.getLinkset().getName().equals(name))
+                    List<String> exoNames = new ArrayList<>();
+                    for(Pointset exo : exoDatas.values()) {
+                        if(exo.getLinkset().getName().equals(getName())) {
                             exoNames.add(exo.getName());
+                        }
+                    }
                     if(!exoNames.isEmpty()) {
                         JOptionPane.showMessageDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Links_is_used_by_exogenous_data") +
                                 Arrays.deepToString(exoNames.toArray()));
                         return;
                     }
-                    List<String> graphNames = new ArrayList<String>();
-                    for(GraphGenerator g : getGraphs())
-                        if(g.getLinkset().getName().equals(name))
+                    List<String> graphNames = new ArrayList<>();
+                    for(GraphGenerator g : getGraphs()) {
+                        if(g.getLinkset().getName().equals(getName())) {
                             graphNames.add(g.getName());
-                    int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_links_") + name + " ?" +
+                        }
+                    }
+                    int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_links_") + getName() + " ?" +
                             (!graphNames.isEmpty() ? "\nGraph " + Arrays.deepToString(graphNames.toArray()) + java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("_will_be_removed.") : ""), java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove"), JOptionPane.YES_NO_OPTION);
-                    if(res != JOptionPane.YES_OPTION)
+                    if(res != JOptionPane.YES_OPTION) {
                         return;
+                    }
                     try {
                         for(String gName : graphNames) {
                             removeGraph(gName);
                             graphLayers.removeLayer(graphLayers.getLayer(gName));
                         }
-                        costLinks.remove(name);
+                        costLinks.remove(getName());
                         save();
                         linkLayers.removeLayer(LinkLayer.this);
-                    } catch (Exception ex) {
+                    } catch (IOException ex) {
                         Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                 }
             });
 
-            menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties...")) {
+            menu.add(new AbstractAction("Extract path costs") {
+                @Override
                 public void actionPerformed(ActionEvent e) {
-                    JOptionPane.showMessageDialog(null, costLinks.get(name).getInfo());
+                    try {
+                        HashMap2D map = costLinks.get(getName()).extractCostFromPath(Project.this);
+                        map.saveToCSV(new File(getDirectory(), getName() + "-links-extract-cost.csv"));
+                        JOptionPane.showMessageDialog(null, "Costs extracted into file " + getName() + "-links-extract-cost.csv");
+                    } catch (IOException ex) {
+                        Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            
+            menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties...")) {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JOptionPane.showMessageDialog(null, costLinks.get(getName()).getInfo());
                 }
             });
             return menu;
@@ -1861,13 +1900,18 @@ public final class Project {
 
     }
 
+    /**
+     * The project associated with MainFrame
+     * @return the current project
+     */
     public static Project getProject() {
         return MainFrame.project;
     }
     
     public static String getDetailName(GlobalMetric indice, int indResult) {
-        if(indice.getResultNames().length == 1)
+        if(indice.getResultNames().length == 1) {
             return indice.getDetailName();
+        }
         return indice.getDetailName() + "|" + indice.getResultNames()[indResult];
     }
 
@@ -1877,31 +1921,38 @@ public final class Project {
      * @return 
      */
     public static List<GlobalMetric> getGlobalMetricsFor(Method method) {
-        List<GlobalMetric> indices = new ArrayList<GlobalMetric>();
-        for(GlobalMetric ind : GLOBAL_METRICS)
-            if(ind.isAcceptMethod(method))
+        List<GlobalMetric> indices = new ArrayList<>();
+        for(GlobalMetric ind : GLOBAL_METRICS) {
+            if(ind.isAcceptMethod(method)) {
                 indices.add(ind);
+            }
+        }
         return indices;
     }
     
     public static List<LocalMetric> getLocalMetrics() {
-        List<LocalMetric> indices = new ArrayList<LocalMetric>();
-        for(LocalMetric ind : LOCAL_METRICS)
+        List<LocalMetric> indices = new ArrayList<>();
+        for(LocalMetric ind : LOCAL_METRICS) {
             indices.add(ind);
+        }
         return indices;
     }
     
     public static GlobalMetric getGlobalMetric(String shortName) {
-        for(GlobalMetric ind : GLOBAL_METRICS)
-            if(ind.getShortName().equals(shortName))
+        for(GlobalMetric ind : GLOBAL_METRICS) {
+            if(ind.getShortName().equals(shortName)) {
                 return ind;
+            }
+        }
         throw new IllegalArgumentException("Unknown metric " + shortName);
     }
 
     public static LocalMetric getLocalMetric(String shortName) {
-        for(LocalMetric ind : LOCAL_METRICS)
-            if(ind.getShortName().equals(shortName))
+        for(LocalMetric ind : LOCAL_METRICS) {
+            if(ind.getShortName().equals(shortName)) {
                 return ind;
+            }
+        }
         throw new IllegalArgumentException("Unknown metric " + shortName);
     }
     
@@ -1923,34 +1974,38 @@ public final class Project {
         File dir = new File(url.toURI()).getParentFile();
         File loc = new File(dir, "plugins");
 
-        if(!loc.exists())
+        if(!loc.exists()) {
             return;
+        }
         
         File[] flist = loc.listFiles(new FileFilter() {
+            @Override
             public boolean accept(File file) {return file.getPath().toLowerCase().endsWith(".jar");}
         });
-        if(flist == null || flist.length == 0)
+        if(flist == null || flist.length == 0) {
             return;
+        }
         URL[] urls = new URL[flist.length];
-        for (int i = 0; i < flist.length; i++)
+        for (int i = 0; i < flist.length; i++) {
             urls[i] = flist[i].toURI().toURL();
+        }
         URLClassLoader ucl = new URLClassLoader(urls);
 
         loadPluginMetric(ucl);
     }
     
     public static void loadPluginMetric(ClassLoader loader) throws Exception {
-       
         ServiceLoader<Metric> sl = ServiceLoader.load(Metric.class, loader);
         Iterator<Metric> it = sl.iterator();
         while (it.hasNext()) {
             Metric ind = it.next();
-            if(ind instanceof GlobalMetric)
+            if(ind instanceof GlobalMetric) {
                 GLOBAL_METRICS.add((GlobalMetric)ind);
-            else if(ind instanceof LocalMetric)
+            } else if(ind instanceof LocalMetric) {
                 LOCAL_METRICS.add((LocalMetric)ind);
-            else
+            } else {
                 throw new RuntimeException("Class " +ind.getClass().getCanonicalName() + " does not inherit from GraphIndice or LocalIndice");
+            }
         }
     }
 
@@ -1960,10 +2015,10 @@ public final class Project {
     
     public static class SoftRef<T> implements Ref<T>{
 
-        SoftReference<T> ref;
+        private final SoftReference<T> ref;
 
         public SoftRef(T val) {
-            ref = new SoftReference<T>(val);
+            ref = new SoftReference<>(val);
         }
         
         @Override
@@ -1975,7 +2030,7 @@ public final class Project {
     
     public static class StrongRef<T> implements Ref<T>{
 
-        T ref;
+        private final T ref;
 
         public StrongRef(T val) {
             ref = val;
