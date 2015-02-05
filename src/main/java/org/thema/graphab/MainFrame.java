@@ -1089,7 +1089,7 @@ public class MainFrame extends javax.swing.JFrame {
             @Override
             public void run() {
                 try {
-                    project.createMetaPatchProject(dlg.prjName, dlg.graph, dlg.alpha);
+                    project.createMetaPatchProject(dlg.prjName, dlg.graph, dlg.alpha, dlg.minCapa);
                     loadProject(new File(prjDir, dlg.prjName + ".xml"));
                     ((DefaultGroupLayer)mapViewer.getLayers()).addLayerLast(new FeatureLayer("Patch voronoi", project.getVoronoi(), new FeatureStyle(null, Color.BLACK)));
                 } catch (IOException | SchemaException ex) {

@@ -29,6 +29,7 @@ public class MetaPatchDialog extends javax.swing.JDialog {
     public String prjName;
     public GraphGenerator graph;
     public double alpha;
+    public double minCapa;
 
     /** Creates new form MetaPatchDialog */
     public MetaPatchDialog(java.awt.Frame parent, Collection<GraphGenerator> graphs) {
@@ -75,6 +76,8 @@ public class MetaPatchDialog extends javax.swing.JDialog {
         probaSpinner = new javax.swing.JSpinner();
         jLabel3 = new javax.swing.JLabel();
         graphComboBox = new javax.swing.JComboBox();
+        jLabel2 = new javax.swing.JLabel();
+        minCapaSpinner = new javax.swing.JSpinner();
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -161,6 +164,10 @@ public class MetaPatchDialog extends javax.swing.JDialog {
 
         jLabel3.setText("Graph");
 
+        jLabel2.setText("Min. capacity");
+
+        minCapaSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(0.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -169,11 +176,6 @@ public class MetaPatchDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                        .add(0, 139, Short.MAX_VALUE)
-                        .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(cancelButton))
                     .add(layout.createSequentialGroup()
                         .add(jLabel1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -181,7 +183,18 @@ public class MetaPatchDialog extends javax.swing.JDialog {
                     .add(layout.createSequentialGroup()
                         .add(jLabel3)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(graphComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .add(graphComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                .add(jLabel2)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(minCapaSpinner))
+                            .add(layout.createSequentialGroup()
+                                .add(0, 139, Short.MAX_VALUE)
+                                .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(cancelButton)))
                 .addContainerGap())
         );
 
@@ -200,7 +213,11 @@ public class MetaPatchDialog extends javax.swing.JDialog {
                     .add(graphComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(18, 18, 18)
                 .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel2)
+                    .add(minCapaSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 20, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
@@ -221,10 +238,13 @@ public class MetaPatchDialog extends javax.swing.JDialog {
             return;
         }
         graph = (GraphGenerator) graphComboBox.getSelectedItem();
-        if(weightRadioButton.isSelected())
+        if(weightRadioButton.isSelected()) {
             alpha = -Math.log((Double)probaSpinner.getValue()) / (Double)distSpinner.getValue();
-        else
+        } else {
             alpha = 0;
+        }
+        
+        minCapa = (Double) minCapaSpinner.getValue();
         isOk = true;
         doClose();
     }//GEN-LAST:event_okButtonActionPerformed
@@ -250,10 +270,12 @@ public class MetaPatchDialog extends javax.swing.JDialog {
     private javax.swing.JSpinner distSpinner;
     private javax.swing.JComboBox graphComboBox;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JSpinner minCapaSpinner;
     private javax.swing.JButton okButton;
     private javax.swing.JTextField prjNameTextField;
     private javax.swing.JSpinner probaSpinner;

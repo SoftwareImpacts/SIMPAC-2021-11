@@ -88,7 +88,9 @@ import org.thema.graphab.util.RSTGridReader;
  */
 public final class Project {
 
-    public enum Method {GLOBAL, COMP, LOCAL, DELTA}
+    public enum Method {
+        GLOBAL, COMP, LOCAL, DELTA
+    }
 
     public static final String CAPA_ATTR = "Capacity";
     public static final String AREA_ATTR = "Area";
@@ -239,13 +241,14 @@ public final class Project {
         clustCov = null;
         covBuilder = null;
 
-        monitor.close();
         Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb small patch removed : " + nbRem);
 
         WritableRaster voronoiR = rasterPatchs;
-        neighborhoodEuclid(voronoiR);
-
-        voronoi = (List<Feature>) vectorizeVoronoi(voronoiR);
+        planarLinks = neighborhoodEuclid(patches, simplify, voronoiR, grid2space, resolution);
+        monitor.setNote("Saving...");
+        DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"), getCRS());
+        
+        voronoi = (List<Feature>) vectorizeVoronoi(voronoiR, grid2space);
         DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"), crs);
 
         exoDatas = new TreeMap<>();
@@ -259,6 +262,8 @@ public final class Project {
         MainFrame.project = this;
         
         save();
+        
+        monitor.close();
         
         createLayers();
     }
@@ -289,14 +294,15 @@ public final class Project {
     }
     
     // using strtree.nearest
-    private void neighborhoodEuclid(final WritableRaster voronoi) throws IOException, SchemaException {
+    private static Links neighborhoodEuclid(List<DefaultFeature> patches, boolean simplify, final WritableRaster voronoi, 
+            final AffineTransformation grid2space, double resolution) throws IOException, SchemaException {
         ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), voronoi.getHeight());
         final STRtree index = new STRtree();
         final int NPOINTS = 50;
         final GeometryFactory factory = new GeometryFactory();
         List<DefaultFeature> simpPatches = patches;
         if(simplify) {
-            simpPatches = simplify(patches);
+            simpPatches = simplify(patches, resolution);
         }
         for(Feature f : simpPatches) {
             Geometry geom = f.getGeometry();
@@ -312,12 +318,14 @@ public final class Project {
                         index.insert(line.getEnvelopeInternal(), df);
                         ind += NPOINTS;
                     }
-                    for(int j = 0; j < p.getNumInteriorRing(); j++)
+                    for(int j = 0; j < p.getNumInteriorRing(); j++) {
                         index.insert(p.getInteriorRingN(j).getEnvelopeInternal(),
                                 new DefaultFeature(f.getId(), p.getInteriorRingN(j), null, null));
+                    }
                 }
-            } else
+            } else {
                 index.insert(geom.getEnvelopeInternal(), f);
+            }
         }
 
 
@@ -327,7 +335,7 @@ public final class Project {
                 Coordinate c = new Coordinate();
                 Envelope env = new Envelope();
         
-                for(int x = 0; x < voronoi.getWidth(); x++)
+                for(int x = 0; x < voronoi.getWidth(); x++) {
                     if(voronoi.getSample(x, y, 0) == 0) {
                         c.x = x+0.5; c.y = y+0.5;
                         grid2space.transform(c, c);
@@ -340,20 +348,22 @@ public final class Project {
                                 Geometry g2 = ((Feature)i2.getItem()).getGeometry();
                                 Coordinate c = g1 instanceof Point ? ((Point)g1).getCoordinate() : ((Point)g2).getCoordinate();
                                 Geometry geom = g1 instanceof Point ? g2 : g1;
-                                if(geom instanceof LineString)
+                                if(geom instanceof LineString) {
                                     return DistanceOp.distancePointLine(c, geom.getCoordinates());
-                                else {
+                                } else {
                                     double d = Double.MAX_VALUE;
                                     for(int g = 0; g < geom.getNumGeometries(); g++) {
                                         Polygon poly = ((Polygon)geom.getGeometryN(g));
                                         double dd = DistanceOp.distancePointLine(c, poly.getExteriorRing().getCoordinates());
-                                        if(dd < d)
+                                        if(dd < d) {
                                             d = dd;
+                                        }
                                         int n = poly.getNumInteriorRing();
                                         for(int i = 0; i < n; i++) {
                                             dd = DistanceOp.distancePointLine(c, poly.getInteriorRingN(i).getCoordinates());
-                                            if(dd < d)
+                                            if(dd < d) {
                                                 d = dd;
+                                            }
                                         }
                                     }
                                     return d;
@@ -363,6 +373,7 @@ public final class Project {
 
                         voronoi.setSample(x, y, 0, (Integer)nearest.getId());
                     }
+                }
             }
         };
         
@@ -372,20 +383,19 @@ public final class Project {
 
         System.out.println("Temps calcul : " + (System.currentTimeMillis() - time) / 1000);
 
-        planarLinks = createLinks(voronoi, monitor);
-
-        monitor.setNote("Saving...");
-
-        DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"), getCRS());
+        Links links = createLinks(voronoi, patches, monitor);
 
         monitor.close();
 
+        return links;
     }
 
     public double[] getLastCosts() {
-        for(Linkset cost : costLinks.values())
-            if(cost.getType_dist() == Linkset.COST)
+        for(Linkset cost : costLinks.values()) {
+            if(cost.getType_dist() == Linkset.COST) {
                 return cost.getCosts();
+            }
+        }
         return null;
     }
 
@@ -405,7 +415,7 @@ public final class Project {
         return costLinks.values();
     }
 
-    private Links createLinks(Raster voronoiRaster, ProgressBar monitor) {
+    private static Links createLinks(Raster voronoiRaster, List<DefaultFeature> patches, ProgressBar monitor) {
         monitor.setNote("Create link set...");
         monitor.setProgress(0);
 
@@ -418,21 +428,24 @@ public final class Project {
             monitor.setNote("" + y + " / " + voronoiRaster.getHeight());
             for(int x = 1; x < voronoiRaster.getWidth()-1; x++) {
                 int id = voronoiRaster.getSample(x, y, 0);
-                if(id <= 0)
+                if(id <= 0) {
                     continue;
+                }
 
-                Feature f = getPatch(id);
+                Feature f = patches.get(id-1);
                 int id1 = voronoiRaster.getSample(x-1, y, 0);
                 if(id1 > 0 && id != id1) {
-                    Feature f1 = getPatch(id1);
-                    if(!links.isLinkExist(f, f1))
+                    Feature f1 = patches.get(id1-1);
+                    if(!links.isLinkExist(f, f1)) {
                         links.addLink(new Path(f, f1));
+                    }
                 }
                 id1  = voronoiRaster.getSample(x, y-1, 0);
                 if(id1 > 0 && id != id1) {
-                    Feature f1 = getPatch(id1);
-                    if(!links.isLinkExist(f, f1))
+                    Feature f1 = patches.get(id1-1);
+                    if(!links.isLinkExist(f, f1)) {
                         links.addLink(new Path(f, f1));
+                    }
                 }
             }
         }
@@ -457,8 +470,9 @@ public final class Project {
         
         if(linkLayers != null) {
             Layer l = new LinkLayer(cost.getName());
-            if(cost.getTopology() == Linkset.COMPLETE && cost.getDistMax() == 0)
+            if(cost.getTopology() == Linkset.COMPLETE && cost.getDistMax() == 0) {
                 l.setVisible(false);
+            }
             linkLayers.addLayerFirst(l);
         }
         
@@ -493,8 +507,9 @@ public final class Project {
             List lst = new ArrayList(attrs.size());
             for(String attr : attrNames) {
                 Object v = f.getAttribute(attr);
-                if(v instanceof String)
+                if(v instanceof String) {
                     v = Double.parseDouble(v.toString());
+                }
                 lst.add(v);
             }
             lst.add(-1); lst.add(-1.0);
@@ -512,24 +527,14 @@ public final class Project {
             for(Object p : patch) {
                 DefaultFeature fp = (DefaultFeature) p;
                 if(fp.getGeometry().intersects(f.getGeometry())) {
-//                   if(exoData.isAgreg()) {
-//                       for(String attr : attrNames) {
-//                           double val = ((Number)fp.getAttribute(exoData.name + "." + attr)).doubleValue();
-//                           if(Double.isNaN(val)) val = 0;
-//                           double s = 0;
-//                           if(f.getAttribute(attr) != null)
-//                            s = ((Number)f.getAttribute(attr)).doubleValue();
-//                           fp.setAttribute(exoData.name + "." + attr, s + val);
-//                       }
-//                       fp.setAttribute(exoData.name + ".NbPoint", 1+(Integer)fp.getAttribute(exoData.name + ".NbPoint"));
-//                   }
                    f.setAttribute(EXO_IDPATCH, fp.getId());
                    f.setAttribute(EXO_COST, 0);
                    nb++;
                 }
             }
-            if(nb > 1)
+            if(nb > 1) {
                 Logger.getLogger(Project.class.getName()).log(Level.WARNING, "Point intersect " + nb + "patches !!");
+            }
             monitor.incProgress(1);
         }
 
@@ -564,11 +569,14 @@ public final class Project {
                 for(DefaultFeature p : distPatch.keySet()) {
                     for(String attr : attrNames) {
                        double val = ((Number)p.getAttribute(exoData.getName() + "." + attr)).doubleValue();
-                       if(Double.isNaN(val)) val = 0;
+                       if(Double.isNaN(val)) {
+                           val = 0;
+                       }
                        double dist = exoData.getLinkset().isCostLength() ? distPatch.get(p).getCost() : distPatch.get(p).getDist();
                        double s = 0;
-                       if(f.getAttribute(attr) != null)
-                          s = ((Number)f.getAttribute(attr)).doubleValue() * Math.exp(-alpha*dist);
+                       if(f.getAttribute(attr) != null) {
+                           s = ((Number)f.getAttribute(attr)).doubleValue() * Math.exp(-alpha*dist);
+                       }
                        p.setAttribute(exoData.getName() + "." + attr, s + val);
                    }
                    p.setAttribute(exoData.getName() + ".NbPoint", 1+(Integer)p.getAttribute(exoData.getName() + ".NbPoint"));
@@ -577,21 +585,12 @@ public final class Project {
             
         }
 
-//        if(exoData.agregType == Pointset.AG_MEAN) // Calc mean
-//            for(DefaultFeature f : patches) {
-//                int nbPoint = ((Number)f.getAttribute(exoData.name+".NbPoint")).intValue();
-//                if(nbPoint > 0) {
-//                    for(String attr : attrNames) {
-//                       double val = ((Number)f.getAttribute(exoData.name + "." + attr)).doubleValue();
-//                       f.setAttribute(exoData.name + "." + attr, val / nbPoint);
-//                   }
-//                }
-//            }
-
         List<DefaultFeature> exoFeatures = new ArrayList<>();
-        for(DefaultFeature f : features)
-            if(((Number)f.getAttribute(EXO_IDPATCH)).intValue() > 0)
+        for(DefaultFeature f : features) {
+            if(((Number)f.getAttribute(EXO_IDPATCH)).intValue() > 0) {
                 exoFeatures.add(f);
+            }
+        }
 
         exoData.setFeatures(exoFeatures);
         exoDatas.put(exoData.getName(), exoData);
@@ -614,14 +613,16 @@ public final class Project {
     }
 
     public synchronized DefaultGroupLayer getRootLayer() {
-        if(rootLayer == null)
+        if(rootLayer == null) {
             createLayers();
+        }
         return rootLayer;
     }
     
     public synchronized DefaultGroupLayer getGraphLayers() {
-        if(graphLayers == null)
+        if(graphLayers == null) {
             createLayers();
+        }
         return graphLayers;
     }
     
@@ -645,15 +646,16 @@ public final class Project {
     public synchronized STRtree getPatchIndex() {
         if(patchIndex == null) {
             patchIndex = new STRtree();
-            for(Feature f : patches)
+            for(Feature f : patches) {
                 patchIndex.insert(f.getGeometry().getEnvelopeInternal(), f);
+            }
         }
 
         return patchIndex;
     }
 
-    private List<DefaultFeature> simplify(List<DefaultFeature> patches) {
-        List<DefaultFeature> simpPatches = new ArrayList<DefaultFeature>();
+    private static List<DefaultFeature> simplify(List<DefaultFeature> patches, double resolution) {
+        List<DefaultFeature> simpPatches = new ArrayList<>();
         ProgressBar monitor = Config.getProgressBar("Simplify", patches.size());
         for(Feature f : patches) {
             simpPatches.add(new DefaultFeature(f.getId(), TopologyPreservingSimplifier.simplify(f.getGeometry(), resolution*1.5), null, null));
@@ -665,10 +667,11 @@ public final class Project {
     }
 
     public final DefaultFeature getPatch(int id) {
-        if(id > 0 && id <= patches.size())
+        if(id > 0 && id <= patches.size()) {
             return patches.get(id-1);
-        else
+        } else {
             throw new IllegalArgumentException("Unknown patch id : " + id);
+        }
     }
 
     public final Feature getVoronoi(int id) {
@@ -680,40 +683,45 @@ public final class Project {
     }
 
     private void recodePatch(WritableRaster rasterPatchs, Geometry patch, int oldCode, int newCode) {
-
         Envelope env = patch.getEnvelopeInternal();
         Geometry gEnv = new GeometryFactory().toGeometry(env);
         gEnv.apply(space2grid);
         env = gEnv.getEnvelopeInternal();
 
-        for(int i = (int)env.getMinY(); i <= env.getMaxY(); i++)
-            for(int j = (int)env.getMinX(); j <= env.getMaxX(); j++)
-                if(rasterPatchs.getSample(j, i, 0) == oldCode)
+        for(int i = (int)env.getMinY(); i <= env.getMaxY(); i++) {
+            for(int j = (int)env.getMinX(); j <= env.getMaxX(); j++) {
+                if(rasterPatchs.getSample(j, i, 0) == oldCode) {
                     ((WritableRaster)rasterPatchs).setSample(j, i, 0, newCode);
+                }
+            }
+        }
 
     }
 
-    private List<? extends Feature> vectorizeVoronoi(Raster voronoi) {
+    private static List<? extends Feature> vectorizeVoronoi(Raster voronoi, AffineTransformation grid2space) {
         ProgressBar monitor = Config.getProgressBar("Vectorize voronoi");
-        TreeMap<Integer, Envelope> envMap = new TreeMap<Integer, Envelope>();
-        for(int j = 1; j < voronoi.getHeight()-1; j++)
-            for(int i = 1; i < voronoi.getWidth()-1; i++)
+        TreeMap<Integer, Envelope> envMap = new TreeMap<>();
+        for(int j = 1; j < voronoi.getHeight()-1; j++) {
+            for(int i = 1; i < voronoi.getWidth()-1; i++) {
                 if(voronoi.getSample(i, j, 0) > 0) {
                     int id = voronoi.getSample(i, j, 0);
                     Envelope env = envMap.get(id);
-                    if(env == null)
+                    if(env == null) {
                         envMap.put(id, new Envelope(new Coordinate(i, j)));
-                    else
+                    } else {
                         env.expandToInclude(i, j);
-
+                    }
+                    
                 }
+            }
+        }
         monitor.setMaximum(envMap.size());
         for(Envelope env : envMap.values()) {
             env.expandBy(0.5);
             env.translate(0.5, 0.5);
         }
 
-        List<DefaultFeature> features = new ArrayList<DefaultFeature>();
+        List<DefaultFeature> features = new ArrayList<>();
         for(Integer id : envMap.keySet()) {
             Geometry geom = vectorize(voronoi, envMap.get(id), id);
             geom.apply(grid2space);
@@ -727,48 +735,58 @@ public final class Project {
 
     public static Geometry vectorize(Raster patchs, Envelope env, double val) {
         GeometryFactory factory = new GeometryFactory();
-        List<LineString> lines = new ArrayList<LineString>();
+        List<LineString> lines = new ArrayList<>();
 
-        for(int y = (int) env.getMinY(); y < env.getMaxY(); y++)
-            for(int x = (int) env.getMinX(); x < env.getMaxX(); x++)
+        for(int y = (int) env.getMinY(); y < env.getMaxY(); y++) {
+            for(int x = (int) env.getMinX(); x < env.getMaxX(); x++) {
                 if(patchs.getSampleDouble(x, y, 0) == val) {
                     // LEFT
-                    if(patchs.getSampleDouble(x-1, y, 0) != val)
+                    if(patchs.getSampleDouble(x-1, y, 0) != val) {
                         lines.add(factory.createLineString(new Coordinate[] {new Coordinate(x, y), new Coordinate(x, y+1)}));
+                    }
                     // RIGHT
-                    if(patchs.getSampleDouble(x+1, y, 0) != val)
+                    if(patchs.getSampleDouble(x+1, y, 0) != val) {
                         lines.add(factory.createLineString(new Coordinate[] {new Coordinate(x+1, y), new Coordinate(x+1, y+1)}));
+                    }
                     // TOP
-                    if(patchs.getSampleDouble(x, y-1, 0) != val)
+                    if(patchs.getSampleDouble(x, y-1, 0) != val) {
                         lines.add(factory.createLineString(new Coordinate[] {new Coordinate(x, y), new Coordinate(x+1, y)}));
+                    }
                     // BOTTOM
-                    if(patchs.getSampleDouble(x, y+1, 0) != val)
+                    if(patchs.getSampleDouble(x, y+1, 0) != val) {
                         lines.add(factory.createLineString(new Coordinate[] {new Coordinate(x, y+1), new Coordinate(x+1, y+1)}));
+                    }
                 }
+            }
+        }
 
         Polygonizer polygonizer = new Polygonizer();
         polygonizer.add(lines);
         Collection polys = polygonizer.getPolygons();
 
-        List<Polygon> finalPolys = new ArrayList<Polygon>();
+        List<Polygon> finalPolys = new ArrayList<>();
         for(Object p : polys) {
             Polygon g = ((Polygon)p);
             double y = g.getEnvelopeInternal().getMinY();
             double minX = g.getEnvelopeInternal().getMaxX();
-            for(Coordinate c : g.getCoordinates())
-                if(c.y == y && c.x < minX)
+            for(Coordinate c : g.getCoordinates()) {
+                if(c.y == y && c.x < minX) {
                     minX = c.x;
-            if(patchs.getSampleDouble((int)minX, (int)y, 0) == val)
+                }
+            }
+            if(patchs.getSampleDouble((int)minX, (int)y, 0) == val) {
                 finalPolys.add(g);
+            }
 
         }
 
         // remove points not needed on straight line
-        List<Polygon> simpPolys = new ArrayList<Polygon>();
+        List<Polygon> simpPolys = new ArrayList<>();
         for(Polygon p : finalPolys) {
             LinearRing [] interior = new LinearRing[p.getNumInteriorRing()];
-            for(int i = 0; i < interior.length; i++)
+            for(int i = 0; i < interior.length; i++) {
                 interior[i] = p.getFactory().createLinearRing(simpRing(p.getInteriorRingN(i).getCoordinates()));
+            }
 
             simpPolys.add(p.getFactory().createPolygon(p.getFactory().createLinearRing(
                     simpRing(p.getExteriorRing().getCoordinates())), interior));
@@ -783,12 +801,13 @@ public final class Project {
      * @return
      */
     private static Coordinate [] simpRing(Coordinate[] coords) {
-        ArrayList<Coordinate> newCoords = new ArrayList<Coordinate>();
+        ArrayList<Coordinate> newCoords = new ArrayList<>();
         Coordinate prec = coords[coords.length-1], cur = coords[0], next;
         for(int i = 1; i < coords.length; i++) {
             next = coords[i];
-            if(!(next.x-cur.x == cur.x-prec.x && next.y-cur.y == cur.y-prec.y))
+            if(!(next.x-cur.x == cur.x-prec.x && next.y-cur.y == cur.y-prec.y)) {
                 newCoords.add(cur);
+            }
             prec = cur;
             cur = next;
         }
@@ -808,8 +827,8 @@ public final class Project {
         TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_patch"), "", 0, img.getHeight());
         WritableRaster clust = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_INT, img.getWidth()+2, img.getHeight()+2, 1), null);
         int k = 0;
-        TreeSet<Integer> set = new TreeSet<Integer>();
-        ArrayList<Integer> idClust = new ArrayList<Integer>();
+        TreeSet<Integer> set = new TreeSet<>();
+        ArrayList<Integer> idClust = new ArrayList<>();
         RandomIter r = RandomIterFactory.create(img, null);
         for(int j = 1; j <= img.getHeight(); j++) {
             monitor.setProgress(j-1);
@@ -835,27 +854,22 @@ public final class Project {
                         int minId = Integer.MAX_VALUE;
                         for(Integer id : set) {
                             int min = getMinId(idClust, id);
-                            if(min < minId)
+                            if(min < minId) {
                                 minId = min;
+                            }
                         }
 
-                        for(Integer id : set)
+                        for(Integer id : set) {
                             idClust.set(getMinId(idClust, id)-1, minId);
-
-//                        for(Integer id : set) {
-//                            while(idClust.get(id-1) != minId) {
-//                                int newId = idClust.get(id-1);
-//                                idClust.set(id-1, minId);
-//                                id = newId;
-//                            }
-//                        }
+                        }
 
                         clust.setSample(i, j, 0, minId);
 
                     }
                     set.clear();
-                } else if(val == noData)
+                } else if(val == noData) {
                     clust.setSample(i, j, 0, -1);
+                }
             }
         }
 
@@ -870,24 +884,28 @@ public final class Project {
 
         for(int i = 0; i < idClust.size(); i++) {
             int m = i+1;
-            while(idClust.get(m-1) != m)
+            while(idClust.get(m-1) != m) {
                 m = idClust.get(m-1);
+            }
             idClust.set(i, m);
         }
 
 
-        for(int j = 1; j < clust.getHeight()-1; j++)
-            for(int i = 1; i < clust.getWidth()-1; i++)
+        for(int j = 1; j < clust.getHeight()-1; j++) {
+            for(int i = 1; i < clust.getWidth()-1; i++) {
                 if(clust.getSample(i, j, 0) > 0) {
                     int id = idClust.get(clust.getSample(i, j, 0)-1);
                     Envelope env = envMap.get(id);
-                    if(env == null)
+                    if(env == null) {
                         envMap.put(id, new Envelope(new Coordinate(i, j)));
-                    else
+                    } else {
                         env.expandToInclude(i, j);
+                    }
 
                     clust.setSample(i, j, 0, id);
                 }
+            }
+        }
 
 
         for(Envelope env : envMap.values()) {
@@ -901,8 +919,9 @@ public final class Project {
     }
 
     private int getMinId(List<Integer> ids, int id) {
-        while(ids.get(id-1) != id)
+        while(ids.get(id-1) != id) {
             id = ids.get(id-1);
+        }
         return id;
     }
 
@@ -1085,39 +1104,44 @@ public final class Project {
 
     public void removeExoDataset(final String name) throws IOException, SchemaException {
         exoDatas.remove(name);
-//        exoDataName.remove(name);
 
         List<String> attrs = new ArrayList<String>();
-        for(String attr : patches.get(0).getAttributeNames())
-            if(attr.startsWith(name + "."))
+        for(String attr : patches.get(0).getAttributeNames()) {
+            if(attr.startsWith(name + ".")) {
                 attrs.add(attr);
+            }
+        }
         
-        for(String attr : attrs)
+        for(String attr : attrs) {
             DefaultFeature.removeAttribute(attr, patches);
-
+        }
 
         savePatch();
         save();
 
         FileFilter filter = new FileFilter() {
+            @Override
             public boolean accept(File f) {
                 return f.getName().startsWith("Exo-" + name + ".") && f.getName().length()-3 == ("Exo-" + name + ".").length();
             }
         };
-        for(File f : dir.listFiles(filter))
+        for(File f : dir.listFiles(filter)) {
             f.delete();
+        }
     }
 
     public synchronized List<Feature> getVoronoi() {
-        if(voronoi == null)
+        if(voronoi == null) {
             try {
                 List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(dir, "voronoi.shp"), "Id", null);
                 voronoi = new ArrayList<Feature>(features);
-                for(Feature f : features)
+                for(Feature f : features) {
                     voronoi.set((Integer)f.getId()-1, f);
+                }
             } catch (IOException ex) {
                 Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
 
         return voronoi;
     }
@@ -1125,31 +1149,37 @@ public final class Project {
     public List<DefaultFeature> loadVoronoiGraph(String name) throws IOException {
         List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(dir, name + "-voronoi.shp"), "Id", null);
 
-        HashMap<Object, DefaultFeature> map = new HashMap<Object, DefaultFeature>();
-        for(DefaultFeature f : features)
+        HashMap<Object, DefaultFeature> map = new HashMap<>();
+        for(DefaultFeature f : features) {
             map.put(f.getId(), f);
+        }
 
         File fCSV = new File(dir, name + "-voronoi.csv");
         if(fCSV.exists()) {
-            CSVReader r = new CSVReader(new FileReader(fCSV));
-            String [] attr = r.readNext();
-            for(int i = 0; i < attr.length; i++)
-                if(features.get(0).getAttributeNames().contains(attr[i]))
-                    attr[i] = null;
-                else
-                    DefaultFeature.addAttribute(attr[i], features, Double.NaN);
-            String [] tab = r.readNext();
-            while(tab != null) {
-                DefaultFeature f = map.get(Integer.parseInt(tab[0]));
-                for(int i = 1; i < tab.length; i++)
-                    if(attr[i] != null)
-                        if(tab[i].isEmpty())
-                            f.setAttribute(attr[i], null);
-                        else
-                            f.setAttribute(attr[i], Double.parseDouble(tab[i]));
-                tab = r.readNext();
+            try (CSVReader r = new CSVReader(new FileReader(fCSV))) {
+                String [] attr = r.readNext();
+                for(int i = 0; i < attr.length; i++) {
+                    if(features.get(0).getAttributeNames().contains(attr[i])) {
+                        attr[i] = null;
+                    } else {
+                        DefaultFeature.addAttribute(attr[i], features, Double.NaN);
+                    }
+                }
+                String [] tab = r.readNext();
+                while(tab != null) {
+                    DefaultFeature f = map.get(Integer.parseInt(tab[0]));
+                    for(int i = 1; i < tab.length; i++) {
+                        if(attr[i] != null) {
+                            if(tab[i].isEmpty()) {
+                                f.setAttribute(attr[i], null);
+                            } else {
+                                f.setAttribute(attr[i], Double.parseDouble(tab[i]));
+                            }
+                        }
+                    }
+                    tab = r.readNext();
+                }
             }
-            r.close();
         }
 
         return features;
@@ -1159,11 +1189,12 @@ public final class Project {
         WritableRaster raster = patchRaster != null ? patchRaster.get() : null;
         if(raster == null) {
             RenderedImage img = IOImage.loadTiffWithoutCRS(new File(dir, "patches.tif")).getRenderedImage();
-            if(img.getNumXTiles() == 1 && img.getNumYTiles() == 1)
+            if(img.getNumXTiles() == 1 && img.getNumYTiles() == 1) {
                 raster = (WritableRaster) img.getTile(0, 0);
-            else
+            } else {
                 raster = (WritableRaster) img.getData();
-            patchRaster = new SoftRef<WritableRaster>(raster);
+            }
+            patchRaster = new SoftRef<>(raster);
         }
         
         return raster;
@@ -1177,40 +1208,41 @@ public final class Project {
             raster = r.createCompatibleWritableRaster();
             raster.setRect(r);
             raster = raster.createWritableTranslatedChild(1, 1);
-            srcRaster = new SoftRef<WritableRaster>(raster);
+            srcRaster = new SoftRef<>(raster);
         }
         return raster;
     }
 
     public void saveGraphVoronoi(String graph) throws IOException, SchemaException {
         List<DefaultFeature> comps = graphs.get(graph).getComponentFeatures();
-        CSVWriter w = new CSVWriter(new FileWriter(dir.getAbsolutePath() + File.separator + graph + "-voronoi.csv"));
-        List<String> header = new ArrayList<String>();
-        header.add("Id");
-        header.addAll(comps.get(0).getAttributeNames());
-        w.writeNext(header.toArray(new String[0]));
-        
-        String [] tab = new String[comps.get(0).getAttributeNames().size()+1];
-        for(Feature f : comps) {
-            tab[0] = f.getId().toString();
-            for(int i = 1; i < tab.length; i++)
-                tab[i] = f.getAttribute(i-1).toString();
-            w.writeNext(tab);
+        try (CSVWriter w = new CSVWriter(new FileWriter(dir.getAbsolutePath() + File.separator + graph + "-voronoi.csv"))) {
+            List<String> header = new ArrayList<>();
+            header.add("Id");
+            header.addAll(comps.get(0).getAttributeNames());
+            w.writeNext(header.toArray(new String[0]));
+            
+            String [] tab = new String[comps.get(0).getAttributeNames().size()+1];
+            for(Feature f : comps) {
+                tab[0] = f.getId().toString();
+                for(int i = 1; i < tab.length; i++) {
+                    tab[i] = f.getAttribute(i-1).toString();
+                }
+                w.writeNext(tab);
+            }
         }
-        w.close();
     }
 
     public void savePatch() throws IOException, SchemaException {
-        CSVWriter w = new CSVWriter(new FileWriter(dir.getAbsolutePath() + File.separator + "patches.csv"));
-        w.writeNext(patches.get(0).getAttributeNames().toArray(new String[0]));
-        String [] tab = new String[patches.get(0).getAttributeNames().size()];
-        for(Feature f : getPatches()) {
-            for(int i = 0; i < tab.length; i++)
-                tab[i] = f.getAttribute(i).toString();
-            w.writeNext(tab);
+        try (CSVWriter w = new CSVWriter(new FileWriter(dir.getAbsolutePath() + File.separator + "patches.csv"))) {
+            w.writeNext(patches.get(0).getAttributeNames().toArray(new String[0]));
+            String [] tab = new String[patches.get(0).getAttributeNames().size()];
+            for(Feature f : getPatches()) {
+                for(int i = 0; i < tab.length; i++) {
+                    tab[i] = f.getAttribute(i).toString();
+                }
+                w.writeNext(tab);
+            }
         }
-        w.close();
-
     }
 
     public void save() throws IOException {
@@ -1219,35 +1251,78 @@ public final class Project {
         xstream.alias("Pointset", Pointset.class);
         xstream.alias("Linkset", Linkset.class);
         xstream.alias("Graph", GraphGenerator.class);
-        FileWriter fw = new FileWriter(getProjectFile());
-        xstream.toXML(this, fw);
-        fw.close();
+        try (FileWriter fw = new FileWriter(getProjectFile())) {
+            xstream.toXML(this, fw);
+        }
     }
 
-    public void createMetaPatchProject(String prjName, GraphGenerator graph, double alpha) throws IOException, SchemaException {
+    public void createMetaPatchProject(String prjName, GraphGenerator graph, double alpha, double minCapa) throws IOException, SchemaException {
+        ProgressBar monitor = Config.getProgressBar("Meta patch...");
+        monitor.setIndeterminate(true);
         File dir = new File(getDirectory(), prjName);
         dir.mkdir();
-        IOFile.copyFile(new File(getDirectory(), "source.tif"), new File(dir, "source.tif"));
-        List<Graph> components = graph.getComponents();
+        
+        List<Graph> components = new ArrayList<>(graph.getComponents());
         int[] idMetaPatch = new int[getPatches().size()+1];
-        for(int i = 0; i < components.size(); i++) {
-            Graph comp = components.get(i);
-            for(Node n : (Collection<Node>)comp.getNodes())
-                idMetaPatch[(Integer)((Feature)n.getObject()).getId()] = i+1;
+        Iterator<Graph> it = components.iterator();
+        int ind = 1;
+        boolean remPatch = false;
+        while(it.hasNext()) {
+            Graph comp = it.next();
+            double capa = 0;
+            for(Node n : (Collection<Node>)comp.getNodes()) {
+                capa += getPatchCapacity(n);
+            }
+            int id;
+            if(capa >= minCapa) {
+                id = ind++;
+            } else {
+                id = 0;
+                it.remove();
+                remPatch = true;
+            }
+            for(Node n : (Collection<Node>)comp.getNodes()) {
+                idMetaPatch[(Integer)((Feature)n.getObject()).getId()] = id;
+            }
         }
         // create new raster patch
         WritableRaster newRaster = getRasterPatch().createCompatibleWritableRaster();
         newRaster.setRect(getRasterPatch());
         DataBufferInt buf = (DataBufferInt) newRaster.getDataBuffer();
         for(int i = 0; i < buf.getSize(); i++) {
-            if(buf.getElem(i) <= 0)
+            if(buf.getElem(i) <= 0) {
                 continue;
+            }
             buf.setElem(i, idMetaPatch[buf.getElem(i)]);
         }
-        
+
         GridCoverage2D gridCov = new GridCoverageFactory().create("rasterpatch",
                 newRaster, new Envelope2D(getCRS() != null ? getCRS() : DefaultGeographicCRS.WGS84, zone));
         new GeoTiffWriter(new File(dir, "patches.tif")).write(gridCov, null);
+        
+        // recode les anciens patchs
+        if(remPatch) {
+            WritableRaster rasterPatch = getRasterPatch();
+            GridCoverage2D landCov = IOImage.loadTiffWithoutCRS(new File(getDirectory(), "source.tif"));
+            WritableRaster land = (WritableRaster) landCov.getRenderedImage().getData();
+            int newCode = codes.last()+1;
+            for(int y = 0; y < rasterPatch.getHeight(); y++) {
+                for(int x = 0; x < rasterPatch.getWidth(); x++) {
+                    int id = rasterPatch.getSample(x, y, 0);
+                    if(id <= 0) {
+                        continue;
+                    }
+                    if(idMetaPatch[id] == 0) {
+                        land.setSample(x-1, y-1, 0, newCode);
+                    }
+                }
+
+            }
+            gridCov = new GridCoverageFactory().create("land", land, landCov.getEnvelope2D());
+            new GeoTiffWriter(new File(dir, "source.tif")).write(gridCov, null);
+        } else {
+            IOFile.copyFile(new File(getDirectory(), "source.tif"), new File(dir, "source.tif"));
+        }
         
         List<DefaultFeature> metaPatches = new ArrayList<>();
         List<DefaultFeature> metaVoronois = new ArrayList<>();
@@ -1262,12 +1337,11 @@ public final class Project {
                 if(alpha > 0) {
                     GraphGenerator.PathFinder pathfinder = graph.getPathFinder(n);
                     for(Node n2 : (Collection<Node>)comp.getNodes()) {
-//                        if(n == n2)
-//                            continue;
                         capa += getPatchCapacity(n2)*Math.exp(-alpha*pathfinder.getCost(n2)) / comp.getNodes().size();
                     }
-                } else
+                } else {
                     capa += getPatchCapacity(patch);
+                }
                 metaPatch.add(patch.getGeometry());
                 metaVoronoi.add(getVoronoi((Integer)patch.getId()).getGeometry());
             }
@@ -1279,24 +1353,34 @@ public final class Project {
         }
         
         DefaultFeature.saveFeatures(metaPatches, new File(dir, "patches.shp"), getCRS());
-        DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
-        
-        Links links = new Links(metaPatches.size());
-        for(Path p : planarLinks.getFeatures()) {
-            int id1 = idMetaPatch[(Integer)p.getPatch1().getId()];
-            int id2 = idMetaPatch[(Integer)p.getPatch2().getId()];
-            DefaultFeature p1 = metaPatches.get(id1-1);
-            DefaultFeature p2 = metaPatches.get(id2-1);
-            if(id1 == id2 || links.isLinkExist(p1, p2))
-                continue;
-            links.addLink(new Path(p1, p2));
+        if(!remPatch) {
+            DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
         }
         
+        Links links;
+        if(remPatch) {
+            links = neighborhoodEuclid(metaPatches, simplify, newRaster, grid2space, resolution);
+            metaVoronois = (List<DefaultFeature>) vectorizeVoronoi(newRaster, grid2space);
+            DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
+        } else {
+            links = new Links(metaPatches.size());
+            for(Path p : planarLinks.getFeatures()) {
+                int id1 = idMetaPatch[(Integer)p.getPatch1().getId()];
+                int id2 = idMetaPatch[(Integer)p.getPatch2().getId()];
+                DefaultFeature p1 = metaPatches.get(id1-1);
+                DefaultFeature p2 = metaPatches.get(id2-1);
+                if(id1 == id2 || links.isLinkExist(p1, p2)) {
+                    continue;
+                }
+                links.addLink(new Path(p1, p2));
+            }
+        }
         DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, "links.shp"), getCRS());
         
         Project prj = new Project(prjName, this);
         prj.dir = dir;
         prj.save();
+        monitor.close();
     }
     
     public File getProjectFile() {
@@ -1340,7 +1424,7 @@ public final class Project {
 
         graphLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Graphs"));
         rootLayer.addLayerFirst(graphLayers);      
-        for(GraphGenerator g : graphs.values())
+        for(GraphGenerator g : graphs.values()) {
             try {
                 l = g.getLayers();
                 l.setVisible(false);
@@ -1348,6 +1432,7 @@ public final class Project {
             } catch(Exception e) {
                 Logger.getLogger(Project.class.getName()).log(Level.WARNING, null, e);
             }
+        }
         
         exoLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Exo_data"));
         rootLayer.addLayerFirst(exoLayers);
