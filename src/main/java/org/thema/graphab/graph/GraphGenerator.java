@@ -57,11 +57,20 @@ public class GraphGenerator {
         private DijkstraPathFinder pathfinder;
         private HashMap<Node, DijkstraNode> computedNodes;
 
-        public PathFinder(Node nodeOrigin) {
+        private PathFinder(Node nodeOrigin) {
             this(nodeOrigin, Double.NaN);
         }
 
-        public PathFinder(Node nodeOrigin, double maxCost) {
+        private PathFinder(Node nodeOrigin, double maxCost, double alpha) {
+            this.nodeOrigin = nodeOrigin;
+            pathfinder = getFlowPathFinder(nodeOrigin, maxCost, alpha);
+            computedNodes = new HashMap<>();
+            for(DijkstraPathFinder.DijkstraNode dn : pathfinder.getComputedNodes()) {
+                computedNodes.put(dn.node, dn);
+            }
+        }
+        
+        private PathFinder(Node nodeOrigin, double maxCost) {
             this.nodeOrigin = nodeOrigin;
             pathfinder = getDijkstraPathFinder(getPathNodes(nodeOrigin), maxCost);
             computedNodes = new HashMap<>();
@@ -126,6 +135,27 @@ public class GraphGenerator {
                 @Override
                 public double getToGraphWeight(double dist) { 
                     return 0; 
+                }
+            });
+
+            finder.calculate(maxCost);
+
+            return finder;
+        }
+        
+        protected DijkstraPathFinder getFlowPathFinder(Node startNode, double maxCost, final double alpha) {
+
+            DijkstraPathFinder finder = new DijkstraPathFinder(getGraph(), startNode, new EdgeWeighter() {
+                @Override
+                public double getWeight(Edge e) {
+                    return -Math.log(Project.getPatchCapacity(e.getNodeA()) * Project.getPatchCapacity(e.getNodeB())
+                            / Math.pow(Project.getTotalPatchCapacity(), 2))
+                            + alpha * ((Path) e.getObject()).getCost();
+                }
+
+                @Override
+                public double getToGraphWeight(double dist) {
+                    return 0;
                 }
             });
 
@@ -202,22 +232,25 @@ public class GraphGenerator {
     }
 
     public synchronized Graph getGraph() {
-        if(graph == null)
+        if(graph == null) {
             createGraph();
+        }
 
         return graph;
     }
     
     protected synchronized Graph getPathGraph() {
-        if(pathGraph == null)
+        if(pathGraph == null) {
             createPathGraph();
+        }
 
         return pathGraph;
     }
 
     protected List<Node> getPathNodes(Node node) {
-        if(!isIntraPatchDist())
+        if(!isIntraPatchDist()) {
             return Collections.singletonList(node);
+        }
         getPathGraph();
         return node2PathNodes.get(node);
     }
@@ -238,9 +271,11 @@ public class GraphGenerator {
      * @return 
      */
     public Node getNode(Feature patch) {
-        for(Node n : getNodes())
-            if(n.getObject().equals(patch))
+        for(Node n : getNodes()) {
+            if(n.getObject().equals(patch)) {
                 return n;
+            }
+        }
 
         return null;
     }
@@ -277,8 +312,9 @@ public class GraphGenerator {
 
     public List<Path> getLinks() {
         ArrayList<Path> links = new ArrayList<>();
-        for(Edge e : getEdges())
+        for(Edge e : getEdges()) {
             links.add((Path)e.getObject());
+        }
         
         return links;
     }
@@ -296,21 +332,25 @@ public class GraphGenerator {
     }
 
     public synchronized List<Graph> getComponents() {
-        if(components == null)
+        if(components == null) {
             components = partition(getGraph());
+        }
         return components;
     }
 
     public DefaultFeature getComponentFeature(Feature patch) {
-        for(DefaultFeature f : getComponentFeatures())
-            if(f.getGeometry().covers(patch.getGeometry()))
+        for(DefaultFeature f : getComponentFeatures()) {
+            if(f.getGeometry().covers(patch.getGeometry())) {
                 return f;
+            }
+        }
         return null;
     }
 
     public synchronized List<DefaultFeature> getComponentFeatures() {
-        if(compFeatures == null)
+        if(compFeatures == null) {
             createVoronoi();
+        }
 
         return compFeatures;
     } 
@@ -323,17 +363,23 @@ public class GraphGenerator {
          return new PathFinder(nodeOrigin, maxCost);
     }
     
+    public PathFinder getFlowPathFinder(Node nodeOrigin, double alpha) {
+         return new PathFinder(nodeOrigin, Double.NaN, alpha);
+    }
+    
     public double getPatchArea() {
         double sum = 0;
-        for(Object n : getGraph().getNodes())
+        for(Object n : getGraph().getNodes()) {
             sum += Project.getPatchArea((Node)n);
+        }
         return sum;
     }
     
     public double getPatchCapacity() {
         double sum = 0;
-        for(Object n : getGraph().getNodes())
+        for(Object n : getGraph().getNodes()) {
             sum += Project.getPatchCapacity((Node)n);
+        }
         return sum;
     }
 
@@ -352,16 +398,18 @@ public class GraphGenerator {
                             col = 0x7c7e40;
                             break;
                         case COMPLETE:
-                            if(cost.getTopology() == Linkset.PLANAR)
+                            if(cost.getTopology() == Linkset.PLANAR) {
                                 col = 0x951012;
-                            else
+                            } else {
                                 col = 0xA2705E;
+                            }
                             break;
                         case THRESHOLD:
-                            if(cost.getTopology() == Linkset.PLANAR)
+                            if(cost.getTopology() == Linkset.PLANAR) {
                                 col = 0x42407E;
-                            else
+                            } else {
                                 col = 0x5f91a2;
+                            }
                             break;
                     }
                     edgeStyle = new LineStyle(new Color(col));
@@ -411,8 +459,9 @@ public class GraphGenerator {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_graph_") + name + " ?", java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove"), JOptionPane.YES_NO_OPTION);
-                            if(res != JOptionPane.YES_OPTION)
+                            if(res != JOptionPane.YES_OPTION) {
                                 return;
+                            }
 
                             MainFrame.project.removeGraph(name);
                         }
@@ -435,8 +484,9 @@ public class GraphGenerator {
                         Number max = Collections.max(new FeatureAttributeCollection<Double>(getNodeLayer().getFeatures(), Project.CAPA_ATTR));
                         Number min = Collections.min(new FeatureAttributeCollection<Double>(getNodeLayer().getFeatures(), Project.CAPA_ATTR));
                         circleStyle = new CircleStyle(Project.CAPA_ATTR, min.doubleValue(), max.doubleValue(), new Color(0xcbcba7/*0x951012*/), new Color(0x212d19));
-                    } else
+                    } else {
                         circleStyle.setStyle(nodeStyle);
+                    }
                     getNodeLayer().setStyle(circleStyle);
                 }
 
@@ -456,8 +506,9 @@ public class GraphGenerator {
                     }
                 }, MainFrame.project.getZone(), new FeatureStyle(null, Color.BLACK), MainFrame.project.getCRS());
 
-            if(getGraph().getEdges().size() > 500000)
+            if(getGraph().getEdges().size() > 500000) {
                 layers.getEdgeLayer().setVisible(false);
+            }
             layers.addLayer(fl);
         }
 
@@ -474,17 +525,19 @@ public class GraphGenerator {
             patchNodes.put(p, n);
         }
 
-        for(Path p : cost.getPaths())
+        for(Path p : cost.getPaths()) {
             if(type != THRESHOLD || getCost(p) <= threshold) {
                 Edge e = gen.buildEdge(patchNodes.get(p.getPatch1()), patchNodes.get(p.getPatch2()));
                 e.setObject(p);
                 gen.addEdge(e);
             }
+        }
 
         graph = gen.getGraph();
 
         if(type == MST) {
             MinSpanTree span = new MinSpanTree(graph, new MinSpanTree.Weighter() {
+                @Override
                 public double getWeight(Edge e) {
                     return getCost(e);
                 }
@@ -502,9 +555,9 @@ public class GraphGenerator {
             return;
         }
         
-        HashMap2D<Node, Coordinate, Node> coord2PathNode = new HashMap2D<Node, Coordinate, Node>(Collections.EMPTY_SET, Collections.EMPTY_SET, null);
+        HashMap2D<Node, Coordinate, Node> coord2PathNode = new HashMap2D<>(Collections.EMPTY_SET, Collections.EMPTY_SET, null);
         
-        node2PathNodes = new HashMapList<Node, Node>();
+        node2PathNodes = new HashMapList<>();
 
         BasicGraphBuilder gen = new BasicGraphBuilder();
 
@@ -542,40 +595,42 @@ public class GraphGenerator {
                 node2PathNodes.putValue(node, n);
             } else { // link all nodes of same patch
                 Map<Coordinate, Node> nodes = coord2PathNode.getLine(node);
-                List<Coordinate> coords = new ArrayList<Coordinate>();
-                for(Coordinate c : nodes.keySet())
-                    if(nodes.get(c) != null)
+                List<Coordinate> coords = new ArrayList<>();
+                for(Coordinate c : nodes.keySet()) {
+                    if(nodes.get(c) != null) {
                         coords.add(c);
-                for(int i = 0; i < coords.size(); i++)
+                    }
+                }
+                for(int i = 0; i < coords.size(); i++) {
                     for(int j = i+1; j < coords.size(); j++) {
                         Coordinate c1 = coords.get(i);
                         Coordinate c2 = coords.get(j);
                         Edge e = gen.buildEdge(nodes.get(c1), nodes.get(c2));
                         double[] costs = cost.getIntraLinkCost(c1, c2);
-                        if(costs == null)
+                        if(costs == null) {
                             throw new RuntimeException("No intra patch dist for " + node.getObject());
+                        }
                         e.setObject(costs);
                         gen.addEdge(e);
                     }
+                }
             }
         }
 
 
         pathGraph = gen.getGraph();
-
-        //System.out.println("End create path graph");
     }
 
     protected List<Graph> partition(Graph g) {
-        HashSet<Node> nodes = new HashSet<Node>(g.getNodes());
-        List<Graph> comps = new ArrayList<Graph>();
+        HashSet<Node> nodes = new HashSet<>(g.getNodes());
+        List<Graph> comps = new ArrayList<>();
         while(!nodes.isEmpty()) {
             Node n = nodes.iterator().next();
             nodes.remove(n);
-            List<Node> part = new ArrayList<Node>();
+            List<Node> part = new ArrayList<>();
             part.add(n);
 
-            LinkedList<Node> queue = new LinkedList<Node>();
+            LinkedList<Node> queue = new LinkedList<>();
             queue.add(n);
             while(!queue.isEmpty()) {
                 n = queue.poll();
@@ -591,9 +646,10 @@ public class GraphGenerator {
                 }
             }
 
-            HashSet<Edge> edges = new HashSet<Edge>();
-            for (Node node : part)
+            HashSet<Edge> edges = new HashSet<>();
+            for (Node node : part) {
                 edges.addAll(node.getEdges());
+            }
             comps.add(new BasicGraph(part, edges));
         }
 
@@ -602,28 +658,29 @@ public class GraphGenerator {
     }
 
     private void createVoronoi() {
-        if(saved)
+        if(saved) {
             try {
                 List<DefaultFeature> features = Project.getProject().loadVoronoiGraph(name);
                 // reorder features
-                compFeatures = new ArrayList<DefaultFeature>(features);
-                for(DefaultFeature f : features)
+                compFeatures = new ArrayList<>(features);
+                for(DefaultFeature f : features) {
                     compFeatures.set(((Number)f.getId()).intValue()-1, f);
+                }
             } catch (IOException ex) {
                 Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
-        else {
-            compFeatures = new ArrayList<DefaultFeature>();
+        } else {
+            compFeatures = new ArrayList<>();
 
             int i = 1;
             for(Graph gr : getComponents()) {
-                List<Geometry> geoms = new ArrayList<Geometry>();
+                List<Geometry> geoms = new ArrayList<>();
                 for(Object o : gr.getNodes()) {
                     Feature f = (Feature)((Node)o).getObject();
                     geoms.add(MainFrame.project.getVoronoi((Integer)f.getId()).getGeometry());
                 }
                 Geometry g = CascadedPolygonUnion.union(geoms);
-                List<String> attrNames = new ArrayList<String>(0);
+                List<String> attrNames = new ArrayList<>(0);
                 compFeatures.add(new DefaultFeature(i, g, attrNames, new ArrayList(0)));
                 i++;
             }
@@ -639,12 +696,13 @@ public class GraphGenerator {
                 return ((Comparable)Project.getPatch(n1).getId()).compareTo(Project.getPatch(n2).getId());
             }
         };
-        TreeSet<Node> nodes = new TreeSet<Node>(cmpPatchId);
+        TreeSet<Node> nodes = new TreeSet<>(cmpPatchId);
         nodes.addAll(getNodes());
         
         w.write("ID");
-        for (Node n1 : nodes)
+        for (Node n1 : nodes) {
             w.write("\t" + Project.getPatch(n1).getId());
+        }
         for (Node n1 : nodes) {
             w.write("\n" + Project.getPatch(n1).getId());
             PathFinder pathfinder = getPathFinder(n1);

@@ -1579,7 +1579,7 @@ public final class Project {
         return ((Number)patch.getAttribute(Project.AREA_ATTR)).doubleValue();
     }
 
-    public static double getTotalPatchCapacity() {
+    public static synchronized double getTotalPatchCapacity() {
         if(MainFrame.project.totalPatchCapacity == 0) {
             double sum = 0;
             for(Feature f : MainFrame.project.getPatches()) {
