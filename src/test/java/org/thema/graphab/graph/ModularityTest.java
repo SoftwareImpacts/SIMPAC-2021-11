@@ -16,7 +16,6 @@
  */
 package org.thema.graphab.graph;
 
-import com.sun.javafx.scene.control.skin.VirtualFlow;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -26,14 +25,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeMap;
 import org.geotools.graph.build.basic.BasicGraphBuilder;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
