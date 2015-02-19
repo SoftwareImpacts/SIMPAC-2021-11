@@ -17,8 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
 import org.thema.graphab.Project;
-import org.thema.graphab.metric.Metric;
-import org.thema.graphab.metric.ParamPanel;
 
 /**
  *
@@ -251,10 +249,12 @@ public class BatchParamMetricDialog<T extends Metric> extends javax.swing.JDialo
 
     private void graphComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphComboBoxActionPerformed
         graph = (GraphGenerator) graphComboBox.getSelectedItem();
-        List<Metric> inds = new ArrayList<Metric>();
-        for(Metric ind : indices)
-            if(ind.isAcceptGraph(graph))
+        List<Metric> inds = new ArrayList<>();
+        for(Metric ind : indices) {
+            if(ind.isAcceptGraph(graph)) {
                 inds.add(ind);
+            }
+        }
         indiceComboBox.setIndices(inds);
 }//GEN-LAST:event_graphComboBoxActionPerformed
 
@@ -265,9 +265,11 @@ public class BatchParamMetricDialog<T extends Metric> extends javax.swing.JDialo
     private void indiceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indiceComboBoxActionPerformed
         indice = (T)indiceComboBox.getSelectedItem();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
-        for(String p : indice.getParams().keySet())
-            if(indice.getParams().get(p) instanceof Number)
+        for(String p : indice.getParams().keySet()) {
+            if(indice.getParams().get(p) instanceof Number) {
                 model.addElement(p);
+            }
+        }
         paramComboBox.setModel(model);
         paramComboBoxActionPerformed(null);
         

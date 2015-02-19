@@ -595,8 +595,9 @@ public class MainFrame extends javax.swing.JFrame {
                 XYSeriesCollection series = new XYSeriesCollection();
                 for(int j = 0; j < indice.getResultNames().length; j++) {
                     XYSeries serie = new XYSeries(indice.getName());
-                    for(Double x : results.keySet())
+                    for(Double x : results.keySet()) {
                         serie.add(x, results.get(x)[j]);
+                    }
                     series.addSeries(serie);
                 }
                 SerieFrame frm = new SerieFrame(indice.getDetailName(),

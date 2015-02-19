@@ -25,6 +25,8 @@ import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.basic.BasicGraph;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.thema.common.Config;
 import org.thema.common.collection.HashMap2D;
 import org.thema.common.collection.HashMapList;
@@ -33,6 +35,7 @@ import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureGetter;
 import org.thema.drawshape.layer.FeatureLayer;
+import org.thema.drawshape.layer.Layer;
 import org.thema.drawshape.style.CircleStyle;
 import org.thema.drawshape.style.FeatureStyle;
 import org.thema.drawshape.style.LineStyle;
@@ -44,7 +47,10 @@ import org.thema.graphab.links.Linkset;
 import org.thema.graphab.MainFrame;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.Modularity.Cluster;
 import org.thema.graphab.metric.Circuit;
+import org.thema.graphab.metric.DistProbaPanel;
+import org.thema.graphab.util.SerieFrame;
 
 /**
  *
@@ -421,6 +427,39 @@ public class GraphGenerator {
                 public JPopupMenu getContextMenu() {
                     JPopupMenu menu = super.getContextMenu();       
 
+                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("partition")) {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    DistProbaPanel distProbaPanel = new DistProbaPanel(1000, 0.05, 1);
+                                    int res = JOptionPane.showConfirmDialog(null, distProbaPanel, "Modularity", JOptionPane.OK_CANCEL_OPTION);
+                                    if(res != JOptionPane.OK_OPTION) {
+                                        return;
+                                    }
+                                    Modularity mod = new Modularity(GraphGenerator.this, distProbaPanel.getAlpha(), distProbaPanel.getA());
+                                    mod.partitions();
+                                    TreeMap<Integer, Double> modularities = mod.getModularities();
+                                    XYSeriesCollection series = new XYSeriesCollection();
+
+                                    XYSeries serie = new XYSeries("mod");
+                                    for(Integer n : modularities.keySet()) {
+                                        serie.add(n, modularities.get(n));
+                                    }
+                                    series.addSeries(serie);
+                                    
+                                    SerieFrame frm = new SerieFrame("Modularity - " + GraphGenerator.this.getName(),
+                                            series, "nb clusters", "modularity");
+                                    frm.pack();
+                                    frm.setVisible(true);
+                                    
+                                    new ModularityDialog(null, mod).setVisible(true);
+                                }
+                            }).start();
+                        }
+                    });
+                    
                     menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix")) {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -429,7 +468,7 @@ public class GraphGenerator {
                                 public void run() {
                                     try {
                                         calcODMatrix();
-                                    } catch (Exception ex) {
+                                    } catch (IOException ex) {
                                         Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
                                         JOptionPane.showMessageDialog(null, "Error : " + ex);
                                     }
@@ -446,7 +485,7 @@ public class GraphGenerator {
                                 public void run() {
                                     try {
                                         calcODMatrixCircuit();
-                                    } catch (Exception ex) {
+                                    } catch (IOException ex) {
                                         Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
                                         JOptionPane.showMessageDialog(null, "Error : " + ex);
                                     }

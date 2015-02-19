@@ -273,13 +273,15 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
         if(distTypeRadioButton.isSelected()) {
             for(Path p : project.getPaths(distComboBox.getSelectedItem().toString()))  {
                 double v = cost.getType_length() == Linkset.COST_LENGTH ? p.getCost() : p.getDist();
-                if(v > max)
+                if(v > max) {
                     max = v;
+                }
             }
             max++;
         }
-        else
+        else {
             max = project.getPaths(distComboBox.getSelectedItem().toString()).size();
+        }
 
         maxSpinner.setValue(max);
     }//GEN-LAST:event_distComboBoxActionPerformed
