@@ -155,11 +155,13 @@ public class Modularity {
         HashMap2D<Cluster, Cluster, Double> delta = new HashMap2D<>(clusters, clusters, Double.NaN);
         for(Cluster c1 : clusters) {
             for(Cluster c2 : clusters) {
-                if(c1 == c2) {
+                if(c1.getId() >= c2.getId()) {
                     continue;
                 }
                 if(c1.isConnected(c2)) {
-                    delta.setValue(c1, c2, c1.getDiffMod(c2));
+                    double d = c1.getDiffMod(c2);
+                    delta.setValue(c1, c2, d);
+                    delta.setValue(c2, c1, d);
                 }
             }
         }
@@ -170,6 +172,9 @@ public class Modularity {
             Cluster [] ij = new Cluster[2];
             for(Cluster c1 : delta.getKeys1()) {
                 for(Cluster c2 : delta.getLine(c1).keySet()) {
+                    if(c1.getId() >= c2.getId()) {
+                        continue;
+                    }
                     double d = delta.getValue(c1, c2);
                     if(d > bestDelta || d == bestDelta && c1.getId() < ij[0].getId()) {
                         ij[0] = c1;

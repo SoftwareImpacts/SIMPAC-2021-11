@@ -119,16 +119,18 @@ public class ModularityTest {
         for(Graph g : graphs) {
             Modularity mod = new Modularity(g);
             mod.partitions();
-            Set<Cluster> result = mod.getBestPartition();
-            double m = mod.getModularity(result);
-            double m1 = 0, m2 = 0;
-            for(Cluster c : result) {
-                m1 += c.getPartModularity();
-                c.init();
-                m2 += c.getPartModularity();
+            for(int nb : mod.getModularities().keySet()) {
+                Set<Cluster> result = mod.getPartition(nb);
+                double m = mod.getModularity(result);
+                double m1 = 0, m2 = 0;
+                for(Cluster c : result) {
+                    m1 += c.getPartModularity();
+                    c.init();
+                    m2 += c.getPartModularity();
+                }
+                assertEquals(m, m1, 0);
+                assertEquals(m, m2, 0);
             }
-            assertEquals(m, m1, 0);
-            assertEquals(m, m2, 0);
         }
     }
     
