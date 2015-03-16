@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import javax.swing.SpinnerListModel;
 import org.geotools.graph.structure.Node;
 import org.thema.common.Config;
 import org.thema.common.ProgressBar;
@@ -202,6 +201,15 @@ public class ModularityDialog extends javax.swing.JDialog {
                 l.setRemovable(true);
 
                 mod.getGraphGenerator().getLayers().addLayer(l);
+                
+                // set cluster id for all patches
+                String attrName = mod.getGraphGenerator().getName() + "_cluster" + partition.size();
+                for(Modularity.Cluster c : partition) {
+                    for(Node n : c.getNodes())  {
+                        Project.getPatch(n).addAttribute(attrName, c.getId());
+                    }
+                }
+                
                 progressBar.close();
             }
         }).start();
