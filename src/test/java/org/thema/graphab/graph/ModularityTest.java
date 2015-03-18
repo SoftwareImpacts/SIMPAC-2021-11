@@ -92,14 +92,15 @@ public class ModularityTest {
      * Test of getBestPartition method, of class Modularity.
      */
     @Test
-    public void testGetBestPartition() {
-        System.out.println("getBestPartition");
+    public void testGetBestOptimPartition() {
+        System.out.println("getBestOptimPartition");
         for(int i = 0; i < graphs.size(); i++) {
             Graph g = graphs.get(i);
             List<Set<Integer>> partition = partitions.get(i);
             Modularity mod = new Modularity(g);
             mod.partitions();
             Set<Cluster> result = mod.getBestPartition();
+            result = mod.getOptimPartition(result.size());
             for(Cluster c : result) {
                 Set<Integer> set = new HashSet<>();
                 for(Node n : c.getNodes()) {
