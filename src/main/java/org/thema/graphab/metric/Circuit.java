@@ -4,14 +4,25 @@
  */
 package org.thema.graphab.metric;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.uib.cipr.matrix.DenseLU;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.sparse.*;
+import no.uib.cipr.matrix.sparse.CG;
+import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import no.uib.cipr.matrix.sparse.DiagonalPreconditioner;
+import no.uib.cipr.matrix.sparse.ICC;
+import no.uib.cipr.matrix.sparse.IterativeSolver;
+import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
+import no.uib.cipr.matrix.sparse.Preconditioner;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
@@ -71,19 +82,21 @@ public class Circuit {
     }
     
     private void init() {
-        indNodes = new HashMap<Node, Integer>();
-        compNodes = new HashMap<Node, Graph>();
-        compMatrix = new HashMap<Graph, CompRowMatrix>();
+        indNodes = new HashMap<>();
+        compNodes = new HashMap<>();
+        compMatrix = new HashMap<>();
         if(!patch2Ground) {
-            if(dense)
-                compLU = new HashMap<Graph, DenseLU>();
-            compPrecond = new HashMap<Graph, Preconditioner>();
+            if(dense) {
+                compLU = new HashMap<>();
+            }
+            compPrecond = new HashMap<>();
         }
         
         for(Graph comp : graph.getComponents()) {
             int nbNodes = comp.getNodes().size();
-            if(nbNodes == 1)
+            if(nbNodes == 1) {
                 continue;
+            }
             int ind = 0;
             for(Node node : (Collection<Node>)comp.getNodes()) {
                 indNodes.put(node, ind);
@@ -105,8 +118,9 @@ public class Circuit {
             for(int i = 0; i < nbNodes; i++) {
                 tab[i] = new int[indices[i].size()];
                 Collections.sort(indices[i]);
-                for(int j = 0; j < tab[i].length; j++)
+                for(int j = 0; j < tab[i].length; j++) {
                     tab[i][j] = (Integer)indices[i].get(j);
+                }
 
             }
             
@@ -116,13 +130,15 @@ public class Circuit {
             for(Node node : (Collection<Node>)comp.getNodes()) {
                 double sum = 0;
                 for(Edge edge : (List<Edge>)node.getEdges()) {
-                    if(graph.getCost(edge) == 0)
+                    if(graph.getCost(edge) == 0) {
                         throw new RuntimeException("Circuit impossible avec un cout nul !");
+                    }
                     sum += 1 / (graph.getCost(edge) * costR);
                 }
                 
-                if(patch2Ground && Project.getPatchCapacity(node) == 0)
+                if(patch2Ground && Project.getPatchCapacity(node) == 0) {
                     throw new RuntimeException("Circuit impossible avec une capacité nulle !");
+                }
                 A.set(i, i, sum + (patch2Ground ? 1 / (capaR * Math.pow(Project.getPatchCapacity(node), capaExp)) : 0));
                 i++;
             }
@@ -136,10 +152,11 @@ public class Circuit {
             if(!patch2Ground) {
                 if(dense) {
                     DenseLU LU = DenseLU.factorize(new DenseMatrix(A));
-                    if(!LU.isSingular())
+                    if(!LU.isSingular()) {
                         compLU.put(comp, LU);
-                    else
+                    } else {
                         System.out.println("Singular matrix for component size " + nbNodes);
+                    }
                 }
                 if(!dense || !compLU.containsKey(comp)){
                     Preconditioner M = new DiagonalPreconditioner(nbNodes);
@@ -163,8 +180,9 @@ public class Circuit {
     public Map<Object, Double> computePotCourant(Node from, Node to, double V) {
         // on calcule le courant dans le graphe pour un courant émis unitaire
         DenseVector U = solveCircuit(from, to, 1);
-        if(U == null)
+        if(U == null) {
             return Collections.EMPTY_MAP;
+        }
         
         int ind1 = indNodes.get(from);
         int ind2 = indNodes.get(to);
@@ -174,8 +192,9 @@ public class Circuit {
         Graph comp = compNodes.get(from);
         // on modifie les courants en fonction du rapport entre la tension V et la résistance R du circuit
         HashMap<Object, Double> courant = getCourant(comp, U);
-        for(Object id : courant.keySet())
+        for(Object id : courant.keySet()) {
             courant.put(id, courant.get(id) * V / R);
+        }
         return courant;
     }
     
@@ -209,8 +228,9 @@ public class Circuit {
      */
     public Map<Object, Double> computeCourant(Node n1, Node n2, double courant) {
         DenseVector U = solveCircuit(n1, n2, courant);
-        if(U == null)
+        if(U == null) {
             return Collections.EMPTY_MAP;
+        }
         Graph comp = compNodes.get(n1);
         return getCourant(comp, U);
     }
@@ -224,21 +244,24 @@ public class Circuit {
      * null si n1 et n2 ne sont pas dans la même composante
      */
     private DenseVector solveCircuit(Node n1, Node n2, double courant) {
-        if(patch2Ground)
+        if(patch2Ground) {
             throw new IllegalStateException("Calcul de R impossible avec patch2Ground");
+        }
         
         Graph comp = compNodes.get(n1);
         // si les noeuds ne sont pas dans la même composante on sort
-        if(comp == null || compNodes.get(n2) != comp)
+        if(comp == null || compNodes.get(n2) != comp) {
             return null;
+        }
         
         int nbNodes = comp.getNodes().size();
 
         int ind1 = indNodes.get(n1);
         int ind2 = indNodes.get(n2);
         
-        if(ind1 == ind2)
+        if(ind1 == ind2) {
             throw new IllegalArgumentException("Circuit impossible : même noeud origine et destination");
+        }
         
         // Z vector is null only the origin patch has current value
         DenseVector Z = new DenseVector(nbNodes);
@@ -310,8 +333,9 @@ public class Circuit {
      */
     public Map<Object, Double> computeCourantTo(Node n1) {
         DenseVector U = solveCircuit(n1);
-        if(U == null)
+        if(U == null) {
             return Collections.EMPTY_MAP;
+        }
         Graph comp = compNodes.get(n1);
         return getCourant(comp, U);
     }        
@@ -326,8 +350,9 @@ public class Circuit {
      * null si n1 est un noeud isolé
      */
     private DenseVector solveCircuit(Node n1) {
-        if(patch2Ground)
+        if(patch2Ground) {
             throw new IllegalStateException("Calcul du courant impossible avec patch2Ground");
+        }
         
         Graph comp = compNodes.get(n1);   
         // si c'est un noeud isolé
@@ -341,8 +366,9 @@ public class Circuit {
         double sumI = 0;
         for(Node node : (Collection<Node>)comp.getNodes()) {
             int ind = indNodes.get(node);
-            if(ind == ind1)
+            if(ind == ind1) {
                 continue;
+            }
             double I = Math.pow(Project.getPatchCapacity(node), beta);
             Z.set(ind, I);
             sumI += I;
@@ -368,13 +394,15 @@ public class Circuit {
      */
     public Map<Object, Double> computeCourantFrom(Node n1) {
         
-        if(!patch2Ground)
+        if(!patch2Ground) {
             throw new IllegalStateException("Calcul du courant impossible sans patch2Ground");
+        }
         
         Graph comp = compNodes.get(n1);
         // si la composante n'existe pas c'est un noeud isolé, on sort
-        if(comp == null)
+        if(comp == null) {
             return Collections.EMPTY_MAP;
+        }
         
         int nbNodes = comp.getNodes().size();
         double capa = Project.getPatchCapacity(n1);
@@ -424,7 +452,7 @@ public class Circuit {
      * @return le courant traversé dans les liens et les noeuds de la composante comp
      */
     private HashMap<Object, Double> getCourant(Graph comp, DenseVector U) {
-        HashMap<Object, Double> courant = new HashMap<Object, Double>();
+        HashMap<Object, Double> courant = new HashMap<>();
         for(Edge edge : (Collection<Edge>)comp.getEdges()) {
             int iA = indNodes.get(edge.getNodeA());
             int iB = indNodes.get(edge.getNodeB());
@@ -437,10 +465,11 @@ public class Circuit {
             for(Edge edge : edges) {
                 int iB = indNodes.get(edge.getOtherNode(node));
                 double c = (U.get(iA) - U.get(iB)) / (graph.getCost(edge) * costR);
-                if(c < 0)
+                if(c < 0) {
                     in += -c;
-                else
+                } else {
                     out += c;
+                }
             }
             courant.put(((Feature)node.getObject()).getId(), Math.min(in, out));
         }

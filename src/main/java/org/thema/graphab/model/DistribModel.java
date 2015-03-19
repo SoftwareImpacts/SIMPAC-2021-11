@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 
 package org.thema.graphab.model;
 
@@ -20,7 +17,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.math.FunctionEvaluationException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.MatrixUtils;
@@ -28,23 +26,24 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.geometry.DirectPosition2D;
+import org.opengis.coverage.CannotEvaluateException;
 import org.opengis.coverage.PointOutsideCoverageException;
 import org.opengis.geometry.DirectPosition;
+import org.thema.common.ProgressBar;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
-import org.thema.common.ProgressBar;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.drawshape.style.RasterStyle;
-import org.thema.graphab.links.Linkset;
-import org.thema.graphab.pointset.Pointset;
-import org.thema.graphab.model.Logistic.LogisticFunction;
-import org.thema.graphab.links.Path;
 import org.thema.graphab.Project;
+import org.thema.graphab.links.Linkset;
+import org.thema.graphab.links.Path;
 import org.thema.graphab.links.SpacePathFinder;
+import org.thema.graphab.model.Logistic.LogisticFunction;
+import org.thema.graphab.pointset.Pointset;
 
 /**
  *
@@ -108,10 +107,12 @@ public class DistribModel {
     }
     
     public List<String> getUsedVars() {
-        List<String> vars = new ArrayList<String>();
-        for(int j = 0; j < nVar; j++)
-            if(((usedVars >> j) & 1) == 1)
+        List<String> vars = new ArrayList<>();
+        for(int j = 0; j < nVar; j++) {
+            if (((usedVars >> j) & 1) == 1) {
                 vars.add(varNames.get(j));
+            }
+        }
         return vars;
     }
 
@@ -143,7 +144,7 @@ public class DistribModel {
             if(y[i] != 0 && y[i] != 1) {
                 throw new IllegalArgumentException("Variable " + varName + " : values must be 0 or 1.");
             }
-            HashMap<DefaultFeature, Path> patchDists = new HashMap<DefaultFeature, Path>();
+            HashMap<DefaultFeature, Path> patchDists = new HashMap<>();
             if(multiAttach) {
                 if(costCache != null) {
                     patchDists = costCache.get(f.getGeometry());
@@ -168,13 +169,17 @@ public class DistribModel {
                     weight += w;
                 }
                 a[i][j] = sum / weight;
-                if(i == 0) varNames.add(patchVars.get(j));
+                if(i == 0) {
+                    varNames.add(patchVars.get(j));
+                }
             }
             int k = 0;
             for(GridCoverage2D grid : extVars.values()) {
                 a[i][j+k] = grid.evaluate((DirectPosition)new DirectPosition2D(coord.x, coord.y), new double[1])[0];
                 k++;
-                if(i == 0) varNames.add("ext-" + grid.getName().toString());
+                if(i == 0) {
+                    varNames.add("ext-" + grid.getName().toString());
+                }
             }
 
 
@@ -182,8 +187,9 @@ public class DistribModel {
             i++;
         }
 
-        if(multiAttach && costCache == null)
+        if(multiAttach && costCache == null) {
             costCache = cache;
+        }
 
         RealMatrix A = MatrixUtils.createRealMatrix(a);
 
@@ -195,15 +201,16 @@ public class DistribModel {
         Logistic bestLog = new Logistic(a, y);
         bestLog.regression();
         int bestI = nc - 1;
-        if(bestModel)
-            for(i = 1; i < nc; i++) {
+        if(bestModel) {
+            for (i = 1; i < nc; i++) {
                 int nv = Integer.bitCount(i);
                 RealMatrix m = MatrixUtils.createRealMatrix(y.length, nv);
                 int k = 0;
-                for(int j = 0; j < nVar; j++)
-                    if(((i >> j) & 1) == 1)
+                for (int j = 0; j < nVar; j++) {
+                    if (((i >> j) & 1) == 1) {
                         m.setColumnVector(k++, A.getColumnVector(j));
-
+                    }
+                }
                 Logistic log = new Logistic(m.getData(), y);
                 log.regression();
                 if(log.getAIC() < bestLog.getAIC()) {
@@ -212,36 +219,29 @@ public class DistribModel {
                 }
                 monitor.setProgress(50+i*50/nc);
             }
+        }
 
         usedVars = bestI;
         regression = bestLog;
 
         RealVector mean = A.preMultiply(new ArrayRealVector(data.size(), 1.0/data.size()));
         stdVar = new ArrayRealVector(nVar);
-        for(i = 0; i < nVar; i++)
+        for(i = 0; i < nVar; i++) {
             stdVar.setEntry(i, Math.sqrt(Math.pow(A.getColumnVector(i).mapSubtract(mean.getEntry(i)).getNorm(), 2) / data.size()));
-
-//        int nv = Integer.bitCount(bestI);
-//        RealMatrix m = MatrixUtils.createRealMatrix(y.length, nv);
-//        int k = 0;
-//        for(int j = 0; j < nVar; j++)
-//            if(((bestI >> j) & 1) == 1)
-//                m.setColumnVector(k++, A.getColumnVector(j).mapSubtract(mean.getEntry(j)).mapDivideToSelf(std.getEntry(j)));
-//
-//        Logistic stdlog = new Logistic(m.getData(), y);
-//        double [] stdcoef =  stdlog.regression();
+        }
 
         double [] coef = bestLog.regression();
         String msg = "Formule : " + varName + " = " +  String.format("%g", coef[0]);
         String lineStd = "Standard : ";
         int k = 1;
-        for(int j = 0; j < nVar; j++)
+        for(int j = 0; j < nVar; j++) {
             if(((bestI >> j) & 1) == 1) {
                 String var = varNames.get(j);
                 msg += String.format(" + %g*%s", coef[k], var);
                 lineStd += String.format(" + %g*%s", coef[k] * stdVar.getEntry(j), var);
                 k++;
             }
+        }
 
         msg += String.format("\n%s\nLikelihood ratio : %g\np : %g\nr2(McFadden) : %g\nAIC : %g",
                 lineStd, bestLog.getDiffLikelihood(), bestLog.getProbaTest(), bestLog.getR2(), bestLog.getAIC());
@@ -253,7 +253,7 @@ public class DistribModel {
     public static RasterLayer extrapolate(final Project project, final double resol, 
             final List<String> vars, final double [] coefs, final double alpha,
             final Map<String, GridCoverage2D> extVars, final Linkset cost, final boolean multiAttach,
-            final double dMax, ProgressBar monitor) throws Throwable {
+            final double dMax, ProgressBar monitor)  {
         monitor.setProgress(1);
 
         final int wi = (int)(project.getZone().getWidth() / resol);
@@ -277,15 +277,17 @@ public class DistribModel {
                     for(int y = start; y < end; y++) {
                         for(int x = 0; x < wi; x++) {
                             Coordinate c = new Coordinate(minx + x*resol, maxy - y*resol);
-                            if(isCanceled())
+                            if(isCanceled()) {
                                 return null;
+                            }
                             if(!project.isInZone(c.x, c.y)) {
                                 raster.setSample(x, y, 0, Float.NaN);
                                 continue;
                             }
-                            HashMap<DefaultFeature, Path> patchDists = new HashMap<DefaultFeature, Path>();
-                            if(multiAttach)
+                            HashMap<DefaultFeature, Path> patchDists = new HashMap<>();
+                            if(multiAttach) {
                                 patchDists = pathFinder.calcPaths(c, dMax, false);
+                            }
   
                             if(patchDists.isEmpty()) {
                                 double [] d = pathFinder.calcPathNearestPatch(new GeometryFactory().createPoint(c));
@@ -297,13 +299,14 @@ public class DistribModel {
                             xVal[0] = 1;
                             int k = 1;
                             for(String var : vars) {
-                                if(var.startsWith("ext-"))
+                                if(var.startsWith("ext-")) {
                                     try {
                                         xVal[k] = extVars.get(var).evaluate((DirectPosition)new DirectPosition2D(c.x, c.y), new double[1])[0];
                                     } catch(PointOutsideCoverageException ex) {
+                                        Logger.getLogger(DistribModel.class.getName()).log(Level.FINER, "Point is outside of grid " + var, ex);
                                         xVal[k] = Double.NaN;
                                     }
-                                else {
+                                } else {
                                     double sum = 0;
                                     double weight = 0;
                                     for(DefaultFeature patch : patchDists.keySet()) {
@@ -317,27 +320,32 @@ public class DistribModel {
                             }
 
                             raster.setSample(x, y, 0, function.value((xVal)));
-
-                            
                         }
                         incProgress(1);
                     }
-                } catch(Exception e) {
+                } catch(IOException | CannotEvaluateException e) {
                     throw new RuntimeException(e);
                 }
                 return null;
             }
 
+            @Override
             public int getSplitRange() {
                 return h;
             }
-            public void finish(Collection results) {  }
-            public Object getResult() { return null; }
+            @Override
+            public void finish(Collection results) { 
+            }
+            @Override
+            public Object getResult() { 
+                return null; 
+            }
         };
 
         new ParallelFExecutor(task).executeAndWait();
-        if(task.isCanceled()) 
+        if(task.isCanceled()) { 
             return null;
+        }
         
         return new RasterLayer("_" + resol, 
                 new RasterShape(raster, new Rectangle2D.Double(minx-resol/2, maxy-h*resol+resol/2, wi*resol, h*resol),
@@ -346,7 +354,7 @@ public class DistribModel {
     
     public static RasterLayer interpolate(final Project project, final double resol, 
             final String var, final double alpha, final Linkset cost, final boolean multiAttach,
-            final double dMax, ProgressBar monitor) throws Throwable {
+            final double dMax, ProgressBar monitor) {
 
         final int wi = (int)(project.getZone().getWidth() / resol);
         final int h = (int)(project.getZone().getHeight() / resol);
@@ -367,15 +375,17 @@ public class DistribModel {
                     for(int y = start; y < end; y++) {
                         for(int x = 0; x < wi; x++) {
                             Coordinate c = new Coordinate(minx + x*resol, maxy - y*resol);
-                            if(isCanceled())
+                            if(isCanceled()) {
                                 return null;
+                            }
                             if(!project.isInZone(c.x, c.y)) {
                                 raster.setSample(x, y, 0, Float.NaN);
                                 continue;
                             }
-                            HashMap<DefaultFeature, Path> patchDists = new HashMap<DefaultFeature, Path>();
-                            if(multiAttach)
+                            HashMap<DefaultFeature, Path> patchDists = new HashMap<>();
+                            if(multiAttach) {
                                 patchDists = pathFinder.calcPaths(c, dMax, false);
+                            }
   
                             if(patchDists.isEmpty()) {
                                 double [] d = pathFinder.calcPathNearestPatch(new GeometryFactory().createPoint(c));
@@ -411,8 +421,9 @@ public class DistribModel {
         };
 
         new ParallelFExecutor(task).executeAndWait();
-        if(task.isCanceled()) 
+        if(task.isCanceled()) { 
             return null;
+        }
         
         return new RasterLayer("_" + resol, 
                 new RasterShape(raster, new Rectangle2D.Double(minx-resol/2, maxy-h*resol+resol/2, wi*resol, h*resol),

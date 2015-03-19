@@ -1,11 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.addpatch;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,15 +27,17 @@ public class AddPatchGraphGenerator extends GraphGenerator {
         this.gen = gen;
         this.addedElem = null;
                 
-        if(gen.isIntraPatchDist())
+        if(gen.isIntraPatchDist()) {
             throw new IllegalArgumentException("Intra patch distance is not supported");
+        }
         
         graph = gen.dupGraphWithout(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }
     
     public void addPatch(Geometry geom, double capa) throws Exception {
-        if(addedElem != null)
+        if(addedElem != null) {
             throw new IllegalStateException("Graph already contains an added element");
+        }
         
         BasicGraphBuilder builder = new BasicGraphBuilder();
         // crée le noeud
@@ -60,8 +58,9 @@ public class AddPatchGraphGenerator extends GraphGenerator {
                         break;
                     }
                 }
-                if(nodeB == null)
+                if(nodeB == null) {
                     throw new IllegalStateException("Graph does not contain the patch node : " + d.getId());
+                }
                 Edge edge = builder.buildEdge(node, nodeB);
                 edge.setObject(path);
                 node.add(edge);

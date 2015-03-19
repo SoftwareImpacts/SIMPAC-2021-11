@@ -1,11 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 
 package org.thema.graphab.metric;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,13 +9,11 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.thema.common.parallel.AbstractParallelFTask;
-import org.thema.common.parallel.ParallelFTask;
 import org.thema.common.swing.TaskMonitor;
-import org.thema.graphab.links.Linkset;
-import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.MainFrame;
-import org.thema.graphab.links.Path;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.Linkset;
+import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.global.GlobalMetric;
 
 /**
@@ -64,11 +58,12 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
         
         // distance en abscisse
         if(distAbs) {
-            TreeSet<Double> distSet = new TreeSet<Double>();
-            for(Path p : Project.getProject().getPaths(linkName))
+            TreeSet<Double> distSet = new TreeSet<>();
+            for(Path p : Project.getProject().getPaths(linkName)) {
                 distSet.add(getPathDist(p));
+            }
 
-            dists = new ArrayList<Double>();
+            dists = new ArrayList<>();
             int size = -1;
             for(double t = min; t <= max; t += inc) {
                 int n = distSet.headSet(t, true).size();
@@ -79,19 +74,22 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
             }
             // ou nb lien en abscisse
         } else {
-            ArrayList<Double> distLst = new ArrayList<Double>();
-            for(Path p : Project.getProject().getPaths(linkName))
+            ArrayList<Double> distLst = new ArrayList<>();
+            for(Path p : Project.getProject().getPaths(linkName)) {
                 distLst.add(getPathDist(p));
+            }
             Collections.sort(distLst);
-            TreeSet<Double> distSet = new TreeSet<Double>();
+            TreeSet<Double> distSet = new TreeSet<>();
 
-            for(double n = min; n <= max; n += inc)
-                if(n == 0)
+            for(double n = min; n <= max; n += inc) {
+                if (n == 0) {
                     distSet.add(0.0);
-                else
+                } else {
                     distSet.add(distLst.get((int)n-1));
+                }
+            }
             
-            dists = new ArrayList<Double>(distSet);
+            dists = new ArrayList<>(distSet);
         }
 
         monitor.setMaximum(dists.size());
@@ -105,10 +103,11 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
 
     @Override
     protected TreeMap<Double, Double[]> execute(int start, int end) {
-        TreeMap<Double, Double[]> results = new TreeMap<Double, Double[]>();
+        TreeMap<Double, Double[]> results = new TreeMap<>();
         for(double t : dists.subList(start, end)) {
-            if(isCanceled())
+            if(isCanceled()) {
                 return null;
+            }
             GraphGenerator gen = new GraphGenerator("g", Project.getProject().getLinkset(linkName),
                     GraphGenerator.THRESHOLD, t, intraPatchDist);
             Double[] res = launcher.calcIndice(gen, new TaskMonitor.EmptyMonitor());
@@ -127,15 +126,17 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
 
     @Override
     public void finish(Collection<TreeMap<Double, Double[]>> results) {
-        result = new TreeMap<Double, Double[]>();
-        for(TreeMap<Double, Double[]> o : results)
+        result = new TreeMap<>();
+        for(TreeMap<Double, Double[]> o : results) {
             result.putAll(o);
+        }
 
         if(distAbs) {
             //insert non calculated elem
             for(double t = min; t <= max; t += inc) {
-                if(!result.containsKey(t))
+                if(!result.containsKey(t)) {
                     result.put(t, result.floorEntry(t).getValue());
+                }
             }
         } 
 //        else {

@@ -40,24 +40,27 @@ public final class AlphaParamMetric implements Serializable {
     }
     
     public void setParams(Map<String, Object> params) {
-        if(params.containsKey(DIST))
+        if(params.containsKey(DIST)) {
             d = ((Number)params.get(DIST)).doubleValue();
-        else
+        } else {
             throw new IllegalArgumentException("Parameter " + DIST + " not found");
-        if(params.containsKey(PROBA))
+        }
+        if(params.containsKey(PROBA)) {
             p = ((Number)params.get(PROBA)).doubleValue();
-        else
+        } else {
             throw new IllegalArgumentException("Parameter " + PROBA + " not found");
-        if(params.containsKey(BETA))
-            beta = ((Number)params.get(BETA)).doubleValue();        
-        else
+        }
+        if(params.containsKey(BETA)) {
+            beta = ((Number)params.get(BETA)).doubleValue();
+        } else {
             throw new IllegalArgumentException("Parameter " + BETA + " not found");
+        }
 
         alpha = -Math.log(p) / d;
     }
 
     public LinkedHashMap<String, Object> getParams() {
-        LinkedHashMap<String, Object> params = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(DIST, d);
         params.put(PROBA, p);
         params.put(BETA, beta);

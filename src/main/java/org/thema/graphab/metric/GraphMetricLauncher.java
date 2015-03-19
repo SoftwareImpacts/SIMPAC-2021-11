@@ -8,9 +8,9 @@ package org.thema.graphab.metric;
 import java.io.Serializable;
 import java.util.concurrent.CancellationException;
 import org.thema.common.swing.TaskMonitor;
-import org.thema.parallel.ExecutorService;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.global.GlobalMetric;
+import org.thema.parallel.ExecutorService;
 
 /**
  *
@@ -48,20 +48,23 @@ public class GraphMetricLauncher implements Serializable {
     }
     
     public Double[] calcIndice(final GraphGenerator graph, TaskMonitor monitor) {
-        if(monitor == null)
+        if(monitor == null) {
             monitor = new TaskMonitor.EmptyMonitor();
+        }
         GlobalMetric indice = (GlobalMetric) refIndice.dupplicate();
         
         monitor.setMaximum(100);
 
         if(indice instanceof PreCalcMetric) {
             PreCalcMetricTask pathTask = new PreCalcMetricTask(graph, (PreCalcMetric)indice, maxCost, monitor.getSubMonitor(0, 100, 100));
-            if(threaded)
+            if(threaded) {
                 ExecutorService.execute(pathTask);
-            else
+            } else {
                 ExecutorService.executeSequential(pathTask);
-            if(pathTask.isCanceled()) 
+            } 
+            if(pathTask.isCanceled()) {
                 throw new CancellationException();
+            }
         }
 
         monitor.setNote(indice.getName());

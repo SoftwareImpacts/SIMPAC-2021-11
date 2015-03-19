@@ -10,11 +10,11 @@ import java.util.Map;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
 import org.thema.data.feature.Feature;
+import org.thema.graphab.Project;
+import org.thema.graphab.Project.Method;
 import org.thema.graphab.graph.DeltaGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphGenerator.PathFinder;
-import org.thema.graphab.Project;
-import org.thema.graphab.Project.Method;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
@@ -35,8 +35,9 @@ public class DeltaPCMetric extends AbstractPathMetric {
     public Double calcPartIndice(PathFinder finder, GraphGenerator g) {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
-        for(Node node : finder.getComputedNodes()) 
+        for(Node node : finder.getComputedNodes()) { 
             sum += Math.pow(srcCapa * Project.getPatchCapacity(node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*finder.getCost(node));
+        }
         
         return sum;
     }
@@ -58,15 +59,18 @@ public class DeltaPCMetric extends AbstractPathMetric {
                 GraphGenerator parentGraph = ((DeltaGraphGenerator)g).getParentGraph();
                 PathFinder pathFinder = parentGraph.getPathFinder(parentGraph.getNode((Feature) remNode.getObject()));
                 double srcCapa = Project.getPatchCapacity(remNode);
-                for(Node node : pathFinder.getComputedNodes()) 
-                    if(node.getObject() != remNode.getObject())
+                for(Node node : pathFinder.getComputedNodes()) {
+                    if (node.getObject() != remNode.getObject()) {
                         flux += Math.pow(srcCapa * Project.getPatchCapacity(node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*pathFinder.getCost(node));
+                    }
+                }
                 
                 flux = 2 * flux;// / Math.pow(Project.getArea(), 2);
             }
             return new Double[] {intra, flux, indice+intra+flux};
-        } else
+        } else {
             return new Double[] {null, null, indice};
+        }
     }
 
     @Override

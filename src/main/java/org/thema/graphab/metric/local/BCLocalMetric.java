@@ -39,37 +39,39 @@ public class BCLocalMetric extends AbstractBCLocalMetric<PathFinder> {
 
     @Override
     public HashMap<Object, Double> calcPartIndice(PathFinder finder, GraphGenerator g) {
-        HashMap<Object, Double> result = new HashMap<Object, Double>();
+        HashMap<Object, Double> result = new HashMap<>();
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
-        for(Node node : finder.getComputedNodes()) 
-            if(((Integer)Project.getPatch(finder.getNodeOrigin()).getId()) < (Integer)Project.getPatch(node).getId()) {
+        for(Node node : finder.getComputedNodes()) {
+            if (((Integer)Project.getPatch(finder.getNodeOrigin()).getId()) < (Integer)Project.getPatch(node).getId()) {
                 Path path = finder.getPath(node);
-                if(path == null)
+                if (path == null) {
                     continue;
+                }
                 double v = Math.pow(Project.getPatchCapacity(node) * srcCapa, alphaParam.getBeta());
-                if(shortDist)
+                if (shortDist) {
                     v *= Math.exp(-alphaParam.getAlpha() * finder.getCost(node));
-                else
+                } else {
                     v *= 1 - Math.exp(-alphaParam.getAlpha() * finder.getCost(node));
-
+                }
                 List<Node> nodes = path.getNodes();
-                for(int i = 1; i < nodes.size()-1; i++) {
+                for (int i = 1; i < nodes.size()-1; i++) {
                     Feature f = (Feature)nodes.get(i).getObject();
-                    if(result.containsKey(f.getId()))
+                    if (result.containsKey(f.getId())) {
                         result.put(f.getId(), result.get(f.getId()) + v);
-                    else
+                    } else {
                         result.put(f.getId(), v);
+                    }
                 }
-                
-                for(Edge e : path.getEdges()) {
+                for (Edge e : path.getEdges()) {
                     Feature f = (Feature)e.getObject();
-                    if(result.containsKey(f.getId()))
+                    if (result.containsKey(f.getId())) {
                         result.put(f.getId(), result.get(f.getId()) + v);
-                    else
+                    } else {
                         result.put(f.getId(), v);
+                    }
                 }
-                   
             }
+        }
         return result;
     }
 

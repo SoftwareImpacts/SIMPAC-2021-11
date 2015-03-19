@@ -5,8 +5,8 @@
 
 package org.thema.graphab.metric.global;
 
-import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
 
 /**
  *

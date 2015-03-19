@@ -25,8 +25,9 @@ public class ConCorrLocalMetric extends LocalMetric {
     @Override
     public double calcIndice(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
-        if(node.getDegree() == 0)
+        if(node.getDegree() == 0) {
             return 0;
+        }
         
         double sum = 0;
         int nb = 0;

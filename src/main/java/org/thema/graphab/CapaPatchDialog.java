@@ -41,8 +41,9 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         getRootPane().setDefaultButton(okButton);
 
         this.params = capaParam;
-        if(params == null)
+        if(params == null) {
             params = new CapaPatchParam();
+        }
 
         DefaultComboBoxModel model = new DefaultComboBoxModel(project.getLinksetNames().toArray());
         model.insertElementAt("(All costs = 1)", 0);
@@ -52,16 +53,18 @@ public class CapaPatchDialog extends javax.swing.JDialog {
 
         if(!params.calcArea) {
             neighborhoodRadioButton.setSelected(true);
-            if(params.costName == null)
+            if(params.costName == null) {
                 costComboBox.setSelectedIndex(0);
-            else
+            } else {
                 costComboBox.setSelectedItem(params.costName);
+            }
             maxCostSpinner.setValue(params.maxCost);
             costWeightedCheckBox.setSelected(params.weightCost);
             int [] selInds = new int[params.codes.size()];
             int i = 0;
-            for(Integer val : params.codes)
+            for(Integer val : params.codes) {
                 selInds[i++] = model.getIndexOf(val);
+            }
             codeList.setSelectedIndices(selInds);
         }
     }
@@ -244,10 +247,11 @@ public class CapaPatchDialog extends javax.swing.JDialog {
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         params.calcArea = areaRadioButton.isSelected();
         if(!params.calcArea) {
-            if(costComboBox.getSelectedIndex() > 0)
+            if(costComboBox.getSelectedIndex() > 0) {
                 params.costName = costComboBox.getSelectedItem().toString();
-            else
+            } else {
                 params.costName = null;
+            }
 
             params.codes = new HashSet(Arrays.asList(codeList.getSelectedValues()));
             params.maxCost = (Double)maxCostSpinner.getValue();

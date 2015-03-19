@@ -1,13 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 
 package org.thema.graphab.pointset;
 
 
 import com.vividsolutions.jts.geom.Coordinate;
-import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -18,13 +14,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
-import org.geotools.graph.structure.Edge;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask.IterParallelTask;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
-import org.thema.graph.pathfinder.Path;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
@@ -58,10 +52,12 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
         });
         this.exoData = exo;
         
-        List<GraphGenerator> graphs = new ArrayList<GraphGenerator>();
-        for(GraphGenerator g : Project.getProject().getGraphs())
-            if(g.getLinkset() == exo.getLinkset())
+        List<GraphGenerator> graphs = new ArrayList<>();
+        for(GraphGenerator g : Project.getProject().getGraphs()) {
+            if (g.getLinkset() == exo.getLinkset()) {
                 graphs.add(g);
+            }
+        }
 //        graphFlowComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
         graphCostComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
 //        graphCircCostComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));

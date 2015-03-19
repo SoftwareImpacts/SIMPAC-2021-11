@@ -8,7 +8,14 @@ package org.thema.graphab;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.thoughtworks.xstream.XStream;
-import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.geom.util.NoninvertibleTransformationException;
 import com.vividsolutions.jts.index.strtree.ItemBoundable;
@@ -21,12 +28,34 @@ import java.awt.Color;
 import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.*;
-import java.io.*;
+import java.awt.image.BandedSampleModel;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferInt;
+import java.awt.image.Raster;
+import java.awt.image.RenderedImage;
+import java.awt.image.WritableRaster;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,10 +83,11 @@ import org.thema.common.ProgressBar;
 import org.thema.common.Util;
 import org.thema.common.collection.HashMap2D;
 import org.thema.common.io.IOFile;
-import org.thema.data.IOImage;
-import org.thema.common.parallel.*;
+import org.thema.common.parallel.ParallelFExecutor;
+import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.GlobalDataStore;
+import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureGetter;
@@ -71,13 +101,38 @@ import org.thema.drawshape.style.LineStyle;
 import org.thema.drawshape.style.RasterStyle;
 import org.thema.graph.shape.GraphGroupLayer;
 import org.thema.graphab.CapaPatchDialog.CapaPatchParam;
+import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.CircuitRaster;
+import org.thema.graphab.links.EuclidePathFinder;
+import org.thema.graphab.links.Links;
+import org.thema.graphab.links.Linkset;
+import org.thema.graphab.links.Path;
+import org.thema.graphab.links.RasterPathFinder;
+import org.thema.graphab.links.SpacePathFinder;
+import org.thema.graphab.metric.Metric;
+import org.thema.graphab.metric.global.CCPMetric;
+import org.thema.graphab.metric.global.DeltaPCMetric;
+import org.thema.graphab.metric.global.ECSMetric;
+import org.thema.graphab.metric.global.GDMetric;
+import org.thema.graphab.metric.global.GlobalMetric;
+import org.thema.graphab.metric.global.HMetric;
+import org.thema.graphab.metric.global.IICMetric;
+import org.thema.graphab.metric.global.MSCMetric;
+import org.thema.graphab.metric.global.NCMetric;
+import org.thema.graphab.metric.global.PCMetric;
+import org.thema.graphab.metric.global.SLCMetric;
+import org.thema.graphab.metric.global.SumLocal2GlobalMetric;
+import org.thema.graphab.metric.local.BCLocalMetric;
+import org.thema.graphab.metric.local.CCLocalMetric;
+import org.thema.graphab.metric.local.ClosenessLocalMetric;
+import org.thema.graphab.metric.local.ConCorrLocalMetric;
+import org.thema.graphab.metric.local.DgLocalMetric;
+import org.thema.graphab.metric.local.EccentricityLocalMetric;
+import org.thema.graphab.metric.local.FLocalMetric;
+import org.thema.graphab.metric.local.FPCLocalMetric;
+import org.thema.graphab.metric.local.LocalMetric;
 import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.pointset.PointsetDistanceDialog;
-import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.links.*;
-import org.thema.graphab.metric.Metric;
-import org.thema.graphab.metric.global.*;
-import org.thema.graphab.metric.local.*;
 import org.thema.graphab.util.DistanceOp;
 import org.thema.graphab.util.RSTGridReader;
 
@@ -938,8 +993,9 @@ public final class Project {
     }
 
     public SpacePathFinder getPathFinder(Linkset linkset) throws IOException {
-        if(linkset.getType_dist() == Linkset.CIRCUIT)
+        if(linkset.getType_dist() == Linkset.CIRCUIT) {
             throw new IllegalArgumentException("Circuit linkset is not supported");
+        }
         return linkset.getType_dist() == Linkset.EUCLID ?
             new EuclidePathFinder(this) : getRasterPathFinder(linkset);
     }
@@ -1105,7 +1161,7 @@ public final class Project {
     public void removeExoDataset(final String name) throws IOException, SchemaException {
         exoDatas.remove(name);
 
-        List<String> attrs = new ArrayList<String>();
+        List<String> attrs = new ArrayList<>();
         for(String attr : patches.get(0).getAttributeNames()) {
             if(attr.startsWith(name + ".")) {
                 attrs.add(attr);

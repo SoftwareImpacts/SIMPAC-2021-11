@@ -13,8 +13,10 @@ package org.thema.graphab.pointset;
 
 import au.com.bytecode.opencsv.CSVReader;
 import com.vividsolutions.jts.geom.Geometry;
+import java.awt.HeadlessException;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -182,14 +184,14 @@ public class PointImportDialog extends javax.swing.JDialog {
         xComboBox.setEnabled(!shpFile);
         yComboBox.setEnabled(!shpFile);
 
-        List<String> attrs = new ArrayList<String>();
+        List<String> attrs = new ArrayList<>();
         try {
             if(shpFile) {
                 ShapefileDataStore datastore = new ShapefileDataStore(f.toURL());
                 List<AttributeType> types = datastore.getSchema().getTypes();
                 DefaultComboBoxModel model = new DefaultComboBoxModel();
-                for(AttributeType type : types)
-                    if(Geometry.class.isAssignableFrom(type.getBinding())) {
+                for(AttributeType type : types) {
+                    if (Geometry.class.isAssignableFrom(type.getBinding())) {
                         if(!type.getBinding().getName().endsWith("Point")) {
                             selectFilePanel.setSelectedFile(null);
                             JOptionPane.showMessageDialog(this, "Geometry type must be Point or MultiPoint.");
@@ -197,16 +199,19 @@ public class PointImportDialog extends javax.swing.JDialog {
                         }
                     } else {
                         model.addElement(type.getName().getLocalPart());
-                        if(Number.class.isAssignableFrom(type.getBinding()))
+                        if (Number.class.isAssignableFrom(type.getBinding())) {
                             attrs.add(type.getName().getLocalPart());
+                        }
                     }
+                }
 
                 idComboBox.setModel(model);
                 datastore.dispose();
             } else {
-                CSVReader r = new CSVReader(new FileReader(f));
-                String [] header = r.readNext();
-                r.close();
+                String[] header;
+                try (CSVReader r = new CSVReader(new FileReader(f))) {
+                    header = r.readNext();
+                }
                 idComboBox.setModel(new DefaultComboBoxModel(header));
                 xComboBox.setModel(new DefaultComboBoxModel(header));
                 yComboBox.setModel(new DefaultComboBoxModel(header));
@@ -214,7 +219,7 @@ public class PointImportDialog extends javax.swing.JDialog {
             }
 
             multipleSelectionPanel.setItems(attrs.toArray());
-        } catch(Exception ex) {
+        } catch(IOException | HeadlessException ex) {
             Logger.getLogger(PointImportDialog.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, "An error occured !\n" + ex.getLocalizedMessage());
         }

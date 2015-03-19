@@ -17,12 +17,16 @@ import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferDouble;
 import java.awt.image.Raster;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.PriorityQueue;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
-import org.thema.graphab.Project;
-
-/**
+import org.thema.graphab.Project;/**
  * This class is not thread safe.<br/>
  * Create one instance for each thread
  * 
@@ -103,7 +107,7 @@ public final class RasterPathFinder implements SpacePathFinder {
      * @param ry
      */
     private void initCoord(int rx, int ry) {
-        queue = new PriorityQueue<Node>();
+        queue = new PriorityQueue<>();
 
         initDistBuf(rx-100, ry-100, 200, 200);
         final int w = rasterPatch.getWidth();
@@ -119,13 +123,14 @@ public final class RasterPathFinder implements SpacePathFinder {
      * @throws IllegalArgumentException if geom is not polygonal
      */
     private void initGeom(Geometry geom) {    
-        if(!(geom instanceof Polygonal))
+        if(!(geom instanceof Polygonal)) {
             throw new IllegalArgumentException("Geometry must be polygonal");
+        }
         final int w = rasterPatch.getWidth();
         GeometryFactory geomFactory = geom.getFactory();
         Geometry geomGrid = project.getSpace2grid().transform(geom);
         Envelope env = geomGrid.getEnvelopeInternal();
-        queue = new PriorityQueue<Node>();
+        queue = new PriorityQueue<>();
         for(double y = (int)env.getMinY() + 0.5; y <= Math.ceil(env.getMaxY()); y++) {
             for(double x = (int)env.getMinX() + 0.5; x <= Math.ceil(env.getMaxX()); x++) {
                 if(geomGrid.contains(geomFactory.createPoint(new Coordinate(x, y)))) {
@@ -137,8 +142,9 @@ public final class RasterPathFinder implements SpacePathFinder {
         initDistBuf((int)env.getMinX()-100, (int)env.getMinY()-100, (int)env.getWidth()+200, (int)env.getHeight()+200);
 
         // initialisation des distances à zéro pour l'ensemble de la géométrie
-        for(Node n : queue)
+        for(Node n : queue) {
             setDist(n.ind, 0);
+        }
     }
 
     /**
@@ -159,25 +165,30 @@ public final class RasterPathFinder implements SpacePathFinder {
         env = gEnv.getEnvelopeInternal();
 
         //  ajout dans la queue des pixels de bord
-        queue = new PriorityQueue<Node>();
-        for(int i = (int)env.getMinY(); i <= env.getMaxY(); i++)
-            for(int j = (int)env.getMinX(); j <= env.getMaxX(); j++)
-                if(rasterPatch.getSample(j, i, 0) == id) {
+        queue = new PriorityQueue<>();
+        for(int i = (int)env.getMinY(); i <= env.getMaxY(); i++) {
+            for (int j = (int)env.getMinX(); j <= env.getMaxX(); j++) {
+                if (rasterPatch.getSample(j, i, 0) == id) {
                     rasterPatch.getPixels(j-1, i-1, 3, 3, tab);
                     boolean border = false;
-                    for(int k = 0; !border && k < 9; k++)
-                        if(tab[k] != id)
+                    for (int k = 0; !border && k < 9; k++) {
+                        if (tab[k] != id) {
                             border = true;
-                    if(border)
+                        }
+                    }
+                    if (border) {
                         queue.add(new Node(i*w+j, 0));
-
+                    }
                 }
+            }
+        }
 
         initDistBuf((int)env.getMinX()-100, (int)env.getMinY()-100, (int)env.getWidth()+200, (int)env.getHeight()+200);
 
         // initialisation des distances à zéro pour le contour la tache origine
-        for(Node n : queue)
+        for(Node n : queue) {
             setDist(n.ind, 0);
+        }
     }
     
     /**
@@ -191,7 +202,7 @@ public final class RasterPathFinder implements SpacePathFinder {
     public List<double[]> calcPaths(Coordinate p, List<Coordinate> dests) {
         initCoord(p);
         final int w = rasterPatch.getWidth();
-        HashSet<Integer> indDests = new HashSet<Integer>();
+        HashSet<Integer> indDests = new HashSet<>();
         for(Coordinate dest : dests) {
             Coordinate cp = project.getSpace2grid().transform(dest, new Coordinate());
             int rx = (int)cp.x;
@@ -204,7 +215,7 @@ public final class RasterPathFinder implements SpacePathFinder {
             indDests.remove(n.ind);
         }
 
-        List<double[]> distances = new ArrayList<double[]>(dests.size());
+        List<double[]> distances = new ArrayList<>(dests.size());
         for(Coordinate dest : dests) {
             Coordinate cp = project.getSpace2grid().transform(dest, new Coordinate());
             int rx = (int)cp.x;
@@ -221,26 +232,29 @@ public final class RasterPathFinder implements SpacePathFinder {
     
     @Override
     public HashMap<DefaultFeature, Path> calcPaths(Geometry geom, double maxCost, boolean realPath) {
-        if(geom instanceof Point)
+        if(geom instanceof Point) {
             initCoord(((Point)geom).getCoordinate());
-        else
+        } else {
             initGeom(geom);
+        }
         
         DefaultFeature geomPatch = new DefaultFeature(geom.getCentroid().getCoordinate().toString(), geom);
-        HashMap<DefaultFeature, Path> paths = new HashMap<DefaultFeature, Path>();
+        HashMap<DefaultFeature, Path> paths = new HashMap<>();
         while(!queue.isEmpty()) {
             Node current = updateNextNodes(queue);
-            if(maxCost > 0 && current.dist > maxCost)
+            if(maxCost > 0 && current.dist > maxCost) {
                 break;
+            }
             int curId = rasterPatch.getSample(getX(current.ind), getY(current.ind), 0);
             if(curId > 0) {
                 DefaultFeature dest = project.getPatch(curId);
                 if(!paths.keySet().contains(dest)) {
                     LineString line = getPath(current.ind);
-                    if(realPath)
+                    if(realPath) {
                         paths.put(dest, new Path(geomPatch, dest, current.dist, line));
-                    else
+                    } else {
                         paths.put(dest, new Path(geomPatch, dest, current.dist, line.getLength()));
+                    }
                 }
             }
         }
@@ -264,16 +278,18 @@ public final class RasterPathFinder implements SpacePathFinder {
         
         final int id = (Integer)oPatch.getId();
 
-        HashMap<Feature, Path> distances = new HashMap<Feature, Path>();
+        HashMap<Feature, Path> distances = new HashMap<>();
         while(!queue.isEmpty()) {
             Node current = updateNextNodes(queue);
-            if(maxCost > 0 && current.dist > maxCost)
+            if(maxCost > 0 && current.dist > maxCost) {
                 break;
+            }
             int curId = rasterPatch.getSample(getX(current.ind), getY(current.ind), 0);
             if(curId > 0 && curId != id && (all || curId > id)) {
                 Feature dest = project.getPatch(curId);
-                if(distances.keySet().contains(dest))
+                if(distances.keySet().contains(dest)) {
                     continue;
+                }
 
                 LineString line = getPath(current.ind);
                 distances.put(dest, realPath ? new Path(dest, oPatch, current.dist, line) :
@@ -289,11 +305,12 @@ public final class RasterPathFinder implements SpacePathFinder {
 
         initPatch(oPatch);
         
-        HashMap<Integer, Feature> destId = new HashMap<Integer, Feature>();
-        for(Feature f : dPatch)
+        HashMap<Integer, Feature> destId = new HashMap<>();
+        for(Feature f : dPatch) {
             destId.put((Integer)f.getId(), f);
+        }
 
-        HashMap<Feature, Path> distances = new HashMap<Feature, Path>();
+        HashMap<Feature, Path> distances = new HashMap<>();
         while(!queue.isEmpty() && !destId.isEmpty()) {
             Node current = updateNextNodes(queue);
 
@@ -305,8 +322,9 @@ public final class RasterPathFinder implements SpacePathFinder {
             }
         }
 
-        if(!destId.isEmpty())
+        if(!destId.isEmpty()) {
             throw new RuntimeException("Impossible de calculer le chemin de " + oPatch.getId() + " à " + Arrays.deepToString(destId.keySet().toArray()));
+        }
 
         return distances;
     }
@@ -362,12 +380,13 @@ public final class RasterPathFinder implements SpacePathFinder {
 
         double neighborhood = 0;
         double alpha = -Math.log(0.05) / maxCost;
-        HashSet<Integer> counts = new HashSet<Integer>();
+        HashSet<Integer> counts = new HashSet<>();
 
         while(!queue.isEmpty()) {
             Node current = updateNextNodes(queue);
-            if(current.dist > maxCost)
+            if(current.dist > maxCost) {
                 break;
+            }
             int code = rasterCode.getSample(getX(current.ind), getY(current.ind), 0);
             if(current.dist > 0 && codes.contains(code) && !counts.contains(current.ind)) {
                 neighborhood += costWeighted ? Math.exp(-alpha*current.dist) : 1;
@@ -391,8 +410,9 @@ public final class RasterPathFinder implements SpacePathFinder {
 
         while(!queue.isEmpty()) {
             Node current = updateNextNodes(queue);
-            if(maxCost > 0 && current.dist > maxCost)
+            if(maxCost > 0 && current.dist > maxCost) {
                 break;
+            }
         }
         
         return Raster.createRaster(new BandedSampleModel(DataBuffer.TYPE_DOUBLE, wd, hd, 1), 
@@ -401,7 +421,7 @@ public final class RasterPathFinder implements SpacePathFinder {
 
     private LineString getPath(int ind) {
         int w = rasterPatch.getWidth();
-        ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
+        ArrayList<Coordinate> coords = new ArrayList<>();
         coords.add(new Coordinate(ind % w + 0.5, ind / w + 0.5));
         int curInd = ind;
         int idAnte = getAnte(ind);
@@ -412,15 +432,16 @@ public final class RasterPathFinder implements SpacePathFinder {
             idAnte = getAnte(curInd);
         }
         // simplify linestring
-        ArrayList<Coordinate> simpCoords = new ArrayList<Coordinate>();
+        ArrayList<Coordinate> simpCoords = new ArrayList<>();
         for(int i = 1; i < coords.size()-1; i++) {
             Coordinate precCoord = coords.get(i-1);
             Coordinate coord = coords.get(i);
             Coordinate nextCoord = coords.get(i+1);
             double a1 = (coord.x - precCoord.x) / (coord.y - precCoord.y);
             double a2 = (nextCoord.x - coord.x) / (nextCoord.y - coord.y);
-            if(a1 != a2)
+            if(a1 != a2) {
                 simpCoords.add(coord);
+            }
         }
         simpCoords.add(0, coords.get(0));
         simpCoords.add(coords.get(coords.size()-1));
@@ -431,14 +452,15 @@ public final class RasterPathFinder implements SpacePathFinder {
 
     private Node updateNextNodes(PriorityQueue<Node> queue) {
         Node current = queue.poll();
-        while(!queue.isEmpty() && current.dist > getDist(current.ind))
+        while(!queue.isEmpty() && current.dist > getDist(current.ind)) {
             current = queue.poll();
+        }
         
         final int x = current.ind % rasterPatch.getWidth();
         final int y = current.ind / rasterPatch.getWidth();
         final double currentCost = getCost(x, y);
             
-        for(int i = 0; i < CON; i++)
+        for(int i = 0; i < CON; i++) {
             if(isInside(x + X[i], y + Y[i])) {
                 final double c = getCost(x+X[i], y+Y[i]);
                 final double newCost = current.dist + 
@@ -451,6 +473,7 @@ public final class RasterPathFinder implements SpacePathFinder {
                     queue.add(newNode);
                 }
             }
+        }
         
         return current;
     }
@@ -478,12 +501,18 @@ public final class RasterPathFinder implements SpacePathFinder {
     }
 
     private void initDistBuf(int x, int y, int w, int h) {
-        if(x < 0) x = 0;
-        if(y < 0) y = 0;
-        if(x+w > rasterPatch.getWidth())
+        if(x < 0) {
+            x = 0;
+        }
+        if(y < 0) {
+            y = 0;
+        }
+        if(x+w > rasterPatch.getWidth()) {
             w = rasterPatch.getWidth() - x;
-        if(y+h > rasterPatch.getHeight())
+        }
+        if(y+h > rasterPatch.getHeight()) {
             h = rasterPatch.getHeight() - y;
+        }
         dist = new double[w*h];
         ante = new byte[w*h];
         Arrays.fill(dist, Double.MAX_VALUE);
@@ -498,8 +527,9 @@ public final class RasterPathFinder implements SpacePathFinder {
         if(x < 0 || x >= wd || y < 0 || y >= hd) {
             resizeDistBuf();
             return Double.MAX_VALUE;
-        } else
+        } else {
             return dist[y*wd+x];
+        }
 
     }
 
@@ -509,8 +539,9 @@ public final class RasterPathFinder implements SpacePathFinder {
         if(x < 0 || x >= wd || y < 0 || y >= hd) {
             resizeDistBuf();
             setDist(ind, val);
-        } else
+        } else {
             dist[y*wd+x] = val;
+        }
     }
     
     private byte getAnte(int ind) {
@@ -525,8 +556,9 @@ public final class RasterPathFinder implements SpacePathFinder {
         if(x < 0 || x >= wd || y < 0 || y >= hd) {
             resizeDistBuf();
             setAnte(ind, val);
-        } else
+        } else {
             ante[y*wd+x] = val;
+        }
     }
 
     private void resizeDistBuf() {
@@ -534,23 +566,33 @@ public final class RasterPathFinder implements SpacePathFinder {
         int h = (int)(hd*1.4+1);
         int x = xd - (int)(wd*0.2+1);
         int y = yd - (int)(hd*0.2+1);
-        if(x < 0) x = 0;
-        if(y < 0) y = 0;
-        if(x+w > rasterPatch.getWidth())
+        if(x < 0) {
+            x = 0;
+        }
+        if(y < 0) {
+            y = 0;
+        }
+        if(x+w > rasterPatch.getWidth()) {
             w = rasterPatch.getWidth() - x;
-        if(y+h > rasterPatch.getHeight())
+        }
+        if(y+h > rasterPatch.getHeight()) {
             h = rasterPatch.getHeight() - y;
+        }
         double [] buf = new double[w*h];
         Arrays.fill(buf, Double.MAX_VALUE);
-        for(int i = 0; i < hd; i++)
-            for(int j = 0; j < wd; j++)
+        for(int i = 0; i < hd; i++) {
+            for (int j = 0; j < wd; j++) {
                 buf[(i+ yd-y)*w+j+(xd-x)] = dist[i*wd+j];
+            }
+        }
         
         byte [] bufAnte = new byte[w*h];
         Arrays.fill(bufAnte, (byte)-1);
-        for(int i = 0; i < hd; i++)
-            for(int j = 0; j < wd; j++)
+        for(int i = 0; i < hd; i++) {
+            for (int j = 0; j < wd; j++) {
                 bufAnte[(i+ yd-y)*w+j+(xd-x)] = ante[i*wd+j];
+            }
+        }
 
         xd = x; yd = y;
         wd = w; hd = h;

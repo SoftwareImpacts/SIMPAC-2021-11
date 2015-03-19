@@ -18,7 +18,15 @@ import java.awt.SplashScreen;
 import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Filter;
@@ -26,24 +34,32 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import org.apache.commons.math.MathException;
 import org.geotools.feature.SchemaException;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.thema.data.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.JavaLoader;
 import org.thema.common.ProgressBar;
 import org.thema.common.Util;
-import org.thema.parallel.ExecutorService;
 import org.thema.common.io.tab.CSVTabReader;
-import org.thema.common.parallel.*;
+import org.thema.common.parallel.AbstractParallelFTask;
+import org.thema.common.parallel.ParallelFExecutor;
+import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.LoggingFrame;
 import org.thema.common.swing.PreferencesDialog;
 import org.thema.common.swing.TaskMonitor;
+import org.thema.data.GlobalDataStore;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.WritableFeature;
 import org.thema.drawshape.layer.DefaultGroupLayer;
@@ -60,7 +76,14 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.NewGraphDialog;
 import org.thema.graphab.links.LinksetPanel;
 import org.thema.graphab.links.RasterPathFinder;
-import org.thema.graphab.metric.*;
+import org.thema.graphab.metric.BatchGraphMetricDialog;
+import org.thema.graphab.metric.BatchMetricTask;
+import org.thema.graphab.metric.BatchParamMetricDialog;
+import org.thema.graphab.metric.CalcMetricDialog;
+import org.thema.graphab.metric.DeltaMetricTask;
+import org.thema.graphab.metric.GraphMetricLauncher;
+import org.thema.graphab.metric.PreCalcMetric;
+import org.thema.graphab.metric.PreCalcMetricTask;
 import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
 import org.thema.graphab.model.MetricInterpolDlg;
@@ -70,6 +93,7 @@ import org.thema.graphab.mpi.MpiLauncher;
 import org.thema.graphab.pointset.PointImportDialog;
 import org.thema.graphab.pointset.PointsetDataDialog;
 import org.thema.graphab.util.SerieFrame;
+import org.thema.parallel.ExecutorService;
 
 /**
  *
@@ -448,8 +472,9 @@ public class MainFrame extends javax.swing.JFrame {
 
         int res = JOptionPane.showConfirmDialog(this, panel, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Cost_distances"), 
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if(res != JOptionPane.OK_OPTION)
+        if(res != JOptionPane.OK_OPTION) {
             return;
+        }
 
         if(project.getLinksetNames().contains(panel.getCostName())) {
             JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("The_name_already_exists") + panel.getCostName());
@@ -499,8 +524,9 @@ public class MainFrame extends javax.swing.JFrame {
     private void addPointDataMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPointDataMenuItemActionPerformed
         final PointImportDialog dlg = new PointImportDialog(this);
         dlg.setVisible(true);
-        if(!dlg.isOk)
+        if(!dlg.isOk) {
             return;
+        }
 
         final List<DefaultFeature> features;
         try {
@@ -553,7 +579,7 @@ public class MainFrame extends javax.swing.JFrame {
                 GraphMetricLauncher launcher = new GraphMetricLauncher(dlg.indice, true);
                 TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_metrics..."), "", 0, 100);
                 Double[]val = launcher.calcIndice(dlg.graph, monitor);
-                String res = dlg.indice.getDetailName() + " : " + Arrays.deepToString(val) + "\n";;
+                String res = dlg.indice.getDetailName() + " : " + Arrays.deepToString(val) + "\n";
 
                 monitor.close();
                 System.out.println(res);
@@ -640,8 +666,9 @@ public class MainFrame extends javax.swing.JFrame {
         JCheckBox checkNode = new JCheckBox(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Nodes"), true); panel.add(checkNode);
         JCheckBox checkEdge = new JCheckBox(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Edges")); panel.add(checkEdge);
         int res = JOptionPane.showConfirmDialog(this, panel, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Delta_metrics"), JOptionPane.OK_CANCEL_OPTION);
-        if(res != JOptionPane.OK_OPTION)
+        if(res != JOptionPane.OK_OPTION) {
             return;
+        }
 
         final int nodeEdge = (checkNode.isSelected() ? 1 : 0) + (checkEdge.isSelected() ? 2 : 0);
 
@@ -884,16 +911,18 @@ public class MainFrame extends javax.swing.JFrame {
                monitor.popupNow();
                
                final List<Double> steps = new ArrayList<>();
-               for(double p = dlg.min; p <= dlg.max; p += dlg.inc)
+               for(double p = dlg.min; p <= dlg.max; p += dlg.inc) {
                    steps.add(p);
+                }
 
                AbstractParallelFTask<TreeMap<Double, Double[]>, TreeMap<Double, Double[]>> task =
                        new AbstractParallelFTask<TreeMap<Double, Double[]>, TreeMap<Double, Double[]>>(monitor.getSubMonitor(0, 100, 100)) {
                         TreeMap<Double, Double[]> results;
                         @Override
                         protected TreeMap<Double, Double[]> execute(int start, int end) {
-                            if(isCanceled())
+                            if(isCanceled()) {
                                 return null;
+                        }
                             GlobalMetric indice = (GlobalMetric)dlg.indice.dupplicate();
                             TreeMap<Double, Double[]> result = new TreeMap<>();
                             Map<String, Object> params = indice.getParams();
@@ -937,8 +966,9 @@ public class MainFrame extends javax.swing.JFrame {
                 XYSeriesCollection series = new XYSeriesCollection();
                 for(int j = 0; j < ((GlobalMetric)dlg.indice).getResultNames().length; j++) {
                     XYSeries serie = new XYSeries(((GlobalMetric)dlg.indice).getResultNames()[j]);
-                    for(Double x : results.keySet())
+                    for(Double x : results.keySet()) {
                         serie.add(x, results.get(x)[j]);
+                    }
                     series.addSeries(serie);
                 }
                 SerieFrame frm = new SerieFrame(dlg.indice.getName() ,
@@ -1011,8 +1041,9 @@ public class MainFrame extends javax.swing.JFrame {
                                     double [] costs = new double[project.getCodes().last()+1];
                                     Arrays.fill(costs, 1);
                                     pathfinder = new RasterPathFinder(project, project.getImageSource(), costs, 0);
-                                } else
+                                } else {
                                     pathfinder = project.getRasterPathFinder(project.getLinkset(project.getCapacityParams().costName));
+                                }
 
                                 for(int i = start; i < end; i++) {
                                     DefaultFeature patch = patches.get(i);
@@ -1268,8 +1299,9 @@ public class MainFrame extends javax.swing.JFrame {
         Logger globalLogger = Logger.getLogger("");
         Handler[] handlers = globalLogger.getHandlers();
         for(Handler handler : handlers) {
-            if(handler instanceof ConsoleHandler)
+            if(handler instanceof ConsoleHandler) {
                 globalLogger.removeHandler(handler);
+            }
         }
         ConsoleHandler h = new ConsoleHandler();
         h.setFilter(new Filter() {

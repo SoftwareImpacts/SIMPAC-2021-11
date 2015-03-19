@@ -5,8 +5,8 @@
 
 package org.thema.graphab.metric.global;
 
-import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
 
 /**
  *
@@ -16,7 +16,7 @@ public class NCMetric extends GlobalMetric {
 
     @Override
     public Double [] calcIndice(GraphGenerator g) {
-        return new Double[]{new Double(g.getComponents().size())};
+        return new Double[]{(double) g.getComponents().size()};
     }
 
     @Override

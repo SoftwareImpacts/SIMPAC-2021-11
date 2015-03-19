@@ -53,8 +53,9 @@ public class Logistic {
 
         A = MatrixUtils.createRealMatrix(n, nVar+1);
         A.setSubMatrix(a, 0, 1);
-        for(int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++) {
             A.setEntry(i, 0, 1);
+        }
     }
 
     private Logistic(double [] y) {
@@ -63,8 +64,9 @@ public class Logistic {
         n = y.length;
 
         A = MatrixUtils.createRealMatrix(n, 1);
-        for(int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++) {
             A.setEntry(i, 0, 1);
+        }
     }
 
     public double[] getCoefs() {
@@ -103,8 +105,9 @@ public class Logistic {
 
             if(oldExpY != null) {
                 double err = expY.subtract(oldExpY).getL1Norm();
-                if(Double.isNaN(err) || err < n*epsilon)
+                if(Double.isNaN(err) || err < n*epsilon) {
                     break;
+                }
             }
             oldExpY = expY;
         } 
@@ -123,8 +126,9 @@ public class Logistic {
     public double [] getEstimation() {
         LogisticFunction func = new LogisticFunction(params.getData());
         double [] y = new double[n];
-        for(int i = 0; i < n; i++) 
+        for(int i = 0; i < n; i++) {
             y[i] = func.value(A.getRow(i));
+        }
         return y;
     }
 
@@ -135,8 +139,9 @@ public class Logistic {
     public double estim(double [] x) {
         double [] xc = new double[nVar+1];
         xc[0] = 1;
-        for(int i = 1; i < xc.length; i++)
+        for(int i = 1; i < xc.length; i++) {
             xc[i] = x[i-1];
+        }
         return getEstimFunction().value(xc);
     }
 
@@ -144,8 +149,9 @@ public class Logistic {
         LogisticFunction func = new LogisticFunction(beta);
         double prod = 1;
 
-        for(int i = 0; i < n; i++) 
+        for(int i = 0; i < n; i++) {
             prod *= Math.pow(func.value(A.getRow(i)), Y.getEntry(i)) * Math.pow(1-func.value(A.getRow(i)), 1-Y.getEntry(i));
+        }
 
         return prod;
     }
@@ -161,8 +167,9 @@ public class Logistic {
     }
 
     public double getProbaTest() throws MathException {
-        if(Double.isInfinite(getDiffLikelihood()))
+        if(Double.isInfinite(getDiffLikelihood())) {
             return Double.NaN;
+        }
         return 1 - new ChiSquaredDistributionImpl(nVar).cumulativeProbability(getDiffLikelihood());
     }
 

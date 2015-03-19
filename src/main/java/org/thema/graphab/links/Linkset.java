@@ -24,23 +24,32 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.geotools.feature.SchemaException;
-import org.thema.data.GlobalDataStore;
 import org.thema.common.Config;
 import org.thema.common.JTS;
+import org.thema.common.ProgressBar;
+import org.thema.common.collection.HashMap2D;
 import org.thema.common.collection.HashMapList;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.ParallelFTask;
-import org.thema.common.ProgressBar;
-import org.thema.common.collection.HashMap2D;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
+import org.thema.data.GlobalDataStore;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
@@ -302,11 +311,13 @@ public class Linkset {
         info += "\n" + bundle.getString("LinksetPanel.topoPanel.border.title") + " : ";
         if(type == COMPLETE) {
             info += bundle.getString("LinksetPanel.completeRadioButton.text");
-            if(distMax > 0)
+            if(distMax > 0) {
                 info += " " + bundle.getString("LinksetPanel.distMaxLabel.text") + " " + distMax;
+            }
         }
-        else
+        else {
             info += bundle.getString("LinksetPanel.planarRadioButton.text");
+        }
         info += "\n" + bundle.getString("LinksetPanel.distPanel.border.title") + " : ";
         switch(getType_dist()) {
             case EUCLID:
@@ -319,27 +330,32 @@ public class Linkset {
                     info += bundle.getString("LinksetPanel.rasterRadioButton.text") + "\nFile : " + extCostFile.getAbsolutePath();
                 } else {
                     info += bundle.getString("LinksetPanel.costRadioButton.text") + "\n";
-                    for(Integer code : Project.getProject().getCodes())
+                    for(Integer code : Project.getProject().getCodes()) {
                         info += code + " : " + costs[code] + "\n";
+            }
                 }       
-                if(isUseSlope())
+                if(isUseSlope()) {
                     info += "Use slope : " + coefSlope + "\n";
+        }
                 break;
         }
         
         if(getType_dist() == COST) {
             info += "\n" + bundle.getString("LinksetPanel.impedancePanel.border.title") + " : ";
-            if(type_length == COST_LENGTH)
+            if(type_length == COST_LENGTH) {
                 info += bundle.getString("LinksetPanel.costDistRadioButton.text");
-            else
+            } else {
                 info += bundle.getString("LinksetPanel.lengthRadioButton.text");
+            }
         }
 
-        if(realPaths)
+        if(realPaths) {
             info += "\n" + bundle.getString("LinksetPanel.realPathCheckBox.text");
+        }
 
-        if(getType_dist() == COST && removeCrossPatch)
+        if(getType_dist() == COST && removeCrossPatch) {
             info += "\n" + bundle.getString("LinksetPanel.removeCrossPatchCheckBox.text");
+        }
 
         info += "\n\n# links : " + paths.size();
 
@@ -538,8 +554,9 @@ public class Linkset {
             @Override
             protected Object execute(int start, int end) {   
                 for(Feature orig : prj.getPatches().subList(start, end)) {
-                    if(isCanceled())
+                    if(isCanceled()) {
                         return null;
+                    }
                     if(allLinks) {
                         List<DefaultFeature> nearPatches = prj.getPatches();
                         if(getDistMax() > 0) {
@@ -548,18 +565,22 @@ public class Linkset {
                             nearPatches = (List<DefaultFeature>)index.query(env);
                         }
                         
-                        for(Feature dest : nearPatches)
-                            if(((Integer)orig.getId()) < (Integer)dest.getId()){
+                        for(Feature dest : nearPatches) {
+                            if (((Integer)orig.getId()) < (Integer)dest.getId()) {
                                 Path p = Path.createEuclidPath(orig, dest);
-                                if(getDistMax() == 0 || p.getDist() <= getDistMax())
+                                if (getDistMax() == 0 || p.getDist() <= getDistMax()) {
                                     links.add(p);
+                                }
                             }
-                    } else
-                        for(Integer dId : prj.getPlanarLinks().getNeighbors(orig)) {
-                            Feature d = prj.getPatch(dId);
-                            if(((Integer)orig.getId()) < dId)
-                                links.add(Path.createEuclidPath(orig, d));
                         }
+                    } else {
+                        for (Integer dId : prj.getPlanarLinks().getNeighbors(orig)) {
+                            Feature d = prj.getPatch(dId);
+                            if (((Integer)orig.getId()) < dId) {
+                                links.add(Path.createEuclidPath(orig, d));
+                            }
+                        }
+                    }
 
                     incProgress(1);
                 }
@@ -604,17 +625,19 @@ public class Linkset {
                         throw new CancellationException();
                     }
                     if(allLinks) {
-                        for(Feature patch : prj.getPatches())
+                        for(Feature patch : prj.getPatches()) {
                             if((Integer)orig.getId() < (Integer)patch.getId()) {
                                 double r = circuit.getODCircuit(orig, patch).getR();
                                 links.add(new Path(orig, patch, r, Double.NaN));
                             }
+                        }
                     } else {
-                        for(Integer dId : prj.getPlanarLinks().getNeighbors(orig))
+                        for(Integer dId : prj.getPlanarLinks().getNeighbors(orig)) {
                             if(((Integer)orig.getId()) < dId) {
                                 double r = circuit.getODCircuit(orig, prj.getPatch(dId)).getR();
                                 links.add(new Path(orig, prj.getPatch(dId), r, Double.NaN));
                             }
+                        }
                     }
 
                     incProgress(1);

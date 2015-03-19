@@ -57,7 +57,7 @@ public class CBCLocalMetric extends AbstractBCLocalMetric<Node> {
 
     @Override
     public LinkedHashMap<String, Object> getParams() {
-        LinkedHashMap<String, Object> params = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(COSTR, costR);
         params.put(CAPAR, capaR);
         params.put(CAPAEXP, capaExp);

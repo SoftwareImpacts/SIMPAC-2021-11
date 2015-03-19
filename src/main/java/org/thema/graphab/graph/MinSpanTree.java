@@ -13,8 +13,8 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import org.geotools.graph.build.basic.BasicGraphBuilder;
 import org.geotools.graph.structure.Edge;
-import org.geotools.graph.structure.Node;
 import org.geotools.graph.structure.Graph;
+import org.geotools.graph.structure.Node;
 import org.thema.graphab.links.Path;
 
 /**
@@ -41,18 +41,25 @@ public class MinSpanTree {
         
         public int compareTo(Object o) {
             SpanNode n = (SpanNode) o;
-            if(n == this)
+            if(n == this) {
                 return 0;
+            }
             
             if(minWeight == n.minWeight) {
-                if(edge == null && n.edge == null)
+                if(edge == null && n.edge == null) {
                     return 0;
-                if(edge == null) return -1;
-                if(n.edge == null) return 1;
+                }
+                if(edge == null) {
+                    return -1;
+                }
+                if(n.edge == null) {
+                    return 1;
+                }
                     
                 return ((String)((Path)edge.getObject()).getId()).compareTo(((String)((Path)n.edge.getObject()).getId()));
-            } else
+            } else {
                 return minWeight > n.minWeight ? 1 : -1;
+            }
         }
         
     }
@@ -70,32 +77,35 @@ public class MinSpanTree {
     }
 
     public Graph calcMST() {
-        queue = new PriorityQueue<MinSpanTree.SpanNode>();
-        mstEdges = new ArrayList<Edge>();
-        passNodes = new HashSet<Node>();
+        queue = new PriorityQueue<>();
+        mstEdges = new ArrayList<>();
+        passNodes = new HashSet<>();
         queue.add(new SpanNode((Node)graph.getNodes().iterator().next(), null, 0));
 
         while(!queue.isEmpty() && passNodes.size() < graph.getNodes().size()) {
             SpanNode sn = queue.poll();
             if(!passNodes.contains(sn.node)) {
-                if(sn.edge != null) // pour le cas initial
+                if(sn.edge != null) { // pour le cas initial
                     mstEdges.add(sn.edge);
+                }
                 passNodes.add(sn.node);
                 for(Object o : sn.node.getEdges()) {
                     Edge e = (Edge) o;
                     Node node = e.getOtherNode(sn.node);
-                    if(!passNodes.contains(node))
+                    if(!passNodes.contains(node)) {
                         queue.add(new SpanNode(node, e, weighter.getWeight(e)));
+                    }
                 }
             }
         }
 
-        if(passNodes.size() < graph.getNodes().size())
+        if(passNodes.size() < graph.getNodes().size()) {
             throw new RuntimeException("Impossible de calculer le MST complet le graphe est il connexe ?");
+        }
 
         BasicGraphBuilder gen = new BasicGraphBuilder();
 
-        HashMap<Node, Node> mapNodes = new HashMap<Node, Node>();
+        HashMap<Node, Node> mapNodes = new HashMap<>();
         for(Node n : passNodes) {
             Node node = gen.buildNode();
             node.setObject(n.getObject());

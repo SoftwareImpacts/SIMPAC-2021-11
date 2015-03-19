@@ -51,7 +51,7 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
         this.indice = indice;
         this.graphName = graphName;
         this.testGeoms = testGeoms;
-        geoms = new ArrayList<Geometry>(testGeoms.keySet());
+        geoms = new ArrayList<>(testGeoms.keySet());
     }
 
     @Override
@@ -75,12 +75,13 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
 
     @Override
     public TreeMapList<Double, Geometry> execute(int start, int end) {
-        TreeMapList<Double, Geometry> results = new TreeMapList<Double, Geometry>();
+        TreeMapList<Double, Geometry> results = new TreeMapList<>();
         for(Geometry geom : geoms.subList(start, end)) {
             try {
                 double indVal = addPatchSoft(geom, indice, gen, testGeoms.get(geom));
-                if(!Double.isNaN(indVal))
+                if(!Double.isNaN(indVal)) {
                     results.putValue(indVal, geom);
+                }
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -90,11 +91,14 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
 
     @Override
     public void gather(TreeMapList<Double, Geometry> results) {
-        if(result == null)
-            result = new TreeMapList<Double, Geometry>();
-        for(Double val : results.keySet())
-            for(Geometry g : results.get(val))
+        if(result == null) {
+            result = new TreeMapList<>();
+        }
+        for(Double val : results.keySet()) {
+            for (Geometry g : results.get(val)) {
                 result.putValue(val, g);
+            }
+        }
     }
     
     @Override
@@ -114,11 +118,13 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
     
     public static double addPatchSoft(Geometry geom, GlobalMetric indice, GraphGenerator gen, double capa) throws Exception {
         Project project = Project.getProject();
-        if(!project.canCreatePatch(geom))
+        if(!project.canCreatePatch(geom)) {
             return Double.NaN;
+        }
 
-        if(capa <= 0)
+        if(capa <= 0) {
             return Double.NaN;
+        }
         AddPatchGraphGenerator graph = new AddPatchGraphGenerator(gen);
         graph.addPatch(geom, capa);
         

@@ -38,9 +38,11 @@ public class HMetric extends GlobalMetric implements PreCalcMetric<Node> {
 
         DijkstraPathFinder finder = new DijkstraPathFinder(g.getGraph(), node, DijkstraPathFinder.NBEDGE_WEIGHTER);
         finder.calculate();
-        for(DijkstraNode n : finder.getComputedNodes())
-            if(n.node != node)
+        for(DijkstraNode n : finder.getComputedNodes()) {
+            if (n.node != node) {
                 sum += 1 / n.cost;
+            }
+        }
                 
         return sum;
     }

@@ -11,12 +11,12 @@
 
 package org.thema.graphab.metric;
 
-import org.thema.graphab.graph.GraphGenerator;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
 
 /**
  *
@@ -164,10 +164,12 @@ public class CalcMetricDialog<T extends Metric> extends javax.swing.JDialog {
 
     private void graphComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphComboBoxActionPerformed
         graph = (GraphGenerator) graphComboBox.getSelectedItem();
-        List<Metric> inds = new ArrayList<Metric>();
-        for(Metric ind : indices)
-            if(ind.isAcceptGraph(graph))
+        List<Metric> inds = new ArrayList<>();
+        for(Metric ind : indices) {
+            if (ind.isAcceptGraph(graph)) {
                 inds.add(ind);
+            }
+        }
         indiceComboBox.setIndices(inds);
     }//GEN-LAST:event_graphComboBoxActionPerformed
 

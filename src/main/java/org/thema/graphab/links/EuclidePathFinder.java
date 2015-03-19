@@ -36,7 +36,7 @@ public class EuclidePathFinder implements SpacePathFinder {
      * @return les distances euclidiennes de p vers les destinations
      */
     public List<double[]> calcPaths(Coordinate p, List<Coordinate> dests) {
-        List<double[]> distances = new ArrayList<double[]>();
+        List<double[]> distances = new ArrayList<>();
         for(Coordinate dest : dests) {
             double d = p.distance(dest);
             distances.add(new double[]{d, d});
@@ -71,14 +71,15 @@ public class EuclidePathFinder implements SpacePathFinder {
         }
        
         DefaultFeature geomPatch = new DefaultFeature(geom.getCentroid().getCoordinate().toString(), geom);
-        HashMap<DefaultFeature, Path> paths = new HashMap<DefaultFeature, Path>();
+        HashMap<DefaultFeature, Path> paths = new HashMap<>();
         for(DefaultFeature patch : nearPatches) {
             double d = patch.getGeometry().distance(geom);
             if(maxCost == 0 || d <= maxCost) {
-                if(realPath)
+                if(realPath) {
                     paths.put(patch, Path.createEuclidPath(geomPatch, patch));
-                else
+                } else {
                     paths.put(patch, new Path(geomPatch, patch, d, d));
+                }
             }
         }
         

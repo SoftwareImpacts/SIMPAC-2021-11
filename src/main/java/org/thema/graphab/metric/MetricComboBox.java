@@ -11,7 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import javax.swing.*;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JComboBox;
+import javax.swing.JList;
+import javax.swing.JSeparator;
 import org.thema.graphab.Project;
 import org.thema.graphab.metric.Metric.Type;
 
@@ -30,10 +34,12 @@ public class MetricComboBox extends JComboBox {
             Object lastItem;
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if(e.getStateChange() == ItemEvent.DESELECTED)
+                if(e.getStateChange() == ItemEvent.DESELECTED) {
                     lastItem = e.getItem();
-                if(SEPARATOR.equals(e.getItem()) && e.getStateChange() == ItemEvent.SELECTED)
+                }
+                if(SEPARATOR.equals(e.getItem()) && e.getStateChange() == ItemEvent.SELECTED) {
                     setSelectedItem(lastItem);
+                }
             }
         });
     }
@@ -48,10 +54,11 @@ public class MetricComboBox extends JComboBox {
             @Override
             public int compare(Metric o1, Metric o2) {
                 int cmp = o1.getType().compareTo(o2.getType());
-                if(cmp == 0)
+                if(cmp == 0) {
                     return o1.getShortName().compareTo(o2.getShortName());
-                else
+                } else {
                     return cmp;
+                }
             }
         });
 //        for(int i = 1; i < indices.size(); i++)
@@ -87,8 +94,9 @@ public class MetricComboBox extends JComboBox {
         public Component getListCellRendererComponent(JList list, Object value,
                 int index, boolean isSelected, boolean cellHasFocus) {
 
-            if (SEPARATOR.equals(value)) 
+            if (SEPARATOR.equals(value)) { 
                 return separator;
+            }
             
             return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         }

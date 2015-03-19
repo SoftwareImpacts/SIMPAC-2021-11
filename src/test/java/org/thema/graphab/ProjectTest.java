@@ -2,29 +2,35 @@ package org.thema.graphab;
 
 import com.thoughtworks.xstream.XStream;
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.TreeSet;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
-import org.junit.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.thema.common.Config;
-import org.thema.parallel.ExecutorService;
-import org.thema.data.IOImage;
 import org.thema.common.io.tab.CSVTabReader;
 import org.thema.common.swing.TaskMonitor;
+import org.thema.data.IOImage;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.addpatch.AddPatchCommand;
-import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.Linkset;
+import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.DeltaMetricTask;
 import org.thema.graphab.metric.GraphMetricLauncher;
 import org.thema.graphab.metric.global.DeltaPCMetric;
 import org.thema.graphab.metric.global.GlobalMetric;
-import org.thema.graphab.metric.local.LocalMetric;
-import org.thema.graphab.links.Linkset;
-import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.global.PCMetric;
+import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.pointset.Pointset;
+import org.thema.parallel.ExecutorService;
 
 /**
  * Test Project class
@@ -85,12 +91,14 @@ public class ProjectTest {
     public void testConstructor() throws Exception {
         assertEquals("Number of patches", 152, project.getPatches().size());
         double area = 0;
-        for(Feature patch : project.getPatches())
+        for(Feature patch : project.getPatches()) {
             area += Project.getPatchArea(patch);
+        }
         assertEquals("Patches area", 7931963.04522982, area, area*1e-13);
         area = 0;
-        for(Feature patch : project.getPatches())
+        for(Feature patch : project.getPatches()) {
             area += patch.getGeometry().getArea();
+        }
         assertEquals("Patches area", 7931963.04522982, area, area*1e-13);
     }
 
@@ -298,8 +306,9 @@ public class ProjectTest {
         for(String varName : resIndices.keySet()) {
             System.out.println("Test global indice : " + varName);
             String indName = varName.substring(0, varName.indexOf("-"));
-            if(indName.contains("_"))
+            if(indName.contains("_")) {
                 indName = indName.substring(0, indName.indexOf("_"));
+            }
             GlobalMetric indice = Project.getGlobalMetric(indName);
             indice.setParamFromDetailName(varName.substring(0, varName.indexOf("-")));
             GraphGenerator gen = project.getGraph(varName.substring(varName.indexOf("-")+1));
@@ -327,8 +336,9 @@ public class ProjectTest {
         
         for(String varName : r.getVarNames()) {
             // pour les attributs Area, Perim et Capacity et les delta métriques
-            if(!varName.contains("_") || varName.startsWith("d_")) 
+            if(!varName.contains("_") || varName.startsWith("d_")) { 
                 continue;
+            }
             String indName = varName.substring(0, varName.indexOf("_"));
             
             GraphGenerator gen = null;

@@ -5,8 +5,8 @@
 
 package org.thema.graphab.metric.global;
 
-import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
 
 /**
  *
@@ -18,8 +18,9 @@ public class SLCMetric extends GlobalMetric {
         double max = 0;
         for(int i = 0; i < g.getComponents().size(); i++) {
             double size = g.getComponentGraphGen(i).getPatchCapacity();
-            if(size > max)
+            if(size > max) {
                 max = size;
+            }
         }
 
         return new Double[]{max};

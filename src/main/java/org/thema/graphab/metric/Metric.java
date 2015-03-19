@@ -27,10 +27,11 @@ public abstract class Metric implements Serializable  {
     
     public String getName() {
         String desc = java.util.ResourceBundle.getBundle("org/thema/graphab/metric/global/Bundle").getString(getShortName());
-        if(desc == null)
+        if(desc == null) {
             return getShortName();
-        else
+        } else {
             return desc + " (" + getShortName() + ")";
+        }
     }
 
     @Override
@@ -41,8 +42,9 @@ public abstract class Metric implements Serializable  {
     public String getDetailName() {
         String str = getShortName();
         Map<String, Object> params = getParams();
-        for(String param : params.keySet())
+        for(String param : params.keySet()) {
             str += "_" + param + format(params.get(param));
+        }
         return str;
     }
 
@@ -61,7 +63,7 @@ public abstract class Metric implements Serializable  {
     public void setParams(Map<String, Object> params) {}
     
     public LinkedHashMap<String, Object> getParams() {
-        return new LinkedHashMap<String, Object>();
+        return new LinkedHashMap<>();
     }
     
     public ParamPanel getParamPanel(Project project) {
@@ -73,7 +75,7 @@ public abstract class Metric implements Serializable  {
     public Metric dupplicate() {
         try {
             return Metric.dupplicate(this);
-        } catch (Exception ex) {
+        } catch (InstantiationException | IllegalAccessException ex) {
             Logger.getLogger(Metric.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
@@ -86,9 +88,10 @@ public abstract class Metric implements Serializable  {
     }
 
     public static String format(Object val) {
-        if(val instanceof Number && ((Number)val).doubleValue() == ((Number)val).intValue())
+        if(val instanceof Number && ((Number)val).doubleValue() == ((Number)val).intValue()) {
             return String.valueOf(((Number)val).intValue());
-        else
+        } else {
             return String.valueOf(val);
+        }
     }    
 }

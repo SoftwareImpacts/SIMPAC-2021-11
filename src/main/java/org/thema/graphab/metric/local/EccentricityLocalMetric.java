@@ -27,9 +27,11 @@ public class EccentricityLocalMetric extends LocalMetric {
         Node node = (Node) g;
         PathFinder pathFinder = gen.getPathFinder(node);
         double max = 0;
-        for(Node n : pathFinder.getComputedNodes()) 
-            if(pathFinder.getCost(n) > max) 
+        for(Node n : pathFinder.getComputedNodes()) {
+            if (pathFinder.getCost(n) > max) {
                 max = pathFinder.getCost(n);
+            }
+        }
             
         return max;
     }

@@ -10,19 +10,24 @@ import com.vividsolutions.jts.geom.Point;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
-import org.thema.common.collection.TreeMapList;
-import org.thema.parallel.AbstractParallelTask;
 import org.thema.common.ProgressBar;
+import org.thema.common.collection.TreeMapList;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.GraphMetricLauncher;
 import org.thema.graphab.metric.global.GlobalMetric;
+import org.thema.parallel.AbstractParallelTask;
 
 /**
  *

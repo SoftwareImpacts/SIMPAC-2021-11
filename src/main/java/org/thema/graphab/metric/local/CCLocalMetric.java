@@ -27,19 +27,22 @@ public class CCLocalMetric extends LocalMetric {
     public double calcIndice(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
 
-        HashSet<Node> related = new HashSet<Node>();
-        for(Iterator it = node.getRelated(); it.hasNext(); )
+        HashSet<Node> related = new HashSet<>();
+        for(Iterator it = node.getRelated(); it.hasNext(); ) {
             related.add((Node)it.next());
+        }
 
-        if(related.size() <= 1)
+        if(related.size() <= 1) {
             return 0;
+        }
         
         double sum = 0;
         for(Node rel : related) {
             for(Iterator itRel = rel.getRelated(); itRel.hasNext(); ) {
                 Node n = (Node) itRel.next();
-                if(related.contains(n))
+                if(related.contains(n)) {
                     sum++;
+                }
             }
         }
 

@@ -1,11 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 
 package org.thema.graphab.metric.local;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,9 +10,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geotools.graph.structure.Graphable;
 import org.thema.data.feature.Feature;
+import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Path;
-import org.thema.graphab.Project;
 import org.thema.graphab.links.RasterPathFinder;
 import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.SingleValuePanel;
@@ -41,12 +37,13 @@ public class IFPCMetric extends LocalMetric {
     @Override
     public synchronized double calcIndice(Graphable g, GraphGenerator gen) {
         Feature patch = (Feature) g.getObject();
-        if(pathfinder == null)
+        if(pathfinder == null) {
             try {
                 pathfinder = Project.getProject().getRasterPathFinder(gen.getLinkset());
             } catch (Exception ex) {
                 Logger.getLogger(IFPCMetric.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
         double ifpc = 0;
         HashMap<Feature, Path> dists = pathfinder.calcPaths(patch, dMax, false, true);
         for(Feature f : dists.keySet()) {

@@ -30,7 +30,9 @@ public class DistanceOp {
   public static double distancePointLine(Coordinate p, Coordinate A, Coordinate B)
   {
     // if start==end, then use pt distance
-    if (  A.equals(B) ) return (p.y - A.y)*(p.y - A.y) + (p.x - A.x)*(p.x - A.x); //p.distance(A);
+    if (  A.equals(B) ) {
+        return (p.y - A.y)*(p.y - A.y) + (p.x - A.x)*(p.x - A.x); //p.distance(A);
+    }
 
     // otherwise use comp.graphics.algorithms Frequently Asked Questions method
     /*(1)     	      AC dot AB
@@ -50,8 +52,12 @@ public class DistanceOp {
             (dx * dx + dy * dy);
 
 
-    if (r <= 0.0) return (p.y - A.y)*(p.y - A.y) + (p.x - A.x)*(p.x - A.x); //p.distance(A);
-    if (r >= 1.0) return (p.y - B.y)*(p.y - B.y) + (p.x - B.x)*(p.x - B.x); //p.distance(B);
+    if (r <= 0.0) {
+        return (p.y - A.y)*(p.y - A.y) + (p.x - A.x)*(p.x - A.x); //p.distance(A);
+    }
+    if (r >= 1.0) {
+        return (p.y - B.y)*(p.y - B.y) + (p.x - B.x)*(p.x - B.x); //p.distance(B);
+    }
 
 
     final double x = A.x + r * dx;
@@ -70,14 +76,16 @@ public class DistanceOp {
    */
 	public static double distancePointLine(Coordinate p, Coordinate[] line)
 	{
-		if (line.length == 0)
-			throw new IllegalArgumentException("Line array must contain at least one vertex");
+		if (line.length == 0) {
+                    throw new IllegalArgumentException("Line array must contain at least one vertex");
+                }
 		// this handles the case of length = 1
 		double minDistance = (p.y - line[0].y)*(p.y - line[0].y) + (p.x - line[0].x)*(p.x - line[0].x); //p.distance(line[0]);
 		for (int i = 0; i < line.length - 1; i++) {
 			double dist = distancePointLine(p, line[i], line[i+1]);
-			if (dist < minDistance)
-				minDistance = dist;
+			if (dist < minDistance) {
+                            minDistance = dist;
+                        }
 
 		}
 		return Math.sqrt(minDistance);
@@ -100,14 +108,13 @@ public class DistanceOp {
 
     Coordinate [] coords = new Coordinate[2];
 
-    for (int i = 0; i < lines0.size(); i++) {
-      LineString line0 = (LineString) lines0.get(i);
-      for (int j = 0; j < lines1.size(); j++) {
-        LineString line1 = (LineString) lines1.get(j);
-        minDistance = computeMinDistance(line0, line1, minDistance, coords);
-
+      for (Object lines01 : lines0) {
+          LineString line0 = (LineString) lines01;
+          for (Object lines11 : lines1) {
+              LineString line1 = (LineString) lines11;
+              minDistance = computeMinDistance(line0, line1, minDistance, coords);
+          }
       }
-    }
 
     return coords;
     }
@@ -153,8 +160,12 @@ public class DistanceOp {
   private static double distanceLineLine(Coordinate A, Coordinate B, Coordinate C, Coordinate D)
   {
     // check for zero-length segments
-    if (  A.equals(B) )	return distancePointLine(A,C,D);
-    if (  C.equals(D) )	return distancePointLine(D,A,B);
+    if (  A.equals(B) ) {
+        return distancePointLine(A,C,D);
+    }
+    if (  C.equals(D) ) {
+        return distancePointLine(D,A,B);
+    }
 
     // AB and CD are line segments
     /* from comp.graphics.algo

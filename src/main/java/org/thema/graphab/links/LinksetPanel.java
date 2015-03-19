@@ -77,9 +77,10 @@ public class LinksetPanel extends javax.swing.JPanel {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.setRowCount(0);
         
-        TreeSet<Integer> treeCodes = new TreeSet<Integer>(codes);
-        for(Integer code : treeCodes)
+        TreeSet<Integer> treeCodes = new TreeSet<>(codes);
+        for(Integer code : treeCodes) {
             model.addRow(new Object[] {code, cost != null ? cost[code] : 1.0});
+        }
 
         maxCode = treeCodes.last();
     }
@@ -90,28 +91,32 @@ public class LinksetPanel extends javax.swing.JPanel {
         int type;
         double distMax = -1;
         double coefSlope = 0;
-        if(useDEMCheckBox.isSelected())
+        if(useDEMCheckBox.isSelected()) {
             coefSlope = (Double)coefSlopeSpinner.getValue();
+        }
         
         if(completeRadioButton.isSelected()) {
             type = Linkset.COMPLETE;
             distMax = (Double)dMaxSpinner.getValue();
-        } else
+        } else {
             type = Linkset.PLANAR;
+        }
 
         int type_length = costDistRadioButton.isSelected() ?
             Linkset.COST_LENGTH : Linkset.DIST_LENGTH;
         
         Linkset cost;
-        if(euclidRadioButton.isSelected())
+        if(euclidRadioButton.isSelected()) {
             cost = new Linkset(name, type, realPathCheckBox.isSelected(), distMax);
-        else if(costRadioButton.isSelected()) {
-            if(table.getCellEditor() != null)
+        } else if(costRadioButton.isSelected()) {
+            if(table.getCellEditor() != null) {
                 table.getCellEditor().stopCellEditing();
+            }
             double[] costs = new double[maxCode+1];
             TableModel model = table.getModel();
-            for(int i = 0; i < model.getRowCount(); i++)
+            for(int i = 0; i < model.getRowCount(); i++) {
                 costs[(Integer)model.getValueAt(i, 0)] = (Double)model.getValueAt(i, 1);
+            }
             cost = new Linkset(name, type, costs, type_length, realPathCheckBox.isSelected(), 
                     removeCrossPatchCheckBox.isSelected(), distMax, coefSlope);
         } else {

@@ -25,14 +25,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
+import org.geotools.feature.SchemaException;
 import org.thema.common.JTS;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.data.feature.Feature;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.drawshape.style.RasterStyle;
-import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.Project;
+import org.thema.graphab.pointset.Pointset;
 import org.thema.msca.Cell;
 import org.thema.msca.SquareGrid;
 import org.thema.msca.operation.AbstractAgregateOperation;
@@ -236,16 +237,17 @@ public class RandomPointDlg extends javax.swing.JDialog {
             return;
         }
 
-        final List<DefaultFeature> points = new ArrayList<DefaultFeature>();
-        final List<String> attrNames = new ArrayList<String>(
+        final List<DefaultFeature> points = new ArrayList<>();
+        final List<String> attrNames = new ArrayList<>(
                 Arrays.asList("presence"));
 
         
         grid.execute(new AbstractLayerOperation() {
             int i = 1;
             public void perform(Cell cell) {
-                if(cell.getLayerValue("presence") == 0)
+                if(cell.getLayerValue("presence") == 0) {
                     return;
+                }
 
                 if(cell.getLayerValue("presence") == 1) {
                     boolean good = false;
@@ -257,8 +259,9 @@ public class RandomPointDlg extends javax.swing.JDialog {
                         int j = 0;
                         while(good && j < points.size()) {
                             if(points.get(j).getGeometry().getCoordinate()
-                                    .distance(new Coordinate(x, y)) < distMin)
+                                    .distance(new Coordinate(x, y)) < distMin) {
                                 good = false;
+                            }
                             try {
                                 if (!project.isInZone(x, y)) {
                                     good = false;
@@ -280,10 +283,12 @@ public class RandomPointDlg extends javax.swing.JDialog {
                         Feature f = lst.get((int)(Math.random()*lst.size()));
                         points.add(new DefaultFeature(f.getId().toString(), f.getGeometry(),
                             attrNames, Arrays.asList(new Object[]{1})));
-                    } else
-                        for(Feature f : lst)
+                    } else {
+                        for (Feature f : lst) {
                             points.add(new DefaultFeature(f.getId().toString(), f.getGeometry(),
                                 attrNames, Arrays.asList(new Object[]{1})));
+                        }
+                    }
                 }
             }
         });
@@ -293,7 +298,7 @@ public class RandomPointDlg extends javax.swing.JDialog {
                 0, Pointset.AG_NONE);
         try {
             project.addPointset(exo, attrNames, points, true);
-        } catch (Exception ex) {
+        } catch (SchemaException | IOException ex) {
             Logger.getLogger(RandomPointDlg.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, "Error while adding points :\n" + ex.getLocalizedMessage());
         }
@@ -350,8 +355,9 @@ public class RandomPointDlg extends javax.swing.JDialog {
 
     private void updateGrid() {
 
-        if(coverage == null)
+        if(coverage == null) {
             return;
+        }
         double res = (Integer)resoSpinner.getValue();
         Rectangle2D rect = project.getZone();
         double dx = rect.getWidth() - Math.ceil((rect.getWidth() - 2*res) / res) * res;
@@ -365,9 +371,10 @@ public class RandomPointDlg extends javax.swing.JDialog {
             public void perform(Cell cell) {
                 try {
                     Point2D p = cell.getCentroid();
-                    if (project.isInZone(p.getX(), p.getY()))
+                    if (project.isInZone(p.getX(), p.getY())) {
                         cell.setLayerValue("presence",
                                 coverage.getFeaturesIn(cell.getGeometry()).isEmpty() ? 1 : 2);
+                    }
 
                 } catch (IOException ex) {
                     Logger.getLogger(RandomPointDlg.class.getName()).log(Level.SEVERE, null, ex);
@@ -376,8 +383,9 @@ public class RandomPointDlg extends javax.swing.JDialog {
             }
         });
 
-        if(gridLayer != null)
+        if(gridLayer != null) {
             project.removeLayer(gridLayer);
+        }
 
         gridLayer = new RasterLayer("Grid", grid.getLayer("presence").getRaster(), rect);
         RasterStyle style = new RasterStyle(new Color[] {Color.BLACK, Color.LIGHT_GRAY},
@@ -390,20 +398,23 @@ public class RandomPointDlg extends javax.swing.JDialog {
 
         int nbCell = grid.agregate(new AbstractAgregateOperation<Integer>(0, 0) {
             public void perform(Cell cell) {
-                if(cell.getLayerValue("presence") == 1)
+                if(cell.getLayerValue("presence") == 1) {
                     result++;
+                }
             }
         });
         if(keepOneCheckBox.isSelected()) {
             int nbCellPres = grid.agregate(new AbstractAgregateOperation<Integer>(0, 0) {
                 public void perform(Cell cell) {
-                    if(cell.getLayerValue("presence") == 2)
+                    if(cell.getLayerValue("presence") == 2) {
                         result++;
+                    }
                 }
             });
             infoLabel.setText(String.format("Presences : %d - Absences : %d", nbCellPres, nbCell));
-        } else
+        } else {
             infoLabel.setText(String.format("Presences : %d - Absences : %d", coverage.getFeatures().size(), nbCell));
+        }
     }
 
 }

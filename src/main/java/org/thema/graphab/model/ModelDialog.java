@@ -27,18 +27,20 @@ import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import org.apache.commons.math.MathException;
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.feature.SchemaException;
 import org.thema.common.JTS;
 import org.thema.common.Util;
-import org.thema.data.IOImage;
 import org.thema.common.swing.TaskMonitor;
+import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.data.feature.Feature;
-import org.thema.graphab.pointset.Pointset;
+import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Path;
-import org.thema.graphab.Project;
+import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.util.RSTGridReader;
 
 /**
@@ -72,8 +74,8 @@ public class ModelDialog extends javax.swing.JDialog {
         
         this.project = project;
         exoDataComboBox.setModel(new DefaultComboBoxModel(project.getPointsets().toArray()));
-        extVars = new LinkedHashMap<String, GridCoverage2D>();
-        patchVars = new ArrayList<String>();
+        extVars = new LinkedHashMap<>();
+        patchVars = new ArrayList<>();
         
         exoDataComboBoxActionPerformed(null);
         graphComboBoxActionPerformed(null);
@@ -467,15 +469,19 @@ public class ModelDialog extends javax.swing.JDialog {
         Pointset exo = (Pointset)exoDataComboBox.getSelectedItem();
         Feature f = (exo).getFeatures().get(0);
         DefaultComboBoxModel model = new DefaultComboBoxModel();
-        for(int i = 0; i < f.getAttributeNames().size(); i++)
-            if(Number.class.isAssignableFrom(f.getAttributeType(i)))
+        for(int i = 0; i < f.getAttributeNames().size(); i++) {
+            if (Number.class.isAssignableFrom(f.getAttributeType(i))) {
                 model.addElement(f.getAttributeNames().get(i));
+            }
+        }
         varComboBox.setModel(model);
 
         model = new DefaultComboBoxModel();
-        for(GraphGenerator g : project.getGraphs())
-            if(g.getLinkset() == exo.getLinkset())
+        for(GraphGenerator g : project.getGraphs()) {
+            if (g.getLinkset() == exo.getLinkset()) {
                 model.addElement(g);
+            }
+        }
         graphComboBox.setModel(model);
 }//GEN-LAST:event_exoDataComboBoxActionPerformed
 
@@ -492,18 +498,20 @@ public class ModelDialog extends javax.swing.JDialog {
         patchVars.clear();
         patchVars.add(0, Project.CAPA_ATTR);
         patchVars.addAll(project.getGraphPatchAttr(graph));
-        List<String> vars = new ArrayList<String>(patchVars);
+        List<String> vars = new ArrayList<>(patchVars);
         vars.addAll(extVars.keySet());
         varList.setModel(new DefaultComboBoxModel(vars.toArray()));
         GraphGenerator g = (GraphGenerator)graphComboBox.getSelectedItem();
-        if(g.getType() == GraphGenerator.THRESHOLD)
+        if(g.getType() == GraphGenerator.THRESHOLD) {
             dSpinner.setValue(g.getThreshold());
+        }
 }//GEN-LAST:event_graphComboBoxActionPerformed
 
     private void estimButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_estimButtonActionPerformed
         if(exoDataComboBox.getSelectedItem() != data 
-                || ((Number)dMaxSpinner.getValue()).doubleValue() != dMax)
+                || ((Number)dMaxSpinner.getValue()).doubleValue() != dMax) {
             costCache = null;
+        }
 
         data = (Pointset) exoDataComboBox.getSelectedItem();
         varName = varComboBox.getSelectedItem().toString();
@@ -528,18 +536,20 @@ public class ModelDialog extends javax.swing.JDialog {
                     TaskMonitor monitor = new TaskMonitor(ModelDialog.this, "Model...", "Loading data...", 0, 100);
                     monitor.setMillisToDecideToPopup(0);
                     String msg = model.estimModel(monitor);
-                    if(multiAttach)
+                    if(multiAttach) {
                         costCache = model.costCache;
+                    }
                     infoResTextArea.setText(msg);
                     DefaultTableModel table = (DefaultTableModel)varTable.getModel();
                     table.setRowCount(0);
-                    for(String var : model.getUsedVars())
+                    for(String var : model.getUsedVars()) {
                         table.addRow(new Object[]{var, String.format("%g", model.getCoef(var))
                                 , String.format("%g", model.getStdCoef(var))});
+                    }
                     monitor.close();
                     extrapolateButton.setEnabled(true);
                     exportButton.setEnabled(true);
-                } catch (Exception ex) {
+                } catch (IOException | MathException ex) {
                     Logger.getLogger(ModelDialog.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(ModelDialog.this, "An error occured : \n" + ex.getLocalizedMessage());
                 }
@@ -554,36 +564,36 @@ public class ModelDialog extends javax.swing.JDialog {
 
     private void exportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportButtonActionPerformed
         File file = Util.getFileSave(".csv");
-        if(file == null)
+        if(file == null) {
             return;
-        try {
-            CSVWriter w = new CSVWriter(new FileWriter(file));
-            List<String> header = new ArrayList<String>(Arrays.asList("Id", "X", "Y", varName, "Estim", "Residu"));
+        }
+        try (CSVWriter w = new CSVWriter(new FileWriter(file))) {
+            List<String> header = new ArrayList<>(Arrays.asList("Id", "X", "Y", varName, "Estim", "Residu"));
             header.addAll(model.getVarNames());
             w.writeNext(header.toArray(new String[header.size()]));
             double [][] varExp = model.getVarExp();
             double[] estim = model.getVarEstim();
             int i = 0;
-            for(Feature f : data.getFeatures()) {
+            for (Feature f : data.getFeatures()) {
                 Coordinate c = f.getGeometry().getCentroid().getCoordinate();
                 double val = ((Number)f.getAttribute(varName)).doubleValue();
-                List<String> lst = new ArrayList<String>(Arrays.asList(f.getId().toString(),
+                List<String> lst = new ArrayList<>(Arrays.asList(f.getId().toString(),
                         String.valueOf(c.x), String.valueOf(c.y),
                         String.valueOf(val), String.valueOf(estim[i]), String.valueOf(val-estim[i])));
-                for(int j = 0; j < varExp[i].length; j++)
+                for (int j = 0; j < varExp[i].length; j++) {
                     lst.add(String.valueOf(varExp[i][j]));
-
+                }
                 w.writeNext(lst.toArray(new String[lst.size()]));
                 i++;
             }
-            w.close();
         } catch (IOException ex) {
             Logger.getLogger(ModelDialog.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "An error occured :\n" + ex.getLocalizedMessage());
         }
     }//GEN-LAST:event_exportButtonActionPerformed
 
     private void addPatchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPatchButtonActionPerformed
-        List<String> vars = new ArrayList<String>();
+        List<String> vars = new ArrayList<>();
         vars.addAll(project.getPatches().iterator().next().getAttributeNames());
         vars.removeAll(patchVars);
         if(vars.isEmpty()) {
@@ -592,8 +602,9 @@ public class ModelDialog extends javax.swing.JDialog {
         }
         String var = (String)JOptionPane.showInputDialog(this, "Add variable : ", "Variable",
                 JOptionPane.PLAIN_MESSAGE, null, vars.toArray(), vars.get(0));
-        if(var == null)
+        if(var == null) {
             return;
+        }
         patchVars.add(var);
         ((DefaultComboBoxModel)varList.getModel()).addElement(var);
 }//GEN-LAST:event_addPatchButtonActionPerformed
@@ -604,18 +615,20 @@ public class ModelDialog extends javax.swing.JDialog {
             int ind = varList.getSelectedIndex();
             String name = (String) varList.getModel().getElementAt(ind);
             ((DefaultComboBoxModel)varList.getModel()).removeElementAt(ind);
-            if(name.startsWith("ext-"))
+            if(name.startsWith("ext-")) {
                 extVars.remove(name);
-            else
+            } else {
                 patchVars.remove(name);
+            }
         }
         
 }//GEN-LAST:event_remVarButtonActionPerformed
 
     private void addExtButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addExtButtonActionPerformed
         File f = Util.getFile(".tif|.rst", "Raster image");
-        if (f == null)
+        if(f == null) {
             return;
+        }
         try {
             GridCoverage2D coverage;
             if (f.getName().toLowerCase().endsWith(".tif")) {
@@ -643,47 +656,9 @@ public class ModelDialog extends javax.swing.JDialog {
 }//GEN-LAST:event_addExtButtonActionPerformed
 
     private void extrapolateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_extrapolateButtonActionPerformed
-//        new Thread(new Runnable() {
-//            public void run() {
-//                try {
-//                    String formule = formuleTextField.getText();
-//                    String [] tok = formule.split("=");
-//                    formule = tok[tok.length-1];
-//                    tok = formule.split(" \\+ ");
-//                    double [] coefs = new double[tok.length];
-//                    List<String> vars = new ArrayList<String>();
-//                    coefs[0] = Double.parseDouble(tok[0]);
-//                    for(int i = 1; i < tok.length; i++) {
-//                        String [] elem = tok[i].split("\\*");
-//                        String v = elem[1].trim();
-//
-//                        if(((DefaultComboBoxModel)varList.getModel()).getIndexOf(v) < 0) {
-//                            JOptionPane.showMessageDialog(ModelDialog.this, "Unknown variable : " + v);
-//                            return;
-//                        }
-//                        vars.add(v);
-//                        coefs[i] = Double.parseDouble(elem[0]);
-//                    }
-//                    TaskMonitor monitor = new TaskMonitor(ModelDialog.this, "Model...", "Loading data...", 0, 100);
-//                    RasterLayer l = DistribModel.extrapolate(project, (Double)resolSpinner.getValue(), vars, coefs,
-//                            alpha, extVars, data.linkset.costs, multiAttach, dMax, monitor);
-//                    if(layers == null) {
-//                        layers = new DefaultGroupLayer("Extrapolate");
-//                        project.addLayer(layers);
-//                    }
-//                    l.setRemovable(true);
-//                    layers.addLayerFirst(l);
-//                    monitor.close();
-//                } catch (Throwable ex) {
-//                    Logger.getLogger(ModelDialog.class.getName()).log(Level.SEVERE, null, ex);
-//                    JOptionPane.showMessageDialog(ModelDialog.this, "An error occured : \n" + ex.getLocalizedMessage());
-//                }
-//            }
-//        }).start();
-
-       
+      
         double [] coefs = new double[model.getUsedVars().size()+1];
-        List<String> vars = new ArrayList<String>();
+        List<String> vars = new ArrayList<>();
         coefs[0] = model.getConstant();
         int i = 1;
         for(String var : model.getUsedVars()) {
@@ -700,33 +675,36 @@ public class ModelDialog extends javax.swing.JDialog {
             @Override
             public void run() {
                 File f = Util.getFile(".shp", "Shapefile");
-                if(f == null)
+                if(f == null) {
                     return;
+                }
+                
+                double [] coefs = new double[model.getUsedVars().size()+1];
+                List<String> vars = new ArrayList<>();
+                coefs[0] = model.getConstant();
+                int i = 1;
+                for(String var : model.getUsedVars()) {
+                    vars.add(var);
+                    coefs[i] = model.getCoef(var);
+                    i++;
+                }
+                TaskMonitor mon = new TaskMonitor(ModelDialog.this, "Diff", "", 0, 100);
                 try {
-                    double [] coefs = new double[model.getUsedVars().size()+1];
-                    List<String> vars = new ArrayList<String>();
-                    coefs[0] = model.getConstant();
-                    int i = 1;
-                    for(String var : model.getUsedVars()) {
-                        vars.add(var);
-                        coefs[i] = model.getCoef(var);
-                        i++;
-                    }
-                    TaskMonitor mon = new TaskMonitor(ModelDialog.this, "Diff", "", 0, 100);
                     List<DefaultFeature> zones = DefaultFeature.loadFeatures(f, false);
                     HashMap<DefaultFeature, Double> probas = DiffLocalModel.diff(project, data, varName, (GraphGenerator)graphComboBox.getSelectedItem(), 
                             vars, coefs, alpha, extVars, multiAttach, dMax, zones, mon);
 
                     DefaultFeature.addAttribute("SumProba", zones, Double.NaN);
-                    for(DefaultFeature fe : probas.keySet())
+                    for(DefaultFeature fe : probas.keySet()) {
                         fe.setAttribute("SumProba", probas.get(fe));
-
+                    }
+                
                     DefaultFeature.saveFeatures(zones, new File(f.getParentFile(), "diffsumproba.shp"));
-
-                    mon.close();
-                } catch (Throwable ex) {
+                } catch (IOException | SchemaException ex) {
                     Logger.getLogger(ModelDialog.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(ModelDialog.this, "An error occured :\n" + ex.getLocalizedMessage());
+                } finally {
+                    mon.close();
                 }
             }
         }).start();

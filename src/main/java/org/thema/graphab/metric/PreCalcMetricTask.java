@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.geotools.graph.structure.Node;
-import org.thema.parallel.AbstractParallelTask;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.PreCalcMetric.TypeParam;
+import org.thema.parallel.AbstractParallelTask;
 
 /**
  * 
@@ -38,9 +38,10 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
         this.indice = indice;
         this.maxCost = maxCost;
         
-        ids = new ArrayList<Integer>(gen.getNodes().size());
-        for(Node n : gen.getNodes()) 
+        ids = new ArrayList<>(gen.getNodes().size());
+        for(Node n : gen.getNodes()) { 
             ids.add((Integer)((Feature)n.getObject()).getId());
+        }
         
         indice.startCalc(gen);
     }
@@ -50,11 +51,12 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
         super.init();
         if(gen == null) {
             gen = Project.getProject().getGraph(graphName);
-            if(gen == null)
+            if(gen == null) {
                 throw new IllegalStateException("Graph " + graphName + " not found in project.\n Modified graph cannot be used in MPI environment");
+            }
         }
         
-        patchNodes = new HashMap<Integer, Node>(gen.getNodes().size());
+        patchNodes = new HashMap<>(gen.getNodes().size());
         for(Node n : gen.getNodes()) {
             int id = (Integer)((Feature)n.getObject()).getId();
             patchNodes.put(id, n);
@@ -66,10 +68,11 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
         List results = new ArrayList(end-start);
         for(Integer id : ids.subList(start, end)) {
             Node node = patchNodes.get(id);
-            if(indice.getTypeParam() == TypeParam.PATHFINDER)
+            if(indice.getTypeParam() == TypeParam.PATHFINDER) {
                 results.add(indice.calcPartIndice(gen.getPathFinder(node, maxCost), gen));
-            else
+            } else {
                 results.add(indice.calcPartIndice(node, gen));
+            }
             
             incProgress(1);
         }
@@ -83,8 +86,9 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
 
     @Override
     public void gather(List results) {
-        for(Object res : results)
+        for(Object res : results) {
             indice.mergePart(res);
+        }
     }
 
     @Override

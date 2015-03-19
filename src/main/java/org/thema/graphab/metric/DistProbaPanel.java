@@ -51,7 +51,7 @@ public class DistProbaPanel extends ParamPanel {
 
     @Override
     public Map<String, Object> getParams() {
-        HashMap<String, Object> params = new HashMap<String, Object>();
+        HashMap<String, Object> params = new HashMap<>();
         params.put(DIST, dSpinner.getValue());
         params.put(PROBA, pSpinner.getValue());
         params.put(A, aSpinner.getValue());
@@ -177,8 +177,9 @@ public class DistProbaPanel extends ParamPanel {
 }//GEN-LAST:event_pSpinnerStateChanged
 
     private void dSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_dSpinnerStateChanged
-        if(!noUpdate)
+        if(!noUpdate) {
             alphaTextField.setText(String.valueOf(-Math.log((Double)pSpinner.getValue()) / (Double)dSpinner.getValue()));
+        }
 }//GEN-LAST:event_dSpinnerStateChanged
 
     private void alphaTextFieldStateChanged(DocumentEvent evt) {

@@ -4,14 +4,14 @@
  */
 package org.thema.graphab.metric.local;
 
-import org.thema.graphab.metric.SingleValuePanel;
-import org.thema.graphab.metric.ParamPanel;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.geotools.graph.structure.Node;
-import org.thema.graphab.metric.Circuit;
-import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.metric.Circuit;
+import org.thema.graphab.metric.ParamPanel;
+import org.thema.graphab.metric.SingleValuePanel;
 
 /**
  *
@@ -49,7 +49,7 @@ public class CFLocalMetric extends AbstractBCLocalMetric<Node> {
     }
 
     public LinkedHashMap<String, Object> getParams() {
-        LinkedHashMap<String, Object> params = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(BETA, beta);
         return params;
     }

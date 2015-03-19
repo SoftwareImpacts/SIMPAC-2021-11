@@ -22,8 +22,9 @@ public class SumLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
     @Override
     public Double[] calcIndice(GraphGenerator g) {
         double sum = 0;
-        for(Double val : getValues())
+        for(Double val : getValues()) {
             sum += val;
+        }
         return new Double[] {sum};
     }
 

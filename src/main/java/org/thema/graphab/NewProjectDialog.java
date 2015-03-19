@@ -11,7 +11,6 @@
 
 package org.thema.graphab;
 
-import org.thema.graphab.util.RSTGridReader;
 import java.awt.CardLayout;
 import java.awt.Cursor;
 import java.awt.image.DataBuffer;
@@ -33,6 +32,7 @@ import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.feature.SchemaException;
 import org.thema.common.Config;
 import org.thema.data.IOImage;
+import org.thema.graphab.util.RSTGridReader;
 
 /**
  *

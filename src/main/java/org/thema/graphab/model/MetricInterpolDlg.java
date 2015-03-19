@@ -9,9 +9,16 @@ package org.thema.graphab.model;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
 import org.thema.common.Config;
 import org.thema.common.ProgressBar;
 import org.thema.drawshape.layer.RasterLayer;
@@ -37,6 +44,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelName);
         ActionMap actionMap = getRootPane().getActionMap();
         actionMap.put(cancelName, new AbstractAction() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 doClose();
             }
@@ -288,9 +296,9 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                ProgressBar progressBar = Config.getProgressBar();
+                okButton.setEnabled(false);
                 try {
-                    ProgressBar progressBar = Config.getProgressBar();
-                    okButton.setEnabled(false);
                     RasterLayer l = DistribModel.interpolate(Project.getProject(), (Double)resolSpinner.getValue(), varComboBox.getSelectedItem().toString(), 
                                         Double.parseDouble(alphaTextField.getText()), ((GraphGenerator)graphComboBox.getSelectedItem()).getLinkset(), 
                                         multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), progressBar);
@@ -299,12 +307,13 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                     l.setRemovable(true);
                     Project.getProject().getAnalysisLayer().addLayerFirst(l);
                     l.saveRaster(new File(Project.getProject().getDirectory(), l.getName() + ".tif"));
-                    progressBar.close();
-                } catch (Throwable ex) {
+                    
+                } catch (IOException ex) {
                     Logger.getLogger(MetricInterpolDlg.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MetricInterpolDlg.this, "Error : " + ex);
                 } finally {
                     okButton.setEnabled(true);
+                    progressBar.close();
                 }
             }
         }).start();
@@ -333,8 +342,9 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
         GraphGenerator g = (GraphGenerator) graphComboBox.getSelectedItem();
         varComboBox.setModel(new DefaultComboBoxModel(Project.getProject().getGraphPatchAttr(g.getName()).toArray()));
         varComboBoxActionPerformed(null);
-        if (g.getType() == GraphGenerator.THRESHOLD) 
+        if (g.getType() == GraphGenerator.THRESHOLD) { 
             dSpinner.setValue(g.getThreshold());
+        }
         
     }//GEN-LAST:event_graphComboBoxActionPerformed
 

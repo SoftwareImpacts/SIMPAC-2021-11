@@ -29,13 +29,13 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.thema.common.Config;
+import org.thema.common.ProgressBar;
 import org.thema.common.Util;
 import org.thema.data.IOImage;
-import org.thema.common.ProgressBar;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.RasterLayer;
-import org.thema.graphab.links.Linkset;
 import org.thema.graphab.Project;
+import org.thema.graphab.links.Linkset;
 import org.thema.graphab.util.RSTGridReader;
 
 /**
@@ -60,11 +60,11 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
 
     public boolean isOk = false;
 
-    Project project;
+    private Project project;
 
-    LinkedHashMap<String, GridCoverage2D> extVars;
+    private LinkedHashMap<String, GridCoverage2D> extVars;
 
-    DefaultGroupLayer layers;
+    private DefaultGroupLayer layers;
 
     public ExtrapolateDialog(Frame owner, Linkset cost, double d, double p, List<String> vars, double[] coefs,
             LinkedHashMap<String, GridCoverage2D> extVars, boolean multiAttach, double dMax) {
@@ -85,15 +85,17 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
             this.extVars = extVars;
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             model.setValueAt(coefs[0], 0, 1);
-            for(int i = 1; i < coefs.length; i++)
+            for(int i = 1; i < coefs.length; i++) {
                 model.addRow(new Object[] {vars.get(i-1), coefs[i]});
+            }
 
             dSpinner.setValue(d);
             pSpinner.setValue(p);
             multiAttachCheckBox.setSelected(multiAttach);
             dMaxSpinner.setValue(dMax);
-        } else
-            extVars = new LinkedHashMap<String, GridCoverage2D>();
+        } else {
+            extVars = new LinkedHashMap<>();
+        }
 
     }
 
@@ -384,36 +386,39 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-
         new Thread(new Runnable() {
+            @Override
             public void run() {
+                TableModel model = table.getModel();
+                double [] coefs = new double[model.getRowCount()];
+                List<String> vars = new ArrayList<>();
+                coefs[0] = (Double)model.getValueAt(0, 1);
+                for(int i = 1; i < model.getRowCount(); i++) {
+                    vars.add(model.getValueAt(i, 0).toString());
+                    coefs[i] = (Double)model.getValueAt(i, 1);
+                }
+                ProgressBar monitor = Config.getProgressBar("Loading data...");
+                RasterLayer l = DistribModel.extrapolate(project, (Double)resolSpinner.getValue(), vars, coefs,
+                        Double.parseDouble(alphaTextField.getText()), extVars, (Linkset)costComboBox.getSelectedItem(),
+                        multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), monitor);
+                if(l == null) {
+                    return;
+                }
+                l.setName(nameTextField.getText());
+                if(layers == null) {
+                    layers = new DefaultGroupLayer("Extrapolate");
+                    project.addLayer(layers);
+                }
+                l.setRemovable(true);
+                layers.addLayerFirst(l);
+                
                 try {
-                    TableModel model = table.getModel();
-                    double [] coefs = new double[model.getRowCount()];
-                    List<String> vars = new ArrayList<String>();
-                    coefs[0] = (Double)model.getValueAt(0, 1);
-                    for(int i = 1; i < model.getRowCount(); i++) {
-                        vars.add(model.getValueAt(i, 0).toString());
-                        coefs[i] = (Double)model.getValueAt(i, 1);
-                    }
-                    ProgressBar monitor = Config.getProgressBar("Loading data...");
-                    RasterLayer l = DistribModel.extrapolate(project, (Double)resolSpinner.getValue(), vars, coefs,
-                            Double.parseDouble(alphaTextField.getText()), extVars, (Linkset)costComboBox.getSelectedItem(),
-                            multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), monitor);
-                    if(l == null)
-                        return;
-                    l.setName(nameTextField.getText());
-                    if(layers == null) {
-                        layers = new DefaultGroupLayer("Extrapolate");
-                        project.addLayer(layers);
-                    }
-                    l.setRemovable(true);
-                    layers.addLayerFirst(l);
                     l.saveRaster(new File(Project.getProject().getDirectory(), l.getName() + ".tif"));
-                    monitor.close();
-                } catch (Throwable ex) {
+                } catch (IOException ex) {
                     Logger.getLogger(ModelDialog.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(ExtrapolateDialog.this, "An error occured : \n" + ex.getLocalizedMessage());
+                } finally {
+                    monitor.close();
                 }
             }
         }).start();
@@ -435,8 +440,9 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
 
     private void addExtButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addExtButtonActionPerformed
         File f = Util.getFile(".tif|.rst", "Raster image");
-        if (f == null)
+        if (f == null) {
             return;
+        }
         try {
             GridCoverage2D coverage;
             if (f.getName().toLowerCase().endsWith(".tif")) {
@@ -461,23 +467,26 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
 
     private void remVarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remVarButtonActionPerformed
         int ind = table.getSelectedRow();
-        if(ind < 1)
+        if(ind < 1) {
             return;
+        }
         String name = (String) table.getValueAt(ind, 0);
         ((DefaultTableModel)table.getModel()).removeRow(ind);
-        if(name.startsWith("ext-"))
+        if(name.startsWith("ext-")) {
             extVars.remove(name);
+        }
 
     }//GEN-LAST:event_remVarButtonActionPerformed
 
     private void addPatchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPatchButtonActionPerformed
-        List<String> vars = new ArrayList<String>();
+        List<String> vars = new ArrayList<>();
         vars.addAll(project.getPatches().iterator().next().getAttributeNames());
         
         String var = (String)JOptionPane.showInputDialog(this, "Add variable : ", "Variable",
                 JOptionPane.PLAIN_MESSAGE, null, vars.toArray(), vars.get(0));
-        if(var == null)
+        if(var == null) {
             return;
+        }
 
         ((DefaultTableModel)table.getModel()).addRow(new Object[] {var, 1.0});
 }//GEN-LAST:event_addPatchButtonActionPerformed

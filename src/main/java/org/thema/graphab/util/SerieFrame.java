@@ -1,13 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
-/*
- * HistogramFrame.java
- *
- * Created on 31 mars 2009, 19:04:16
- */
 
 package org.thema.graphab.util;
 
@@ -28,7 +19,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ExtensionFileFilter;
 import org.thema.drawshape.layer.RasterLayer;
@@ -124,14 +114,16 @@ public class SerieFrame extends javax.swing.JFrame {
         fileChooser.addChoosableFileFilter(txtFilter);
         
         int option = fileChooser.showSaveDialog(null);
-        if (option != JFileChooser.APPROVE_OPTION)
+        if (option != JFileChooser.APPROVE_OPTION) {
             return;
+        }
 
 
         String filename = fileChooser.getSelectedFile().getPath();
         if(fileChooser.getFileFilter() == svgFilter) {
-            if (!filename.endsWith(".svg"))
+            if (!filename.endsWith(".svg")) {
                 filename = filename + ".svg";
+            }
 
 
             DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
@@ -145,30 +137,33 @@ public class SerieFrame extends javax.swing.JFrame {
 
             // Write svg file
             try {
-                OutputStream outputStream = new FileOutputStream(filename);
-                Writer out = new OutputStreamWriter(outputStream, "UTF-8");
-                svgGenerator.stream(out, true /* use css */);
-                outputStream.flush();
-                outputStream.close();
+                try (OutputStream outputStream = new FileOutputStream(filename)) {
+                    Writer out = new OutputStreamWriter(outputStream, "UTF-8");
+                    svgGenerator.stream(out, true /* use css */);
+                    outputStream.flush();
+                }
             } catch (IOException ex) {
                 Logger.getLogger(RasterLayer.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-            if (!filename.endsWith(".txt"))
+            if (!filename.endsWith(".txt")) {
                 filename = filename + ".txt";
+            }
             try {
-                FileWriter w = new FileWriter(filename);
-                w.write(xLabel);
-                for(int i = 0; i < series.getSeriesCount(); i++)
-                    w.write("\t" + series.getSeriesKey(i).toString());
-                w.write("\n");
-                for(int i = 0; i < series.getSeries(0).getItemCount(); i++) {
-                    w.write(series.getX(0, i).toString());
-                    for(int j = 0; j < series.getSeriesCount(); j++)
-                        w.write("\t" + series.getY(j, i));
+                try (FileWriter w = new FileWriter(filename)) {
+                    w.write(xLabel);
+                    for (int i = 0; i < series.getSeriesCount(); i++) {
+                        w.write("\t" + series.getSeriesKey(i).toString());
+                    }
                     w.write("\n");
+                    for (int i = 0; i < series.getSeries(0).getItemCount(); i++) {
+                        w.write(series.getX(0, i).toString());
+                        for (int j = 0; j < series.getSeriesCount(); j++) {
+                            w.write("\t" + series.getY(j, i));
+                        }
+                        w.write("\n");
+                    }
                 }
-                w.close();
             } catch (IOException ex) {
                 Logger.getLogger(RasterLayer.class.getName()).log(Level.SEVERE, null, ex);
             }

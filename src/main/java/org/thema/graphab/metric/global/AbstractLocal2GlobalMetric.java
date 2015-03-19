@@ -34,21 +34,25 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
     
     public AbstractLocal2GlobalMetric(LocalMetric indice, TypeElem type) {
         typeElem = type;
-        if(typeElem == TypeElem.NODE && !indice.calcNodes())
+        if(typeElem == TypeElem.NODE && !indice.calcNodes()) {
             throw new IllegalArgumentException("La métrique locale ne se calcule pas sur les noeuds");
-        if(typeElem == TypeElem.EDGE && !indice.calcEdges())
+        }
+        if(typeElem == TypeElem.EDGE && !indice.calcEdges()) {
             throw new IllegalArgumentException("La métrique locale ne se calcule pas sur les liens");
-        if(typeElem == TypeElem.EDGE && !(indice instanceof PreCalcMetric))
+        }
+        if(typeElem == TypeElem.EDGE && !(indice instanceof PreCalcMetric)) {
             throw new IllegalArgumentException("La métrique locale ne peut pas se calculer pas sur les liens");
+        }
         this.indice = indice;
     }
 
     @Override
     public Object calcPartIndice(Object param, GraphGenerator g) {
-        if(indice instanceof PreCalcMetric)
+        if(indice instanceof PreCalcMetric) {
             return ((PreCalcMetric)indice).calcPartIndice(param, g);
-        else
+        } else {
             return indice.calcIndice((Graphable)param, g);
+        }
     }
 
     @Override
@@ -56,37 +60,42 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
         if(indice instanceof PreCalcMetric) {
             ((PreCalcMetric)indice).endCalc(g);
             if(typeElem == TypeElem.NODE) {
-                for(Node n : g.getNodes())
+                for(Node n : g.getNodes()) {
                     values.add(indice.calcIndice(n, g));
+                }
             } else {
-                for(Edge e : g.getEdges())
+                for(Edge e : g.getEdges()) {
                     values.add(indice.calcIndice(e, g));
+                }
             }
         }
     }
 
     @Override
     public void startCalc(GraphGenerator g) {
-        if(indice instanceof PreCalcMetric)
+        if(indice instanceof PreCalcMetric) {
             ((PreCalcMetric)indice).startCalc(g);
+        }
         
-        values = new ArrayList<Double>();
+        values = new ArrayList<>();
     }
 
     @Override
     public void mergePart(Object part) {
-        if(indice instanceof PreCalcMetric)
+        if(indice instanceof PreCalcMetric) {
             ((PreCalcMetric)indice).mergePart(part);
-        else
+        } else {
             values.add((Double)part);
+        }
     }
 
     @Override
     public TypeParam getTypeParam() {
-        if(indice instanceof PreCalcMetric)
+        if(indice instanceof PreCalcMetric) {
             return ((PreCalcMetric)indice).getTypeParam();
-        else
+        } else {
             return TypeParam.NODE;
+        }
     }
 
     public LocalMetric getIndice() {

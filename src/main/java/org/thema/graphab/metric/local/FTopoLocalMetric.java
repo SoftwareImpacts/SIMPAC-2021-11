@@ -1,23 +1,18 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 
 package org.thema.graphab.metric.local;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
-import org.thema.graphab.links.Linkset;
-import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.Linkset;
 import org.thema.graphab.metric.DistProbaPanel;
 import org.thema.graphab.metric.ParamPanel;
-import org.thema.graphab.metric.local.LocalMetric;
 
 /**
  *
@@ -57,7 +52,7 @@ public class FTopoLocalMetric extends LocalMetric {
     }
 
     public LinkedHashMap<String, Object> getParams() {
-        LinkedHashMap<String, Object> params = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(DistProbaPanel.DIST, d);
         params.put(DistProbaPanel.PROBA, p);
         params.put(DistProbaPanel.A, a);

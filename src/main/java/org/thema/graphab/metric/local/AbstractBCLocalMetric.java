@@ -28,18 +28,21 @@ public abstract class AbstractBCLocalMetric<T> extends LocalMetric implements Pr
 
     @Override
     public void startCalc(GraphGenerator g) {
-        mapVal = new HashMap<Object, Double>();
-        for(Node node : g.getNodes())
+        mapVal = new HashMap<>();
+        for(Node node : g.getNodes()) {
             mapVal.put(((Feature)node.getObject()).getId(), 0.0);
-        for(Edge edge : g.getEdges())
+        }
+        for(Edge edge : g.getEdges()) {
             mapVal.put(((Feature)edge.getObject()).getId(), 0.0);
+        }
     }
 
     @Override
     public void mergePart(Object part) {
         Map<Object, Double> courant = (Map<Object, Double>) part;
-        for(Object id : courant.keySet())
+        for(Object id : courant.keySet()) {
             mapVal.put(id, courant.get(id) + mapVal.get(id));
+        }
     }
 
     

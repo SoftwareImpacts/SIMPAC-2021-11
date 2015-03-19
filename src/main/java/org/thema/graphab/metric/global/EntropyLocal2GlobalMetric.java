@@ -23,18 +23,20 @@ public class EntropyLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
     public Double[] calcIndice(GraphGenerator g) {
         double sum = 0;
         for(Double val : getValues()) {
-            if(val < 0)
+            if(val < 0) {
                 throw new RuntimeException("Value < 0 not allowed for entropy");
+            }
             sum += val;
         }
         
         double e = 0;
         int nb = 0;
-        for(Double val : getValues()) 
+        for(Double val : getValues()) { 
             if(val > 0) {
                 e += (val/sum) * Math.log(val/sum);
                 nb++;
             }
+        }
         
         return new Double[]{-e / Math.log(nb)};
     }

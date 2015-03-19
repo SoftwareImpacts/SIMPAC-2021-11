@@ -11,11 +11,11 @@
 
 package org.thema.graphab.metric;
 
-import org.thema.graphab.links.Linkset;
-import org.thema.graphab.links.Path;
 import java.awt.BorderLayout;
 import javax.swing.DefaultComboBoxModel;
 import org.thema.graphab.Project;
+import org.thema.graphab.links.Linkset;
+import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.global.GlobalMetric;
 
 

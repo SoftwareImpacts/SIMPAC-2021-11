@@ -227,12 +227,13 @@ public class NewGraphDialog extends javax.swing.JDialog {
         cost = (Linkset) costComboBox.getSelectedItem();
         threshold = (Double)thresholdSpinner.getValue();
 
-        if(completeRadioButton.isSelected())
+        if(completeRadioButton.isSelected()) {
             type = GraphGenerator.COMPLETE;
-        else if(thresholdRadioButton.isSelected())
+        } else if(thresholdRadioButton.isSelected()) {
             type = GraphGenerator.THRESHOLD;
-        else
+        } else {
             type = GraphGenerator.MST;
+        }
 
         intraPatchDist = intraPatchCheckBox.isSelected();
         

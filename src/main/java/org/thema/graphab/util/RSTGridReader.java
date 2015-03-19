@@ -98,31 +98,35 @@ public class RSTGridReader extends AbstractGridCoverage2DReader  {
 
     public RSTGridReader(File file) throws IOException {
         File rdcFile = file;
-        if(file.getName().toLowerCase().endsWith(extRST))
+        if(file.getName().toLowerCase().endsWith(extRST)) {
             rdcFile = new File(file.getAbsolutePath().replace("."+extRST, "."+extRDC));
-        else
+        } else {
             file = new File(file.getAbsolutePath().replace("."+extRDC, "."+extRST));
+        }
 
         inStream = new FileImageInputStream(file);
         inStream.setByteOrder(ByteOrder.LITTLE_ENDIAN);
 
-        BufferedReader reader = new BufferedReader(new FileReader(rdcFile));
-        HashMap<String, String> params = new HashMap<String, String>();
-        String line;
-        while((line = reader.readLine()) != null)
-            params.put(line.substring(0, 12), line.substring(14, line.length()));
-        reader.close();
+        HashMap<String, String> params;
+        try (BufferedReader reader = new BufferedReader(new FileReader(rdcFile))) {
+            params = new HashMap<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                params.put(line.substring(0, 12), line.substring(14, line.length()));
+            }
+        }
 
         nbLine = Integer.parseInt(params.get(rdcROWS));
         nbCol = Integer.parseInt(params.get(rdcCOLUMNS));
-        if(params.get(rdcDATA_TYPE).equals(rstBYTE))
+        if(params.get(rdcDATA_TYPE).equals(rstBYTE)) {
             dataType = DataBuffer.TYPE_BYTE;
-        else if(params.get(rdcDATA_TYPE).equals(rstINTEGER))
+        } else if(params.get(rdcDATA_TYPE).equals(rstINTEGER)) {
             dataType = DataBuffer.TYPE_SHORT;
-        else if(params.get(rdcDATA_TYPE).equals(rstREAL))
+        } else if(params.get(rdcDATA_TYPE).equals(rstREAL)) {
             dataType = DataBuffer.TYPE_FLOAT;
-        else
+        } else {
             throw new IllegalArgumentException("Type format not supported !");
+        }
 
         double coef = Double.parseDouble(params.get(rdcUNIT_DIST));
         double minX = coef*Double.parseDouble(params.get(rdcMIN_X));

@@ -160,11 +160,12 @@ public class AddPatchCommand {
             
             if(saveDetail) {
                 List<DefaultFeature> debug = new ArrayList<>();
-                for(Double val : patchIndices.keySet())
+                for(Double val : patchIndices.keySet()) {
                     for(Geometry g : patchIndices.get(val)) {
                         debug.add(new DefaultFeature(g.getCentroid().getX()+","+g.getCentroid().getY()+" - " + (step), g, Arrays.asList("Etape", indice.getDetailName()), 
                                 Arrays.asList(step, val)));
                     }
+                }
                 File dir = getResultDir();
                 dir = new File(dir, "detail");
                 dir.mkdirs();
@@ -205,16 +206,20 @@ public class AddPatchCommand {
             if(nbMultiPatch <= 1) {
                 GeometryFactory geomFactory = new GeometryFactory();
                 HashMap<Geometry, Double> testPoints = new HashMap<>();
-                for(double y = rect.getMinY()+res/2; y < rect.getMaxY(); y += res) 
-                    for(double x = rect.getMinX()+res/2; x < rect.getMaxX(); x += res) 
+                for(double y = rect.getMinY()+res/2; y < rect.getMaxY(); y += res) {
+                    for (double x = rect.getMinX()+res/2; x < rect.getMaxX(); x += res) {
                         testPoints.put(geomFactory.createPoint(new Coordinate(x, y)), capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(x, y), new double[1])[0]);
+                    }
+                }
                 return addPatchSimple(testPoints, mon, indiceValues, saveDetail);
             }
             
-            HashMap<Coordinate, Double> testPoints = new HashMap<Coordinate, Double>();
-            for(double y = rect.getMinY()+res/2; y < rect.getMaxY(); y += res) 
-                for(double x = rect.getMinX()+res/2; x < rect.getMaxX(); x += res) 
+            HashMap<Coordinate, Double> testPoints = new HashMap<>();
+            for(double y = rect.getMinY()+res/2; y < rect.getMaxY(); y += res) {
+                for (double x = rect.getMinX()+res/2; x < rect.getMaxX(); x += res) {
                     testPoints.put(new Coordinate(x, y), capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(x, y), new double[1])[0]);
+                }
+            }
             
             // sinon on continue avec la version multipatch
             mon.setMaximum((int)(nbPatch*rect.getWidth()/res*rect.getHeight()/res));
@@ -237,10 +242,11 @@ public class AddPatchCommand {
                 } else {
                     pointIndices = new TreeMapList<>();
                     for(Coordinate coord : testPoints.keySet()) {
-                        if(mon.isCanceled())
+                        if(mon.isCanceled()) {
                             throw new CancellationException();
+                        }
                         Point p = new GeometryFactory().createPoint(coord);
-                        addPatchWindow(new LinkedList<Point>(Arrays.asList(p)), indice, gen, capaCov, 
+                        addPatchWindow(new LinkedList<>(Arrays.asList(p)), indice, gen, capaCov, 
                             currentInd, res, nbMultiPatch, windowSize, pointIndices, nbMultiPatch);
                         mon.incProgress(1);
                     }
@@ -267,9 +273,10 @@ public class AddPatchCommand {
                 
                 if(saveDetail) {
                     List<DefaultFeature> debug = new ArrayList<>();
-                    for(Point p : bests) 
-                        debug.add(new DefaultFeature(p.getX()+","+p.getY()+" - " + (step), p, Arrays.asList("Etape", indice.getDetailName()), 
+                    for(Point p : bests) {
+                        debug.add(new DefaultFeature(p.getX()+","+p.getY()+" - " + (step), p, Arrays.asList("Etape", indice.getDetailName()),
                                 Arrays.asList(step, currentInd)));
+                    }
                         
                     File dir = getResultDir();
                     dir = new File(dir, "detail");
@@ -345,9 +352,11 @@ public class AddPatchCommand {
         double y = point.getY() - (level != nbMultiPatch ? windowSize*res : 0);
         List<Point> coords = new ArrayList<>();
         for(; y <= point.getY()+windowSize*res; y += res) {
-            for(; x <= point.getX()+windowSize*res; x += res)
-                if(x != point.getX() || y != point.getY())
+            for(; x <= point.getX()+windowSize*res; x += res) {
+                if (x != point.getX() || y != point.getY()) {
                     coords.add(new GeometryFactory().createPoint(new Coordinate(x, y)));
+                }
+            }
             // on redémarre complètement à gauche pas comme à l'initial (si level == nbMultiPatch)
             x = point.getX() - windowSize*res;
         }
@@ -360,7 +369,7 @@ public class AddPatchCommand {
                     try {
                         double indVal = AddPatchTask.addPatchSoft(p, indice, graph, capaCov);
                         if(!Double.isNaN(indVal)) {
-                            HashSet<Point> pointSet = new HashSet<Point>(points);
+                            HashSet<Point> pointSet = new HashSet<>(points);
                             pointSet.add(p);
                             synchronized(pointIndices) {
                                 pointIndices.putValue((indVal-indInit)/pointSet.size(), pointSet);

@@ -7,15 +7,24 @@ package org.thema.graphab;
 
 import com.vividsolutions.jts.geom.Geometry;
 import java.awt.image.Raster;
-import java.io.*;
-import org.thema.graphab.links.Path;
-import org.thema.graphab.links.Linkset;
-import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.DeltaAddGraphGenerator;
-import org.thema.graphab.pointset.Pointset;
-import org.thema.graphab.model.Logistic;
-import org.thema.graphab.model.DistribModel;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.math.MathException;
@@ -24,20 +33,27 @@ import org.thema.common.JTS;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
-import org.thema.parallel.ExecutorService;
-import org.thema.parallel.ParallelExecutor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.drawshape.style.RasterStyle;
 import org.thema.graphab.addpatch.AddPatchCommand;
+import org.thema.graphab.graph.DeltaAddGraphGenerator;
+import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.CircuitRaster;
+import org.thema.graphab.links.Linkset;
+import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.DeltaMetricTask;
 import org.thema.graphab.metric.GraphMetricLauncher;
 import org.thema.graphab.metric.Metric;
 import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.model.DistribModel;
+import org.thema.graphab.model.Logistic;
+import org.thema.graphab.pointset.Pointset;
+import org.thema.parallel.ExecutorService;
+import org.thema.parallel.ParallelExecutor;
 
 /**
  *
@@ -76,8 +92,9 @@ public class CLITools {
                     lst.add(v);
                 }
                 return lst;
-            } else
+            } else {
                 return values;
+            }
         }
         
         public double getValue(int ind) {
@@ -618,8 +635,9 @@ public class CLITools {
             int [] indParam = new int[ranges.size()];
             boolean end = false;
             while(!end) {
-                for(int i = 0; i < indParam.length; i++)
+                for(int i = 0; i < indParam.length; i++) {
                     params.put(paramNames.get(i), ranges.get(paramNames.get(i)).getValue(indParam[i]));
+                }
                 indice.setParams(params);
 
                 System.out.println(graph.getName() + " : " + indice.getDetailName());
@@ -662,10 +680,11 @@ public class CLITools {
         while(!args.get(0).startsWith("obj=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
-            if(r.isUnique())
+            if(r.isUnique()) {
                 params.put(tok[0], r.min);
-            else
+            } else {
                 throw new IllegalArgumentException("No range for metric params in --delta");
+            }
         }
         // obj=patch|link
         boolean patch = args.remove(0).split("=")[1].equals("patch");
@@ -673,18 +692,22 @@ public class CLITools {
         List ids = new ArrayList();
         if(!args.isEmpty() && args.get(0).startsWith("sel=")) {
             String [] toks = args.remove(0).split("=")[1].split(",");
-            for(String tok : toks)
-                if(patch)
+            for(String tok : toks) {
+                if (patch) {
                     ids.add(Integer.parseInt(tok));
-                else
+                } else {
                     ids.add(tok);
-        } else 
+                } 
+            }
+        } else {
             ids = null;
+        }
 
         GlobalMetric indice = Project.getGlobalMetric(indName);
         if(indice.hasParams()) {
-            if(params.isEmpty())
+            if(params.isEmpty()) {
                 throw new IllegalArgumentException("Params for " + indice.getName() + " not found in --delta");
+            }
             indice.setParams(params);
         }
         
@@ -874,28 +897,33 @@ public class CLITools {
         while(!args.get(0).startsWith("obj=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
-            if(r.isUnique())
+            if(r.isUnique()) {
                 params.put(tok[0], r.min);
-            else
+            } else {
                 throw new IllegalArgumentException("No range for indice params in --ltest");
+            }
         }
         // obj=patch|link
         boolean patch = args.remove(0).split("=")[1].equals("patch");
 
         List lstIds = new ArrayList();
         String [] toks = args.remove(0).split("=")[1].split(",");
-        for(String tok : toks)
-            if(patch)
+        for(String tok : toks) {
+            if (patch) {
                 lstIds.add(Integer.parseInt(tok));
-            else
+            } else {
                 lstIds.add(tok);
+            }
+        }
 
         LocalMetric indice = Project.getLocalMetric(indName);
-        if(patch && !indice.calcNodes() || !patch && !indice.calcEdges())
+        if(patch && !indice.calcNodes() || !patch && !indice.calcEdges()) {
             throw new IllegalArgumentException("Indice " + indice.getName() + " is not calculated on selected object type");
+        }
         if(indice.hasParams()) {
-            if(params.isEmpty())
+            if(params.isEmpty()) {
                 throw new IllegalArgumentException("Params for " + indice.getName() + " not found in --ltest");
+            }
             indice.setParams(params);
         }
         
@@ -1114,8 +1142,9 @@ public class CLITools {
             threshold = 0;
         }
         for(Linkset link : getCosts()) {
-            if(link.getType_dist() == Linkset.EUCLID)
+            if(link.getType_dist() == Linkset.EUCLID) {
                 continue;
+            }
             System.out.println("Linkset : " + link.getName());
             final CircuitRaster circuit = link.isExtCost() ? 
                     new CircuitRaster(project, project.getExtRaster(link.getExtCostFile()), true, true, link.getCoefSlope()) :
@@ -1123,45 +1152,48 @@ public class CLITools {
                     
             final File dir = new File(project.getDirectory(), link.getName() + "-circuit");
             dir.mkdir();
-            final FileWriter fw = new FileWriter(new File(dir, "resistances.csv"));
-            fw.write("Id1,Id2,R\n");
-            final List<DefaultFeature> corridors = new ArrayList<>();
-            SimpleParallelTask task = new SimpleParallelTask<Path>(link.getPaths()) {
-                @Override
-                protected void executeOne(Path p) {
-                    try {
-                        long t1 = System.currentTimeMillis();
-                        CircuitRaster.ODCircuit odCircuit = circuit.getODCircuit(p.getPatch1(), p.getPatch2());
-                        odCircuit.solve();
-                        long t2 = System.currentTimeMillis();
-                        synchronized(CLITools.this) {
-                            System.out.println(p.getPatch1() + " - " + p.getPatch2() + " : " + odCircuit.getZone());
-                            System.out.print("R : " + odCircuit.getR());
-                            System.out.print(" - cost : " + p.getCost());
-                            System.out.println(" - time : " + (t2 - t1) / 1000.0 + "s");
-                            System.out.println("Err max : " + odCircuit.getErrMax());
-                            fw.write(p.getPatch1() + "," + p.getPatch2() + "," + odCircuit.getR() + "\n");
-                            Raster raster = odCircuit.getCurrentMap();
-                            new RasterLayer("", new RasterShape(raster, JTS.envToRect(odCircuit.getEnvelope()), new RasterStyle(), true))
-                                    .saveRaster(new File(dir, p.getPatch1() + "-" + p.getPatch2() + "-cur.tif"));
-                            if(threshold > 0) {
-                                raster = odCircuit.getCorridorMap(threshold);
+            final List<DefaultFeature> corridors;
+            try (FileWriter fw = new FileWriter(new File(dir, "resistances.csv"))) {
+                fw.write("Id1,Id2,R\n");
+                corridors = new ArrayList<>();
+                SimpleParallelTask task = new SimpleParallelTask<Path>(link.getPaths()) {
+                    @Override
+                    protected void executeOne(Path p) {
+                        try {
+                            long t1 = System.currentTimeMillis();
+                            CircuitRaster.ODCircuit odCircuit = circuit.getODCircuit(p.getPatch1(), p.getPatch2());
+                            odCircuit.solve();
+                            long t2 = System.currentTimeMillis();
+                            synchronized (CLITools.this) {
+                                System.out.println(p.getPatch1() + " - " + p.getPatch2() + " : " + odCircuit.getZone());
+                                System.out.print("R : " + odCircuit.getR());
+                                System.out.print(" - cost : " + p.getCost());
+                                System.out.println(" - time : " + (t2 - t1) / 1000.0 + "s");
+                                System.out.println("Err max : " + odCircuit.getErrMax());
+                                fw.write(p.getPatch1() + "," + p.getPatch2() + "," + odCircuit.getR() + "\n");
+                                Raster raster = odCircuit.getCurrentMap();
                                 new RasterLayer("", new RasterShape(raster, JTS.envToRect(odCircuit.getEnvelope()), new RasterStyle(), true))
-                                        .saveRaster(new File(dir, p.getPatch1() + "-" + p.getPatch2() + "-cor.tif"));
-                                Geometry poly = odCircuit.getCorridor(threshold);
-                                if(!poly.isEmpty())
-                                    corridors.add(new DefaultFeature(p.getPatch1() + "-" + p.getPatch2(), poly));
+                                        .saveRaster(new File(dir, p.getPatch1() + "-" + p.getPatch2() + "-cur.tif"));
+                                if (threshold > 0) {
+                                    raster = odCircuit.getCorridorMap(threshold);
+                                    new RasterLayer("", new RasterShape(raster, JTS.envToRect(odCircuit.getEnvelope()), new RasterStyle(), true))
+                                            .saveRaster(new File(dir, p.getPatch1() + "-" + p.getPatch2() + "-cor.tif"));
+                                    Geometry poly = odCircuit.getCorridor(threshold);
+                                    if (!poly.isEmpty()) {
+                                        corridors.add(new DefaultFeature(p.getPatch1() + "-" + p.getPatch2(), poly));
+                                    }
+                                }
                             }
+                        }catch (IOException ex) {
+                            Logger.getLogger(CLITools.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    } catch (IOException ex) {
-                        Logger.getLogger(CLITools.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                }
-            };
-            new ParallelFExecutor(task).executeAndWait();
-            fw.close();
-            if(threshold > 0) 
+                };
+                new ParallelFExecutor(task).executeAndWait();
+            }
+            if(threshold > 0) { 
                 DefaultFeature.saveFeatures(corridors, new File(dir, "corridor-" + threshold + ".shp"));
+            }
         }
     }
     

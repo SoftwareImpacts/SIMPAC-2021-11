@@ -18,9 +18,11 @@ public class GDMetric extends AbstractPathMetric {
     @Override
     public Double calcPartIndice(PathFinder finder, GraphGenerator g) {
         double max = 0;
-        for(Node node : finder.getComputedNodes()) 
-            if(finder.getCost(node) > max)
+        for(Node node : finder.getComputedNodes()) {
+            if (finder.getCost(node) > max) {
                 max = finder.getCost(node);
+            }
+        }
         
         return max;
     }
@@ -28,8 +30,9 @@ public class GDMetric extends AbstractPathMetric {
     @Override
     public void mergePart(Object part) {
         double val = (Double)part;
-        if(val > indice)
+        if(val > indice) {
             indice = val;
+        }
     }
 
     @Override

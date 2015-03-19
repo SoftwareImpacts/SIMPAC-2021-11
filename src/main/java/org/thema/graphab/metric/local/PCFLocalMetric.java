@@ -4,15 +4,15 @@
  */
 package org.thema.graphab.metric.local;
 
-import org.thema.graphab.metric.SingleValuePanel;
-import org.thema.graphab.metric.ParamPanel;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.geotools.graph.structure.Node;
-import org.thema.graphab.metric.Circuit;
-import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.metric.Circuit;
+import org.thema.graphab.metric.ParamPanel;
+import org.thema.graphab.metric.SingleValuePanel;
 
 /**
  *
@@ -28,16 +28,19 @@ public class PCFLocalMetric extends AbstractBCLocalMetric<Node> {
     
     @Override
     public Map<Object, Double> calcPartIndice(Node node, GraphGenerator g) {
-        Map<Object, Double> res = new HashMap<Object, Double>();
-        for(Node n2 : g.getNodes())
-            if(node != n2) {
+        Map<Object, Double> res = new HashMap<>();
+        for(Node n2 : g.getNodes()) {
+            if (node != n2) {
                 Map<Object, Double> courant = circuit.computePotCourant(node, n2, Math.pow(Project.getPatchCapacity(node), beta));
-                for(Object id : courant.keySet())
-                    if(res.containsKey(id))
+                for (Object id : courant.keySet()) {
+                    if (res.containsKey(id)) {
                         res.put(id, courant.get(id) + res.get(id));
-                    else
+                    } else {
                         res.put(id, courant.get(id));
+                    }
+                }
             }
+        }
         return res;
     }
     
@@ -61,7 +64,7 @@ public class PCFLocalMetric extends AbstractBCLocalMetric<Node> {
     }
 
     public LinkedHashMap<String, Object> getParams() {
-        LinkedHashMap<String, Object> params = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(BETA, beta);
         return params;
     }

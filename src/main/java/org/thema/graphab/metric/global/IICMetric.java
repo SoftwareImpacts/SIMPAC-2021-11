@@ -40,8 +40,9 @@ public class IICMetric extends GlobalMetric implements PreCalcMetric<Node> {
 
         DijkstraPathFinder finder = new DijkstraPathFinder(g.getGraph(), node, DijkstraPathFinder.NBEDGE_WEIGHTER);
         finder.calculate();
-        for(DijkstraPathFinder.DijkstraNode n : finder.getComputedNodes())
+        for(DijkstraPathFinder.DijkstraNode n : finder.getComputedNodes()) {
             sum += Project.getPatchCapacity(n.node) * Project.getPatchCapacity(node) / (1+n.cost);
+        }
         return sum;
     }
 

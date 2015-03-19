@@ -29,9 +29,10 @@ import org.geotools.graph.build.basic.BasicGraphBuilder;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.thema.graphab.graph.Modularity.Cluster;
 
 /**
@@ -48,40 +49,40 @@ public class ModularityTest {
         graphs = new ArrayList<>();
         partitions = new ArrayList<>();
         File f = new File("target/test-classes/org/thema/graphab/modularity.txt");
-        BufferedReader r = new BufferedReader(new FileReader(f));
-        String line = r.readLine();
-        while(line != null) {
-            BasicGraphBuilder gen = new BasicGraphBuilder();
-            int n = Integer.parseInt(line.split("\\s+")[1]);
-            List<Node> nodes = new ArrayList<>();
-            for(int i = 0; i < n; i++) {
-                Node node = gen.buildNode();
-                node.setID(i+1);
-                gen.addNode(node);
-                nodes.add(node);
-            }
-            line = r.readLine();
-            while(!line.startsWith("part")) {
-                String[] tokens = line.split("\\s+");
-                Edge e = gen.buildEdge(nodes.get(Integer.parseInt(tokens[0])-1), nodes.get(Integer.parseInt(tokens[1])-1));
-                gen.addEdge(e);
-                line = r.readLine();
-            }
-            graphs.add(gen.getGraph());
-            List<Set<Integer>> part = new ArrayList<>();
-            while(line != null && line.startsWith("part")) {
-                String[] tokens = line.split("\\s+");
-                Set<Integer> set = new HashSet<>();
-                for(int i = 1; i < tokens.length; i++) {
-                    set.add(Integer.parseInt(tokens[i]));
+        try (BufferedReader r = new BufferedReader(new FileReader(f))) {
+            String line = r.readLine();
+            while(line != null) {
+                BasicGraphBuilder gen = new BasicGraphBuilder();
+                int n = Integer.parseInt(line.split("\\s+")[1]);
+                List<Node> nodes = new ArrayList<>();
+                for(int i = 0; i < n; i++) {
+                    Node node = gen.buildNode();
+                    node.setID(i+1);
+                    gen.addNode(node);
+                    nodes.add(node);
                 }
-                part.add(set);
+                line = r.readLine();
+                while(!line.startsWith("part")) {
+                    String[] tokens = line.split("\\s+");
+                    Edge e = gen.buildEdge(nodes.get(Integer.parseInt(tokens[0])-1), nodes.get(Integer.parseInt(tokens[1])-1));
+                    gen.addEdge(e);
+                    line = r.readLine();
+                }
+                graphs.add(gen.getGraph());
+                List<Set<Integer>> part = new ArrayList<>();
+                while(line != null && line.startsWith("part")) {
+                    String[] tokens = line.split("\\s+");
+                    Set<Integer> set = new HashSet<>();
+                    for(int i = 1; i < tokens.length; i++) {
+                        set.add(Integer.parseInt(tokens[i]));
+                    }
+                    part.add(set);
+                    line = r.readLine();
+                }
+                partitions.add(part);
                 line = r.readLine();
             }
-            partitions.add(part);
-            line = r.readLine();
         }
-        r.close();
         
     }
     
