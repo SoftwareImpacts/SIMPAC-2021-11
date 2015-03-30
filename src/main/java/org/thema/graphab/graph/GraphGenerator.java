@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import org.geotools.feature.SchemaException;
 import org.geotools.graph.build.basic.BasicGraphBuilder;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
@@ -506,6 +507,34 @@ public class GraphGenerator {
                         }
                     });
                     
+                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Set_Comp_Id")) {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Project project = Project.getProject();
+                                    ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Set_Comp_Id") + "...", 
+                                            project.getPatches().size());
+                                    String attrName = "comp_" + GraphGenerator.this.getName();
+                                    DefaultFeature.addAttribute(attrName,
+                                        project.getPatches(), -1);
+                                    for(Feature comp : getComponentFeatures()) {
+                                        Object id = comp.getId();
+                                        for(DefaultFeature patch : (List<DefaultFeature>)project.getPatchIndex()
+                                                .query(comp.getGeometry().getEnvelopeInternal())) {
+                                            if(patch.getGeometry().intersects(comp.getGeometry())) {
+                                                patch.setAttribute(attrName, id);
+                                                progressBar.incProgress(1);
+                                            }
+                                        }
+                                    }
+                                    progressBar.close();
+                                }
+                            }).start();
+                        }
+                    });
+                    
                     menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove")) {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -514,7 +543,7 @@ public class GraphGenerator {
                                 return;
                             }
 
-                            MainFrame.project.removeGraph(name);
+                            Project.getProject().removeGraph(name);
                         }
                     });
 

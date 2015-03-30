@@ -19,10 +19,14 @@ package org.thema.graphab.graph;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import java.awt.Color;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.geotools.feature.SchemaException;
 import org.geotools.graph.structure.Node;
 import org.thema.common.Config;
 import org.thema.common.ProgressBar;
@@ -73,6 +77,7 @@ public class ModularityDialog extends javax.swing.JDialog {
         modLabel = new javax.swing.JLabel();
         optimCheckBox = new javax.swing.JCheckBox();
         optimLabel = new javax.swing.JLabel();
+        graphButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Modularity");
@@ -111,6 +116,13 @@ public class ModularityDialog extends javax.swing.JDialog {
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, optimCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), optimLabel, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
+        graphButton.setText("Graph");
+        graphButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                graphButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -129,13 +141,15 @@ public class ModularityDialog extends javax.swing.JDialog {
                                     .addComponent(modLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(optimLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(closeButton))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(closeButton)
+                            .addComponent(graphButton)))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(nbSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE)
+                        .addComponent(nbSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(showButton)))
+                        .addComponent(showButton, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -146,19 +160,20 @@ public class ModularityDialog extends javax.swing.JDialog {
                     .addComponent(jLabel1)
                     .addComponent(nbSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(showButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(graphButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(closeButton)
-                        .addContainerGap())
+                        .addComponent(closeButton))
                     .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(modLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(optimCheckBox)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(optimLabel)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
 
         bindingGroup.bind();
@@ -220,9 +235,20 @@ public class ModularityDialog extends javax.swing.JDialog {
         optimLabel.setText("");
     }//GEN-LAST:event_nbSpinnerStateChanged
 
+    private void graphButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphButtonActionPerformed
+        Set<Modularity.Cluster> partition = optimCheckBox.isSelected() ? mod.getOptimPartition((int) nbSpinner.getValue())
+                        : mod.getPartition((int) nbSpinner.getValue());
+        try {
+            Project.getProject().addGraph(new ModGraphGenerator(mod.getGraphGenerator(), partition), true);
+        } catch (IOException | SchemaException ex) {
+            Logger.getLogger(ModularityDialog.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_graphButtonActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton closeButton;
+    private javax.swing.JButton graphButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel modLabel;
     private javax.swing.JSpinner nbSpinner;

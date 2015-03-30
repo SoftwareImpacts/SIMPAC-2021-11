@@ -701,7 +701,7 @@ public final class Project {
     public synchronized STRtree getPatchIndex() {
         if(patchIndex == null) {
             patchIndex = new STRtree();
-            for(Feature f : patches) {
+            for(Feature f : getPatches()) {
                 patchIndex.insert(f.getGeometry().getEnvelopeInternal(), f);
             }
         }
