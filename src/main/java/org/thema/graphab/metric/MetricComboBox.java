@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.metric;
 
 import java.awt.Component;
@@ -20,15 +17,14 @@ import org.thema.graphab.Project;
 import org.thema.graphab.metric.Metric.Type;
 
 /**
- *
- * @author gvuidel
+ * Combobox showing metrics ordered by type and short name.
+ * 
+ * @author Gilles Vuidel
  */
 public class MetricComboBox extends JComboBox {
-    
-    List<Metric> indices;
-    
+       
     public MetricComboBox() {
-        setIndices(new ArrayList<Metric>(Project.GLOBAL_METRICS));
+        setMetrics(new ArrayList<Metric>(Project.GLOBAL_METRICS));
         setRenderer(new ComboBoxRenderer());
         addItemListener(new ItemListener() {
             Object lastItem;
@@ -44,13 +40,12 @@ public class MetricComboBox extends JComboBox {
         });
     }
 
-    public List<Metric> getIndices() {
-        return indices;
-    }
-
-    public void setIndices(List<? extends Metric> lstIndice) {
-        this.indices = new ArrayList(lstIndice);
-        Collections.sort(indices, new Comparator<Metric>() {
+    /**
+     * Sets the metrics for this combo box.
+     * @param metrics the new list of metrics
+     */
+    public final void setMetrics(List<? extends Metric> metrics) {
+        Collections.sort(metrics, new Comparator<Metric>() {
             @Override
             public int compare(Metric o1, Metric o2) {
                 int cmp = o1.getType().compareTo(o2.getType());
@@ -61,12 +56,12 @@ public class MetricComboBox extends JComboBox {
                 }
             }
         });
-//        for(int i = 1; i < indices.size(); i++)
-//            if(indices.get(i-1).getType() != indices.get(i).getType()) {
-//                indices.add(i, SEPARATOR);
+//        for(int i = 1; i < metrics.size(); i++)
+//            if(metrics.get(i-1).getType() != metrics.get(i).getType()) {
+//                metrics.add(i, SEPARATOR);
 //                i++;
 //            }
-        setModel(new DefaultComboBoxModel(indices.toArray()));
+        setModel(new DefaultComboBoxModel(metrics.toArray()));
         this.fireActionEvent();
     }
    
@@ -83,9 +78,9 @@ public class MetricComboBox extends JComboBox {
     
     private class ComboBoxRenderer extends DefaultListCellRenderer {
 
-        JSeparator separator;
+        private JSeparator separator;
 
-        public ComboBoxRenderer() {
+        private ComboBoxRenderer() {
             super();
             separator = new JSeparator(JSeparator.HORIZONTAL);
         }

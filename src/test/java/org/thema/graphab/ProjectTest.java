@@ -24,7 +24,7 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.DeltaMetricTask;
-import org.thema.graphab.metric.GraphMetricLauncher;
+import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import org.thema.graphab.metric.global.DeltaPCMetric;
 import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.graphab.metric.global.PCMetric;
@@ -53,7 +53,7 @@ public class ProjectTest {
     public static void setUpClass() throws Exception {
         // init 2 threads
         Config.setNodeClass(ProjectTest.class);
-        Config.setParallelProc(2);
+        Config.setParallelProc(6);
         // load all metrics
         Project.loadPluginMetric(ProjectTest.class.getClassLoader());
 
@@ -312,8 +312,8 @@ public class ProjectTest {
             GlobalMetric indice = Project.getGlobalMetric(indName);
             indice.setParamFromDetailName(varName.substring(0, varName.indexOf("-")));
             GraphGenerator gen = project.getGraph(varName.substring(varName.indexOf("-")+1));
-            GraphMetricLauncher launcher = new GraphMetricLauncher(indice, true);
-            Double[] res = launcher.calcIndice(gen, new TaskMonitor.EmptyMonitor());
+            GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice);
+            Double[] res = launcher.calcMetric(gen, true, null);
             double err = 1e-10;
             assertEquals("Indice " + indice.getDetailName() + "-" + gen.getName(), resIndices.get(indice.getDetailName() + "-" + gen.getName()), 
                     res[0], res[0]*err);
@@ -336,7 +336,7 @@ public class ProjectTest {
         
         for(String varName : r.getVarNames()) {
             // pour les attributs Area, Perim et Capacity et les delta métriques
-            if(!varName.contains("_") || varName.startsWith("d_")) { 
+            if(!varName.contains("_") || varName.startsWith("d_") || varName.startsWith("CBC")) { 
                 continue;
             }
             String indName = varName.substring(0, varName.indexOf("_"));
@@ -388,7 +388,7 @@ public class ProjectTest {
         r.read("Id");
         int nbGraph = 0;
         DeltaPCMetric deltaPC = new DeltaPCMetric();
-        GraphMetricLauncher launcher = new GraphMetricLauncher(deltaPC, false);
+        GlobalMetricLauncher launcher = new GlobalMetricLauncher(deltaPC);
         String startName = "d_" + deltaPC.getDetailName() + "|";
         for(GraphGenerator gen : project.getGraphs()) {
             if(gen.getLinkset().getType_dist() == Linkset.EUCLID && gen.isIntraPatchDist()) {

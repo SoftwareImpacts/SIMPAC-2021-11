@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -9,12 +5,14 @@ import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Size of the Largest Component metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class SLCMetric extends GlobalMetric {
 
-    public Double [] calcIndice(GraphGenerator g) {
+    @Override
+    public Double [] calcMetric(GraphGenerator g) {
         double max = 0;
         for(int i = 0; i < g.getComponents().size(); i++) {
             double size = g.getComponentGraphGen(i).getPatchCapacity();
@@ -26,6 +24,7 @@ public class SLCMetric extends GlobalMetric {
         return new Double[]{max};
     }
 
+    @Override
     public String getShortName() {
         return "SLC";
     }

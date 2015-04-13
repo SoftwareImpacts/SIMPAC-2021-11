@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -9,15 +5,18 @@ import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Mean Size of Components metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class MSCMetric extends GlobalMetric {
 
-    public Double [] calcIndice(GraphGenerator g) {
+    @Override
+    public Double [] calcMetric(GraphGenerator g) {
         return new Double[]{g.getPatchCapacity() / g.getComponents().size()};
     }
 
+    @Override
     public String getShortName() {
         return "MSC";
     }

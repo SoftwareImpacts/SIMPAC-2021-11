@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.addpatch;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -16,8 +13,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.thema.common.ProgressBar;
 import org.thema.common.collection.TreeMapList;
@@ -25,37 +20,53 @@ import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.metric.GraphMetricLauncher;
+import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
- *
- * @author gvuidel
+ * Parallel task testing the adding of a set of patches on a graph and calculates a metric for each.
+ * This task is useful only for grid sampling with multi simultaneous patch adding and in MPI environment.
+ * Works only on MPI environment.
+ * @author Gilles Vuidel
  */
 public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Double, Set<Point>>, TreeMapList<Double, Set<Point>>> 
-                    implements Serializable{
+                    implements Serializable {
 
     // Patches to be added at init
-    HashMap<Point, Double> addPoints;
+    private HashMap<Point, Double> addPoints;
     
-    int nbMultiPatch;
-    int windowSize;
-    double res;
-    GridCoverage2D capaCov;
-    List<Coordinate> testPoints;
-    GlobalMetric indice;
-    String graphName;
-    double indInit;
+    private int nbMultiPatch;
+    private int windowSize;
+    private double res;
+    private GridCoverage2D capaCov;
+    private List<Coordinate> testPoints;
+    private GlobalMetric metric;
+    private String graphName;
+    private double indInit;
     
-    transient GraphGenerator gen;
-    transient TreeMapList<Double, Set<Point>> result;
+    private transient GraphGenerator gen;
+    private transient TreeMapList<Double, Set<Point>> result;
 
-    public AddPatchMultiMPITask(HashMap<Point, Double> addPoints, GraphGenerator gen, GlobalMetric indice, double indInit, double res, int nbMultiPatch, int windowSize,
+    /**
+     * Creates a new AddPatchMultiMPITask.
+     * If nbMultiPatch == 1, use {@link AddPatchTask } instead. It is faster.
+     * @param addPoints the patches added at a previous step with their capacity, can be null if no patch already added
+     * @param gen the graph
+     * @param metric the metric
+     * @param indInit the initial metric value
+     * @param res the resolution of the grid (cell size)
+     * @param nbMultiPatch the number of patches added simultaneously
+     * @param windowSize the window size in cell
+     * @param testPoints the set of points to test
+     * @param capaCov the grid containing capacity
+     * @param monitor the progress bar
+     */
+    public AddPatchMultiMPITask(HashMap<Point, Double> addPoints, GraphGenerator gen, GlobalMetric metric, double indInit, double res, int nbMultiPatch, int windowSize,
             List<Coordinate> testPoints, GridCoverage2D capaCov, ProgressBar monitor) {
         super(monitor);
         this.addPoints = addPoints;
-        this.indice = indice;
+        this.metric = metric;
         this.gen = gen;
         this.graphName = gen.getName();
         this.indInit = indInit;
@@ -83,7 +94,6 @@ public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Doubl
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(AddPatchMultiMPITask.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
     }
@@ -94,8 +104,8 @@ public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Doubl
         for(Coordinate coord : testPoints.subList(start, end)) {
             Point p = new GeometryFactory().createPoint(coord);
             try {
-                addPatchWindow(new LinkedList<>(Arrays.asList(p)), indInit, results, nbMultiPatch);
-            } catch (Exception ex) {
+                addPatchWindow(new LinkedList<>(Arrays.asList(p)), results, nbMultiPatch);
+            } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -119,28 +129,38 @@ public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Doubl
         return testPoints.size();
     }
     
+    /**
+     * @return the metrics gain by added patch associated with the set of added patches
+     */
     @Override
     public TreeMapList<Double, Set<Point>> getResult() {
         return result;
     }
   
-    
-    private double addPatchWindow(LinkedList<Point> points, double indInit, TreeMapList<Double, Set<Point>> pointIndices, int level) throws Exception {
+    /**
+     * Add several patches at the same time and calculates the gain of the metric by added patch.
+     * This method is called recursively, adding one patch for each call.
+     * @param points the added patches, the last one will be added
+     * @param pointMetrics the resulting metrics gain associated with the set of added patches
+     * @param level the current level from nbMultiPatch to 2
+     * @throws IOException 
+     */
+    private void addPatchWindow(LinkedList<Point> points, TreeMapList<Double, Set<Point>> pointMetrics, int level) throws IOException {
         Project project = Project.getProject();
         Point point = points.getLast();
         if(!project.canCreatePatch(point)) {
-            return Double.NaN;
+            return ;
         }
         double capa = capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(point.getX(), point.getY()), new double[1])[0];
         if(capa <= 0) {
-            return Double.NaN;
+            return ;
         }
         DefaultFeature patch = project.addPatch(point, capa);
         gen.getLinkset().addLinks(patch);
         GraphGenerator graph = new GraphGenerator(gen, "");
-        double indVal = (new GraphMetricLauncher(indice, false).calcIndice(graph, new TaskMonitor.EmptyMonitor())[0]
+        double indVal = (new GlobalMetricLauncher(metric).calcMetric(graph, false, null)[0]
                 - indInit) / points.size();
-        pointIndices.putValue(indVal, new HashSet<>(points));
+        pointMetrics.putValue(indVal, new HashSet<>(points));
 
         // si c'est le premier voisinage on ne calcule que la moitié (à partir du centre) 
         // sinon on calcule pour tout le voisinage (peut être amélioré mais pas évident)
@@ -154,15 +174,15 @@ public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Doubl
                 Point p = new GeometryFactory().createPoint(new Coordinate(x, y));
                 // si il ne reste qu'un voisinage à tester on le fait en soft sinon on récurre
                 if(level == 2) {
-                    double val = AddPatchTask.addPatchSoft(p, indice, gen, capaCov);
+                    double val = AddPatchTask.addPatchSoft(p, metric, gen, capaCov);
                     if(!Double.isNaN(val)) {
                         HashSet<Point> pointSet = new HashSet<>(points);
                         pointSet.add(p);
-                        pointIndices.putValue((val-indInit)/pointSet.size(), pointSet);
+                        pointMetrics.putValue((val-indInit)/pointSet.size(), pointSet);
                     }
                 } else {
                     points.addLast(p);
-                    addPatchWindow(points, indInit, pointIndices, level-1);
+                    addPatchWindow(points, pointMetrics, level-1);
                     points.removeLast();
                 }
             }
@@ -173,7 +193,6 @@ public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Doubl
         gen.getLinkset().removeLinks(patch);
         project.removePointPatch(patch);
         
-        return indVal;
     }
     
 }

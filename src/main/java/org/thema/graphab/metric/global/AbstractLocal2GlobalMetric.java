@@ -1,10 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,52 +17,58 @@ import org.thema.graphab.metric.PreCalcMetric;
 import org.thema.graphab.metric.local.LocalMetric;
 
 /**
+ * Base class for agregating local metric into a global metric.
+ * If the local metric implements PreCalcMetric, delegates the methods to the local metric.
+ * If not, implements PreCalcMetric on typeElem.
+ * Subclass must have the same constructor signature or override {@link #dupplicate() }.
  * 
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements PreCalcMetric {
 
-    public enum TypeElem {NODE, EDGE}
+    /** Calculates on nodes or edges */
+    public enum TypeElem { NODE, EDGE }
     
-    private LocalMetric indice;
-    protected TypeElem typeElem;
+    private LocalMetric metric;
+    private TypeElem typeElem;
     private transient List<Double> values;
 
-    
-    public AbstractLocal2GlobalMetric(LocalMetric indice, TypeElem type) {
+    /**
+     * Creates a new global metric for agregating the local metric on nodes or edges
+     * @param metric the local metric
+     * @param type calculates local metric on nodes or edges ?
+     */
+    public AbstractLocal2GlobalMetric(LocalMetric metric, TypeElem type) {
         typeElem = type;
-        if(typeElem == TypeElem.NODE && !indice.calcNodes()) {
+        if(typeElem == TypeElem.NODE && !metric.calcNodes()) {
             throw new IllegalArgumentException("La métrique locale ne se calcule pas sur les noeuds");
         }
-        if(typeElem == TypeElem.EDGE && !indice.calcEdges()) {
+        if(typeElem == TypeElem.EDGE && !metric.calcEdges()) {
             throw new IllegalArgumentException("La métrique locale ne se calcule pas sur les liens");
         }
-        if(typeElem == TypeElem.EDGE && !(indice instanceof PreCalcMetric)) {
-            throw new IllegalArgumentException("La métrique locale ne peut pas se calculer pas sur les liens");
-        }
-        this.indice = indice;
+        this.metric = metric;
     }
 
     @Override
-    public Object calcPartIndice(Object param, GraphGenerator g) {
-        if(indice instanceof PreCalcMetric) {
-            return ((PreCalcMetric)indice).calcPartIndice(param, g);
+    public Object calcPartMetric(Object param, GraphGenerator g) {
+        if(metric instanceof PreCalcMetric) {
+            return ((PreCalcMetric)metric).calcPartMetric(param, g);
         } else {
-            return indice.calcIndice((Graphable)param, g);
+            return metric.calcMetric((Graphable)param, g);
         }
     }
 
     @Override
     public void endCalc(GraphGenerator g) {
-        if(indice instanceof PreCalcMetric) {
-            ((PreCalcMetric)indice).endCalc(g);
+        if(metric instanceof PreCalcMetric) {
+            ((PreCalcMetric)metric).endCalc(g);
             if(typeElem == TypeElem.NODE) {
                 for(Node n : g.getNodes()) {
-                    values.add(indice.calcIndice(n, g));
+                    values.add(metric.calcMetric(n, g));
                 }
             } else {
                 for(Edge e : g.getEdges()) {
-                    values.add(indice.calcIndice(e, g));
+                    values.add(metric.calcMetric(e, g));
                 }
             }
         }
@@ -73,8 +76,8 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
 
     @Override
     public void startCalc(GraphGenerator g) {
-        if(indice instanceof PreCalcMetric) {
-            ((PreCalcMetric)indice).startCalc(g);
+        if(metric instanceof PreCalcMetric) {
+            ((PreCalcMetric)metric).startCalc(g);
         }
         
         values = new ArrayList<>();
@@ -82,8 +85,8 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
 
     @Override
     public void mergePart(Object part) {
-        if(indice instanceof PreCalcMetric) {
-            ((PreCalcMetric)indice).mergePart(part);
+        if(metric instanceof PreCalcMetric) {
+            ((PreCalcMetric)metric).mergePart(part);
         } else {
             values.add((Double)part);
         }
@@ -91,67 +94,125 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
 
     @Override
     public TypeParam getTypeParam() {
-        if(indice instanceof PreCalcMetric) {
-            return ((PreCalcMetric)indice).getTypeParam();
+        if(metric instanceof PreCalcMetric) {
+            return ((PreCalcMetric)metric).getTypeParam();
         } else {
-            return TypeParam.NODE;
+            return typeElem == TypeElem.NODE ? TypeParam.NODE : TypeParam.EDGE;
         }
     }
 
-    public LocalMetric getIndice() {
-        return indice;
+    /**
+     * @return the type of element : node or edge
+     */
+    public TypeElem getTypeElem() {
+        return typeElem;
     }
 
+    /**
+     * @return the local metric
+     */
+    public LocalMetric getLocalMetric() {
+        return metric;
+    }
+
+    /**
+     * @return the values calculated by the local metric for nodes or edges
+     */
     protected List<Double> getValues() {
         return values;
     }
     
     @Override
-    public abstract AbstractLocal2GlobalMetric dupplicate(); 
+    public AbstractLocal2GlobalMetric dupplicate() {
+        try {
+            return this.getClass().getConstructor(LocalMetric.class, TypeElem.class).newInstance(metric.dupplicate(), typeElem);
+        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+        }
+    } 
 
+    /**
+     * {@inheritDoc }
+     * Delegates to the local metric
+     */
     @Override
     public boolean isAcceptGraph(GraphGenerator graph) {
-        return indice.isAcceptGraph(graph);
+        return metric.isAcceptGraph(graph);
     }
 
+    /**
+     * Accepts only global and component methods
+     * @param method
+     * @return 
+     */
     @Override
     public boolean isAcceptMethod(Project.Method method) {
         return method == Method.GLOBAL || method == Method.COMP;
     }
     
+    /**
+     * @return the short name prefix
+     */
     public abstract String getPrefixShortName();
+    
+    /**
+     * @return the prefix for the full name
+     */
     public abstract String getPrefixName();
     
     @Override
     public String getShortName() {
-        return getPrefixShortName() + "#" + (typeElem == TypeElem.EDGE ? "e" : "") + indice.getShortName();
+        return getPrefixShortName() + "#" + (typeElem == TypeElem.EDGE ? "e" : "") + metric.getShortName();
     }
 
     @Override
     public String getName() {
-        return getPrefixName() + (typeElem == TypeElem.EDGE ? "(" + typeElem.toString().toLowerCase() + ") " : " ") + indice.getName();
+        return getPrefixName() + (typeElem == TypeElem.EDGE ? "(" + typeElem.toString().toLowerCase() + ") " : " ") + metric.getName();
     }
 
+    /**
+     * {@inheritDoc }
+     * Delegates to the local metric
+     */
+    @Override
     public void setParams(Map<String, Object> params) {
-        indice.setParams(params);
+        metric.setParams(params);
     }
 
+    /**
+     * {@inheritDoc }
+     * Delegates to the local metric
+     */
+    @Override
     public LinkedHashMap<String, Object> getParams() {
-        return indice.getParams();
+        return metric.getParams();
     }
 
+    /**
+     * {@inheritDoc }
+     * Delegates to the local metric
+     */
+    @Override
     public ParamPanel getParamPanel(Project project) {
-        return indice.getParamPanel(project);
+        return metric.getParamPanel(project);
     }
 
+    /**
+     * {@inheritDoc }
+     * Delegates to the local metric
+     */
     @Override
     public void setParamFromDetailName(String detailName) {
-        indice.setParamFromDetailName(detailName);
+        metric.setParamFromDetailName(detailName);
     }
     
+    /**
+     * {@inheritDoc }
+     * Delegates to the local metric
+     */
     @Override
     public Type getType() {
-        return indice.getType();
+        return metric.getType();
     }
     
 }

@@ -1,46 +1,47 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * BatchParamMetricDialog.java
- *
- * Created on 8 févr. 2011, 14:07:01
- */
 
 package org.thema.graphab.metric;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Dialog for selecting a graph, a metric, a parameter of the metric and a range of values for the parameter.
+ * 
+ * @author Gilles Vuidel
  */
 public class BatchParamMetricDialog<T extends Metric> extends javax.swing.JDialog {
 
+    /** the selected graph */
     public GraphGenerator graph;
-    public T indice;
+    /** the selected metric */
+    public T metric;
+    /** the selected param of the metric */
     public String param;
+    /** the value range for the parameter */
     public double min, max, inc;
-
-    private List<? extends T> indices;
-
+    /** has user clicked Ok ? */
     public boolean isOk = false;
+    
+    private List<? extends T> metrics;
 
-    /** Creates new form BatchParamMetricDialog */
-    public BatchParamMetricDialog(java.awt.Frame parent, List<? extends T> indices) {
+    /**
+     * Creates new form BatchParamMetricDialog
+     * @param parent parent frame
+     * @param graphs collection of graphs
+     * @param metrics list of metrics
+     */
+    public BatchParamMetricDialog(java.awt.Frame parent, Collection<GraphGenerator> graphs, List<? extends T> metrics) {
         super(parent, true);
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
-        this.indices = indices;
-        graphComboBox.setModel(new DefaultComboBoxModel(Project.getProject().getGraphs().toArray()));
+        this.metrics = metrics;
+        graphComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
         graphComboBoxActionPerformed(null);
         
     }
@@ -235,7 +236,7 @@ public class BatchParamMetricDialog<T extends Metric> extends javax.swing.JDialo
         max = (Double)maxSpinner.getValue();
         inc = (Double)incSpinner.getValue();
 
-        indice.setParams(((ParamPanel)paramPanel.getComponent(0)).getParams());
+        metric.setParams(((ParamPanel)paramPanel.getComponent(0)).getParams());
         
         isOk = true;
         setVisible(false);
@@ -250,12 +251,12 @@ public class BatchParamMetricDialog<T extends Metric> extends javax.swing.JDialo
     private void graphComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphComboBoxActionPerformed
         graph = (GraphGenerator) graphComboBox.getSelectedItem();
         List<Metric> inds = new ArrayList<>();
-        for(Metric ind : indices) {
+        for(Metric ind : metrics) {
             if(ind.isAcceptGraph(graph)) {
                 inds.add(ind);
             }
         }
-        indiceComboBox.setIndices(inds);
+        indiceComboBox.setMetrics(inds);
 }//GEN-LAST:event_graphComboBoxActionPerformed
 
     private void paramComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_paramComboBoxActionPerformed
@@ -263,10 +264,10 @@ public class BatchParamMetricDialog<T extends Metric> extends javax.swing.JDialo
 }//GEN-LAST:event_paramComboBoxActionPerformed
 
     private void indiceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indiceComboBoxActionPerformed
-        indice = (T)indiceComboBox.getSelectedItem();
+        metric = (T)indiceComboBox.getSelectedItem();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
-        for(String p : indice.getParams().keySet()) {
-            if(indice.getParams().get(p) instanceof Number) {
+        for(String p : metric.getParams().keySet()) {
+            if(metric.getParams().get(p) instanceof Number) {
                 model.addElement(p);
             }
         }

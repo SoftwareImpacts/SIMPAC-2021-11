@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -19,8 +15,10 @@ import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
 /**
- *
- * @author gvuidel
+ * PC decomposition for delta method.
+ * This metric works only in delta mode, for calculating the decomposition of the PC metric:
+ * dPCIntra, dPCFlux, dPCConnector
+ * @author Gilles Vuidel
  */
 public class DeltaPCMetric extends AbstractPathMetric {
 
@@ -32,7 +30,7 @@ public class DeltaPCMetric extends AbstractPathMetric {
     }
 
     @Override
-    public Double calcPartIndice(PathFinder finder, GraphGenerator g) {
+    public Double calcPartMetric(PathFinder finder, GraphGenerator g) {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         for(Node node : finder.getComputedNodes()) { 
@@ -44,18 +42,19 @@ public class DeltaPCMetric extends AbstractPathMetric {
 
     @Override
     public void mergePart(Object part) {
-        indice += (Double)part;
+        metric += (Double)part;
     }
 
     @Override
-    public Double[] calcIndice(GraphGenerator g) {
-//        indice = indice / Math.pow(Project.getArea(), 2);
+    public Double[] calcMetric(GraphGenerator g) {
+        // if an element of the graph has been removed 
+        // calculates Intra and Flux for the node
         if(g instanceof DeltaGraphGenerator && ((DeltaGraphGenerator)g).getRemovedElem() != null) {
             Graphable remElem = ((DeltaGraphGenerator)g).getRemovedElem();
             double intra = 0, flux = 0;
             if(remElem instanceof Node) {
                 Node remNode = (Node) remElem;
-                intra = Math.pow(Project.getPatchCapacity(remNode), 2);// / Math.pow(Project.getArea(), 2);
+                intra = Math.pow(Project.getPatchCapacity(remNode), 2);
                 GraphGenerator parentGraph = ((DeltaGraphGenerator)g).getParentGraph();
                 PathFinder pathFinder = parentGraph.getPathFinder(parentGraph.getNode((Feature) remNode.getObject()));
                 double srcCapa = Project.getPatchCapacity(remNode);
@@ -65,11 +64,13 @@ public class DeltaPCMetric extends AbstractPathMetric {
                     }
                 }
                 
-                flux = 2 * flux;// / Math.pow(Project.getArea(), 2);
+                flux = 2 * flux;
             }
-            return new Double[] {intra, flux, indice+intra+flux};
+            return new Double[] {intra, flux, metric+intra+flux};
         } else {
-            return new Double[] {null, null, indice};
+            // no element has been removed from the graph
+            // return only the PC value
+            return new Double[] {null, null, metric};
         }
     }
 
@@ -97,11 +98,6 @@ public class DeltaPCMetric extends AbstractPathMetric {
     @Override
     public ParamPanel getParamPanel(Project project) {
         return alphaParam.getParamPanel(project);
-    }
-
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        alphaParam.setParamFromDetailName(detailName);
     }
     
     @Override

@@ -1,10 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.thema.graphab.metric;
 
+import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Graphable;
-import org.thema.common.swing.TaskMonitor;
+import org.thema.common.ProgressBar;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
@@ -22,14 +18,16 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
- *
- * @author gvuidel
+ * Task for calculating global metric in delta mode on nodes and/or edges.
+ * 
+ * Works on threaded and MPI environment.
+ * @author Gilles
  */
 public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>, Map<Object, Double[]>>
         implements Serializable {
 
     private String graphName;
-    private GraphMetricLauncher launcher;
+    private GlobalMetricLauncher launcher;
 
     private List ids;
     private Double[] init;
@@ -37,7 +35,14 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
     private transient GraphGenerator gen;
     private transient Map<Object, Double[]> result;
 
-    public DeltaMetricTask(TaskMonitor monitor, GraphGenerator gen, GraphMetricLauncher launcher, int nodeEdge) {
+    /**
+     * Creates a new DeltaMetricTask
+     * @param monitor progress monitor
+     * @param gen the graph
+     * @param launcher the global metric launcher
+     * @param nodeEdge delta on nodes (1), on edges (2) or both (3)
+     */
+    public DeltaMetricTask(ProgressBar monitor, GraphGenerator gen, GlobalMetricLauncher launcher, int nodeEdge) {
         super(monitor);
         this.gen = gen;
         this.graphName = gen.getName();
@@ -54,23 +59,30 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
                 ids.add(((DefaultFeature)((Graphable)n).getObject()).getId());
             }
         }
-        monitor.popupNow();
+
         calcInit();
     }
     
-    public DeltaMetricTask(TaskMonitor monitor, GraphGenerator gen, GraphMetricLauncher launcher, List ids) {
+    /**
+     * Creates a new DeltaMetricTask
+     * @param monitor progress monitor
+     * @param gen the graph
+     * @param launcher the global metric launcher
+     * @param ids list of patch and/or link ids
+     */
+    public DeltaMetricTask(ProgressBar monitor, GraphGenerator gen, GlobalMetricLauncher launcher, List ids) {
         super(monitor);
         this.gen = gen;
         this.graphName = gen.getName();
         this.launcher = launcher;
         this.ids = ids;
-        monitor.popupNow();
+
         calcInit();
     }
     
     private void calcInit() {
         monitor.setNote("Etat initial...");
-        init = launcher.calcIndice(gen, null);
+        init = launcher.calcMetric(gen, true, null);
         monitor.setNote("Delta...");
     }
 
@@ -108,7 +120,7 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
                 return null;
             }
             deltaGen.removeElem(elem);
-            Double[] res = launcher.calcIndice(deltaGen, new TaskMonitor.EmptyMonitor());
+            Double[] res = launcher.calcMetric(deltaGen, false, null);
             DefaultFeature f = (DefaultFeature)elem.getObject();
             Double [] delta = new Double[init.length];
             for(int i = 0; i < init.length; i++) {
@@ -154,6 +166,9 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
         return result;
     }
 
+    /**
+     * @return initial metric values
+     */
     public Double[] getInit() {
         return init;
     }

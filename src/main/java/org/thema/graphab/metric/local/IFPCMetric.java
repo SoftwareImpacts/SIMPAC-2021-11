@@ -1,13 +1,11 @@
 
-
 package org.thema.graphab.metric.local;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.geotools.graph.structure.Graphable;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
@@ -18,30 +16,33 @@ import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.SingleValuePanel;
 
 /**
- *
- * @author gvuidel
+ * IFPC metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class IFPCMetric extends LocalMetric {
 
     double dMax = 100;
     private RasterPathFinder pathfinder;
 
+    @Override
     public String getName() {
         return "IFPC";
     }
 
+    @Override
     public String getShortName() {
         return getName();
     }
 
     @Override
-    public synchronized double calcIndice(Graphable g, GraphGenerator gen) {
+    public synchronized double calcMetric(Graphable g, GraphGenerator gen) {
         Feature patch = (Feature) g.getObject();
         if(pathfinder == null) {
             try {
                 pathfinder = Project.getProject().getRasterPathFinder(gen.getLinkset());
-            } catch (Exception ex) {
-                Logger.getLogger(IFPCMetric.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         }
         double ifpc = 0;
@@ -57,21 +58,19 @@ public class IFPCMetric extends LocalMetric {
         return true;
     }
 
+    @Override
     public void setParams(Map<String, Object> params) {
         dMax = (Double)params.get("Dmax");
     }
 
+    @Override
     public LinkedHashMap<String, Object> getParams() {
         return new LinkedHashMap(Collections.singletonMap("Dmax", (Object)dMax));
     }
 
+    @Override
     public ParamPanel getParamPanel(Project project) {
         return new SingleValuePanel("Dmax", 100);
-    }
-
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        dMax = Double.parseDouble(detailName.substring(detailName.indexOf("Dmax") + 4));
     }
 
     @Override

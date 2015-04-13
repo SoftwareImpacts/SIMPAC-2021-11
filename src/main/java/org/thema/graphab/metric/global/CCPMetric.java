@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -9,12 +5,15 @@ import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Class Coincidence Probability metric.
+ * Sum of squared ratio of capacity components
+ * Sum of pi^2 where pi = capacity of component i / total capacity
+ * @author Gilles Vuidel
  */
 public class CCPMetric extends GlobalMetric {
 
-    public Double[] calcIndice(GraphGenerator g) {
+    @Override
+    public Double[] calcMetric(GraphGenerator g) {
         double total = g.getPatchCapacity();
         double sum = 0;
         for(int i = 0; i < g.getComponents().size(); i++) {
@@ -25,6 +24,7 @@ public class CCPMetric extends GlobalMetric {
         return new Double[]{sum};
     }
 
+    @Override
     public String getShortName() {
         return "CCP";
     }

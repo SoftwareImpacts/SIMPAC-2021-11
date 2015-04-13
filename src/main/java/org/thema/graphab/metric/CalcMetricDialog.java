@@ -1,44 +1,43 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * CalcMetricDialog.java
- *
- * Created on 28 juil. 2010, 11:47:53
- */
 
 package org.thema.graphab.metric;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Dialog for selecting a graph, a metric and his parameters
+ * @author Gilles Vuidel
  */
 public class CalcMetricDialog<T extends Metric> extends javax.swing.JDialog {
 
+    /** the selected graph */
     public GraphGenerator graph;
-    public T indice;
+    /** the selected metric */
+    public T metric;
+    /** has user clicked Ok ? */
     public boolean isOk = false;
 
-    private List<? extends T> indices;
+    private List<? extends T> metrics;
 
-    /** Creates new form CalcMetricDialog */
-    public CalcMetricDialog(java.awt.Frame parent, Project prj, List<? extends T> indices) {
+    /**
+     * Creates new form CalcMetricDialog 
+     * @param parent parent frame
+     * @param graphs collection of graphs
+     * @param metrics list of metrics
+     */
+    public CalcMetricDialog(java.awt.Frame parent, Collection<GraphGenerator> graphs, List<? extends T> metrics) {
         super(parent, true);
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
 
-        this.indices = indices;
-        graphComboBox.setModel(new DefaultComboBoxModel(prj.getGraphs().toArray()));
+        this.metrics = metrics;
+        graphComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
 
         graphComboBoxActionPerformed(null);
     }
@@ -150,8 +149,8 @@ public class CalcMetricDialog<T extends Metric> extends javax.swing.JDialog {
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
 
         graph = (GraphGenerator) graphComboBox.getSelectedItem();
-        indice = (T)indiceComboBox.getSelectedItem();
-        indice.setParams(((ParamPanel)paramPanel.getComponent(0)).getParams());
+        metric = (T)indiceComboBox.getSelectedItem();
+        metric.setParams(((ParamPanel)paramPanel.getComponent(0)).getParams());
         isOk = true;
         setVisible(false);
         dispose();
@@ -165,12 +164,12 @@ public class CalcMetricDialog<T extends Metric> extends javax.swing.JDialog {
     private void graphComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphComboBoxActionPerformed
         graph = (GraphGenerator) graphComboBox.getSelectedItem();
         List<Metric> inds = new ArrayList<>();
-        for(Metric ind : indices) {
+        for(Metric ind : metrics) {
             if (ind.isAcceptGraph(graph)) {
                 inds.add(ind);
             }
         }
-        indiceComboBox.setIndices(inds);
+        indiceComboBox.setMetrics(inds);
     }//GEN-LAST:event_graphComboBoxActionPerformed
 
     private void indiceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indiceComboBoxActionPerformed
@@ -180,8 +179,6 @@ public class CalcMetricDialog<T extends Metric> extends javax.swing.JDialog {
         paramPanel.revalidate();
         paramPanel.repaint();
     }//GEN-LAST:event_indiceComboBoxActionPerformed
-
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;

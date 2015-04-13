@@ -13,7 +13,9 @@ import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.PreCalcMetric;
 
 /**
- *
+ * Betweeness Centrality Circuit version.
+ * The shortest path is replaced by the current of the circuit.
+ * 
  * @author gvuidel
  */
 public class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphGenerator.PathFinder> {
@@ -23,7 +25,7 @@ public class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphGenerator.P
     private transient Circuit circuit;
 
     @Override
-    public Map<Object, Double> calcPartIndice(GraphGenerator.PathFinder finder, GraphGenerator g) {
+    public Map<Object, Double> calcPartMetric(GraphGenerator.PathFinder finder, GraphGenerator g) {
         HashMap<Object, Double> result = new HashMap<>();
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         Node n1 = finder.getNodeOrigin();
@@ -50,10 +52,17 @@ public class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphGenerator.P
     }
 
     @Override
+    public void endCalc(GraphGenerator g) {
+        super.endCalc(g); 
+        circuit = null;
+    }
+
+    @Override
     public boolean isAcceptGraph(GraphGenerator graph) {
         return graph.getType() != GraphGenerator.MST;
     }
     
+    @Override
     public String getShortName() {
         return "BCCirc";
     }
@@ -71,11 +80,6 @@ public class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphGenerator.P
     @Override
     public ParamPanel getParamPanel(Project project) {
         return alphaParam.getParamPanel(project);
-    }
-
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        alphaParam.setParamFromDetailName(detailName);
     }
     
     @Override

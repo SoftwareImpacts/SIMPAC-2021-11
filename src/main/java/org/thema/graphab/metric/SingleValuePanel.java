@@ -1,13 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * SingleValuePanel.java
- *
- * Created on 15 oct. 2010, 17:40:54
- */
 
 package org.thema.graphab.metric;
 
@@ -15,8 +5,9 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- *
- * @author gvuidel
+ * ParamPanel for metric with only one numeric parameter.
+ * 
+ * @author Gilles Vuidel
  */
 public class SingleValuePanel extends ParamPanel {
 

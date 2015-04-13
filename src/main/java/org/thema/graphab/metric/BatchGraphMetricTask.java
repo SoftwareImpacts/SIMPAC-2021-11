@@ -1,40 +1,52 @@
 
-
 package org.thema.graphab.metric;
 
+import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import org.thema.common.ProgressBar;
 import org.thema.common.parallel.AbstractParallelFTask;
-import org.thema.common.swing.TaskMonitor;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
-import org.thema.graphab.metric.global.GlobalMetric;
 
 /**
- *
- * @author gvuidel
+ * Task for calculating a GlobalMetric on several thresholded graphs.
+ * The result contains for each graph threshold the value(s) of the metric.
+ * 
+ * Works only in threaded environment.
+ * 
+ * @author Gilles Vuidel
  */
-public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Double[]>, TreeMap<Double, Double[]>> {
+public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, Double[]>, TreeMap<Double, Double[]>> {
 
-    String linkName;
-    boolean distAbs;
-    double min, inc, max;
-    boolean intraPatchDist;
-    GraphMetricLauncher launcher;
+    private String linkName;
+    private boolean distAbs;
+    private double min, inc, max;
+    private boolean intraPatchDist;
+    private GlobalMetricLauncher launcher;
 
-    transient TreeMap<Double, Double[]> result;
-    transient GlobalMetric indice;
+    private transient TreeMap<Double, Double[]> result;
+    private transient List<Double> dists;
 
-    transient protected List<Double> dists;
-
-    public BatchMetricTask(TaskMonitor monitor, String linkName, boolean distAbs, 
-            double min, double inc, double max, GraphMetricLauncher launcher, boolean intraPatchDist) {
+    /**
+     * Creates a new BatchGraphMetricTask.
+     * @param monitor the progress monitor
+     * @param linkName the linkset name for graph creation
+     * @param distAbs is range values are in distance or in number of links ?
+     * @param min the minimum threshold in distance or nb links
+     * @param inc the increment between 2 threshold in distance or nb links
+     * @param max the maximum threshold in distance or nb links
+     * @param launcher the global metric launcher
+     * @param intraPatchDist include intra patch distance when creating the graphs ?
+     */
+    public BatchGraphMetricTask(ProgressBar monitor, String linkName, boolean distAbs, 
+            double min, double inc, double max, GlobalMetricLauncher launcher, boolean intraPatchDist) {
         super(monitor);
         this.linkName = linkName;
         this.distAbs = distAbs;
@@ -45,8 +57,10 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
         this.intraPatchDist = intraPatchDist;
     }
 
-    protected BatchMetricTask() {}
-
+    /**
+     * {@inheritDoc }
+     * @return for each distance threshold the value(s) of the metric.
+     */
     @Override
     public TreeMap<Double, Double[]> getResult() {
         return result;
@@ -54,9 +68,7 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
 
     @Override
     public void init() {
-        indice = launcher.getIndice();
-        
-        // distance en abscisse
+        // distance range
         if(distAbs) {
             TreeSet<Double> distSet = new TreeSet<>();
             for(Path p : Project.getProject().getPaths(linkName)) {
@@ -72,7 +84,7 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
                     dists.add(t);
                 }
             }
-            // ou nb lien en abscisse
+            // or nb links range
         } else {
             ArrayList<Double> distLst = new ArrayList<>();
             for(Path p : Project.getProject().getPaths(linkName)) {
@@ -110,7 +122,7 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
             }
             GraphGenerator gen = new GraphGenerator("g", Project.getProject().getLinkset(linkName),
                     GraphGenerator.THRESHOLD, t, intraPatchDist);
-            Double[] res = launcher.calcIndice(gen, new TaskMonitor.EmptyMonitor());
+            Double[] res = launcher.calcMetric(gen, false, null);
             results.put(t, res);
             incProgress(1);
         }
@@ -139,32 +151,6 @@ public class BatchMetricTask extends AbstractParallelFTask<TreeMap<Double, Doubl
                 }
             }
         } 
-//        else {
-//            TreeMap<Double, Integer> nLinks = new TreeMap<Double, Integer>();
-//            for(Path p : Project.getProject().getPaths(linkName)) {
-//                double d = getPathDist(p);
-//                if(nLinks.containsKey(d))
-//                    nLinks.put(d, nLinks.get(d)+1);
-//                else
-//                    nLinks.put(d, 1);
-//            }
-//            for(Entry<Double, Integer> entry : nLinks.entrySet()) {
-//                Double d = nLinks.higherKey(entry.getKey());
-//                if(d != null)
-//                    nLinks.put(d, entry.getValue() + nLinks.get(d));
-//            }
-//            TreeMap<Double, Double[]> newRes = new TreeMap<Double, Double[]>();
-//            for(Double d : result.keySet()) {
-//                List<Double[]> lst = result.get(d);
-//                lst.add(new Double[]{d});
-//                if(d == 0)
-//                    newRes.put(0.0, lst);
-//                else
-//                    newRes.put(nLinks.get(d).doubleValue(), lst);
-//            }
-//            
-//            result = newRes;
-//        }
     }
 
 }

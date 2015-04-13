@@ -1,13 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * BatchGraphMetricDialog.java
- *
- * Created on 28 juil. 2010, 14:22:22
- */
 
 package org.thema.graphab.metric;
 
@@ -18,23 +8,33 @@ import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.global.GlobalMetric;
 
-
 /**
- *
- * @author gvuidel
+ * Dialog parameters for executing {@link BatchGraphMetricTask }
+ * 
+ * @author Gilles Vuidel
  */
 public class BatchGraphMetricDialog extends javax.swing.JDialog {
 
+    /** has user clicked Ok ? */
     public boolean isOk = false;
-    public String distName;
+    /** the selected linkset */
+    public String linksetName;
+    /** the range of values for the graph thresholds in distance or nb links depending on distAbs */
     public double min, inc, max;
-    public GlobalMetric indice;
+    /** the selected metric */
+    public GlobalMetric metric;
+    /** Is range values are in distance or in number of links ? */
     public boolean distAbs;
+    /** include intra patch distance when creating the graphs ? */
     public boolean intraPatchDist;
 
-    Project project;
+    private Project project;
 
-    /** Creates new form BatchGraphMetricDialog */
+    /**
+     * Creates new form BatchGraphMetricDialog 
+     * @param parent the parent frame
+     * @param prj the project
+     */
     public BatchGraphMetricDialog(java.awt.Frame parent, Project prj) {
         super(parent, true);
         initComponents();
@@ -43,7 +43,7 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
         project = prj;
 
         distComboBox.setModel(new DefaultComboBoxModel(prj.getLinksets().toArray()));
-        indiceComboBox.setIndices(Project.getGlobalMetricsFor(Project.Method.GLOBAL));
+        indiceComboBox.setMetrics(Project.getGlobalMetricsFor(Project.Method.GLOBAL));
 
         distComboBoxActionPerformed(null);
     }
@@ -248,15 +248,15 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-        distName = ((Linkset)distComboBox.getSelectedItem()).getName();
+        linksetName = ((Linkset)distComboBox.getSelectedItem()).getName();
         min = (Double)minSpinner.getValue();
         inc = (Double)incSpinner.getValue();
         max = (Double)maxSpinner.getValue();
-        indice = (GlobalMetric) indiceComboBox.getSelectedItem();
+        metric = (GlobalMetric) indiceComboBox.getSelectedItem();
 
         distAbs = distTypeRadioButton.isSelected();
         intraPatchDist = intraPatchCheckBox.isSelected();
-        indice.setParams(((ParamPanel)paramPanel.getComponent(0)).getParams());
+        metric.setParams(((ParamPanel)paramPanel.getComponent(0)).getParams());
         isOk = true;
         setVisible(false);
         dispose();
@@ -269,10 +269,10 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
 
     private void distComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_distComboBoxActionPerformed
         max = 0;
-        Linkset cost = (Linkset) distComboBox.getSelectedItem();
+        Linkset linkset = (Linkset) distComboBox.getSelectedItem();
         if(distTypeRadioButton.isSelected()) {
             for(Path p : project.getPaths(distComboBox.getSelectedItem().toString()))  {
-                double v = cost.getType_length() == Linkset.COST_LENGTH ? p.getCost() : p.getDist();
+                double v = linkset.getType_length() == Linkset.COST_LENGTH ? p.getCost() : p.getDist();
                 if(v > max) {
                     max = v;
                 }

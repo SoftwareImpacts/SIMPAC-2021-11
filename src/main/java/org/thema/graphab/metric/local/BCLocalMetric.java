@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.local;
 
@@ -20,25 +16,16 @@ import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
 /**
- *
- * @author gvuidel
+ * Betweeness Centrality metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class BCLocalMetric extends AbstractBCLocalMetric<PathFinder> {
 
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
     
-    private boolean shortDist;
-
-    public BCLocalMetric() {
-        this(true);
-    }
-    
-    private BCLocalMetric(boolean shortDist) {
-        this.shortDist = shortDist;
-    }
-
     @Override
-    public HashMap<Object, Double> calcPartIndice(PathFinder finder, GraphGenerator g) {
+    public HashMap<Object, Double> calcPartMetric(PathFinder finder, GraphGenerator g) {
         HashMap<Object, Double> result = new HashMap<>();
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         for(Node node : finder.getComputedNodes()) {
@@ -47,12 +34,9 @@ public class BCLocalMetric extends AbstractBCLocalMetric<PathFinder> {
                 if (path == null) {
                     continue;
                 }
-                double v = Math.pow(Project.getPatchCapacity(node) * srcCapa, alphaParam.getBeta());
-                if (shortDist) {
-                    v *= Math.exp(-alphaParam.getAlpha() * finder.getCost(node));
-                } else {
-                    v *= 1 - Math.exp(-alphaParam.getAlpha() * finder.getCost(node));
-                }
+                double v = Math.pow(Project.getPatchCapacity(node) * srcCapa, alphaParam.getBeta())
+                        * Math.exp(-alphaParam.getAlpha() * finder.getCost(node));
+                
                 List<Node> nodes = path.getNodes();
                 for (int i = 1; i < nodes.size()-1; i++) {
                     Feature f = (Feature)nodes.get(i).getObject();
@@ -77,7 +61,7 @@ public class BCLocalMetric extends AbstractBCLocalMetric<PathFinder> {
 
     @Override
     public String getShortName() {
-        return "BC";// + (shortDist ? "s" : "l");
+        return "BC";
     }
     
     @Override
@@ -93,11 +77,6 @@ public class BCLocalMetric extends AbstractBCLocalMetric<PathFinder> {
     @Override
     public ParamPanel getParamPanel(Project project) {
         return alphaParam.getParamPanel(project);
-    }
-
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        alphaParam.setParamFromDetailName(detailName);
     }
     
     @Override

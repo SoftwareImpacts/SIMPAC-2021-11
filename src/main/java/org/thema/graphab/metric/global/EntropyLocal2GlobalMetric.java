@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -9,18 +5,23 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.local.LocalMetric;
 
 /**
+ * Agregate a local metric by shannon entropy.
  * 
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class EntropyLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
 
-
+    /**
+     * Creates a new EntropyLocal2GlobalMetric.
+     * @param metric the local metric to agregate
+     * @param type agregate on nodes or on edges ?
+     */
     public EntropyLocal2GlobalMetric(LocalMetric indice, TypeElem type) {
         super(indice, type);
     }
 
     @Override
-    public Double[] calcIndice(GraphGenerator g) {
+    public Double[] calcMetric(GraphGenerator g) {
         double sum = 0;
         for(Double val : getValues()) {
             if(val < 0) {
@@ -39,11 +40,6 @@ public class EntropyLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
         }
         
         return new Double[]{-e / Math.log(nb)};
-    }
-
-    @Override
-    public EntropyLocal2GlobalMetric dupplicate() {
-        return new EntropyLocal2GlobalMetric((LocalMetric)getIndice().dupplicate(), typeElem);
     }
 
     @Override

@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -11,28 +7,45 @@ import org.thema.graphab.metric.PreCalcMetric;
 
 
 /**
- *
- * @author gvuidel
+ * Base class for global metric using path calculation.
+ * 
+ * @author Gilles Vuidel
  */
 public abstract class AbstractPathMetric extends GlobalMetric implements PreCalcMetric<PathFinder> {
 
-    transient protected double indice;
+    /** the metric result */
+    protected transient double metric;
 
-    public Double [] calcIndice(GraphGenerator g) {
-        return new Double[]{indice};
+    @Override
+    public Double [] calcMetric(GraphGenerator g) {
+        return new Double[]{ metric };
     }
 
-    public void endCalc(GraphGenerator g) {};
+    /**
+     * {@inheritDoc }
+     * Default implementation does nothing.
+     * @param g the graph
+     */
+    @Override
+    public void endCalc(GraphGenerator g) {
+    };
 
+    /**
+     * {@inheritDoc }
+     * Initialize metric to 0
+     * @param g the graph
+     */
+    @Override
     public void startCalc(GraphGenerator g) {
-        indice = 0;
+        metric = 0;
     }
 
+    /**
+     * {@inheritDoc }
+     * @return {@link TypeParam.PATHFINDER}
+     */
     @Override
     public TypeParam getTypeParam() {
         return TypeParam.PATHFINDER;
     }
-    
-    
-
 }

@@ -1,10 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab;
 
+import org.thema.graphab.pointset.PointsetLayer;
+import org.thema.graphab.links.LinkLayer;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.thoughtworks.xstream.XStream;
@@ -26,7 +24,6 @@ import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 import java.awt.Color;
 import java.awt.color.ColorSpace;
-import java.awt.event.ActionEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BandedSampleModel;
 import java.awt.image.BufferedImage;
@@ -61,9 +58,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
-import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageBuilder;
 import org.geotools.coverage.grid.GridCoverageFactory;
@@ -80,8 +75,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.common.Config;
 import org.thema.common.JTS;
 import org.thema.common.ProgressBar;
-import org.thema.common.Util;
-import org.thema.common.collection.HashMap2D;
 import org.thema.common.io.IOFile;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
@@ -90,7 +83,6 @@ import org.thema.data.GlobalDataStore;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
-import org.thema.data.feature.FeatureGetter;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.FeatureLayer;
@@ -110,6 +102,8 @@ import org.thema.graphab.links.Path;
 import org.thema.graphab.links.RasterPathFinder;
 import org.thema.graphab.links.SpacePathFinder;
 import org.thema.graphab.metric.Metric;
+import org.thema.graphab.metric.global.AbstractLocal2GlobalMetric;
+import org.thema.graphab.metric.global.AbstractLocal2GlobalMetric.TypeElem;
 import org.thema.graphab.metric.global.CCPMetric;
 import org.thema.graphab.metric.global.DeltaPCMetric;
 import org.thema.graphab.metric.global.ECSMetric;
@@ -132,7 +126,6 @@ import org.thema.graphab.metric.local.FLocalMetric;
 import org.thema.graphab.metric.local.FPCLocalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
 import org.thema.graphab.pointset.Pointset;
-import org.thema.graphab.pointset.PointsetDistanceDialog;
 import org.thema.graphab.util.DistanceOp;
 import org.thema.graphab.util.RSTGridReader;
 
@@ -524,7 +517,7 @@ public final class Project {
         }
         
         if(linkLayers != null) {
-            Layer l = new LinkLayer(cost.getName());
+            Layer l = new LinkLayer(cost.getName(), this);
             if(cost.getTopology() == Linkset.COMPLETE && cost.getDistMax() == 0) {
                 l.setVisible(false);
             }
@@ -658,7 +651,7 @@ public final class Project {
 
         if(exoLayers != null) {
             exoLayers.setExpanded(true);
-            exoLayers.addLayerFirst(new ExoLayer(exoData.getName()));
+            exoLayers.addLayerFirst(new PointsetLayer(exoData, this));
         }
         monitor.close();
 
@@ -674,11 +667,25 @@ public final class Project {
         return rootLayer;
     }
     
+    public synchronized DefaultGroupLayer getLinksetLayers() {
+        if(linkLayers == null) {
+            createLayers();
+        }
+        return linkLayers;
+    }
+    
     public synchronized DefaultGroupLayer getGraphLayers() {
         if(graphLayers == null) {
             createLayers();
         }
         return graphLayers;
+    }
+    
+    public synchronized DefaultGroupLayer getPointsetLayers() {
+        if(exoLayers == null) {
+            createLayers();
+        }
+        return exoLayers;
     }
     
     public synchronized DefaultGroupLayer getAnalysisLayer() {
@@ -1158,7 +1165,7 @@ public final class Project {
         return exoDatas.values();
     }
 
-    public void removeExoDataset(final String name) throws IOException, SchemaException {
+    public void removePointset(final String name) throws IOException, SchemaException {
         exoDatas.remove(name);
 
         List<String> attrs = new ArrayList<>();
@@ -1468,7 +1475,7 @@ public final class Project {
         }
 
         for(String linkName : costLinks.keySet()) {
-            Layer l = new LinkLayer(linkName);
+            Layer l = new LinkLayer(linkName, this);
             l.setVisible(false);
             linkLayers.addLayerLast(l);
         }
@@ -1492,8 +1499,8 @@ public final class Project {
         
         exoLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Exo_data"));
         rootLayer.addLayerFirst(exoLayers);
-        for(String dataset : exoDatas.keySet())  {
-            l = new ExoLayer(dataset);
+        for(Pointset dataset : exoDatas.values())  {
+            l = new PointsetLayer(dataset, this);
             l.setVisible(false);
             exoLayers.addLayerLast(l);
         }
@@ -1872,175 +1879,6 @@ public final class Project {
         patches.remove(patches.size()-1);
     }
     
-    
-    class ExoLayer extends FeatureLayer {
-
-        public ExoLayer(String name) {
-            super(name, exoDatas.get(name).getFeatures(), null, Project.this.getCRS());
-        }
-
-        @Override
-        public JPopupMenu getContextMenu() {
-            JPopupMenu menu = super.getContextMenu();
-            menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Export_all")) {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    GraphGenerator gen = (GraphGenerator) JOptionPane.showInputDialog(null,
-                            java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Select_graph"), java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Export..."), JOptionPane.PLAIN_MESSAGE,
-                            null, getGraphs().toArray(), null);
-                    if(gen == null) {
-                        return;
-                    }
-                    File f = Util.getFileSave(".csv");
-                    if(f == null) {
-                        return;
-                    }
-
-                    try (CSVWriter w = new CSVWriter(new FileWriter(f))) {
-                        List<DefaultFeature> exoData = getPointset(getName()).getFeatures();
-                        List<String> attrNames = new ArrayList<>(exoData.get(0).getAttributeNames());
-                        attrNames.addAll(getPatches().iterator().next().getAttributeNames());
-                        attrNames.addAll(gen.getComponentFeatures().get(0).getAttributeNames());
-                        w.writeNext(attrNames.toArray(new String[attrNames.size()]));
-                        String [] attrs = new String[attrNames.size()];
-                        for(Feature exo : exoData) {
-                            int n = exo.getAttributeNames().size();
-                            for(int i = 0; i < n; i++) {
-                                attrs[i] = exo.getAttribute(i).toString();
-                            }
-                            Feature patch = getPatch((Integer)exo.getAttribute(EXO_IDPATCH));
-                            for(int i = 0; i < patch.getAttributeNames().size(); i++) {
-                                attrs[i+n] = patch.getAttribute(i).toString();
-                            }
-                            n += patch.getAttributeNames().size();
-                            Feature comp = gen.getComponentFeature(patch);
-                            for(int i = 0; i < comp.getAttributeNames().size(); i++) {
-                                attrs[i+n] = comp.getAttribute(i).toString();
-                            }
-                            w.writeNext(attrs);
-                        }
-                    } catch (IOException ex) {
-                        Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                }
-            });
-
-            menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DISTANCE MATRIX")) {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    new PointsetDistanceDialog(null, exoDatas.get(getName())).setVisible(true);
-                }
-            });
-
-            menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove...")) {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_dataset_") + name + " ?");
-                    if(res != JOptionPane.YES_OPTION) {
-                        return;
-                    }
-                    try {
-                        removeExoDataset(getName());
-                        exoLayers.removeLayer(ExoLayer.this);
-                    } catch (IOException | SchemaException ex) {
-                        Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                }
-            });
-
-            menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties...")) {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    JOptionPane.showMessageDialog(null, exoDatas.get(getName()).getInfo());
-                }
-            });
-            return menu;
-        }
-
-    }
-
-
-    class LinkLayer extends FeatureLayer {
-        
-        public LinkLayer(final String name) {
-            super(name, new FeatureGetter<Path>() {
-                    @Override
-                    public Collection<Path> getFeatures() {
-                        return costLinks.get(name).getPaths();
-                    }
-                }, zone, new LineStyle(new Color(costLinks.get(name).getTopology() == Linkset.PLANAR ? 0x25372b : 0xb8c45d)), 
-                Project.this.getCRS());
-        }
-
-        @Override
-        public JPopupMenu getContextMenu() {
-            JPopupMenu menu = super.getContextMenu();
-            menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove...")) {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    List<String> exoNames = new ArrayList<>();
-                    for(Pointset exo : exoDatas.values()) {
-                        if(exo.getLinkset().getName().equals(getName())) {
-                            exoNames.add(exo.getName());
-                        }
-                    }
-                    if(!exoNames.isEmpty()) {
-                        JOptionPane.showMessageDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Links_is_used_by_exogenous_data") +
-                                Arrays.deepToString(exoNames.toArray()));
-                        return;
-                    }
-                    List<String> graphNames = new ArrayList<>();
-                    for(GraphGenerator g : getGraphs()) {
-                        if(g.getLinkset().getName().equals(getName())) {
-                            graphNames.add(g.getName());
-                        }
-                    }
-                    int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_links_") + getName() + " ?" +
-                            (!graphNames.isEmpty() ? "\nGraph " + Arrays.deepToString(graphNames.toArray()) + java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("_will_be_removed.") : ""), java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove"), JOptionPane.YES_NO_OPTION);
-                    if(res != JOptionPane.YES_OPTION) {
-                        return;
-                    }
-                    try {
-                        for(String gName : graphNames) {
-                            removeGraph(gName);
-                            graphLayers.removeLayer(graphLayers.getLayer(gName));
-                        }
-                        costLinks.remove(getName());
-                        save();
-                        linkLayers.removeLayer(LinkLayer.this);
-                    } catch (IOException ex) {
-                        Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                }
-            });
-
-            menu.add(new AbstractAction("Extract path costs") {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        HashMap2D map = costLinks.get(getName()).extractCostFromPath(Project.this);
-                        map.saveToCSV(new File(getDirectory(), getName() + "-links-extract-cost.csv"));
-                        JOptionPane.showMessageDialog(null, "Costs extracted into file " + getName() + "-links-extract-cost.csv");
-                    } catch (IOException ex) {
-                        Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            });
-            
-            menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties...")) {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    JOptionPane.showMessageDialog(null, costLinks.get(getName()).getInfo());
-                }
-            });
-            return menu;
-        }
-
-    }
-
     /**
      * The project associated with MainFrame
      * @return the current project
@@ -2100,13 +1938,13 @@ public final class Project {
     public static List<GlobalMetric> GLOBAL_METRICS;
     public static List<LocalMetric> LOCAL_METRICS;
     static {
-        GLOBAL_METRICS = new ArrayList(Arrays.asList(new SumLocal2GlobalMetric(new FLocalMetric()), new PCMetric(), new IICMetric(), new CCPMetric(),
+        GLOBAL_METRICS = new ArrayList(Arrays.asList(new SumLocal2GlobalMetric(new FLocalMetric(), TypeElem.NODE), 
+                new PCMetric(), new IICMetric(), new CCPMetric(),
                 new MSCMetric(), new SLCMetric(), new ECSMetric(), new GDMetric(), new HMetric(), new NCMetric(),
-                new DeltaPCMetric()/*, new EntropyLocal2GlobalIndice(new BCLocalMetric()), new PCCircMetric()*/));
+                new DeltaPCMetric()));
         LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new FPCLocalMetric(),
                 new DgLocalMetric(), new CCLocalMetric(), new ClosenessLocalMetric(), new ConCorrLocalMetric(),
-                new EccentricityLocalMetric()/*, new IFPCIndice(), new BCCircuitLocalIndice(),
-                new CBCLocalIndice(), new CFLocalIndice(), new PCFLocalIndice()*/));
+                new EccentricityLocalMetric()));
     }
     
     

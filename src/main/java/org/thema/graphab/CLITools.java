@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab;
 
@@ -45,7 +41,7 @@ import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.DeltaMetricTask;
-import org.thema.graphab.metric.GraphMetricLauncher;
+import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import org.thema.graphab.metric.Metric;
 import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
@@ -57,11 +53,11 @@ import org.thema.parallel.ParallelExecutor;
 
 /**
  *
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class CLITools {
 
-    static class Range {
+    private static class Range {
         private double min, max, inc;
         private List<Double> values;
 
@@ -127,8 +123,6 @@ public class CLITools {
             return  null;
         }
     }
-
-
 
     private Project project;
     private List<Linkset> useCosts = new ArrayList<>();
@@ -513,7 +507,7 @@ public class CLITools {
                     }
                     indice.setParams(params);
                     
-                    Double[] res = new GraphMetricLauncher(indice, maxCost, true).calcIndice(graph, null);
+                    Double[] res = new GlobalMetricLauncher(indice, maxCost).calcMetric(graph, true, null);
                     System.out.println(graph.getName() + " - " + indice.getDetailName() + " : " + res[0]);
                     
                     fw.write(graph.getName());
@@ -711,7 +705,7 @@ public class CLITools {
             indice.setParams(params);
         }
         
-        GraphMetricLauncher launcher = new GraphMetricLauncher(indice, maxCost, false);
+        GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice, maxCost);
         System.out.println("Global indice " + indice.getName());
         for(GraphGenerator graph : getGraphs()) {
             System.out.println(graph.getName());
@@ -777,7 +771,7 @@ public class CLITools {
             }
             indice.setParams(params);
         }
-        GraphMetricLauncher launcher = new GraphMetricLauncher(indice, maxCost, true);
+        GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice, maxCost);
         
         for(GraphGenerator graph : getGraphs()) {
             HashSet ids = new HashSet(lstIds);
@@ -788,7 +782,7 @@ public class CLITools {
                 
                 System.out.println("Global metric " + indice.getName());
                 
-                Double [] init = launcher.calcIndice(graph, new TaskMonitor.EmptyMonitor());
+                Double [] init = launcher.calcMetric(graph, true, null);
                 w.write("0\tinit\t" + init[0] + "\n");
                 
                 for(int i = 1; i <= nbStep; i++) {
@@ -796,13 +790,13 @@ public class CLITools {
                     
                     DeltaAddGraphGenerator deltaGraph = new DeltaAddGraphGenerator(graph,
                             patch ? ids : Collections.EMPTY_LIST, !patch ? ids : Collections.EMPTY_LIST);
-                    init = launcher.calcIndice(deltaGraph, new TaskMonitor.EmptyMonitor());
+                    init = launcher.calcMetric(deltaGraph, true, null);
                     wd.write(i + "\tinit\t" + init[0] + "\n");
                     Object bestId = null;
                     double maxVal = -Double.MAX_VALUE;
                     for(Object id : ids) {
                         deltaGraph.addElem(id);
-                        Double [] res = launcher.calcIndice(deltaGraph, new TaskMonitor.EmptyMonitor());
+                        Double [] res = launcher.calcMetric(deltaGraph, true, null);
                         if(res[0] > maxVal) {
                             bestId = id;
                             maxVal = res[0];
@@ -872,14 +866,14 @@ public class CLITools {
             linkIds.addAll(ids);
         }
         
-        GraphMetricLauncher launcher = new GraphMetricLauncher(indice, maxCost, true);
+        GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice, maxCost);
         System.out.println("Global indice " + indice.getDetailName());
         for(GraphGenerator graph : getGraphs()) {
             System.out.println("Graph " + graph.getName());
             GraphGenerator deltaGraph = new GraphGenerator(graph, patchIds, linkIds);
             System.out.println("Remove " + (graph.getNodes().size()-deltaGraph.getNodes().size()) + " patches and " +
                     (graph.getEdges().size()-deltaGraph.getEdges().size()) + " links");
-            Double[] res = launcher.calcIndice(deltaGraph, new TaskMonitor.EmptyMonitor());     
+            Double[] res = launcher.calcMetric(deltaGraph, true, null);     
 
             System.out.println(indName + " : " + res[0] + "\n");
         }
@@ -987,7 +981,7 @@ public class CLITools {
             indice.setParams(params);
         }
         
-        GraphMetricLauncher launcher = new GraphMetricLauncher(indice, maxCost, false);
+        GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice, maxCost);
         System.out.println("Global metric " + indice.getDetailName());
         for(GraphGenerator graph : getGraphs()) {
             System.out.println("Graph " + graph.getName());
@@ -1079,7 +1073,6 @@ public class CLITools {
                             " and metric " + indice.getShortName() + " at resolution " + res);
                     AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, capaFile, res, nbMulti, window);
                     addPatchCmd.run(new TaskMonitor.EmptyMonitor());
-                    addPatchCmd.saveResults();
                 }
             }
         } else {
@@ -1096,7 +1089,6 @@ public class CLITools {
                 System.out.println("Add patches with graph " + graph.getName() + " and metric " + indice.getShortName());
                 AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, patchFile, capaField);
                 addPatchCmd.run(new TaskMonitor.EmptyMonitor());
-                addPatchCmd.saveResults();
             }
         }
         

@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric;
 
@@ -9,8 +5,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.geotools.graph.structure.Edge;
+import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
-import org.thema.common.swing.TaskMonitor;
+import org.thema.common.ProgressBar;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
@@ -18,37 +16,51 @@ import org.thema.graphab.metric.PreCalcMetric.TypeParam;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
- * 
- * @author gvuidel
+ * Task for executing PreCalcMetric.
+ * Works on threaded and MPI environment.
+ * @author Gilles Vuidel
  */
 public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implements Serializable {
 
-    PreCalcMetric indice;
-    double maxCost;
-    String graphName;
-    List<Integer> ids;
+    private PreCalcMetric metric;
+    private double maxCost;
+    private String graphName;
+    private List<Integer> ids;
     
-    transient HashMap<Integer, Node> patchNodes;
-    transient GraphGenerator gen;
+    private transient HashMap<Object, Graphable> mapElem;
+    private transient GraphGenerator gen;
 
-    public PreCalcMetricTask(GraphGenerator gen, PreCalcMetric indice, double maxCost, TaskMonitor monitor) {
+    /**
+     * Creates a new PreCalcMetricTask
+     * @param gen the graph 
+     * @param metric the metric to calculate on the graph
+     * @param maxCost max distance for path metric
+     * @param monitor the progress monitor
+     */
+    public PreCalcMetricTask(GraphGenerator gen, PreCalcMetric metric, double maxCost, ProgressBar monitor) {
         super(monitor);
         this.gen = gen;
         this.graphName = gen.getName();
-        this.indice = indice;
+        this.metric = metric;
         this.maxCost = maxCost;
         
-        ids = new ArrayList<>(gen.getNodes().size());
-        for(Node n : gen.getNodes()) { 
-            ids.add((Integer)((Feature)n.getObject()).getId());
+        ids = new ArrayList<>();
+        if(metric.getTypeParam() == TypeParam.EDGE) {
+            for(Edge e : gen.getEdges()) { 
+                ids.add((Integer)((Feature)e.getObject()).getId());
+            }
+        } else {
+            for(Node n : gen.getNodes()) { 
+                ids.add((Integer)((Feature)n.getObject()).getId());
+            }
         }
-        
-        indice.startCalc(gen);
+        metric.startCalc(gen);
     }
 
     @Override
     public void init() {
         super.init();
+        // useful only for MPI
         if(gen == null) {
             gen = Project.getProject().getGraph(graphName);
             if(gen == null) {
@@ -56,10 +68,17 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
             }
         }
         
-        patchNodes = new HashMap<>(gen.getNodes().size());
-        for(Node n : gen.getNodes()) {
-            int id = (Integer)((Feature)n.getObject()).getId();
-            patchNodes.put(id, n);
+        mapElem = new HashMap<>();
+        if(metric.getTypeParam() == TypeParam.EDGE) {
+            for(Edge e : gen.getEdges()) { 
+                Object id = ((Feature)e.getObject()).getId();
+                mapElem.put(id, e);
+            }
+        } else {
+            for(Node n : gen.getNodes()) {
+                Integer id = (Integer)((Feature)n.getObject()).getId();
+                mapElem.put(id, n);
+            }
         }
     }
     
@@ -67,11 +86,11 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
     public List execute(int start, int end) {
         List results = new ArrayList(end-start);
         for(Integer id : ids.subList(start, end)) {
-            Node node = patchNodes.get(id);
-            if(indice.getTypeParam() == TypeParam.PATHFINDER) {
-                results.add(indice.calcPartIndice(gen.getPathFinder(node, maxCost), gen));
+            Graphable elem = mapElem.get(id);
+            if(metric.getTypeParam() == TypeParam.PATHFINDER) {
+                results.add(metric.calcPartMetric(gen.getPathFinder((Node)elem, maxCost), gen));
             } else {
-                results.add(indice.calcPartIndice(node, gen));
+                results.add(metric.calcPartMetric(elem, gen));
             }
             
             incProgress(1);
@@ -81,16 +100,20 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
 
     @Override
     public void finish() {
-        indice.endCalc(gen);
+        metric.endCalc(gen);
     }
 
     @Override
     public void gather(List results) {
         for(Object res : results) {
-            indice.mergePart(res);
+            metric.mergePart(res);
         }
     }
 
+    /**
+     * The result can be retrieved by the metric.
+     * @return null
+     */
     @Override
     public Void getResult() {
         return null;
@@ -98,6 +121,6 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
 
     @Override
     public int getSplitRange() {
-        return gen.getNodes().size();
+        return metric.getTypeParam() == TypeParam.EDGE ? gen.getEdges().size() : gen.getNodes().size();
     }
 }

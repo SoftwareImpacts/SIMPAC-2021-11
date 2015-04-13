@@ -1,6 +1,5 @@
 org.thema.graphab.metric.local.PCFLocalMetric
 org.thema.graphab.metric.local.BCCircuitLocalMetric
-org.thema.graphab.metric.local.CBCLocalMetric
 org.thema.graphab.metric.local.CFLocalMetric
 org.thema.graphab.metric.local.IFPCMetric
 org.thema.graphab.metric.global.BCEntropyMetric$Node

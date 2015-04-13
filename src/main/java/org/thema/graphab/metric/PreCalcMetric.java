@@ -1,30 +1,50 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.metric;
 
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Interface for metric which needs precalculations (local metric as BC) or can be decomposed for parallelization (global metric).
+ * 
+ * @author Gilles Vuidel
  */
 public interface PreCalcMetric<T>  {
 
-    enum TypeParam { NODE, PATHFINDER }
+    /** The type of parameter for {@link #calcPartMetric } */
+    enum TypeParam { NODE, EDGE, PATHFINDER }
+    
     /**
-     * @param param
-     * @param g
+     * Initialize the calculation for the graph g
+     * @param g the graph
      */
-    public Object calcPartIndice(T param, GraphGenerator g);
-
-    public void mergePart(Object part);
+    void startCalc(GraphGenerator g);
     
-    public void endCalc(GraphGenerator g);
+    /**
+     * Calculates a part of the whole calculation.
+     * This method must be thread safe !
+     * @param param the element : node, edge or pathfinder of a node
+     * @param g the graph
+     * @return the partial result
+     */
+    Object calcPartMetric(T param, GraphGenerator g);
 
-    public void startCalc(GraphGenerator g);
+    /**
+     * This method is called with the result of {@link #calcPartMetric}.
+     * It merges partial results together.
+     * This method is called by only one thread.
+     * @param part the partial result
+     */
+    void mergePart(Object part);
     
-    public TypeParam getTypeParam();
+    /**
+     * This method is called after all {@link #calcPartMetric} and {@link #mergePart} calls to finalize the calculation if needed.
+     * @param g the graph
+     */
+    void endCalc(GraphGenerator g);
+
+    /**
+     * @return the type of the parameter of {@link #calcPartMetric}
+     */
+    TypeParam getTypeParam();
 
 }

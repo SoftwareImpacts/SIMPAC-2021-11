@@ -26,15 +26,23 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
 /**
- *
- * @author gvuidel
+ * Frame for showing a line chart.
+ * 
+ * @author Gilles Vuidel
  */
 public class SerieFrame extends javax.swing.JFrame {
 
-    JFreeChart chart;
-    XYSeriesCollection series;
-    String xLabel, yLabel;
+    private JFreeChart chart;
+    private XYSeriesCollection series;
+    private String xLabel, yLabel;
 
+    /**
+     * Creates a new SerieFrame
+     * @param title frame title
+     * @param series data series
+     * @param xLabel label for x axis
+     * @param yLabel label for y axis
+     */
     public SerieFrame(String title, XYSeriesCollection series, String xLabel, String yLabel) {
         super(title);
         initComponents();
@@ -136,12 +144,10 @@ public class SerieFrame extends javax.swing.JFrame {
             chart.draw(svgGenerator, new Rectangle2D.Float(0, 0, 600, 400));
 
             // Write svg file
-            try {
-                try (OutputStream outputStream = new FileOutputStream(filename)) {
-                    Writer out = new OutputStreamWriter(outputStream, "UTF-8");
-                    svgGenerator.stream(out, true /* use css */);
-                    outputStream.flush();
-                }
+            try (OutputStream outputStream = new FileOutputStream(filename)) {
+                Writer out = new OutputStreamWriter(outputStream, "UTF-8");
+                svgGenerator.stream(out, true /* use css */);
+                outputStream.flush();
             } catch (IOException ex) {
                 Logger.getLogger(RasterLayer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -149,20 +155,19 @@ public class SerieFrame extends javax.swing.JFrame {
             if (!filename.endsWith(".txt")) {
                 filename = filename + ".txt";
             }
-            try {
-                try (FileWriter w = new FileWriter(filename)) {
-                    w.write(xLabel);
-                    for (int i = 0; i < series.getSeriesCount(); i++) {
-                        w.write("\t" + series.getSeriesKey(i).toString());
+
+            try (FileWriter w = new FileWriter(filename)) {
+                w.write(xLabel);
+                for (int i = 0; i < series.getSeriesCount(); i++) {
+                    w.write("\t" + series.getSeriesKey(i).toString());
+                }
+                w.write("\n");
+                for (int i = 0; i < series.getSeries(0).getItemCount(); i++) {
+                    w.write(series.getX(0, i).toString());
+                    for (int j = 0; j < series.getSeriesCount(); j++) {
+                        w.write("\t" + series.getY(j, i));
                     }
                     w.write("\n");
-                    for (int i = 0; i < series.getSeries(0).getItemCount(); i++) {
-                        w.write(series.getX(0, i).toString());
-                        for (int j = 0; j < series.getSeriesCount(); j++) {
-                            w.write("\t" + series.getY(j, i));
-                        }
-                        w.write("\n");
-                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(RasterLayer.class.getName()).log(Level.SEVERE, null, ex);

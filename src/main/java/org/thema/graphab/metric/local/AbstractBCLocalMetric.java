@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.local;
 
@@ -15,8 +11,9 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.PreCalcMetric;
 
 /**
- *
- * @author gvuidel
+ * Base class for all Betweeness Centrality local metric.
+ * 
+ * @author Gilles Vuidel
  */
 public abstract class AbstractBCLocalMetric<T> extends LocalMetric implements PreCalcMetric<T> {
   
@@ -44,10 +41,9 @@ public abstract class AbstractBCLocalMetric<T> extends LocalMetric implements Pr
             mapVal.put(id, courant.get(id) + mapVal.get(id));
         }
     }
-
     
     @Override
-    public double calcIndice(Graphable g, GraphGenerator gen) {
+    public double calcMetric(Graphable g, GraphGenerator gen) {
         return mapVal.get(((Feature)g.getObject()).getId());
     }
 

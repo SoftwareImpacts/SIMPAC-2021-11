@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.metric;
 
 import java.util.ArrayList;
@@ -19,7 +16,6 @@ import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.sparse.CG;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.DiagonalPreconditioner;
-import no.uib.cipr.matrix.sparse.ICC;
 import no.uib.cipr.matrix.sparse.IterativeSolver;
 import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import no.uib.cipr.matrix.sparse.Preconditioner;
@@ -31,13 +27,12 @@ import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Calculates electric circuit on graph.
+ * 
+ * @author Gilles Vuidel
  */
 public class Circuit {
     private GraphGenerator graph;
-    private double costR, capaR, capaExp, beta;
-    private boolean patch2Ground;
     
     /**
      * for testing native LU decomposition on dense matrix
@@ -52,45 +47,32 @@ public class Circuit {
     private HashMap<Graph, Preconditioner> compPrecond;
     private HashMap<Graph, DenseLU> compLU;
     
+    /**
+     * Creates a new Circuit with graph
+     * @param graph the graph representing the electric circuit
+     */
     public Circuit(GraphGenerator graph) {
-        this(graph, 0);
-    }
-    
-    public Circuit(GraphGenerator graph, double beta) {
         if(graph.getType() == GraphGenerator.MST) {
             throw new IllegalArgumentException("No circuit in MST graph");
         }
         this.graph = graph;
-        this.costR = 1;
-        this.capaR = 0;
-        this.capaExp = 0;
-        this.beta = beta;
-        this.patch2Ground = false;
         
         init();
     }
     
-    public Circuit(GraphGenerator graph, double costR, double capaR, double capaExp, double beta) {
-        this.graph = graph;
-        this.costR = costR;
-        this.capaR = capaR;
-        this.capaExp = capaExp;
-        this.beta = beta;
-        this.patch2Ground = true;
-        
-        init();
-    }
-    
+    /**
+     * Initialize the matrices representing the circuits and the preconditionners
+     */
     private void init() {
         indNodes = new HashMap<>();
         compNodes = new HashMap<>();
         compMatrix = new HashMap<>();
-        if(!patch2Ground) {
-            if(dense) {
-                compLU = new HashMap<>();
-            }
-            compPrecond = new HashMap<>();
+
+        if(dense) {
+            compLU = new HashMap<>();
         }
+        compPrecond = new HashMap<>();
+        
         
         for(Graph comp : graph.getComponents()) {
             int nbNodes = comp.getNodes().size();
@@ -133,36 +115,31 @@ public class Circuit {
                     if(graph.getCost(edge) == 0) {
                         throw new RuntimeException("Circuit impossible avec un cout nul !");
                     }
-                    sum += 1 / (graph.getCost(edge) * costR);
+                    sum += 1 / graph.getCost(edge);
                 }
                 
-                if(patch2Ground && Project.getPatchCapacity(node) == 0) {
-                    throw new RuntimeException("Circuit impossible avec une capacité nulle !");
-                }
-                A.set(i, i, sum + (patch2Ground ? 1 / (capaR * Math.pow(Project.getPatchCapacity(node), capaExp)) : 0));
+                A.set(i, i, sum);
                 i++;
             }
             for(Edge edge : (Collection<Edge>)comp.getEdges()) {
-                A.set(indNodes.get(edge.getNodeA()), indNodes.get(edge.getNodeB()), -1 / (graph.getCost(edge) * costR));
-                A.set(indNodes.get(edge.getNodeB()), indNodes.get(edge.getNodeA()), -1 / (graph.getCost(edge) * costR));
+                A.set(indNodes.get(edge.getNodeA()), indNodes.get(edge.getNodeB()), -1 / graph.getCost(edge));
+                A.set(indNodes.get(edge.getNodeB()), indNodes.get(edge.getNodeA()), -1 / graph.getCost(edge));
             }          
             
             compMatrix.put(comp, A);
             
-            if(!patch2Ground) {
-                if(dense) {
-                    DenseLU LU = DenseLU.factorize(new DenseMatrix(A));
-                    if(!LU.isSingular()) {
-                        compLU.put(comp, LU);
-                    } else {
-                        System.out.println("Singular matrix for component size " + nbNodes);
-                    }
+            if(dense) {
+                DenseLU LU = DenseLU.factorize(new DenseMatrix(A));
+                if(!LU.isSingular()) {
+                    compLU.put(comp, LU);
+                } else {
+                    System.out.println("Singular matrix for component size " + nbNodes);
                 }
-                if(!dense || !compLU.containsKey(comp)){
-                    Preconditioner M = new DiagonalPreconditioner(nbNodes);
-                    M.setMatrix(A);
-                    compPrecond.put(comp, M);
-                }
+            }
+            if(!dense || !compLU.containsKey(comp)){
+                Preconditioner M = new DiagonalPreconditioner(nbNodes);
+                M.setMatrix(A);
+                compPrecond.put(comp, M);
             }
             
         }
@@ -200,9 +177,9 @@ public class Circuit {
     
     /**
      * Calcule la résistance globale entre 2 noeuds du graphe
-     * @param n1
-     * @param n2
-     * @return 
+     * @param n1 noeud 1
+     * @param n2 noeud 2
+     * @return la résistance entre n1 et n2
      */
     public double computeR(Node n1, Node n2) {
         if(n1 == n2) {
@@ -244,10 +221,7 @@ public class Circuit {
      * null si n1 et n2 ne sont pas dans la même composante
      */
     private DenseVector solveCircuit(Node n1, Node n2, double courant) {
-        if(patch2Ground) {
-            throw new IllegalStateException("Calcul de R impossible avec patch2Ground");
-        }
-        
+       
         Graph comp = compNodes.get(n1);
         // si les noeuds ne sont pas dans la même composante on sort
         if(comp == null || compNodes.get(n2) != comp) {
@@ -286,7 +260,7 @@ public class Circuit {
      * @return la résistance entre chaque noeud et n1
      */
     public Map<Node, Double> computeRs(Node n1) {
-        DenseVector U = solveCircuit(n1);
+        DenseVector U = solveCircuit(n1, 0);
         if(U == null) {
             return Collections.EMPTY_MAP;
         }
@@ -304,6 +278,13 @@ public class Circuit {
         return mapR;
     }     
     
+    /**
+     * Recursive method called used by computeRs
+     * @param n1
+     * @param U
+     * @param mapR
+     * @return 
+     */
     private double calcR(Node n1, DenseVector U, HashMap<Node, Double> mapR) {
         if(mapR.containsKey(n1)) {
             return mapR.get(n1);
@@ -329,10 +310,11 @@ public class Circuit {
      * Cette version est une approximation de computeCourant(n1, n2) qui évite 
      * de calculer toutes les paires.
      * @param n1 noeud récepteur du courant
+     * @param beta capacity exponent for current emission
      * @return le courant traversé dans les liens et les noeuds
      */
-    public Map<Object, Double> computeCourantTo(Node n1) {
-        DenseVector U = solveCircuit(n1);
+    public Map<Object, Double> computeCourantTo(Node n1, double beta) {
+        DenseVector U = solveCircuit(n1, beta);
         if(U == null) {
             return Collections.EMPTY_MAP;
         }
@@ -346,13 +328,11 @@ public class Circuit {
      * Cette version est une approximation de solveCircuit(n1, n2) qui évite 
      * de calculer toutes les paires.
      * @param n1 noeud récepteur du courant
+     * @param beta capacity exponent for current emission
      * @return vecteur contenant le potentiel en chaque noeud de la composante
      * null si n1 est un noeud isolé
      */
-    private DenseVector solveCircuit(Node n1) {
-        if(patch2Ground) {
-            throw new IllegalStateException("Calcul du courant impossible avec patch2Ground");
-        }
+    private DenseVector solveCircuit(Node n1, double beta) {
         
         Graph comp = compNodes.get(n1);   
         // si c'est un noeud isolé
@@ -386,47 +366,17 @@ public class Circuit {
     }        
     
     /**
-     * Calcule le courant traversé dans chaque élément du graphe 
-     * Chaque noeud est relié à la masse à travers une résistance sauf n1 qui émet le courant
-     * TODO pourquoi enlever la résistance à la masse de n1 ?
-     * @param n1 noeud émetteur du courant
-     * @return le courant traversé dans les liens et les noeuds
+     * Solve A.U = Z for sparse matrix A with preconditioner P
+     * @param A the sparse matrix
+     * @param P the preconditioner
+     * @param Z the vector
+     * @return the vector U
      */
-    public Map<Object, Double> computeCourantFrom(Node n1) {
-        
-        if(!patch2Ground) {
-            throw new IllegalStateException("Calcul du courant impossible sans patch2Ground");
-        }
-        
-        Graph comp = compNodes.get(n1);
-        // si la composante n'existe pas c'est un noeud isolé, on sort
-        if(comp == null) {
-            return Collections.EMPTY_MAP;
-        }
-        
-        int nbNodes = comp.getNodes().size();
-        double capa = Project.getPatchCapacity(n1);
-        int ind1 = indNodes.get(n1);
-        
-        // Z vector is null only the origin patch has current value
-        DenseVector Z = new DenseVector(nbNodes);
-        Z.set(ind1, Math.pow(capa, beta));
-
-        CompRowMatrix A = compMatrix.get(comp).copy();
-        A.add(ind1, ind1, -1 / (capaR * Math.pow(capa, capaExp)));
-        
-        DenseVector U = solve(A, calcPrecond(A), Z);
-
-        return getCourant(comp, U);
-    }
-    
     private DenseVector solve(CompRowMatrix A, Preconditioner P, DenseVector Z) {
         // Calcule a starting solution U
         double [] v = new double[Z.size()];
         Arrays.fill(v, 1);
         DenseVector U = new DenseVector(v);        
-//        // May be better initial solution      
-//        DenseVector U = new DenseVector(Z);
         
         // Allocate storage for Conjugate Gradients
         IterativeSolver solver = new CG(U);
@@ -441,14 +391,20 @@ public class Circuit {
         }
     }
     
-    private DenseMatrix solveDense(DenseLU LU, DenseVector Z) {
-        return LU.solve(new DenseMatrix(Z, true));
+    /**
+     * Solve A.U = Z for dense matrix A by LU decomposition
+     * @param A the dense matrix
+     * @param Z the vector
+     * @return the vector U
+     */
+    private DenseMatrix solveDense(DenseLU A, DenseVector Z) {
+        return A.solve(new DenseMatrix(Z, true));
     }
     
     /**
-     * 
-     * @param comp composante du graphe
-     * @param U vecteur des potentiels
+     * Retrieve the current through each node and each edge
+     * @param comp graph component
+     * @param U voltage vector
      * @return le courant traversé dans les liens et les noeuds de la composante comp
      */
     private HashMap<Object, Double> getCourant(Graph comp, DenseVector U) {
@@ -456,7 +412,7 @@ public class Circuit {
         for(Edge edge : (Collection<Edge>)comp.getEdges()) {
             int iA = indNodes.get(edge.getNodeA());
             int iB = indNodes.get(edge.getNodeB());
-            courant.put(((Feature)edge.getObject()).getId(), Math.abs(U.get(iA) - U.get(iB)) / (graph.getCost(edge) * costR));
+            courant.put(((Feature)edge.getObject()).getId(), Math.abs(U.get(iA) - U.get(iB)) / graph.getCost(edge));
         }
         for(Node node : (Collection<Node>)comp.getNodes()) {
             double in = 0, out = 0;
@@ -464,7 +420,7 @@ public class Circuit {
             int iA = indNodes.get(node);
             for(Edge edge : edges) {
                 int iB = indNodes.get(edge.getOtherNode(node));
-                double c = (U.get(iA) - U.get(iB)) / (graph.getCost(edge) * costR);
+                double c = (U.get(iA) - U.get(iB)) / graph.getCost(edge);
                 if(c < 0) {
                     in += -c;
                 } else {
@@ -476,17 +432,5 @@ public class Circuit {
         
         return courant;
     }
-    
-    /**
-     * Calcule le preconditioner dans le cas path2Ground = true
-     * @param A
-     * @return 
-     */
-    private Preconditioner calcPrecond(CompRowMatrix A) {
-        // Create  preconditioner
-        Preconditioner M = new ICC(A.copy());
-        // Set up the preconditioner, and attach it
-        M.setMatrix(A);
-        return M;
-    }
+   
 }

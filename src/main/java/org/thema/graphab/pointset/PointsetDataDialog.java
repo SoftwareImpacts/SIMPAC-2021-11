@@ -1,13 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * PointsetDataDialog.java
- *
- * Created on 10 juin 2010, 07:23:12
- */
 
 package org.thema.graphab.pointset;
 
@@ -16,23 +6,25 @@ import javax.swing.DefaultComboBoxModel;
 import org.thema.graphab.links.Linkset;
 
 /**
- *
- * @author gvuidel
+ * Dialog for creating the Pointset instance.
+ * 
+ * @author Gilles Vuidel
  */
 public class PointsetDataDialog extends javax.swing.JDialog {
 
+    /** User has clicked OK ? */
     public boolean isOk = false;
-
-    public Pointset exoData;
+    /** The created Pointset */
+    public Pointset pointset;
 
     /** Creates new form PointsetDataDialog */
-    public PointsetDataDialog(java.awt.Frame parent, Collection<Linkset> costNames) {
+    public PointsetDataDialog(java.awt.Frame parent, Collection<Linkset> linksets) {
         super(parent, true);
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
 
-        distComboBox.setModel(new DefaultComboBoxModel(costNames.toArray()));
+        distComboBox.setModel(new DefaultComboBoxModel(linksets.toArray()));
     }
 
 
@@ -153,7 +145,7 @@ public class PointsetDataDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-        exoData = new Pointset(nameTextField.getText(), (Linkset)distComboBox.getSelectedItem(),
+        pointset = new Pointset(nameTextField.getText(), (Linkset)distComboBox.getSelectedItem(),
                 (Double)maxSpinner.getValue(), Pointset.AG_SUM);
         
         isOk = true;

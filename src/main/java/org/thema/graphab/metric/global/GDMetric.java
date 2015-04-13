@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -10,13 +6,15 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphGenerator.PathFinder;
 
 /**
- *
- * @author gvuidel
+ * Graph Diameter metric.
+ * The maximum shortest path in the graph.
+ * 
+ * @author Gilles Vuidel
  */
 public class GDMetric extends AbstractPathMetric {
 
     @Override
-    public Double calcPartIndice(PathFinder finder, GraphGenerator g) {
+    public Double calcPartMetric(PathFinder finder, GraphGenerator g) {
         double max = 0;
         for(Node node : finder.getComputedNodes()) {
             if (finder.getCost(node) > max) {
@@ -30,8 +28,8 @@ public class GDMetric extends AbstractPathMetric {
     @Override
     public void mergePart(Object part) {
         double val = (Double)part;
-        if(val > indice) {
-            indice = val;
+        if(val > metric) {
+            metric = val;
         }
     }
 

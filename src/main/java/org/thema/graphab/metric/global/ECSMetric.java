@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -9,12 +5,14 @@ import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Expected Cluster Size metric.
+ * Sum of squared capacity components / total capacity
+ * @author Gilles Vuidel
  */
 public class ECSMetric extends GlobalMetric {
 
-    public Double [] calcIndice(GraphGenerator gen) {
+    @Override
+    public Double [] calcMetric(GraphGenerator gen) {
         double sum = 0;
         for(int i = 0; i < gen.getComponents().size(); i++) {
             double size = gen.getComponentGraphGen(i).getPatchCapacity();
@@ -23,6 +21,7 @@ public class ECSMetric extends GlobalMetric {
         return new Double[]{sum / gen.getPatchCapacity()};
     }
 
+    @Override
     public String getShortName() {
         return "ECS";
     }

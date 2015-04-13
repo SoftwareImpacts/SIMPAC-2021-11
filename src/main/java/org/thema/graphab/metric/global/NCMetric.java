@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -9,13 +5,14 @@ import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Number of Components metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class NCMetric extends GlobalMetric {
 
     @Override
-    public Double [] calcIndice(GraphGenerator g) {
+    public Double [] calcMetric(GraphGenerator g) {
         return new Double[]{(double) g.getComponents().size()};
     }
 

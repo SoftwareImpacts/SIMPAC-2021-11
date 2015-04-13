@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.metric.local;
 
 import java.util.LinkedHashMap;
@@ -14,8 +11,10 @@ import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.SingleValuePanel;
 
 /**
- *
- * @author gvuidel
+ * Current Flow metric.
+ * Faster than {@link BCCircuitLocalMetric}
+ * 
+ * @author Gilles Vuidel
  */
 public class CFLocalMetric extends AbstractBCLocalMetric<Node> {
 
@@ -25,14 +24,20 @@ public class CFLocalMetric extends AbstractBCLocalMetric<Node> {
     private transient Circuit circuit;
     
     @Override
-    public Map<Object, Double> calcPartIndice(Node node, GraphGenerator g) {
-        return circuit.computeCourantTo(node);
+    public Map<Object, Double> calcPartMetric(Node node, GraphGenerator g) {
+        return circuit.computeCourantTo(node, beta);
     }
     
     @Override
     public void startCalc(GraphGenerator gen) {
         super.startCalc(gen);
-        circuit = new Circuit(gen, beta);
+        circuit = new Circuit(gen);
+    }
+    
+    @Override
+    public void endCalc(GraphGenerator g) {
+        super.endCalc(g); 
+        circuit = null;
     }
     
     @Override
@@ -40,28 +45,27 @@ public class CFLocalMetric extends AbstractBCLocalMetric<Node> {
         return graph.getType() != GraphGenerator.MST;
     }
 
+    @Override
     public String getShortName() {
         return "CF";
     }
 
+    @Override
     public void setParams(Map<String, Object> params) {
         beta = ((Number)params.get(BETA)).doubleValue();
     }
 
+    @Override
     public LinkedHashMap<String, Object> getParams() {
         LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(BETA, beta);
         return params;
     }
 
+    @Override
     public ParamPanel getParamPanel(Project project) {
         return new SingleValuePanel(BETA, beta);
-    }
-    
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        beta = Double.parseDouble(detailName.substring(detailName.indexOf(BETA) + BETA.length()));
-    }    
+    } 
 
     @Override
     public Type getType() {

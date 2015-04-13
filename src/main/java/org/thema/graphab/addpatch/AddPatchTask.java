@@ -1,18 +1,14 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.addpatch;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import java.awt.geom.Point2D;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.thema.common.ProgressBar;
 import org.thema.common.collection.TreeMapList;
@@ -20,35 +16,46 @@ import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.metric.GraphMetricLauncher;
+import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
- *
- * @author gvuidel
+ * Parallel task testing the adding of one patch (from a set of patches) on a graph and calculates a metric for each.
+ * Works in threaded and MPI environment.
+ * @author Gilles Vuidel
  */
 public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geometry>, TreeMapList<Double, Geometry>> 
-                    implements Serializable{
+                    implements Serializable {
 
-    // Patch to be added at init
-    Geometry addedGeom;
-    double capaGeom;
+    // Patch to be added at init, useful only for MPI env
+    private Geometry addedGeom;
+    private double capaGeom;
     
-    HashMap<Geometry, Double> testGeoms;
-    List<Geometry> geoms;
-    GlobalMetric indice;
-    String graphName;
+    private HashMap<Geometry, Double> testGeoms;
+    private List<Geometry> geoms;
+    private GlobalMetric metric;
+    private String graphName;
     
-    transient GraphGenerator gen;
-    transient TreeMapList<Double, Geometry> result;
+    private transient GraphGenerator gen;
+    private transient TreeMapList<Double, Geometry> result;
 
-    public AddPatchTask(Geometry addedGeom, double capaGeom, String graphName, GlobalMetric indice, 
+    /**
+     * Creates a new AddPatchTask.
+     * 
+     * @param addedGeom geometry of the previous added patch, can be null if no patch already added
+     * @param capaGeom capacity of the previous added patch, can be Double.NaN if no patch already added
+     * @param graphName the name of the graph
+     * @param metric the metric to maximize
+     * @param testGeoms the set of patch geometries to test, with their capacity
+     * @param monitor th progress bar
+     */
+    public AddPatchTask(Geometry addedGeom, double capaGeom, String graphName, GlobalMetric metric, 
             HashMap<Geometry, Double> testGeoms, ProgressBar monitor) {
         super(monitor);
         this.addedGeom = addedGeom;
         this.capaGeom = capaGeom;
-        this.indice = indice;
+        this.metric = metric;
         this.graphName = graphName;
         this.testGeoms = testGeoms;
         geoms = new ArrayList<>(testGeoms.keySet());
@@ -65,8 +72,7 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
                 DefaultFeature patch = Project.getProject().addPatch(addedGeom, capaGeom);
                 gen.getLinkset().addLinks(patch);
             }
-        } catch (Exception ex) {
-            Logger.getLogger(AddPatchTask.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
         
@@ -78,11 +84,11 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
         TreeMapList<Double, Geometry> results = new TreeMapList<>();
         for(Geometry geom : geoms.subList(start, end)) {
             try {
-                double indVal = addPatchSoft(geom, indice, gen, testGeoms.get(geom));
+                double indVal = addPatchSoft(geom, metric, gen, testGeoms.get(geom));
                 if(!Double.isNaN(indVal)) {
                     results.putValue(indVal, geom);
                 }
-            } catch (Exception ex) {
+            } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -106,17 +112,42 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
         return testGeoms.size();
     }
     
+    /**
+     * @return the metric value associated with each patch geometry
+     */
     @Override
     public TreeMapList<Double, Geometry> getResult() {
         return result;
     }
     
-    public static double addPatchSoft(Point point, GlobalMetric indice, GraphGenerator gen, GridCoverage2D capaCov) throws Exception {
+    /**
+     * Add a patch to the graph and calculate the metric.
+     * The graph gen is dupplicated before adding the patch.
+     * The project is not modified : soft method.
+     * @param point the point representing the patch
+     * @param metric the metric
+     * @param gen the graph
+     * @param capaCov the grid containing the capacity
+     * @return the value of the metric after adding the patch to the graph or NaN if the patch cannot be added or if capacity <= 0
+     * @throws IOException 
+     */
+    public static double addPatchSoft(Point point, GlobalMetric metric, GraphGenerator gen, GridCoverage2D capaCov) throws IOException {
         double capa = capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(point.getX(), point.getY()), new double[1])[0];
-        return addPatchSoft(point, indice, gen, capa);
+        return addPatchSoft(point, metric, gen, capa);
     }
     
-    public static double addPatchSoft(Geometry geom, GlobalMetric indice, GraphGenerator gen, double capa) throws Exception {
+    /**
+     * Add a patch to the graph and calculate the metric.
+     * The graph gen is dupplicated before adding the patch.
+     * The project is not modified : soft method.
+     * @param geom the geometry of the patch
+     * @param metric the metric
+     * @param gen the graph
+     * @param capa the capacity of the patch
+     * @return the value of the metric after adding the patch to the graph or NaN if the patch cannot be added or if capacity <= 0
+     * @throws IOException 
+     */
+    public static double addPatchSoft(Geometry geom, GlobalMetric metric, GraphGenerator gen, double capa) throws IOException {
         Project project = Project.getProject();
         if(!project.canCreatePatch(geom)) {
             return Double.NaN;
@@ -128,7 +159,7 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
         AddPatchGraphGenerator graph = new AddPatchGraphGenerator(gen);
         graph.addPatch(geom, capa);
         
-        double indVal = new GraphMetricLauncher(indice, false).calcIndice(graph, new TaskMonitor.EmptyMonitor())[0];
+        double indVal = new GlobalMetricLauncher(metric).calcMetric(graph, false, null)[0];
         
         return indVal;
     }

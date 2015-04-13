@@ -1,30 +1,45 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.thema.graphab.Project;
 import org.thema.graphab.Project.Method;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Base class for metric.
+ * Metric must have a constructor without parameter or override {@link #dupplicate() }.
+ * 
+ * @author Gilles Vuidel
  */
 public abstract class Metric implements Serializable  {
     
-    public enum Type {WEIGHT, AREA, TOPO, RASTER}
+    /** Types of metric for classification */
+    public enum Type { WEIGHT, AREA, TOPO, RASTER }
     
+    /**
+     * @return the short name of the metric 
+     */
     public abstract String getShortName();
+    /**
+     * @return the type of the metric
+     * @see Type
+     */
     public abstract Type getType();
     
+    /**
+     * The full name of the metric is retrieved from 
+     * org/thema/graphab/metric/global/Bundle properties file.
+     * The key is the short name metric.
+     * If the entry does not exist in the Bundle file, return only the short name.
+     * @return the full name of the metric
+     */
     public String getName() {
         String desc = java.util.ResourceBundle.getBundle("org/thema/graphab/metric/global/Bundle").getString(getShortName());
         if(desc == null) {
@@ -34,11 +49,20 @@ public abstract class Metric implements Serializable  {
         }
     }
 
+    /**
+     * @return {@link #getName() }
+     */
     @Override
     public String toString() {
         return getName();
     }
 
+    /**
+     * The short name with the parameters (if any) separated by underscore.
+     * metric_param1val1_param2val2
+     * Ex : PC_d1000_p0.05_beta1
+     * @return the short name with the metric parameters
+     */
     public String getDetailName() {
         String str = getShortName();
         Map<String, Object> params = getParams();
@@ -48,45 +72,125 @@ public abstract class Metric implements Serializable  {
         return str;
     }
 
+    /**
+     * Is this metric can be calculated on this graph.
+     * Default implementation returns always true.
+     * @param graph the graph
+     * @return true if this metric can be calculated on this graph
+     */
     public boolean isAcceptGraph(GraphGenerator graph) {
         return true;
     }
 
+    /**
+     * Is this metric can be calculated with this method.
+     * Default implementation returns always true.
+     * @param method the method (global, local, component or delta)
+     * @return true if this metric can be calculated with this method
+     */
     public boolean isAcceptMethod(Method method) {
         return true;
     }
 
+    /**
+     * Do this metric has parameters ?
+     * @return true if the metric has parameters
+     */
     public boolean hasParams() {
         return !getParams().isEmpty();
     }
     
-    public void setParams(Map<String, Object> params) {}
+    /**
+     * Set the parameters of this metric.
+     * Default implementation does nothing.
+     * This method must be overriden if the metric has parameter.
+     * @param params 
+     * @throws IllegalStateException if params is not empty
+     */
+    public void setParams(Map<String, Object> params) {
+        if(!params.isEmpty()) {
+            throw new IllegalStateException("This metric has no parameter or this method must be overriden !");
+        }
+    }
     
+    /**
+     * Returns a map containing parameter name and value.
+     * Default implementation returns an empty map.
+     * This method must be overriden if the metric has parameter.
+     * @return the parameter map
+     */
     public LinkedHashMap<String, Object> getParams() {
         return new LinkedHashMap<>();
     }
     
+    /**
+     * Returns a panel for editing parameters.
+     * Default implementation returns {@link DefaultParamPanel}
+     * @param project the project
+     * @return a panel for editing parameters
+     */
     public ParamPanel getParamPanel(Project project) {
         return new DefaultParamPanel(this.dupplicate());
     }
     
-    public void setParamFromDetailName(String detailName) {}
+    /**
+     * Sets the parameters from a detail name.
+     * Default implementation parse only double type parameter.
+     * This method must be overriden if the metric has non numeric parameter.
+     * @param detailName the detail name
+     */
+    public void setParamFromDetailName(String detailName) {
+        String[] tokens = detailName.split("_");
+        tokens = Arrays.copyOfRange(tokens, 1, tokens.length);
+        if(tokens.length != getParams().size()) {
+            throw new IllegalArgumentException("Bad number of parameters for " + detailName);
+        }
+        HashMap<String, Object> params = new HashMap<>();
+        Pattern pattern = Pattern.compile("([a-zA-Z]+)([-+]?[0-9]+\\.?[0-9]*)");
+        for(String token : tokens) {
+            Matcher matcher = pattern.matcher(token);
+            matcher.find();
+            params.put(matcher.group(1), Double.parseDouble(matcher.group(2)));
+        }
+        
+        setParams(params);
+    }
     
+    /**
+     * Creates a copy of this metric.
+     * Creates a new instance of the metric and copy parameters.
+     * @return a clone of this metric
+     */
     public Metric dupplicate() {
         try {
             return Metric.dupplicate(this);
         } catch (InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(Metric.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
+            throw new RuntimeException(ex);
         }
     }
     
-    protected static <T extends Metric>  T dupplicate(T indice) throws InstantiationException, IllegalAccessException  {
-        T dupIndice = (T) indice.getClass().newInstance();
-        dupIndice.setParams(indice.getParams());
+    /**
+     * Creates a copy of this metric.
+     * Creates a new instance of the metric and copy parameters with {@link #setParams }
+     * @param <T>
+     * @param metric the metric to copy
+     * @return a new copy
+     * @throws InstantiationException
+     * @throws IllegalAccessException 
+     */
+    protected static <T extends Metric>  T dupplicate(T metric) throws InstantiationException, IllegalAccessException  {
+        T dupIndice = (T) metric.getClass().newInstance();
+        dupIndice.setParams(metric.getParams());
         return dupIndice;
     }
 
+    /**
+     * Use {@link String.valueOf }.
+     * Avoid the trailing .0 for floating point number.
+     * If the value is a floating point number containing an integral number, cast the value to int.
+     * @param val the value to convert in String
+     * @return a string representing val
+     */
     public static String format(Object val) {
         if(val instanceof Number && ((Number)val).doubleValue() == ((Number)val).intValue()) {
             return String.valueOf(((Number)val).intValue());

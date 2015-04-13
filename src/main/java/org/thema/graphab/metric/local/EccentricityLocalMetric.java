@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.local;
 
@@ -11,11 +7,11 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphGenerator.PathFinder;
 
 /**
- *
- * @author gvuidel
+ * Eccentricity metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class EccentricityLocalMetric extends LocalMetric {
-
 
     @Override
     public String getShortName() {
@@ -23,7 +19,7 @@ public class EccentricityLocalMetric extends LocalMetric {
     }
 
     @Override
-    public double calcIndice(Graphable g, GraphGenerator gen) {
+    public double calcMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
         PathFinder pathFinder = gen.getPathFinder(node);
         double max = 0;

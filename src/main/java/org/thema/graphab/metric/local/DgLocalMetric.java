@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.local;
 
@@ -10,11 +6,11 @@ import org.geotools.graph.structure.Node;
 import org.thema.graphab.graph.GraphGenerator;
 
 /**
- *
- * @author gvuidel
+ * Degree metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class DgLocalMetric extends LocalMetric {
-
 
     @Override
     public String getShortName() {
@@ -22,7 +18,7 @@ public class DgLocalMetric extends LocalMetric {
     }
 
     @Override
-    public double calcIndice(Graphable g, GraphGenerator gen) {
+    public double calcMetric(Graphable g, GraphGenerator gen) {
         return ((Node)g).getDegree();
     }
 

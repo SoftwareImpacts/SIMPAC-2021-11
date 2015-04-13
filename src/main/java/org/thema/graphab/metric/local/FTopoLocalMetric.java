@@ -1,5 +1,4 @@
 
-
 package org.thema.graphab.metric.local;
 
 import java.util.LinkedHashMap;
@@ -11,73 +10,54 @@ import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Linkset;
-import org.thema.graphab.metric.DistProbaPanel;
+import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
 /**
- *
- * @author gvuidel
+ * Flux metric, topological version.
+ * Does not calculate path, use only edges connected to the node.
+ * 
+ * @author Gilles Vuidel
  */
 public class FTopoLocalMetric extends LocalMetric {
 
-    private double k = 0.0029957322735539907;
-    private double d = 1000;
-    private double p = 0.05;
-    private double a = 1.0;
+    private AlphaParamMetric alphaParam = new AlphaParamMetric();
 
-
-    public double calcIndice(Graphable g, GraphGenerator gen) {
+    @Override
+    public double calcMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
         double sum = 0;
         for(Edge edge : (List<Edge>)node.getEdges()) {
-            sum += Math.exp(-k * gen.getCost(edge)) * Math.pow(Project.getPatchCapacity(node), a);            
+            sum += Math.exp(-alphaParam.getAlpha() * gen.getCost(edge)) * Math.pow(Project.getPatchCapacity(node), alphaParam.getBeta());            
         }
         return sum;
     }
 
-    public String getName() {
-        return java.util.ResourceBundle.getBundle("org/thema/graphab/indice/global/Bundle").getString(getShortName())
-                + " (" + getShortName() + ")";
-    }
 
+    @Override
     public String getShortName() {
         return "FTopo";
     }
 
+    @Override
     public void setParams(Map<String, Object> params) {
-        d = ((Number)params.get(DistProbaPanel.DIST)).doubleValue();
-        p = ((Number)params.get(DistProbaPanel.PROBA)).doubleValue();
-        a = ((Number)params.get(DistProbaPanel.A)).doubleValue();
-        k = -Math.log(p) / d;
+        alphaParam.setParams(params);
     }
 
+    @Override
     public LinkedHashMap<String, Object> getParams() {
-        LinkedHashMap<String, Object> params = new LinkedHashMap<>();
-        params.put(DistProbaPanel.DIST, d);
-        params.put(DistProbaPanel.PROBA, p);
-        params.put(DistProbaPanel.A, a);
-        return params;
+        return alphaParam.getParams();
     }
 
+    @Override
     public boolean calcNodes() {
         return true;
     }
 
-    public boolean calcEdges() {
-        return false;
-    }
-
-    public ParamPanel getParamPanel(Project project) {
-        return new DistProbaPanel(d, p, a);
-    }
-    
     @Override
-    public void setParamFromDetailName(String detailName) {
-        a = Double.parseDouble(detailName.substring(detailName.indexOf(DistProbaPanel.A) + DistProbaPanel.A.length(), detailName.indexOf(DistProbaPanel.DIST)));
-        d = Double.parseDouble(detailName.substring(detailName.indexOf(DistProbaPanel.DIST) + DistProbaPanel.DIST.length(), detailName.indexOf(DistProbaPanel.PROBA)));
-        p = Double.parseDouble(detailName.substring(detailName.indexOf(DistProbaPanel.PROBA) + DistProbaPanel.PROBA.length()));
-        k = -Math.log(p) / d;
-    }    
+    public ParamPanel getParamPanel(Project project) {
+        return alphaParam.getParamPanel(project);
+    } 
     
     @Override
     public boolean isAcceptGraph(GraphGenerator graph) {

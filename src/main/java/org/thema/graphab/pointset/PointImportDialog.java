@@ -1,13 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * PointImportDialog.java
- *
- * Created on 10 juin 2010, 06:14:40
- */
 
 package org.thema.graphab.pointset;
 
@@ -28,16 +18,23 @@ import org.geotools.data.shapefile.ShapefileDataStore;
 import org.opengis.feature.type.AttributeType;
 
 /**
- *
- * @author gvuidel
+ * Dialog for importing point set from a shapefile or a CSV file
+ * @author Gilles Vuidel
  */
 public class PointImportDialog extends javax.swing.JDialog {
 
+    /** User has clicked OK ? */
     public boolean isOk = false;
 
+    /** The file to import */
     public File file;
+    /** Is a shapefile or a CSV file ? */
     public boolean shpFile;
-    public String idAttr, xAttr, yAttr;
+    /** The id field name */
+    public String idAttr;
+    /** The x and y attribute, for CSV file only */
+    public String xAttr, yAttr;
+    /** Other attributes to import */
     public List<String> zAttrs;
 
     /** Creates new form PointImportDialog */
@@ -225,8 +222,6 @@ public class PointImportDialog extends javax.swing.JDialog {
         }
 
 }//GEN-LAST:event_selectFilePanelActionPerformed
-
-    /** Closes the dialog */
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

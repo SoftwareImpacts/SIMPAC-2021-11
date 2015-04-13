@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -9,18 +5,23 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.local.LocalMetric;
 
 /**
- * 
- * @author gvuidel
+ * Agregate a local metric by division index.
+ * 1 - sum pi^2 where pi = local metric for elem i / sum of local metric
+ * @author Gilles Vuidel
  */
 public class DivisionLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
 
-
-    public DivisionLocal2GlobalMetric(LocalMetric indice, TypeElem type) {
-        super(indice, type);
+    /**
+     * Creates a new DivisionLocal2GlobalMetric
+     * @param metric the local metric to agregate
+     * @param type agregate on nodes or on edges ?
+     */
+    public DivisionLocal2GlobalMetric(LocalMetric metric, TypeElem type) {
+        super(metric, type);
     }
 
     @Override
-    public Double[] calcIndice(GraphGenerator g) {
+    public Double[] calcMetric(GraphGenerator g) {
         double sum = 0;
         for(Double val : getValues()) {
             sum += val;
@@ -32,11 +33,6 @@ public class DivisionLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
         }
         
         return new Double[]{1 - div};
-    }
-
-    @Override
-    public DivisionLocal2GlobalMetric dupplicate() {
-        return new DivisionLocal2GlobalMetric((LocalMetric)getIndice().dupplicate(), typeElem);
     }
 
     @Override

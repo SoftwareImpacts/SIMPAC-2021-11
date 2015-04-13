@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.local;
 
@@ -16,15 +12,16 @@ import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
 /**
- *
- * @author gvuidel
+ * Flux metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class FLocalMetric extends LocalMetric {
 
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
 
     @Override
-    public double calcIndice(Graphable g, GraphGenerator gen) {
+    public double calcMetric(Graphable g, GraphGenerator gen) {
         PathFinder pathFinder = gen.getPathFinder((Node)g);
         double sum = 0;
         for(Node node : pathFinder.getComputedNodes()) {
@@ -59,11 +56,6 @@ public class FLocalMetric extends LocalMetric {
     @Override
     public ParamPanel getParamPanel(Project project) {
         return alphaParam.getParamPanel(project);
-    }
-
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        alphaParam.setParamFromDetailName(detailName);
     }
     
     @Override

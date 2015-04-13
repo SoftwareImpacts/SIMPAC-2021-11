@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -9,28 +5,28 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.local.LocalMetric;
 
 /**
+ * Global metric summing the results of a local metric on nodes or edges.
  * 
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class SumLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
 
-
-    public SumLocal2GlobalMetric(LocalMetric indice) {
-        super(indice, TypeElem.NODE);
+    /**
+     * Creates a new global metric.
+     * @param metric the local metric to sum
+     * @param typeElem apply the local metric on nodes or edges ?
+     */
+    public SumLocal2GlobalMetric(LocalMetric metric, TypeElem typeElem) {
+        super(metric, typeElem);
     }
 
     @Override
-    public Double[] calcIndice(GraphGenerator g) {
+    public Double[] calcMetric(GraphGenerator g) {
         double sum = 0;
         for(Double val : getValues()) {
             sum += val;
         }
         return new Double[] {sum};
-    }
-
-    @Override
-    public SumLocal2GlobalMetric dupplicate() {
-        return new SumLocal2GlobalMetric((LocalMetric)getIndice().dupplicate());
     }
 
     @Override
@@ -40,10 +36,7 @@ public class SumLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
 
     @Override
     public String getPrefixName() {
-        return "";
+        return "Sum";
     }
-
-
-    
     
 }

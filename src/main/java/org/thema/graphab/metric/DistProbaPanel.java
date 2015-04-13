@@ -1,25 +1,13 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * DistProbaPanel.java
- *
- * Created on 15 déc. 2010, 13:56:17
- */
 
 package org.thema.graphab.metric;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.event.DocumentEvent;
 
 /**
- *
- * @author gvuidel
+ * ParamPanel for metric with parameters Distance, Proba and Beta.
+ * 
+ * @author Gilles Vuidel
  */
 public class DistProbaPanel extends ParamPanel {
 
@@ -27,23 +15,15 @@ public class DistProbaPanel extends ParamPanel {
     public static final String PROBA = "p";
     public static final String A = "beta";
 
-    private boolean noUpdate = false;
-
-    /** Creates new form DistProbaPanel */
+    /** 
+     * Creates new form DistProbaPanel.
+     * 
+     * @param dist distance
+     * @param p proba
+     * @param a beta
+     */
     public DistProbaPanel(double dist, double p, double a) {
         initComponents();
-//        alphaTextField.getDocument().addDocumentListener(new DocumentListener() {
-//            public void insertUpdate(DocumentEvent e) {
-//                alphaTextFieldStateChanged(e);
-//            }
-//            public void removeUpdate(DocumentEvent e) {
-//                alphaTextFieldStateChanged(e);
-//            }
-//            public void changedUpdate(DocumentEvent e) {
-//                alphaTextFieldStateChanged(e);
-//            }
-//        });
-
         dSpinner.setValue(dist);
         pSpinner.setValue(p);
         aSpinner.setValue(a);
@@ -58,18 +38,30 @@ public class DistProbaPanel extends ParamPanel {
         return params;
     }
 
+    /**
+     * @return alpha
+     */
     public double getAlpha() {
         return Double.parseDouble(alphaTextField.getText());
     }
 
+    /**
+     * @return distance
+     */
     public double getDist() {
         return (Double)dSpinner.getValue();
     }
 
+    /**
+     * @return proba
+     */
     public double getP() {
         return (Double)pSpinner.getValue();
     }
 
+    /**
+     * @return beta
+     */
     public double getA() {
         return (Double)aSpinner.getValue();
     }
@@ -173,25 +165,12 @@ public class DistProbaPanel extends ParamPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void pSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_pSpinnerStateChanged
-        alphaTextField.setText(String.valueOf(-Math.log((Double)pSpinner.getValue()) / (Double)dSpinner.getValue()));
+        alphaTextField.setText(String.valueOf(-Math.log(getP()) / getDist()));
 }//GEN-LAST:event_pSpinnerStateChanged
 
     private void dSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_dSpinnerStateChanged
-        if(!noUpdate) {
-            alphaTextField.setText(String.valueOf(-Math.log((Double)pSpinner.getValue()) / (Double)dSpinner.getValue()));
-        }
+        alphaTextField.setText(String.valueOf(-Math.log(getP()) / getDist()));
 }//GEN-LAST:event_dSpinnerStateChanged
-
-    private void alphaTextFieldStateChanged(DocumentEvent evt) {
-        noUpdate = true;
-        try {
-            double alpha = Double.parseDouble(alphaTextField.getText());
-            dSpinner.setValue(-Math.log((Double)pSpinner.getValue()) / alpha);
-        } catch(Exception e) {
-            Logger.getLogger(DistProbaPanel.class.getName()).log(Level.SEVERE, null, e);
-        }
-        noUpdate = false;
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JSpinner aSpinner;

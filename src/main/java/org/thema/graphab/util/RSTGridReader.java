@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.util;
 
@@ -35,8 +31,10 @@ import org.opengis.coverage.grid.Format;
 import org.opengis.parameter.GeneralParameterValue;
 
 /**
- *
- * @author gvuidel
+ * RST format raster reader.
+ * RST format is used mainly by IDRISI software.
+ * 
+ * @author Gilles Vuidel
  */
 public class RSTGridReader extends AbstractGridCoverage2DReader  {
 
@@ -90,12 +88,17 @@ public class RSTGridReader extends AbstractGridCoverage2DReader  {
     private static final String rstUTM     =     "utm-%d%c";
     private static final String rstSPC      =    "spc%2d%2s%d";
 
-    protected int nbLine;
-    protected int nbCol;
-    protected int dataType;
+    private int nbLine;
+    private int nbCol;
+    private int dataType;
 
-    double minValue, maxValue;
+    private double minValue, maxValue;
 
+    /**
+     * Creates a new RST/RDC gridcoverage reader
+     * @param file the RST or RDC file
+     * @throws IOException 
+     */
     public RSTGridReader(File file) throws IOException {
         File rdcFile = file;
         if(file.getName().toLowerCase().endsWith(extRST)) {
@@ -142,7 +145,6 @@ public class RSTGridReader extends AbstractGridCoverage2DReader  {
 
         coverageName = file.getName().substring(0, file.getName().length()-4);
     }
-
 
 
     @Override
@@ -213,6 +215,7 @@ public class RSTGridReader extends AbstractGridCoverage2DReader  {
         return tabCat;
     }
 
+    @Override
     public Format getFormat() {
         return null;
     }

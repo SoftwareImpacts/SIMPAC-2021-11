@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.metric.local;
 
 import java.util.HashMap;
@@ -15,8 +12,9 @@ import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.SingleValuePanel;
 
 /**
- *
- * @author gvuidel
+ * Potential Current Flow metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class PCFLocalMetric extends AbstractBCLocalMetric<Node> {
 
@@ -27,7 +25,7 @@ public class PCFLocalMetric extends AbstractBCLocalMetric<Node> {
     private transient Circuit circuit;
     
     @Override
-    public Map<Object, Double> calcPartIndice(Node node, GraphGenerator g) {
+    public Map<Object, Double> calcPartMetric(Node node, GraphGenerator g) {
         Map<Object, Double> res = new HashMap<>();
         for(Node n2 : g.getNodes()) {
             if (node != n2) {
@@ -47,36 +45,41 @@ public class PCFLocalMetric extends AbstractBCLocalMetric<Node> {
     @Override
     public void startCalc(GraphGenerator gen) {
         super.startCalc(gen);
-        circuit = new Circuit(gen, beta);
+        circuit = new Circuit(gen);
     }
 
+    @Override
+    public void endCalc(GraphGenerator g) {
+        super.endCalc(g); 
+        circuit = null;
+    }
+    
     @Override
     public boolean isAcceptGraph(GraphGenerator graph) {
         return graph.getType() != GraphGenerator.MST;
     }
     
+    @Override
     public String getShortName() {
         return "PCF";
     }
 
+    @Override
     public void setParams(Map<String, Object> params) {
         beta = ((Number)params.get(BETA)).doubleValue();
     }
 
+    @Override
     public LinkedHashMap<String, Object> getParams() {
         LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(BETA, beta);
         return params;
     }
 
+    @Override
     public ParamPanel getParamPanel(Project project) {
         return new SingleValuePanel(BETA, beta);
     }
-    
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        beta = Double.parseDouble(detailName.substring(detailName.indexOf(BETA) + BETA.length()));
-    }    
 
     @Override
     public Type getType() {

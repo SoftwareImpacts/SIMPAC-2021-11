@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.local;
 
@@ -16,15 +12,17 @@ import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
 /**
- *
- * @author gvuidel
+ * Local Probability of Connectivity.
+ * PC index for one patch.
+ * 
+ * @author Gilles Vuidel
  */
 public class FPCLocalMetric extends LocalMetric {
 
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
     
     @Override
-    public double calcIndice(Graphable g, GraphGenerator gen) {
+    public double calcMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
         double srcCapa = Project.getPatchCapacity(node);
         PathFinder pathFinder = gen.getPathFinder(node);
@@ -41,6 +39,7 @@ public class FPCLocalMetric extends LocalMetric {
         return "FPC";
     }
 
+    @Override
     public boolean calcNodes() {
         return true;
     }
@@ -58,11 +57,6 @@ public class FPCLocalMetric extends LocalMetric {
     @Override
     public ParamPanel getParamPanel(Project project) {
         return alphaParam.getParamPanel(project);
-    }
-
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        alphaParam.setParamFromDetailName(detailName);
     }
     
     @Override

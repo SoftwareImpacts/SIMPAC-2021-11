@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.metric;
 
 import java.awt.BorderLayout;
@@ -9,19 +6,23 @@ import java.util.Map;
 import org.thema.common.param.DefaultParamEditor;
 
 /**
- *
- * @author gvuidel
+ * Default ParamPanel for metric parameters editing.
+ * Use {@link DefaultParamEditor}
+ * 
+ * @author Gilles Vuidel
  */
 public class DefaultParamPanel extends ParamPanel {
-    Metric params;
+    
+    private Metric metric;
     
     /**
      * Creates new form DefaultParamPanel
+     * @param metric the metric to edit parameters
      */
-    public DefaultParamPanel(Metric params) {
+    public DefaultParamPanel(Metric metric) {
         initComponents();
-        this.params = params;
-        DefaultParamEditor editor = new DefaultParamEditor(params);
+        this.metric = metric;
+        DefaultParamEditor editor = new DefaultParamEditor(metric);
         panel.add(editor, BorderLayout.CENTER);
     }
 
@@ -55,6 +56,6 @@ public class DefaultParamPanel extends ParamPanel {
 
     @Override
     public Map<String, Object> getParams() {
-        return params.getParams();
+        return metric.getParams();
     }
 }

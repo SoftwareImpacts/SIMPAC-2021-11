@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.metric;
 
 import java.io.Serializable;
@@ -10,8 +7,11 @@ import java.util.Map;
 import org.thema.graphab.Project;
 
 /**
- *
- * @author gvuidel
+ * Class for delegating parameter management for metrics having parameters :
+ * d, p, beta 
+ * and alpha = -Math.log(p) / d;
+ * 
+ * @author Gilles Vuidel
  */
 public final class AlphaParamMetric implements Serializable {
     
@@ -24,14 +24,26 @@ public final class AlphaParamMetric implements Serializable {
     private double p = 0.05;
     private double beta = 1.0;
 
+    /**
+     * @return alpha = -Math.log(p) / d;
+     */
     public double getAlpha() {
         return alpha;
     }
 
+    /**
+     * @return beta the exponent of the capacity
+     */
     public double getBeta() {
         return beta;
     }
     
+    /**
+     * Set the parameters and calculate alpha
+     * @param d the distance
+     * @param p the probability
+     * @param beta the exponent of the capacity
+     */
     public void setParams(double d, double p, double beta) {
         this.d = d;
         this.p = p;
@@ -39,6 +51,10 @@ public final class AlphaParamMetric implements Serializable {
         alpha = -Math.log(p) / d;
     }
     
+    /**
+     * Set the parameters and calculate alpha
+     * @param params map containing the 3 parameters
+     */
     public void setParams(Map<String, Object> params) {
         if(params.containsKey(DIST)) {
             d = ((Number)params.get(DIST)).doubleValue();
@@ -59,6 +75,9 @@ public final class AlphaParamMetric implements Serializable {
         alpha = -Math.log(p) / d;
     }
 
+    /**
+     * @return the parameters name and value
+     */
     public LinkedHashMap<String, Object> getParams() {
         LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(DIST, d);
@@ -67,14 +86,11 @@ public final class AlphaParamMetric implements Serializable {
         return params;
     }
     
+    /**
+     * @param project not used
+     * @return DistProbaPanel for editing parameters
+     */
     public ParamPanel getParamPanel(Project project) {
         return new DistProbaPanel(d, p, beta);
-    }
-
-    public void setParamFromDetailName(String detailName) {
-        d = Double.parseDouble(detailName.substring(detailName.indexOf(DIST) + DIST.length(), detailName.indexOf("_"+PROBA)));
-        p = Double.parseDouble(detailName.substring(detailName.indexOf(PROBA) + PROBA.length(), detailName.indexOf("_"+BETA)));
-        beta = Double.parseDouble(detailName.substring(detailName.indexOf(BETA) + BETA.length()));
-        alpha = -Math.log(p) / d;
     }
 }

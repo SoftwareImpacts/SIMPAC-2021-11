@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -12,19 +8,20 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.PreCalcMetric;
 
 /**
- *
- * @author gvuidel
+ * Integral Index of Connectivity metric.
+ * 
+ * @author Gilles Vuidel
  */
 public class IICMetric extends GlobalMetric implements PreCalcMetric<Node> {
 
-    private transient double indice;
+    private transient double metric;
 
     @Override
-    public Double [] calcIndice(GraphGenerator g) {
-        return new Double[]{indice / Math.pow(Project.getArea(), 2)};
+    public Double [] calcMetric(GraphGenerator g) {
+        return new Double[]{metric / Math.pow(Project.getArea(), 2)};
     }
 
-
+    @Override
     public String getShortName() {
         return "IIC";
     }
@@ -35,7 +32,7 @@ public class IICMetric extends GlobalMetric implements PreCalcMetric<Node> {
     }
 
     @Override
-    public Double calcPartIndice(Node node, GraphGenerator g) {
+    public Double calcPartMetric(Node node, GraphGenerator g) {
         double sum = 0;
 
         DijkstraPathFinder finder = new DijkstraPathFinder(g.getGraph(), node, DijkstraPathFinder.NBEDGE_WEIGHTER);
@@ -48,7 +45,7 @@ public class IICMetric extends GlobalMetric implements PreCalcMetric<Node> {
 
     @Override
     public void mergePart(Object part) {
-        indice += (Double)part;
+        metric += (Double)part;
     }
     
     @Override
@@ -58,7 +55,7 @@ public class IICMetric extends GlobalMetric implements PreCalcMetric<Node> {
 
     @Override
     public void startCalc(GraphGenerator g) {
-        indice = 0;
+        metric = 0;
     }
 
     @Override

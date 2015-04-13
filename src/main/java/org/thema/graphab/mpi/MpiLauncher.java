@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.thema.graphab.mpi;
 
 import java.io.File;
@@ -17,11 +14,16 @@ import org.thema.parallel.mpi.MainMPI;
 import org.thema.parallel.mpi.OpenMPIInterface;
 
 /**
- *
- * @author gvuidel
+ * Start point for MPI execution.
+ * 
+ * @author Gilles Vuidel
  */
 public class MpiLauncher extends MainMPI {
 
+    /**
+     * Creates a new MpiLauncher passing command line argument
+     * @param args command line argument from public static void main method
+     */
     public MpiLauncher(String[] args) {
         super(new OpenMPIInterface(), args);
     }
@@ -36,7 +38,7 @@ public class MpiLauncher extends MainMPI {
     }
 
     @Override
-    public void initWorker(String [] args) throws Exception {
+    public void initWorker(String [] args) throws IOException  {
         if(args.length < 2 || !args[0].equals("--project")) {
             throw new IllegalArgumentException();
         }

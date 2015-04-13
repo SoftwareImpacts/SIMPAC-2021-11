@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.metric.global;
 
@@ -16,8 +12,10 @@ import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.PreCalcMetric;
 
 /**
- *
- * @author gvuidel
+ * Probability of Connectivity Circuit version.
+ * The shortest path is replaced by the resistance of the circuit.
+ * 
+ * @author Gilles Vuidel
  */
 public class PCCircMetric extends GlobalMetric implements PreCalcMetric<Node> {
 
@@ -26,7 +24,7 @@ public class PCCircMetric extends GlobalMetric implements PreCalcMetric<Node> {
     private Circuit circuit;
     
     @Override
-    public Double calcPartIndice(Node n1, GraphGenerator g) {
+    public Double calcPartMetric(Node n1, GraphGenerator g) {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(n1);
         for(Node n2 : g.getNodes()) {
@@ -37,7 +35,7 @@ public class PCCircMetric extends GlobalMetric implements PreCalcMetric<Node> {
     }
 
     @Override
-    public Double[] calcIndice(GraphGenerator g) {
+    public Double[] calcMetric(GraphGenerator g) {
         return new Double[]{metric};
     }
 
@@ -68,10 +66,6 @@ public class PCCircMetric extends GlobalMetric implements PreCalcMetric<Node> {
         return "PCCirc";
     }
     
-    public void setParams(double d, double p, double beta) {
-        alphaParam.setParams(d, p, beta);
-    }
-    
     @Override
     public void setParams(Map<String, Object> params) {
         alphaParam.setParams(params);
@@ -85,11 +79,6 @@ public class PCCircMetric extends GlobalMetric implements PreCalcMetric<Node> {
     @Override
     public ParamPanel getParamPanel(Project project) {
         return alphaParam.getParamPanel(project);
-    }
-
-    @Override
-    public void setParamFromDetailName(String detailName) {
-        alphaParam.setParamFromDetailName(detailName);
     }
     
     @Override

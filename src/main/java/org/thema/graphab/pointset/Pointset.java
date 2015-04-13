@@ -6,7 +6,8 @@ import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.links.Linkset;
 
 /**
- *
+ * A set of points connected to nearest patch with distance defined by a linkset.
+ * The class is serialized in the xml project file.
  * @author Gilles Vuidel
  */
 public class Pointset {
@@ -20,6 +21,15 @@ public class Pointset {
 
     private transient List<DefaultFeature> features;
 
+    /**
+     * Creates a new Pointset.
+     * The calculation, saving and loading of the pointset is done by the Project class.
+     * 
+     * @param name the name of the pointset
+     * @param linkset the linkset associated
+     * @param maxCost the max distance for agregating point attributes to patches or 0
+     * @param agregType the type of agregation : AG_NONE or AG_SUM
+     */
     public Pointset(String name, Linkset linkset, double maxCost, int agregType) {
         this.name = name;
         this.cost = linkset;
@@ -27,26 +37,48 @@ public class Pointset {
         this.agregType = agregType;
     }
 
+    /**
+     * Returns the features representing the point set.
+     * {@link#setFeatures} must be called before
+     * @return the features representing the point set or null
+     */
     public List<DefaultFeature> getFeatures() {
         return features;
     }
 
+    /**
+     * Set the features representing the point set.
+     * @param features 
+     */
     public void setFeatures(List<DefaultFeature> features) {
         this.features = features;
     }
 
+    /**
+     * @return the linkset associated with this point set
+     */
     public Linkset getLinkset() {
         return cost;
     }
 
+    /**
+     * @return the max distance for agregating point attributes to patches or 0
+     */
     public double getMaxCost() {
         return maxCost;
     }
 
+    /**
+     * @return the name of the point set
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Return true if agregType != AG_NONE and maxCost > 0
+     * @return true if point set fields are summarized in patches
+     */
     public boolean isAgreg() {
         return agregType != AG_NONE && maxCost > 0;
     }
@@ -56,6 +88,9 @@ public class Pointset {
         return name;
     }
 
+    /**
+     * @return a String containing informations about this point set
+     */
     public String getInfo() {
         return "Name : " + name + "\nLinkset : " + cost.getName();
     }
