@@ -10,7 +10,7 @@ import org.thema.graphab.Project;
 import org.thema.graphab.Project.Method;
 import org.thema.graphab.graph.DeltaGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphGenerator.PathFinder;
+import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
@@ -30,7 +30,7 @@ public class DeltaPCMetric extends AbstractPathMetric {
     }
 
     @Override
-    public Double calcPartMetric(PathFinder finder, GraphGenerator g) {
+    public Double calcPartMetric(GraphPathFinder finder, GraphGenerator g) {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         for(Node node : finder.getComputedNodes()) { 
@@ -56,7 +56,7 @@ public class DeltaPCMetric extends AbstractPathMetric {
                 Node remNode = (Node) remElem;
                 intra = Math.pow(Project.getPatchCapacity(remNode), 2);
                 GraphGenerator parentGraph = ((DeltaGraphGenerator)g).getParentGraph();
-                PathFinder pathFinder = parentGraph.getPathFinder(parentGraph.getNode((Feature) remNode.getObject()));
+                GraphPathFinder pathFinder = parentGraph.getPathFinder(parentGraph.getNode((Feature) remNode.getObject()));
                 double srcCapa = Project.getPatchCapacity(remNode);
                 for(Node node : pathFinder.getComputedNodes()) {
                     if (node.getObject() != remNode.getObject()) {

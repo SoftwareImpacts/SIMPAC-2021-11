@@ -11,7 +11,7 @@ import org.thema.data.feature.Feature;
 import org.thema.graph.pathfinder.Path;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphGenerator.PathFinder;
+import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
@@ -20,12 +20,12 @@ import org.thema.graphab.metric.ParamPanel;
  * 
  * @author Gilles Vuidel
  */
-public class BCLocalMetric extends AbstractBCLocalMetric<PathFinder> {
+public class BCLocalMetric extends AbstractBCLocalMetric<GraphPathFinder> {
 
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
     
     @Override
-    public HashMap<Object, Double> calcPartMetric(PathFinder finder, GraphGenerator g) {
+    public HashMap<Object, Double> calcPartMetric(GraphPathFinder finder, GraphGenerator g) {
         HashMap<Object, Double> result = new HashMap<>();
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         for(Node node : finder.getComputedNodes()) {

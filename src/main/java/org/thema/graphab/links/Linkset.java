@@ -90,7 +90,7 @@ public class Linkset {
     private transient HashMap<MultiKey, double[]> intraLinks;
     
     /**
-     * Jeu de lien en distance cout
+     * Jeu de lien en distance cout à partir des codes
      * @param name
      * @param type
      * @param costs
@@ -102,15 +102,7 @@ public class Linkset {
      */
     public Linkset(String name, int type, double[] costs, int type_length, boolean realPaths, 
             boolean removeCrossPatch, double distMax, double coefSlope) {
-        this.name = name;
-        this.type = type;
-        this.type_dist = COST;
-        this.type_length = type_length;
-        this.costs = Arrays.copyOf(costs, costs.length);
-        this.realPaths = realPaths;
-        this.removeCrossPatch = removeCrossPatch;
-        this.distMax = distMax;
-        this.coefSlope = coefSlope;
+        this(name, type, costs, null, type_length, realPaths, removeCrossPatch, distMax, coefSlope);
     }
 
     /**
@@ -144,20 +136,43 @@ public class Linkset {
      */
     public Linkset(String name, int type, int type_length, boolean realPaths, 
             boolean removeCrossPatch, double distMax, File extCostFile, double coefSlope) {
+        this(name, type, null, extCostFile, type_length, realPaths, removeCrossPatch, distMax, coefSlope);
+    }
+    
+    /**
+     * Jeu de lien en distance cout à partir des codes ou cout externe
+     * @param name
+     * @param type
+     * @param costs
+     * @param type_length
+     * @param realPaths
+     * @param removeCrossPatch
+     * @param distMax 
+     * @param coefSlope 
+     */
+    public Linkset(String name, int type, double[] costs, File extCostFile, int type_length, boolean realPaths, 
+            boolean removeCrossPatch, double distMax, double coefSlope) {
+        if(costs != null && extCostFile != null) {
+            throw new IllegalArgumentException();
+        }
         this.name = name;
         this.type = type;
         this.type_dist = COST;
         this.type_length = type_length;
+        if(costs != null) {
+            this.costs = Arrays.copyOf(costs, costs.length);
+        }
         this.realPaths = realPaths;
         this.removeCrossPatch = removeCrossPatch;
         this.distMax = distMax;
         this.coefSlope = coefSlope;
-        
-        String prjPath = Project.getProject().getDirectory().getAbsolutePath();
-        if(extCostFile.getAbsolutePath().startsWith(prjPath)) {
-            this.extCostFile = new File(extCostFile.getAbsolutePath().substring(prjPath.length()+1));
-        } else {
-            this.extCostFile = extCostFile.getAbsoluteFile();
+        if(extCostFile != null) {
+            String prjPath = Project.getProject().getDirectory().getAbsolutePath();
+            if(extCostFile.getAbsolutePath().startsWith(prjPath)) {
+                this.extCostFile = new File(extCostFile.getAbsolutePath().substring(prjPath.length()+1));
+            } else {
+                this.extCostFile = extCostFile.getAbsoluteFile();
+            }
         }
     }
     
@@ -179,12 +194,22 @@ public class Linkset {
         this.type_dist = CIRCUIT;
         this.type_length = COST_LENGTH;
         this.distMax = Double.NaN;
-        this.costs = costs;
-        this.extCostFile = extCostFile;
+        if(costs != null) {
+            this.costs = Arrays.copyOf(costs, costs.length);
+        }
         this.realPaths = false;
         this.removeCrossPatch = false;
         this.optimCirc = optimCirc;
         this.coefSlope = coefSlope;
+        
+        if(extCostFile != null) {
+            String prjPath = Project.getProject().getDirectory().getAbsolutePath();
+            if(extCostFile.getAbsolutePath().startsWith(prjPath)) {
+                this.extCostFile = new File(extCostFile.getAbsolutePath().substring(prjPath.length()+1));
+            } else {
+                this.extCostFile = extCostFile.getAbsoluteFile();
+            }
+        }
     }
 
     public double getDistMax() {
@@ -332,11 +357,11 @@ public class Linkset {
                     info += bundle.getString("LinksetPanel.costRadioButton.text") + "\n";
                     for(Integer code : Project.getProject().getCodes()) {
                         info += code + " : " + costs[code] + "\n";
-            }
+                    }
                 }       
                 if(isUseSlope()) {
                     info += "Use slope : " + coefSlope + "\n";
-        }
+                }
                 break;
         }
         
@@ -372,11 +397,43 @@ public class Linkset {
     }
     
     /**
+     * Return a new virtual linkset for circuit calculation based on cost linkset.
+     * Return this if this linkset is already a circuit linkset
+     * @return a new linkset or this
+     * @throws IllegalArgumentException if the linkset is euclidean
+     */
+    public Linkset getCircuitVersion() {
+        if(getType_dist() == Linkset.CIRCUIT) {
+            return this;
+        } else if(getType_dist() == Linkset.EUCLID) {
+            throw new IllegalArgumentException("No circuit from euclidean linkset");
+        }
+        
+        return new Linkset(name+"_circ", type, costs, extCostFile, true, coefSlope);
+    }
+    
+    /**
+     * Return a new virtual linkset for cost calculation based on circuit linkset.
+     * Return this if this linkset is already a cost linkset
+     * @return a new linkset or this
+     * @throws IllegalArgumentException if the linkset is euclidean
+     */
+    public Linkset getCostVersion() {
+        if(getType_dist() == Linkset.COST) {
+            return this;
+        } else if(getType_dist() == Linkset.EUCLID) {
+            throw new IllegalArgumentException("No cost from euclidean linkset");
+        }
+        
+        return new Linkset(name+"_cost", type, costs, extCostFile, COST_LENGTH, true, false, Double.NaN, coefSlope);
+    }
+    
+    /**
      * Compute all links defined in this linkset.<br/>
      * This method is called only once by the project
-     * @param prj
+     * @param prj the project
      * @param progressBar
-     * @throws Throwable 
+     * @throws IOException 
      */
     public void compute(Project prj, ProgressBar progressBar) throws IOException {
         progressBar.setNote("Create linkset " + getName());
@@ -397,7 +454,7 @@ public class Linkset {
     
     /**
      * Compute and return corridors of all paths existing in this linkset
-     * @param prj
+     * @param prj the project
      * @param progressBar
      * @param maxCost maximal cost distance 
      * @return list of features where id equals id path and geometry is a polygon or multipolygon
@@ -434,7 +491,7 @@ public class Linkset {
     
     private Geometry calcCircuitCorridor(Project prj, Path path, double maxCost) throws IOException {
         CircuitRaster circuit = prj.getRasterCircuit(this);
-        CircuitRaster.ODCircuit odCircuit = circuit.getODCircuit(path.getPatch1(), path.getPatch2());
+        CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(path.getPatch1(), path.getPatch2());
         return odCircuit.getCorridor(maxCost);
     }
 
@@ -534,9 +591,10 @@ public class Linkset {
         new ParallelFExecutor(task).executeAndWait();
 
         if(task.isCanceled()) {
-            return ;
+            throw new CancellationException();
         }
-        System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
+        
+        Logger.getLogger(Linkset.class.getName()).info("Temps écoulé : " + (System.currentTimeMillis()-start));
         
         paths = links;
     }
@@ -603,20 +661,20 @@ public class Linkset {
         new ParallelFExecutor(task).executeAndWait();
 
         if(task.isCanceled()) {
-            return ;
+            throw new CancellationException();
         }
-        System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
+        Logger.getLogger(Linkset.class.getName()).info("Temps écoulé : " + (System.currentTimeMillis()-start));
         paths = links;
     }
-    
+       
     private void calcCircuitLinkset(final Project prj, ProgressBar progressBar) throws IOException {
         final boolean allLinks = getTopology() == Linkset.COMPLETE;
         final List<Path> links = Collections.synchronizedList(new ArrayList<Path>(prj.getPatches().size() * 4));
         Path.newSetOfPaths();
         long start = System.currentTimeMillis();
-        final CircuitRaster circuit = costs != null ? 
-                    new CircuitRaster(prj, prj.getImageSource(), costs, true, optimCirc, coefSlope)
-                    : new CircuitRaster(prj, prj.getExtRaster(getExtCostFile()), true, optimCirc, coefSlope);
+        final CircuitRaster circuit = prj.getRasterCircuit(this);
+        final FileWriter w = new FileWriter(new File(prj.getDirectory(), getName() + "-stats.csv"));
+        w.write("Id1,Id2,Area1,Area2,W,H,T,Iter,InitSErr,R,MErr,M2Err,SErr\n");
         ParallelFTask task = new AbstractParallelFTask(progressBar) {
             @Override
             protected Object execute(int start, int end) {
@@ -634,12 +692,27 @@ public class Linkset {
                     } else {
                         for(Integer dId : prj.getPlanarLinks().getNeighbors(orig)) {
                             if(((Integer)orig.getId()) < dId) {
-                                double r = circuit.getODCircuit(orig, prj.getPatch(dId)).getR();
+                                DefaultFeature dest = prj.getPatch(dId);
+                                long t1 = System.currentTimeMillis();
+                                CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(orig, dest);
+                                odCircuit.solve();
+                                long t2 = System.currentTimeMillis();
+                                double r = odCircuit.getR();
+                                synchronized (Linkset.this) {
+                                    try {
+                                        w.write(orig.getId() + "," + dest.getId() + "," + Project.getPatchArea(orig) + "," + Project.getPatchArea(dest) + "," +
+                                                odCircuit.getZone().getWidth() + "," + odCircuit.getZone().getHeight() + "," + (t2 - t1) / 1000.0 + "," + odCircuit.getNbIter() + "," +
+                                                odCircuit.getInitErrSum() + "," + r + "," + odCircuit.getErrMax() + "," + odCircuit.getErrMaxWithoutFirst() + "," + odCircuit.getErrSum() + "\n");
+                                        w.flush();
+                                    } catch (IOException ex) {
+                                        Logger.getLogger(Linkset.class.getName()).log(Level.WARNING, null, ex);
+                                    }
+                                }
                                 links.add(new Path(orig, prj.getPatch(dId), r, Double.NaN));
                             }
                         }
                     }
-
+                    
                     incProgress(1);
                 }
                     
@@ -659,11 +732,12 @@ public class Linkset {
         };
 
         new ParallelFExecutor(task).executeAndWait();
-
+        w.close();
         if(task.isCanceled()) {
-            return ;
+            throw new CancellationException();
         }
-        System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
+        
+        Logger.getLogger(Linkset.class.getName()).info("Temps écoulé : " + (System.currentTimeMillis()-start));
         
         paths = links;
     }
@@ -714,7 +788,7 @@ public class Linkset {
         
         new ParallelFExecutor(task).executeAndWait();
         if(task.isCanceled())  {
-            return;
+            throw new CancellationException();
         }
         intraLinks = mapIntraLinks;
     }

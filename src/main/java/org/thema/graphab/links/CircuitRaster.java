@@ -1,15 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.links;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BandedSampleModel;
 import java.awt.image.DataBuffer;
@@ -21,7 +18,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Vector;
@@ -54,11 +50,20 @@ public final class CircuitRaster {
     private final double resolution;
     private final Project project;
     
+    // solver parameters
+    public static double prec = 1e-6;
+    public static Vector.Norm errNorm = Vector.Norm.Two;
+    public enum InitVector {
+        ANY, FLAT, DIST
+    }
+    public static InitVector initVector = InitVector.FLAT;
+       
+    
     public CircuitRaster(Project prj, Raster codeRaster, double [] cost, boolean con8, boolean optimCirc, double coefSlope) throws IOException {
         this.project = prj;
         this.rasterPatch = project.getRasterPatch();
         this.costRaster = codeRaster;
-        this.cost = cost;
+        this.cost = Arrays.copyOf(cost, cost.length);
         this.coefSlope = coefSlope;
         this.con8 = con8;
         this.optimCirc = optimCirc;
@@ -71,8 +76,19 @@ public final class CircuitRaster {
         this(prj, costRaster, null, con8, optimCirc, coefSlope);
     }
     
-    public ODCircuit getODCircuit(Feature patch1, Feature patch2) {
-        
+    public ODCircuit getODCircuit(Coordinate c1, Coordinate c2) {
+        Rectangle compZone = new Rectangle(0, 0, rasterPatch.getWidth(), rasterPatch.getHeight());
+        Coordinate tc1 = project.getSpace2grid().transform(c1, new Coordinate());
+        Coordinate tc2 = project.getSpace2grid().transform(c2, new Coordinate());
+        Point p1 = new Point((int)tc1.x, (int)tc1.y);
+        Point p2 = new Point((int)tc2.x, (int)tc2.y);
+
+        WritableRaster rasterZone = checkConnexity(p1, p2, compZone);
+
+        return createCircuit(c1, c2, compZone, rasterZone);
+    }
+    
+    public PatchODCircuit getODCircuit(Feature patch1, Feature patch2) {
         Rectangle compZone = new Rectangle(0, 0, rasterPatch.getWidth(), rasterPatch.getHeight());
         Rectangle zone = compZone;
         Raster rasterZone = rasterPatch;
@@ -94,14 +110,100 @@ public final class CircuitRaster {
                     connex = rasterZone != null;
                 }
                 if(!connex) {
-                    System.out.println("Two patches (" + patch1 + "-" + patch2 + ") are not connected with rect : " + zone + " -> expand rect");
+                    Logger.getLogger(CircuitRaster.class.getName()).info("Two patches (" + patch1 + "-" + patch2 + ") are not connected with rect : " + zone + " -> expand rect");
+                }
+            }
+        } else {
+            rasterZone = checkConnexity(patch1, patch2, zone);
+        }
+        // la connexité est bonne, maintenant on supprime les trous dans les taches
+        WritableRaster rasterZone2 = checkConnexity(patch2, patch1, zone);
+        for(int y = rasterZone2.getMinY(); y < rasterZone2.getMinY()+rasterZone2.getHeight(); y++) {
+            for(int x = rasterZone2.getMinX(); x < rasterZone2.getMinX()+rasterZone2.getWidth(); x++) {
+                if(rasterZone2.getSample(x, y, 0) != rasterZone.getSample(x, y, 0)) {
+                    rasterZone2.setSample(x, y, 0, -1);
                 }
             }
         }
-        return createCircuit(patch1, patch2, zone, rasterZone);
+
+        return (PatchODCircuit) createCircuit(patch1, patch2, zone, rasterZone2);
     }
     
-    private Raster checkConnexity(Feature patch1, Feature patch2, Rectangle zone) {
+    private WritableRaster checkConnexity(Point p1, Point p2, Rectangle zone) {
+        final int w = rasterPatch.getWidth();
+        
+        boolean connex = false;
+        
+        WritableRaster rasterZone = Raster.createBandedRaster(DataBuffer.TYPE_INT, zone.width, zone.height, 1, new java.awt.Point(zone.x, zone.y));
+        for(int x = 0; x < zone.width; x++) {
+            rasterZone.setSample(x+zone.x, zone.y, 0, -1);
+            rasterZone.setSample(x+zone.x, (int)zone.getMaxY()-1, 0, -1);
+        }
+        for(int y = 0; y < zone.height; y++) {
+            rasterZone.setSample(zone.x, y+zone.y, 0, -1);
+            rasterZone.setSample((int)zone.getMaxX()-1, y+zone.y, 0, -1);
+        }
+        
+        LinkedList<Integer> queue = new LinkedList<>();
+        queue.add(p1.y*w+p1.x);
+        rasterZone.setSample(p1.x, p1.y, 0, 1);
+        rasterZone.setSample(p2.x, p2.y, 0, 1);
+        
+        final int [] dir, xd, yd;
+        if(con8) {
+            dir = new int[] {-w-1, -w, -w+1, -1, +1, +w-1, +w, +w+1};
+            xd = new int[] {-1, 0, +1, -1, +1, -1, 0, +1};
+            yd = new int[] {-1, -1, -1, 0, 0, +1, +1, +1};
+
+        } else {
+            dir = new int[] {-w, -1, +1, +w};
+            xd = new int[] {0, -1, +1, 0};
+            yd = new int[] {-1, 0, 0, +1};
+        }
+        
+        while(!queue.isEmpty()) {
+            final int ind = queue.poll();
+            final int x = ind % w;
+            final int y = ind / w;
+            rasterZone.setSample(x, y, 0, 1);
+            for(int d = 0; d < dir.length; d++) {
+                final int x1 = x+xd[d];
+                final int y1 = y+yd[d];
+                if(p2.x == x1 && p2.y == y1) {
+                    connex = true;
+                } else {
+                    if(rasterPatch.getSample(x1, y1, 0) != -1 && rasterZone.getSample(x1, y1, 0) == 0) {
+                        rasterZone.setSample(x1, y1, 0, 1);
+                        queue.add(ind+dir[d]);
+                    }
+                }
+            }
+        }
+        
+        int nbRem = 0;
+        for(int y = 0; y < zone.height; y++) {
+            for (int x = 0; x < zone.width; x++) {
+                if (rasterZone.getSample(x+zone.x, y+zone.y, 0) == 0) {
+                    rasterZone.setSample(x+zone.x, y+zone.y, 0, -1);
+                    if (rasterPatch.getSample(x+zone.x, y+zone.y, 0) != -1) {
+                        nbRem++;
+                    }
+                }
+            }
+        }
+        
+        if(nbRem > 0) {
+            System.out.println(nbRem + " pixels are not connected for points (" + p1 + "-" + p2 + ") with rect : " + zone + " -> they are ignored");
+        }
+        
+        if(connex) {
+            return rasterZone;
+        } else {
+            return null;
+        }
+    }
+    
+    private WritableRaster checkConnexity(Feature patch1, Feature patch2, Rectangle zone) {
         final int id1 = (Integer)patch1.getId();
         final int id2 = (Integer)patch2.getId();
         final int w = rasterPatch.getWidth();
@@ -119,13 +221,17 @@ public final class CircuitRaster {
         }
         
         LinkedList<Integer> queue = new LinkedList<>();
-        Geometry gEnv = new GeometryFactory().toGeometry(patch1.getGeometry().getEnvelopeInternal());
+        Envelope env = patch1.getGeometry().getEnvelopeInternal();
+        env.expandToInclude(patch2.getGeometry().getEnvelopeInternal());
+        Geometry gEnv = new GeometryFactory().toGeometry(env);
         gEnv.apply(project.getSpace2grid());
-        Envelope env = gEnv.getEnvelopeInternal();
+        env = gEnv.getEnvelopeInternal();
         for(int i = (int)env.getMinY(); i <= env.getMaxY(); i++) {
             for (int j = (int)env.getMinX(); j <= env.getMaxX(); j++) {
                 if(rasterPatch.getSample(j, i, 0) == id1) {
                     queue.add(i*w+j);
+                    rasterZone.setSample(j, i, 0, 1);
+                } else if(rasterPatch.getSample(j, i, 0) == id2) {
                     rasterZone.setSample(j, i, 0, 1);
                 }
             }
@@ -150,11 +256,12 @@ public final class CircuitRaster {
             rasterZone.setSample(x, y, 0, 1);
             for(int d = 0; d < dir.length; d++) {
                 int val = rasterPatch.getSample(x+xd[d], y+yd[d], 0);
-                if(val != -1 && rasterZone.getSample(x+xd[d], y+yd[d], 0) == 0) {
-                    rasterZone.setSample(x+xd[d], y+yd[d], 0, 1);
-                    queue.add(ind+dir[d]);
-                    if(val == id2) {
-                        connex = true;
+                if(val == id2) {
+                    connex = true;
+                } else {
+                    if(val != -1 && rasterZone.getSample(x+xd[d], y+yd[d], 0) == 0) {
+                        rasterZone.setSample(x+xd[d], y+yd[d], 0, 1);
+                        queue.add(ind+dir[d]);
                     }
                 }
             }
@@ -183,19 +290,30 @@ public final class CircuitRaster {
         }
     }
     
-    private ODCircuit createCircuit(Feature patch1, Feature patch2, Rectangle zone, Raster rasterZone) {
-        final int id1 = (Integer)patch1.getId();
-        final int id2 = (Integer)patch2.getId();
-        if(id1 == id2) {
-            throw new IllegalArgumentException("Same patches");
+    private ODCircuit createCircuit(Object p1, Object p2, Rectangle zone, Raster rasterZone) {
+        final int id1, id2;
+        final Point po1, po2;
+        final boolean isPatch = p1 instanceof Feature;
+        // is it patch
+        if(isPatch) {
+            id1 = (Integer)((Feature)p1).getId();
+            id2 = (Integer)((Feature)p2).getId();
+            po1 = po2 = null;
+            if(id1 == id2) {
+                throw new IllegalArgumentException("Same patches");
+            }
+        } else {
+            id1 = id2 = -2;
+            Coordinate tc1 = project.getSpace2grid().transform((Coordinate)p1, new Coordinate());
+            Coordinate tc2 = project.getSpace2grid().transform((Coordinate)p2, new Coordinate());
+            po1 = new Point((int)tc1.x, (int)tc1.y);
+            po2 = new Point((int)tc2.x, (int)tc2.y);
         }
         
         final int w = zone.width;
         final int h = zone.height;
 
         int [] img2mat = new int[w*h];
-        int [] mat2img = new int[w*h];
-        Arrays.fill(mat2img, -1);
         int i = 2;
         for(int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
@@ -204,13 +322,16 @@ public final class CircuitRaster {
                     img2mat[ind] = -1;
                 } else if (rasterZone.getSample(x+zone.x, y+zone.y, 0) == -1) {
                     img2mat[ind] = -1;
-                } else if (rasterPatch.getSample(x+zone.x, y+zone.y, 0) == id1) {
+                } else if (isPatch && rasterPatch.getSample(x+zone.x, y+zone.y, 0) == id1) {
                     img2mat[ind] = 0;
-                } else if (rasterPatch.getSample(x+zone.x, y+zone.y, 0) == id2) {
+                } else if (isPatch && rasterPatch.getSample(x+zone.x, y+zone.y, 0) == id2) {
+                    img2mat[ind] = 1;
+                } else if (!isPatch && po1.x == x+zone.x && po1.y == y+zone.y) {
+                    img2mat[ind] = 0;
+                } else if (!isPatch && po2.x == x+zone.x && po2.y == y+zone.y) {
                     img2mat[ind] = 1;
                 } else {
                     img2mat[ind] = i;
-                    mat2img[i] = ind;
                     i++;
                 }
             }
@@ -234,6 +355,8 @@ public final class CircuitRaster {
         int [][] tab = new int[size][];
         TreeSet<Integer> indPatch1 = new TreeSet<>();
         TreeSet<Integer> indPatch2 = new TreeSet<>();
+        TreeSet<Integer> buf = new TreeSet<>();
+        int [] colsInt = new int[10];
         for(int y = 1; y < h-1; y++) {
             for (int x = 1; x < w-1; x++) {
                 int indImg = y*w+x;
@@ -241,42 +364,65 @@ public final class CircuitRaster {
                 if (indMat == -1) {
                     continue;
                 }
-                TreeSet<Integer> cols = indMat == 0 ? indPatch1 : indMat == 1 ? indPatch2 : new TreeSet<Integer>();
-                for (int d : dir) {
-                    int indMat2 = img2mat[indImg + d];
-                    if (indMat2 != -1 && indMat2 != indMat) {
-                        cols.add(indMat2);
+                
+                if(isPatch) {
+                    buf.clear();
+                    TreeSet<Integer> cols = indMat == 0 ? indPatch1 : indMat == 1 ? indPatch2 : buf;
+                    for (int d : dir) {
+                        int indMat2 = img2mat[indImg + d];
+                        if (indMat2 != -1 && indMat2 != indMat) {
+                            cols.add(indMat2);
+                        }
                     }
-                }
-                if (indMat >= 2) {
-                    if (cols.isEmpty()) {
+                    if (!isPatch || indMat >= 2) {
+                        if (cols.isEmpty()) {
+                            throw new RuntimeException("Isolated pixel at (" + x + "," + y +")");
+                        }
+                        cols.add(indMat);
+                        int [] col = new int[cols.size()];
+                        i = 0;
+                        for (Integer ind : cols) {
+                            col[i++] = ind;
+                        }
+                        tab[indMat] = col;
+                    }
+                } else {
+                    
+                    i = 0;
+                    for (int d : dir) {
+                        int indMat2 = img2mat[indImg + d];
+                        if (indMat2 != -1 && indMat2 != indMat) {
+                            colsInt[i++] = indMat2;
+                        }
+                    }
+                    
+                    if (i == 0) {
                         throw new RuntimeException("Isolated pixel at (" + x + "," + y +")");
                     }
-                    cols.add(indMat);
-                    int [] col = new int[cols.size()];
-                    i = 0;
-                    for (Integer ind : cols) {
-                        col[i++] = ind;
-                    }
+                    colsInt[i++] = indMat;
+                    int [] col = Arrays.copyOf(colsInt, i);
+                    Arrays.sort(col);
                     tab[indMat] = col;
+                    
                 }
             }
         }
-        indPatch1.add(0);
-        int [] col = new int[indPatch1.size()];
-        i = 0;
-        for(Integer ind : indPatch1) {
-            col[i++] = ind;
+        if(isPatch) {
+            indPatch1.add(0);
+            int [] col = new int[indPatch1.size()];
+            i = 0;
+            for(Integer ind : indPatch1) {
+                col[i++] = ind;
+            }
+            tab[0] = col;
+            indPatch2.add(1);
+            col = new int[indPatch2.size()];
+            i = 0;
+            for(Integer ind : indPatch2) {
+                col[i++] = ind;
+            }
+            tab[1] = col;
         }
-        tab[0] = col;
-        indPatch2.add(1);
-        col = new int[indPatch2.size()];
-        i = 0;
-        for(Integer ind : indPatch2) {
-            col[i++] = ind;
-        }
-        tab[1] = col;
-        
         CompRowMatrix A = new CompRowMatrix(size, size, tab);
         for(int y = 1; y < h-1; y++) {
             for (int x = 1; x < w-1; x++) {
@@ -317,15 +463,25 @@ public final class CircuitRaster {
 //        if(Im.norm(Norm.One) > 1e-10) {
 //            throw new RuntimeException("A columns are not null" + Im.norm(Norm.One));
 //        }
-        ODCircuit circuit = new ODCircuit();
-        circuit.zone = zone;
-        circuit.patch1 = patch1;
-        circuit.patch2 = patch2;
-        circuit.img2mat = img2mat;
-        circuit.mat2img = mat2img;
-        circuit.tabMatrix = tab;
-        circuit.A = A;
-        return circuit;
+        if(isPatch) {
+            PatchODCircuit circuit = new PatchODCircuit();
+            circuit.zone = zone;
+            circuit.patch1 = (Feature) p1;
+            circuit.patch2 = (Feature) p2;
+            circuit.img2mat = img2mat;
+            circuit.tabMatrix = tab;
+            circuit.A = A;   
+            return circuit;
+        } else {
+            PointODCircuit circuit = new PointODCircuit();
+            circuit.zone = zone;
+            circuit.c1 = (Coordinate) p1;
+            circuit.c2 = (Coordinate) p2;
+            circuit.img2mat = img2mat;
+            circuit.tabMatrix = tab;
+            circuit.A = A;   
+            return circuit;
+        }
     }
 
     private double getCost(int x, int y) {
@@ -336,34 +492,19 @@ public final class CircuitRaster {
         return Math.abs(demRaster.getSampleDouble(x+xd, y+yd, 0) - demRaster.getSampleDouble(x, y, 0)) 
                 / (wd * resolution);
     }
-    
-    public final class ODCircuit {
-        private Rectangle zone;
-        private Feature patch1, patch2;
-        private int [] img2mat, mat2img;
-        private int[][] tabMatrix;
-        private CompRowMatrix A;
-        private DenseVector U, Z;
-        
+
+    public abstract class ODCircuit {
+        protected Rectangle zone;
+        protected int [] img2mat;
+        protected int[][] tabMatrix;
+        protected CompRowMatrix A;
+        protected DenseVector U, Z;
+        private int nbIter;
+        private double initErrSum;
         
         public double getR() {
             solve();
             return U.get(0) - U.get(1);
-        }
-        
-        public Geometry getCorridor(double maxCost) {
-            Raster r = getCorridorMap(maxCost);
-            Geometry corridor = Project.vectorize(r, new Envelope(0, zone.width, 0, zone.height), 1);
-            corridor = AffineTransformation.translationInstance(zone.x, zone.y).transform(corridor);
-            corridor = project.getGrid2space().transform(corridor);
-            List<Geometry> geomTouches = new ArrayList<>();
-            for(int i = 0; i < corridor.getNumGeometries(); i++) {
-                if (corridor.getGeometryN(i).intersects(patch1.getGeometry()) &&
-                        corridor.getGeometryN(i).intersects(patch2.getGeometry())) {
-                    geomTouches.add(corridor.getGeometryN(i));
-                }
-            }
-            return new GeometryFactory().buildGeometry(geomTouches);
         }
         
         public Raster getCorridorMap(double maxCost) {
@@ -381,45 +522,6 @@ public final class CircuitRaster {
             
             return corridor;
         }
-        
-//        public Raster getCorridorMap(double part) {
-//            solve(); 
-//            WritableRaster corridor = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_BYTE, zone.width, zone.height, 1), null);
-//            LinkedList<Integer> queue = new LinkedList<Integer>();
-//
-//            queue.add(0);
-//            
-//            while(!queue.isEmpty()) {
-//                int indMat = queue.poll();
-//                double tot = 0;
-//                TreeMapList<Double, Integer> distribCurrent = new TreeMapList<Double, Integer>();
-//                for(int ind : tabMatrix[indMat])
-//                    if(ind >= 2) {
-//                        double i = (U.get(indMat) - U.get(ind)) * -A.get(indMat, ind);
-//                        if(i > 0) {
-//                            distribCurrent.putValue(i, ind);
-//                            tot += i;
-//                        }
-//                    }
-//
-//                double sum = 0;
-//                for(Double cur : distribCurrent.descendingKeySet()) {
-//                    for(Integer ind : distribCurrent.get(cur)) {
-//                        if(sum > tot*part)
-//                            continue;
-//                        sum += cur;
-//                        int indImg = mat2img[ind];
-//                        if(corridor.getSample(indImg%zone.width, indImg/zone.width, 0) == 0) {
-//                            queue.add(ind);
-//                            corridor.setSample(indImg%zone.width, indImg/zone.width, 0, 1);
-//                        }
-//                    }
-//                }
-//            
-//            }
-//            
-//            return corridor;
-//        }
         
         public Raster getCurrentMap() {
             solve(); 
@@ -440,7 +542,6 @@ public final class CircuitRaster {
                             }
                         }
                         current.setSample(x, y, 0, sum/2);
-                        //                    corridor.setSample(x, y, 0, U.get(indMat));
                     }
                 }
             }
@@ -466,12 +567,44 @@ public final class CircuitRaster {
             return Zres.add(-1, Z).norm(Vector.Norm.Infinity);
         }
         
+        public double getErrMaxWithoutFirst() {
+            DenseVector Zres = new DenseVector(getSize());
+            A.mult(U, Zres);
+            Zres = new DenseVector(Arrays.copyOfRange(Zres.getData(), 2, Zres.size()));
+            
+            return Zres.add(-1, new DenseVector(Arrays.copyOfRange(Z.getData(), 2, Z.size())))
+                    .norm(Vector.Norm.Infinity);
+        }
+        
+        public double getErrSum() {
+            return getErrSum(U);
+        }
+        
+        private double getErrSum(DenseVector U) {
+            DenseVector Zres = new DenseVector(getSize());
+            A.mult(U, Zres);
+            return Zres.add(-1, Z).norm(Vector.Norm.Two);
+        }
+
+        public int getNbIter() {
+            return nbIter;
+        }
+
+        public double getInitErrSum() {
+            return initErrSum;
+        }
+        
+        protected abstract Coordinate getCoord1();
+        protected abstract Coordinate getCoord2();
+        
         public synchronized DenseVector solve() {
             if(U != null) {
                 return U;
             }
             
             Preconditioner P = new DiagonalPreconditioner(getSize());
+//            Preconditioner P = new AMG();
+//            Preconditioner P = new ICC(A.copy());
             P.setMatrix(A);
 
             // Z vector is null but the 2 first elements
@@ -481,45 +614,110 @@ public final class CircuitRaster {
 
             // Starting solution U
             double [] v = new double[getSize()];
-    //        Arrays.fill(v, 1);
             v[0] = 1;
             v[1] = -1;
-
-//            // permet d'améliorer la précision d'un facteur 10 et un peu le temps d'exécution mais pas dans tous les cas...
-//            // TODO à tester plus en profondeur
-//            Coordinate c1 = project.getSpace2grid().transform(patch1.getGeometry().getCentroid().getCoordinate(), new Coordinate());
-//            Coordinate c2 = project.getSpace2grid().transform(patch2.getGeometry().getCentroid().getCoordinate(), new Coordinate());  
-//            Coordinate c = new Coordinate();
-//            for(int y = 0; y < zone.height; y++) 
-//                for(int x = 0; x < zone.width; x++) {
-//                    c.x = x + zone.x;
-//                    c.y = y + zone.y;
-//                    int indImg = y*zone.width+x;
-//                    int indMat = img2mat[indImg];
-//                    if(indMat < 2)
-//                        continue;
-//                    v[indMat] = (c.distance(c2) - c.distance(c1)) / (c.distance(c1) + c.distance(c2));
-//                }
-
-
-            U = new DenseVector(v);
-
+            
+            double [] vOptim = Arrays.copyOf(v, v.length);
+            if(initVector != InitVector.FLAT) {
+                // permet d'améliorer la précision d'un facteur 10 et un peu le temps d'exécution mais pas dans tous les cas...
+                Coordinate c1 = project.getSpace2grid().transform(getCoord1(), new Coordinate());
+                Coordinate c2 = project.getSpace2grid().transform(getCoord2(), new Coordinate());  
+                Coordinate c = new Coordinate();
+                for(int y = 0; y < zone.height; y++) { 
+                    for(int x = 0; x < zone.width; x++) {
+                        c.x = x + zone.x;
+                        c.y = y + zone.y;
+                        int indImg = y*zone.width+x;
+                        int indMat = img2mat[indImg];
+                        if(indMat < 2) {
+                            continue;
+                        }
+                        vOptim[indMat] = (c.distance(c2) - c.distance(c1)) / (c.distance(c1) + c.distance(c2));
+                    }
+                }
+            }
+            
+            if(initVector == InitVector.DIST || (initVector == InitVector.ANY && getErrSum(new DenseVector(v)) > getErrSum(new DenseVector(vOptim)))) {
+                if(initVector == InitVector.ANY) {
+                    Logger.getLogger(ODCircuit.class.getName()).info("Use distance initial vector");
+                }
+                U = new DenseVector(vOptim);
+            } else {
+                if(initVector == InitVector.ANY) {
+                    Logger.getLogger(ODCircuit.class.getName()).info("Use flat initial vector");
+                }
+                U = new DenseVector(v);
+            }
+                
+            initErrSum = getErrSum(U);
             IterativeSolver solver = new CG(U);
             solver.setPreconditioner(P);
-            solver.setIterationMonitor(new DefaultIterationMonitor(100000, 1e-6, 1e-50, 1e+5));
+            DefaultIterationMonitor mon = new DefaultIterationMonitor(100000, prec, 1e-50, 1e+5);
+            mon.setNormType(errNorm);
+            solver.setIterationMonitor(mon);
+            long t = System.currentTimeMillis();
             try {
                 // Start the solver, and check for problems
                 solver.solve(A, Z, U);
             } catch (IterativeSolverNotConvergedException ex) {
-                Logger.getLogger(org.thema.graphab.metric.Circuit.class.getName()).log(Level.SEVERE, null, ex);
                 throw new RuntimeException(ex);
             }
+            nbIter = mon.iterations();
             
+            Logger.getLogger(ODCircuit.class.getName()).info("Row size " + A.numRows() + " - Solve in " + ((System.currentTimeMillis()-t) / 1000.0) + " s " 
+                    + nbIter + " iter. - Err max " + getErrMax() + " - Err sum " + getErrSum());
             return U;
         }
 
         private int getIndMat(int x, int y) {
             return img2mat[y*zone.width+x];
         }
+    }    
+    
+    public final class PatchODCircuit extends ODCircuit{
+
+        private Feature patch1, patch2;
+        
+        
+        public Geometry getCorridor(double maxCost) {
+            Raster r = getCorridorMap(maxCost);
+            Geometry corridor = Project.vectorize(r, new Envelope(0, zone.width, 0, zone.height), 1);
+            corridor = AffineTransformation.translationInstance(zone.x, zone.y).transform(corridor);
+            corridor = project.getGrid2space().transform(corridor);
+            List<Geometry> geomTouches = new ArrayList<>();
+            for(int i = 0; i < corridor.getNumGeometries(); i++) {
+                if (corridor.getGeometryN(i).intersects(patch1.getGeometry()) &&
+                        corridor.getGeometryN(i).intersects(patch2.getGeometry())) {
+                    geomTouches.add(corridor.getGeometryN(i));
+                }
+            }
+            return new GeometryFactory().buildGeometry(geomTouches);
+        }
+
+        @Override
+        protected Coordinate getCoord1() {
+            return patch1.getGeometry().getCentroid().getCoordinate();
+        }
+
+        @Override
+        protected Coordinate getCoord2() {
+            return patch2.getGeometry().getCentroid().getCoordinate();
+        }
+    }    
+    
+    public final class PointODCircuit extends ODCircuit {
+
+        private Coordinate c1, c2;
+
+        @Override
+        protected Coordinate getCoord1() {
+            return c1;
+        }
+
+        @Override
+        protected Coordinate getCoord2() {
+            return c2;
+        }
+      
     }    
 }

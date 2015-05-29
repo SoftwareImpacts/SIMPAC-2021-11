@@ -386,7 +386,6 @@ public class Circuit {
             solver.solve(A, Z, U);
             return U;
         } catch (IterativeSolverNotConvergedException ex) {
-            Logger.getLogger(Circuit.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
     }

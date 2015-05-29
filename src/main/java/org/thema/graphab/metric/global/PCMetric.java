@@ -6,7 +6,7 @@ import java.util.Map;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphGenerator.PathFinder;
+import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
@@ -20,7 +20,7 @@ public class PCMetric extends AbstractPathMetric {
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
     
     @Override
-    public Double calcPartMetric(PathFinder finder, GraphGenerator g) {
+    public Double calcPartMetric(GraphPathFinder finder, GraphGenerator g) {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         for(Node node : finder.getComputedNodes()) {
@@ -44,6 +44,12 @@ public class PCMetric extends AbstractPathMetric {
         return "PC";
     }
     
+    /**
+     * Set the parameters and calculate alpha
+     * @param d the distance
+     * @param p the probability
+     * @param beta the exponent of the capacity
+     */
     public void setParams(double d, double p, double beta) {
         alphaParam.setParams(d, p, beta);
     }

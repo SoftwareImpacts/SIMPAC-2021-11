@@ -2,7 +2,7 @@
 package org.thema.graphab.metric.global;
 
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphGenerator.PathFinder;
+import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.metric.PreCalcMetric;
 
 
@@ -11,7 +11,7 @@ import org.thema.graphab.metric.PreCalcMetric;
  * 
  * @author Gilles Vuidel
  */
-public abstract class AbstractPathMetric extends GlobalMetric implements PreCalcMetric<PathFinder> {
+public abstract class AbstractPathMetric extends GlobalMetric implements PreCalcMetric<GraphPathFinder> {
 
     /** the metric result */
     protected transient double metric;

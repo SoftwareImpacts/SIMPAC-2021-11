@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.graph;
 
@@ -15,8 +11,10 @@ import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
 
 /**
- *
- * @author gvuidel
+ * A graph where one element can be removed and put back, one at a time.
+ * Used for delta metric calculation.
+ * 
+ * @author Gilles Vuidel
  */
 public class DeltaGraphGenerator extends GraphGenerator {
 
@@ -26,6 +24,11 @@ public class DeltaGraphGenerator extends GraphGenerator {
     private Graph remComp;
     private List<Graph> addComps;
 
+    /**
+     * Creates a new DeltaGraphGenerator based on the graph gen.
+     * Dupplicates the parent graph.
+     * @param gen the parent graph
+     */
     public DeltaGraphGenerator(GraphGenerator gen) {
         super(gen, "Delta");
         this.gen = gen;
@@ -33,15 +36,30 @@ public class DeltaGraphGenerator extends GraphGenerator {
         graph = gen.dupGraphWithout(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }
 
+    /**
+     * @return the current removed element, a node or an edge or null if no element is currently removed.
+     */
     public Graphable getRemovedElem() {
         return removedElem;
     }
 
+    /**
+     * @return the parent graph
+     */
     public GraphGenerator getParentGraph() {
         return gen;
     }
 
+    /**
+     * Removes the element elem from this graph. Only one element can be removed at a time.
+     * 
+     * @param elem the element to remove, a node or an edge
+     * @throws IllegalStateException if an element is already removed
+     */
     public void removeElem(Graphable elem) {
+        if(removedElem != null) {
+            throw new IllegalStateException("An element is already removed");
+        }
         Graph gr = null;
         for(Iterator<Graph> it = getComponents().iterator(); it.hasNext() && gr == null; ) {
             Graph g = it.next();
@@ -80,7 +98,13 @@ public class DeltaGraphGenerator extends GraphGenerator {
         node2PathNodes = null;        
     }
 
+    /**
+     * If an element has been removed, put back the element in the graph.
+     */
     public void reset() {
+        if(removedElem == null) {
+            return;
+        }
         if(removedElem instanceof Edge) {
             Edge e = (Edge) removedElem;
             graph.getEdges().add(e);

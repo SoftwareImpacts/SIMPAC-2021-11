@@ -465,8 +465,9 @@ public class LinksetPanel extends javax.swing.JPanel {
         lengthRadioButton.setEnabled(!euclidRadioButton.isSelected());
         costDistRadioButton.setEnabled(!euclidRadioButton.isSelected());
         removeCrossPatchCheckBox.setEnabled(!euclidRadioButton.isSelected());
-        useDEMCheckBox.setEnabled(!euclidRadioButton.isSelected() && Project.getProject().isDemExist());
-        coefSlopeSpinner.setEnabled(!euclidRadioButton.isSelected() && Project.getProject().isDemExist());
+        Project prj = Project.getProject();
+        useDEMCheckBox.setEnabled(!euclidRadioButton.isSelected() && prj != null && prj.isDemExist());
+        coefSlopeSpinner.setEnabled(!euclidRadioButton.isSelected() && prj != null && prj.isDemExist());
     }//GEN-LAST:event_distanceRadioButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

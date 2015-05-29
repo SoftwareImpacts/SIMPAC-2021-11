@@ -12,7 +12,6 @@ import java.util.List;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.thema.common.ProgressBar;
 import org.thema.common.collection.TreeMapList;
-import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
@@ -21,7 +20,7 @@ import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
- * Parallel task testing the adding of one patch (from a set of patches) on a graph and calculates a metric for each.
+ * Parallel task testing the adding of one patch at a time (from a set of patches) on a graph and calculates a metric for each.
  * Works in threaded and MPI environment.
  * @author Gilles Vuidel
  */

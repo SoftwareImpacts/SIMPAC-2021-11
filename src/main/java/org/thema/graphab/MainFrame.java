@@ -500,7 +500,7 @@ public class MainFrame extends javax.swing.JFrame {
             @Override
             public void run() {
                 try {
-                    project.addGraph(new GraphGenerator(dlg.name, dlg.cost, dlg.type, dlg.threshold, dlg.intraPatchDist), true);
+                    project.addGraph(new GraphGenerator(dlg.name, dlg.linkset, dlg.type, dlg.threshold, dlg.intraPatchDist), true);
                 } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
@@ -528,7 +528,7 @@ public class MainFrame extends javax.swing.JFrame {
             }
         } catch (IOException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured_while_loading_data_!\n") + ex.getLocalizedMessage());
+            JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured_while_loading_data_!") + ex.getLocalizedMessage());
             return;
         }
 

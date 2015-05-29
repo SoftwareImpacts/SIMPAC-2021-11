@@ -24,17 +24,18 @@ import org.thema.graphab.Project;
  */
 public class EuclidePathFinder implements SpacePathFinder {
 
-    Project project;
+    private Project project;
 
     public EuclidePathFinder(Project project) {
         this.project = project;
     }
 
     /**
-     * Calcule la distance euclidienne à partir du point p vers tous les 
+     * Calcule la distance euclidienne à partir du point p vers toutes les 
      * destinations dests
      * @return les distances euclidiennes de p vers les destinations
      */
+    @Override
     public List<double[]> calcPaths(Coordinate p, List<Coordinate> dests) {
         List<double[]> distances = new ArrayList<>();
         for(Coordinate dest : dests) {
@@ -86,14 +87,17 @@ public class EuclidePathFinder implements SpacePathFinder {
         return paths;
     }
 
+    @Override
     public HashMap<Feature, Path> calcPaths(Feature oPatch, double maxCost, boolean realPath, boolean all) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public HashMap<Feature, Path> calcPaths(Feature oPatch, Collection<Feature> dPatch) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public double[] calcPathNearestPatch(Point p) {
         Feature patch = nearestPatch(p);
         double dist = p.distance(patch.getGeometry());

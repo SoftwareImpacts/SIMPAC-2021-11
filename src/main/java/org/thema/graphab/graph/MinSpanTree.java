@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.graph;
 
@@ -15,23 +11,20 @@ import org.geotools.graph.build.basic.BasicGraphBuilder;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
+import org.thema.graph.pathfinder.EdgeWeighter;
 import org.thema.graphab.links.Path;
 
 /**
  * Calculate Minimum Spanning Tree
- * based on Prim's algorithm
- * @author gvuidel
+ * based on Prim's algorithm.
+ * @author Gilles Vuidel
  */
 public class MinSpanTree {
 
-    public interface Weighter {
-        public double getWeight(Edge e);
-    }
-
-    class SpanNode implements Comparable {
-        Node node;
-        Edge edge;
-        double minWeight;
+    private class SpanNode implements Comparable {
+        private Node node;
+        private Edge edge;
+        private double minWeight;
 
         public SpanNode(Node node, Edge edge, double minWeight) {
             this.node = node;
@@ -39,6 +32,7 @@ public class MinSpanTree {
             this.minWeight = minWeight;
         }
         
+        @Override
         public int compareTo(Object o) {
             SpanNode n = (SpanNode) o;
             if(n == this) {
@@ -64,18 +58,28 @@ public class MinSpanTree {
         
     }
 
-    PriorityQueue<SpanNode> queue;
-    List<Edge> mstEdges;
-    Set<Node> passNodes;
+    private PriorityQueue<SpanNode> queue;
+    private List<Edge> mstEdges;
+    private Set<Node> passNodes;
 
-    Graph graph;
-    Weighter weighter;
+    private Graph graph;
+    private EdgeWeighter weighter;
 
-    public MinSpanTree(Graph graph, Weighter weighter) {
+    /**
+     * Creates a new MinSpanTree based on graph and edgeweighter
+     * @param graph the graph, must be connected (only one component)
+     * @param weighter the edge weighter
+     */
+    public MinSpanTree(Graph graph, EdgeWeighter weighter) {
         this.graph = graph;
         this.weighter = weighter;
     }
 
+    /**
+     * Calculates the minimum spanning tree.
+     * @return a graph representing the minimum spnning tree
+     * @throws IllegalArgumentException if the graph is not connected
+     */
     public Graph calcMST() {
         queue = new PriorityQueue<>();
         mstEdges = new ArrayList<>();
@@ -100,7 +104,7 @@ public class MinSpanTree {
         }
 
         if(passNodes.size() < graph.getNodes().size()) {
-            throw new RuntimeException("Impossible de calculer le MST complet le graphe est il connexe ?");
+            throw new IllegalArgumentException("Impossible de calculer le MST complet le graphe est il connexe ?");
         }
 
         BasicGraphBuilder gen = new BasicGraphBuilder();
@@ -117,7 +121,6 @@ public class MinSpanTree {
             edge.setObject(e.getObject());
             gen.addEdge(edge);
         }
-
 
         return gen.getGraph();
     }

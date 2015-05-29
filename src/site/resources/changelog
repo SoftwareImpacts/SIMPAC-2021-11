@@ -1,3 +1,10 @@
+version 1.3.25
+- Graph modularity execution has been optimized
+- Point set : distance matrix can be calculated for raster circuit
+- Point set : works with circuit linkset (attach to the nearest patch in least cost and set cost to 0)
+- CLI : rempatch and remlink add id selection
+- CLI : add command --create for creating new project
+- CLI : --linkset command : add parameter name, remcrosspatch and extcost
 version 1.3.24 (13/04/2015)
 - remove CBC metric from plugin metric
 version 1.3.23 (30/03/2015)

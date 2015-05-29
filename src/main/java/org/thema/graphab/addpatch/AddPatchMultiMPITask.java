@@ -16,7 +16,6 @@ import java.util.Set;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.thema.common.ProgressBar;
 import org.thema.common.collection.TreeMapList;
-import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
@@ -26,7 +25,7 @@ import org.thema.parallel.AbstractParallelTask;
 
 /**
  * Parallel task testing the adding of a set of patches on a graph and calculates a metric for each.
- * This task is useful only for grid sampling with multi simultaneous patch adding and in MPI environment.
+ * This task is useful only for grid sampling with multi simultaneous patch adding in MPI environment.
  * Works only on MPI environment.
  * @author Gilles Vuidel
  */

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeSet;
+import no.uib.cipr.matrix.Vector;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
@@ -21,6 +22,8 @@ import org.thema.data.IOImage;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.addpatch.AddPatchCommand;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.graph.GraphPathFinder;
+import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.DeltaMetricTask;
@@ -53,7 +56,7 @@ public class ProjectTest {
     public static void setUpClass() throws Exception {
         // init 2 threads
         Config.setNodeClass(ProjectTest.class);
-        Config.setParallelProc(6);
+        Config.setParallelProc(2);
         // load all metrics
         Project.loadPluginMetric(ProjectTest.class.getClassLoader());
 
@@ -69,6 +72,11 @@ public class ProjectTest {
         xstream.alias("Linkset", Linkset.class);
         xstream.alias("Graph", GraphGenerator.class);
         Project refPrj = (Project) xstream.fromXML(new File("target/test-classes/org/thema/graphab/TestProject.xml"));
+        
+        // for circuit linkset
+        CircuitRaster.errNorm = Vector.Norm.Two;
+        CircuitRaster.prec = 1e-6;
+        CircuitRaster.initVector = CircuitRaster.InitVector.FLAT;
         
         // create linksets
         for(Linkset costDist : refPrj.getLinksets()) {
@@ -133,7 +141,7 @@ public class ProjectTest {
             put("plan_cout10_keep_links", 78962.696132);
             put("plan_cout1_len", 27588.8605768);
             put("plan_euclid", 377561.1225223806);
-            put("plan_circ", 409.4970877191959);
+            put("plan_circ", 409.4970207847323);
         }};
         HashMap<String, Double> sumDists = new HashMap<String, Double>() {{
             put("comp_cout10", 1858377.81871097);
@@ -225,7 +233,7 @@ public class ProjectTest {
         GraphGenerator graph = project.getGraph("graph_comp_cout10");
         Linkset linkset = project.getLinkset("comp_cout10_all");
         for(Node node : graph.getNodes()) {
-            GraphGenerator.PathFinder pathFinder = graph.getPathFinder(node);
+            GraphPathFinder pathFinder = graph.getPathFinder(node);
             for(Path p : linkset.getPaths()) {
                 if(p.getPatch1().equals(node.getObject())) {
                     assertTrue("Compare direct link with path with intrapatch between " + node.getObject() + " and " + p.getPatch2(), p.getCost() <= pathFinder.getCost(graph.getNode(p.getPatch2()))*(1+1e-11));

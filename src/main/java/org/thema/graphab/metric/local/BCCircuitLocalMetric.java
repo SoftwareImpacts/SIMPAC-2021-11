@@ -7,6 +7,7 @@ import java.util.Map;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.Circuit;
 import org.thema.graphab.metric.ParamPanel;
@@ -18,14 +19,14 @@ import org.thema.graphab.metric.PreCalcMetric;
  * 
  * @author gvuidel
  */
-public class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphGenerator.PathFinder> {
+public class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphPathFinder> {
       
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
     
     private transient Circuit circuit;
 
     @Override
-    public Map<Object, Double> calcPartMetric(GraphGenerator.PathFinder finder, GraphGenerator g) {
+    public Map<Object, Double> calcPartMetric(GraphPathFinder finder, GraphGenerator g) {
         HashMap<Object, Double> result = new HashMap<>();
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         Node n1 = finder.getNodeOrigin();

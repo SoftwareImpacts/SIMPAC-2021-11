@@ -94,6 +94,7 @@ import org.thema.drawshape.style.RasterStyle;
 import org.thema.graph.shape.GraphGroupLayer;
 import org.thema.graphab.CapaPatchDialog.CapaPatchParam;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.EuclidePathFinder;
 import org.thema.graphab.links.Links;
@@ -588,7 +589,13 @@ public final class Project {
 
 //        monitor.setNote("Point outside patch...");
 
-        SpacePathFinder pathFinder = getPathFinder(exoData.getLinkset());
+        Linkset linkset = exoData.getLinkset();
+        boolean circuit = false;
+        if(linkset.getType_dist() == Linkset.CIRCUIT) {
+            linkset = linkset.getCostVersion();
+            circuit = true;
+        }
+        SpacePathFinder pathFinder = getPathFinder(linkset);
 
         int nErr = 0;
         for(DefaultFeature f : features) {
@@ -601,9 +608,9 @@ public final class Project {
                 try {
                     double [] res = pathFinder.calcPathNearestPatch((Point)f.getGeometry());
                     DefaultFeature p = getPatch((int)res[0]);
-                    double cost = exoData.getLinkset().isCostLength() ? res[1] : res[2];
+                    double cost = linkset.isCostLength() ? res[1] : res[2];
                     f.setAttribute(EXO_IDPATCH, p.getId());
-                    f.setAttribute(EXO_COST, cost);
+                    f.setAttribute(EXO_COST, circuit ? 0 : cost);
                 } catch(Exception e) {
                     nErr++;
                     Logger.getLogger(Project.class.getName()).log(Level.WARNING, "Chemin non calculé pour le point " + f.getId(), e);
@@ -1042,13 +1049,16 @@ public final class Project {
     public void addGraph(GraphGenerator graphGen, boolean save) throws IOException, SchemaException {
         ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Create_graph..."));
         progressBar.setIndeterminate(true);
-        graphs.put(graphGen.getName(), graphGen);
         
         if(save) {
             DefaultFeature.saveFeatures(graphGen.getComponentFeatures(),
                     new File(dir, graphGen.getName() + "-voronoi.shp"), getCRS());
 
             graphGen.setSaved(true);
+        }
+        
+        graphs.put(graphGen.getName(), graphGen);
+        if(save) {
             save();
         }
 
@@ -1398,7 +1408,7 @@ public final class Project {
             for(Node n : (Collection<Node>)comp.getNodes()) {
                 DefaultFeature patch = (DefaultFeature)n.getObject();
                 if(alpha > 0) {
-                    GraphGenerator.PathFinder pathfinder = graph.getPathFinder(n);
+                    GraphPathFinder pathfinder = graph.getPathFinder(n);
                     for(Node n2 : (Collection<Node>)comp.getNodes()) {
                         capa += getPatchCapacity(n2)*Math.exp(-alpha*pathfinder.getCost(n2)) / comp.getNodes().size();
                     }

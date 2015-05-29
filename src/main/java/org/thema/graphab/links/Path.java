@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.thema.graphab.links;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -19,8 +14,9 @@ import org.thema.graphab.Project;
 import org.thema.graphab.util.DistanceOp;
 
 /**
- *
- * @author gib
+ * A path of a linkset ie. a link between 2 patches.
+ * 
+ * @author Gilles Vuidel
  */
 public class Path extends DefaultFeature {
     public static final String COST_ATTR = "Dist";
@@ -99,8 +95,6 @@ public class Path extends DefaultFeature {
             return coords[coords.length-1];
         }
     }
-    
-    
     
     public static Feature getCommonPatch(Path p1, Path p2) {
         if(p1.getPatch1() == p2.getPatch1() || p1.getPatch1() == p2.getPatch2()) {

@@ -3,7 +3,7 @@ package org.thema.graphab.metric.global;
 
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphGenerator.PathFinder;
+import org.thema.graphab.graph.GraphPathFinder;
 
 /**
  * Graph Diameter metric.
@@ -14,7 +14,7 @@ import org.thema.graphab.graph.GraphGenerator.PathFinder;
 public class GDMetric extends AbstractPathMetric {
 
     @Override
-    public Double calcPartMetric(PathFinder finder, GraphGenerator g) {
+    public Double calcPartMetric(GraphPathFinder finder, GraphGenerator g) {
         double max = 0;
         for(Node node : finder.getComputedNodes()) {
             if (finder.getCost(node) > max) {

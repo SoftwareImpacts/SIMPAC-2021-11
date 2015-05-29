@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2015 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+
 package org.thema.graphab.graph;
 
 import java.util.HashMap;
@@ -25,17 +10,23 @@ import org.geotools.graph.structure.Node;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
-import org.thema.graphab.graph.Modularity.Cluster;
+import org.thema.graph.Modularity.Cluster;
 import org.thema.graphab.links.Path;
 
 /**
- *
+ * Creates a graph from the modularity partitionning.
+ * Based on the parent graph and keep only intra cluster edges of the clustering.
  * @author Gilles Vuidel
  */
 public class ModGraphGenerator extends GraphGenerator {
     
     private Map<Integer, Integer> clusters;
     
+    /**
+     * Creates a new graph based on the graph gen but keeping only intra cluster edges.
+     * @param gen the parent graph
+     * @param cluster the partitionning
+     */
     public ModGraphGenerator(GraphGenerator gen, Set<Cluster> cluster) {
         super(gen, "mod"+cluster.size());
         clusters = new HashMap<>();

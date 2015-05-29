@@ -18,21 +18,19 @@ import org.thema.graphab.links.Path;
 /**
  * GraphGenerator which can add new patch in a graph without creates it in the project (soft adding).
  * 
- * 
  * @author Gilles Vuidel
  */
 public class AddPatchGraphGenerator extends GraphGenerator {
-    private GraphGenerator gen;
+
     private Node addedElem;
 
     /**
      * Creates a new AddPatchGraphGenerator based on graph gen.
-     * The graph gen is dupplicate.
+     * The graph gen is dupplicated.
      * @param gen the underlying graph
      */
     public AddPatchGraphGenerator(GraphGenerator gen) {
         super(gen, "AddPatch");
-        this.gen = gen;
         this.addedElem = null;
                 
         if(gen.isIntraPatchDist()) {

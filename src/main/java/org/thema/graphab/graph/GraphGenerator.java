@@ -1,15 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
  
 package org.thema.graphab.graph;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
-import java.awt.Color;
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,166 +20,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
-import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import org.geotools.feature.SchemaException;
 import org.geotools.graph.build.basic.BasicGraphBuilder;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
 import org.geotools.graph.structure.basic.BasicGraph;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import org.thema.common.Config;
 import org.thema.common.ProgressBar;
 import org.thema.common.collection.HashMap2D;
 import org.thema.common.collection.HashMapList;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
-import org.thema.data.feature.FeatureGetter;
-import org.thema.drawshape.layer.FeatureLayer;
-import org.thema.drawshape.style.CircleStyle;
-import org.thema.drawshape.style.FeatureStyle;
-import org.thema.drawshape.style.LineStyle;
-import org.thema.drawshape.style.table.FeatureAttributeCollection;
-import org.thema.graph.pathfinder.DijkstraPathFinder;
-import org.thema.graph.pathfinder.DijkstraPathFinder.DijkstraNode;
-import org.thema.graph.pathfinder.DijkstraPathFinder.EdgeWeighter;
+import org.thema.graph.pathfinder.EdgeWeighter;
 import org.thema.graph.shape.GraphGroupLayer;
 import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.metric.Circuit;
-import org.thema.graphab.metric.DistProbaPanel;
-import org.thema.graphab.util.SerieFrame;
 
 /**
  *
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class GraphGenerator {
 
-    public class PathFinder {
-        private Node nodeOrigin;
-        private DijkstraPathFinder pathfinder;
-        private HashMap<Node, DijkstraNode> computedNodes;
-
-        private PathFinder(Node nodeOrigin) {
-            this(nodeOrigin, Double.NaN);
-        }
-
-        private PathFinder(Node nodeOrigin, double maxCost, double alpha) {
-            this.nodeOrigin = nodeOrigin;
-            pathfinder = getFlowPathFinder(nodeOrigin, maxCost, alpha);
-            computedNodes = new HashMap<>();
-            for(DijkstraPathFinder.DijkstraNode dn : pathfinder.getComputedNodes()) {
-                computedNodes.put(dn.node, dn);
-            }
-        }
-        
-        private PathFinder(Node nodeOrigin, double maxCost) {
-            this.nodeOrigin = nodeOrigin;
-            pathfinder = getDijkstraPathFinder(getPathNodes(nodeOrigin), maxCost);
-            computedNodes = new HashMap<>();
-            for(DijkstraPathFinder.DijkstraNode dn : pathfinder.getComputedNodes()) {
-                if(dn.node.getObject() instanceof Node) {
-                    Node node = (Node) dn.node.getObject();
-                    DijkstraNode oldDn = computedNodes.get(node);
-                    if(oldDn == null || dn.cost < oldDn.cost) {
-                        computedNodes.put(node, dn);
-                    }
-                } else {
-                    computedNodes.put(dn.node, dn);
-                }
-            }
-        }
-
-        public Double getCost(Node node) {
-            DijkstraNode dn = computedNodes.get(node);
-            if(dn == null) {
-                return null;
-            }
-            return dn.cost;
-        }
-
-        public org.thema.graph.pathfinder.Path getPath(Node node) {
-            org.thema.graph.pathfinder.Path p = pathfinder.getPath(computedNodes.get(node));
-            if(isIntraPatchDist() && p != null) {
-                List<Edge> edges = new ArrayList<>(p.getEdges().size()/2+1);
-                for(Edge e : p.getEdges()) {
-                    if(e.getObject() instanceof Edge) {
-                        edges.add((Edge)e.getObject());
-                    }
-                }
-                p = new org.thema.graph.pathfinder.Path(nodeOrigin, edges);
-            } 
-            return p;
-        }
-
-        public Node getNodeOrigin() {
-            return nodeOrigin;
-        }
-        
-        public Collection<Node> getComputedNodes() {
-            return computedNodes.keySet();
-        }
-        
-        protected DijkstraPathFinder getDijkstraPathFinder(List<Node> startNodes, double maxCost) {
-            DijkstraPathFinder finder = new DijkstraPathFinder(getPathGraph(), startNodes, new EdgeWeighter() {
-                @Override
-                public double getWeight(Edge e) {
-                    if(e.getObject() instanceof Path) {
-                        return GraphGenerator.this.getCost((Path)e.getObject());
-                    } else if(e.getObject() instanceof Edge) {
-                        return GraphGenerator.this.getCost((Edge)e.getObject());
-                    } else if(intraPatchDist) {
-                        double [] w = (double [])e.getObject();
-                        return getLinkset().isCostLength() ? w[0] : w[1];
-                    } else {
-                        throw new RuntimeException("Unknown object in the graph");
-                    }
-                }
-                @Override
-                public double getToGraphWeight(double dist) { 
-                    return 0; 
-                }
-            });
-
-            finder.calculate(maxCost);
-
-            return finder;
-        }
-        
-        protected DijkstraPathFinder getFlowPathFinder(Node startNode, double maxCost, final double alpha) {
-
-            DijkstraPathFinder finder = new DijkstraPathFinder(getGraph(), startNode, new EdgeWeighter() {
-                @Override
-                public double getWeight(Edge e) {
-                    return -Math.log(Project.getPatchCapacity(e.getNodeA()) * Project.getPatchCapacity(e.getNodeB())
-                            / Math.pow(Project.getTotalPatchCapacity(), 2))
-                            + alpha * ((Path) e.getObject()).getCost();
-                }
-
-                @Override
-                public double getToGraphWeight(double dist) {
-                    return 0;
-                }
-            });
-
-            finder.calculate(maxCost);
-
-            return finder;
-        }
-    }
-
+    /** Type of graph without threshold ie. keep all links of the linkset */
     public static final int COMPLETE = 1;
+    /** Type of graph with an edge threshold ie. keep links which cost (or distance) is less than threshold */
     public static final int THRESHOLD = 2;
+    /** Minimum Spanning Tree graph. */
     public static final int MST = 3;
 
     private String name;
@@ -202,6 +67,14 @@ public class GraphGenerator {
     private transient GraphGroupLayer layers;
     protected transient HashMapList<Node, Node> node2PathNodes;
 
+    /**
+     * Creates a new graph.
+     * @param name name of the graph
+     * @param linkset the linkset
+     * @param type the type of graph : COMPLETE, THRESHOLD or MST
+     * @param threshold the threshold if any
+     * @param intraPatchDist use intra patch distances for path calculation ?
+     */
     public GraphGenerator(String name, Linkset linkset, int type, double threshold, boolean intraPatchDist) {
         this.name = name;
         this.cost = linkset;
@@ -214,6 +87,11 @@ public class GraphGenerator {
         this.intraPatchDist = intraPatchDist;
     }
 
+    /**
+     * Dupplicates the graph gen and changes the name of the graph by adding prefix
+     * @param gen the graph to dupplicate
+     * @param prefix the name prefix
+     */
     public GraphGenerator(GraphGenerator gen, String prefix) {
         this.name = prefix + "_" + gen.name;
         this.cost = gen.cost;
@@ -222,10 +100,23 @@ public class GraphGenerator {
         this.intraPatchDist = gen.intraPatchDist;
     }
     
+    /**
+     * Creates a new graph, removing nodes and edges contained in the 2 collections
+     * @param gen the parent graph
+     * @param remIdNodes collection of patches id to remove
+     * @param remIdEdges ollection of links id to remove
+     */
     public GraphGenerator(GraphGenerator gen, Collection remIdNodes, Collection remIdEdges) {
         this(gen, Arrays.deepToString(remIdNodes.toArray()), Arrays.deepToString(remIdEdges.toArray()));
     }
     
+    /**
+     * Creates a new graph, removing nodes and edges contained in the 2 strings
+     * @param gen the parent graph
+     * @param remIdNodes the list of patch id to remove, separated by comma
+     * @param remIdEdges the list of link id to remove, separated by comma
+     * @see #stringToList(java.lang.String, boolean) 
+     */
     public GraphGenerator(GraphGenerator gen, String remIdNodes, String remIdEdges) {
         this.name = gen.name + "!" + remIdNodes + "!" + remIdEdges;
         this.cost = gen.cost;
@@ -235,7 +126,11 @@ public class GraphGenerator {
         this.graph = dupGraphWithout(stringToList(remIdNodes, true), stringToList(remIdEdges, false));
     }
             
-    protected GraphGenerator() {}
+    /**
+     * Creates a sub graph containing the indComp component only.
+     * @param gen the parent graph
+     * @param indComp the component index
+     */
     protected GraphGenerator(GraphGenerator gen, int indComp) {
         name = gen.name;
         cost = gen.cost;
@@ -246,10 +141,17 @@ public class GraphGenerator {
         components = Collections.singletonList(graph);
     }
 
+    /**
+     * @return true if intrapatch distances are used in pathfinder, false otherwise
+     */
     public boolean isIntraPatchDist() {
         return intraPatchDist;
     }
 
+    /**
+     * Creates, if needed, and returns the graph.
+     * @return the graph
+     */
     public synchronized Graph getGraph() {
         if(graph == null) {
             createGraph();
@@ -258,6 +160,10 @@ public class GraphGenerator {
         return graph;
     }
     
+    /**
+     * Creates, if needed, and returns the path graph.
+     * @return the path graph if intraPatchDist = true, the graph otherwise
+     */
     protected synchronized Graph getPathGraph() {
         if(pathGraph == null) {
             createPathGraph();
@@ -266,6 +172,12 @@ public class GraphGenerator {
         return pathGraph;
     }
 
+    /**
+     * Returns a list of pathgraph nodes corresponding to the graph node if intraPatchDist = true,
+     * returns the same node otherwise.
+     * @param node a graph node
+     * @return the list of pathgraph nodes corresponding to the graph node
+     */
     protected List<Node> getPathNodes(Node node) {
         if(!isIntraPatchDist()) {
             return Collections.singletonList(node);
@@ -275,10 +187,16 @@ public class GraphGenerator {
     }
 
 
+    /**
+     * @return all nodes of the graph
+     */
     public Collection<Node> getNodes() {
         return getGraph().getNodes();
     }
     
+    /**
+     * @return all edges of the graph
+     */
     public Collection<Edge> getEdges() {
         return getGraph().getEdges();
     }
@@ -286,8 +204,8 @@ public class GraphGenerator {
     /**
      * Attention version très lente
      * Parcours tous les noeuds pour trouver le bon
-     * @param patch
-     * @return 
+     * @param patch the patch
+     * @return the node representing the patch in this graph or null
      */
     public Node getNode(Feature patch) {
         for(Node n : getNodes()) {
@@ -302,8 +220,9 @@ public class GraphGenerator {
     /**
      * Attention version très lente
      * Parcours tous les noeuds pour trouver le bon
-     * @param patchId
-     * @return 
+     * @param patchId the patch identifier
+     * @return the node corresponding to the patch id in this graph
+     * @throws NoSuchElementException if no node correspond to the patch id
      */
     public Node getNode(Integer patchId) {
         for(Node n : getNodes()) {
@@ -317,8 +236,9 @@ public class GraphGenerator {
     /**
      * Attention version très lente
      * Parcours tous les noeuds pour trouver le bon
-     * @param linkId
-     * @return 
+     * @param linkId the link identifier
+     * @return the edge corresponding to the link id in this graph
+     * @throws NoSuchElementException if no edge correspond to the link id
      */
     public Edge getEdge(String linkId) {
         for(Edge e : getEdges()) {
@@ -329,6 +249,9 @@ public class GraphGenerator {
         throw new NoSuchElementException("Link id : " + linkId);
     }
 
+    /**
+     * @return all links in this graph
+     */
     public List<Path> getLinks() {
         ArrayList<Path> links = new ArrayList<>();
         for(Edge e : getEdges()) {
@@ -338,18 +261,35 @@ public class GraphGenerator {
         return links;
     }
     
+    /**
+     * @param edge
+     * @return the cost (or distance) of this edge
+     */
     public final double getCost(Edge edge) {
         return getCost((Path)edge.getObject());
     }
     
+    /**
+     * @param link
+     * @return he cost (or distance) of this link
+     */
     public final double getCost(Path link) {
         return cost.isCostLength() ? link.getCost() : link.getDist();
     }
 
+    /**
+     * 
+     * @param i the component index (start at zero)
+     * @return a new GraphGenerator representing the ith component of this graph
+     */
     public GraphGenerator getComponentGraphGen(int i) {
         return new GraphGenerator(this, i);
     }
 
+    /**
+     * Creates, if needed, and returns all graph components.
+     * @return all components of this graph
+     */
     public synchronized List<Graph> getComponents() {
         if(components == null) {
             components = partition(getGraph());
@@ -357,6 +297,11 @@ public class GraphGenerator {
         return components;
     }
 
+    /**
+     * Slow version. Test the geometry covering of each component.
+     * @param patch a patch
+     * @return the component feature containing the patch
+     */
     public DefaultFeature getComponentFeature(Feature patch) {
         for(DefaultFeature f : getComponentFeatures()) {
             if(f.getGeometry().covers(patch.getGeometry())) {
@@ -366,6 +311,10 @@ public class GraphGenerator {
         return null;
     }
 
+    /**
+     * Creates, if needed, and returns all feature components.
+     * @return all feature components of this graph
+     */
     public synchronized List<DefaultFeature> getComponentFeatures() {
         if(compFeatures == null) {
             createVoronoi();
@@ -374,18 +323,38 @@ public class GraphGenerator {
         return compFeatures;
     } 
 
-    public PathFinder getPathFinder(Node nodeOrigin) {
-         return new PathFinder(nodeOrigin);
+    /**
+     * Creates and return a pathfinder from nodeOrigin
+     * @param nodeOrigin the starting node
+     * @return the calculated pathfinder
+     */
+    public GraphPathFinder getPathFinder(Node nodeOrigin) {
+         return new GraphPathFinder(nodeOrigin, this);
     }
     
-    public PathFinder getPathFinder(Node nodeOrigin, double maxCost) {
-         return new PathFinder(nodeOrigin, maxCost);
+    /**
+     * Creates and return a pathfinder from nodeOrigin and stop calculation when the cost distance exceeds maxCost
+     * @param nodeOrigin the starting node
+     * @param maxCost maximal cost distance
+     * @return the calculated pathfinder
+     */
+    public GraphPathFinder getPathFinder(Node nodeOrigin, double maxCost) {
+         return new GraphPathFinder(nodeOrigin, maxCost, this);
     }
     
-    public PathFinder getFlowPathFinder(Node nodeOrigin, double alpha) {
-         return new PathFinder(nodeOrigin, Double.NaN, alpha);
+    /**
+     * Creates and return a pathfinder from nodeOrigin where weight are not cost distance but flows : -ln(ai*aj/A^2) + alpha*cost.
+     * @param nodeOrigin the starting node
+     * @param alpha exponential coefficient
+     * @return the calculated pathfinder
+     */
+    public GraphPathFinder getFlowPathFinder(Node nodeOrigin, double alpha) {
+         return new GraphPathFinder(nodeOrigin, Double.NaN, alpha, this);
     }
     
+    /**
+     * @return the sum of the area of the patch nodes
+     */
     public double getPatchArea() {
         double sum = 0;
         for(Object n : getGraph().getNodes()) {
@@ -394,6 +363,9 @@ public class GraphGenerator {
         return sum;
     }
     
+    /**
+     * @return the sum of the capacity of the patch nodes
+     */
     public double getPatchCapacity() {
         double sum = 0;
         for(Object n : getGraph().getNodes()) {
@@ -402,199 +374,29 @@ public class GraphGenerator {
         return sum;
     }
 
+    /**
+     * Is the shapefile of the voronoï of the graph has been saved ?
+     * @param saved 
+     */
     public void setSaved(boolean saved) {
         this.saved = saved;
     }
 
+    /**
+     * Creates, if needed, the layers and returns them.
+     * @return the layers of the graph
+     */
     public synchronized GraphGroupLayer getLayers() {
         if(layers == null) {
-            layers = new GraphGroupLayer(name, getGraph(), MainFrame.project.getCRS()) {
-                CircleStyle circleStyle;
-                {
-                    int col = 0;
-                    switch(type) {
-                        case MST:
-                            col = 0x7c7e40;
-                            break;
-                        case COMPLETE:
-                            if(cost.getTopology() == Linkset.PLANAR) {
-                                col = 0x951012;
-                            } else {
-                                col = 0xA2705E;
-                            }
-                            break;
-                        case THRESHOLD:
-                            if(cost.getTopology() == Linkset.PLANAR) {
-                                col = 0x42407E;
-                            } else {
-                                col = 0x5f91a2;
-                            }
-                            break;
-                    }
-                    edgeStyle = new LineStyle(new Color(col));
-                    getEdgeLayer().setStyle(edgeStyle);
-                    nodeStyle = new FeatureStyle(new Color(0x951012), new Color(0x212d19));
-                }
-                
-                @Override
-                public JPopupMenu getContextMenu() {
-                    JPopupMenu menu = super.getContextMenu();       
-
-                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("partition")) {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    DistProbaPanel distProbaPanel = new DistProbaPanel(1000, 0.05, 1);
-                                    int res = JOptionPane.showConfirmDialog(null, distProbaPanel, "Modularity", JOptionPane.OK_CANCEL_OPTION);
-                                    if(res != JOptionPane.OK_OPTION) {
-                                        return;
-                                    }
-                                    Modularity mod = new Modularity(GraphGenerator.this, distProbaPanel.getAlpha(), distProbaPanel.getA());
-                                    mod.partitions();
-                                    TreeMap<Integer, Double> modularities = mod.getModularities();
-                                    XYSeriesCollection series = new XYSeriesCollection();
-
-                                    XYSeries serie = new XYSeries("mod");
-                                    for(Integer n : modularities.keySet()) {
-                                        serie.add(n, modularities.get(n));
-                                    }
-                                    series.addSeries(serie);
-                                    
-                                    SerieFrame frm = new SerieFrame("Modularity - " + GraphGenerator.this.getName(),
-                                            series, "nb clusters", "modularity");
-                                    frm.pack();
-                                    frm.setVisible(true);
-                                    
-                                    new ModularityDialog(null, mod).setVisible(true);
-                                }
-                            }).start();
-                        }
-                    });
-                    
-                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix")) {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        calcODMatrix();
-                                    } catch (IOException ex) {
-                                        Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                                        JOptionPane.showMessageDialog(null, "Error : " + ex);
-                                    }
-                                }
-                            }).start();
-                        }
-                    });
-                    
-                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix_circuit")) {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        calcODMatrixCircuit();
-                                    } catch (IOException ex) {
-                                        Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                                        JOptionPane.showMessageDialog(null, "Error : " + ex);
-                                    }
-                                }
-                            }).start();
-                        }
-                    });
-                    
-                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Set_Comp_Id")) {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Project project = Project.getProject();
-                                    ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Set_Comp_Id") + "...", 
-                                            project.getPatches().size());
-                                    String attrName = "comp_" + GraphGenerator.this.getName();
-                                    DefaultFeature.addAttribute(attrName,
-                                        project.getPatches(), -1);
-                                    for(Feature comp : getComponentFeatures()) {
-                                        Object id = comp.getId();
-                                        for(DefaultFeature patch : (List<DefaultFeature>)project.getPatchIndex()
-                                                .query(comp.getGeometry().getEnvelopeInternal())) {
-                                            if(patch.getGeometry().intersects(comp.getGeometry())) {
-                                                patch.setAttribute(attrName, id);
-                                                progressBar.incProgress(1);
-                                            }
-                                        }
-                                    }
-                                    progressBar.close();
-                                }
-                            }).start();
-                        }
-                    });
-                    
-                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove")) {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            int res = JOptionPane.showConfirmDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Do_you_want_to_remove_the_graph_") + name + " ?", java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove"), JOptionPane.YES_NO_OPTION);
-                            if(res != JOptionPane.YES_OPTION) {
-                                return;
-                            }
-
-                            Project.getProject().removeGraph(name);
-                        }
-                    });
-
-                    menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties")) {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            JOptionPane.showMessageDialog(null, getInfo());
-                        }
-                    });
-
-                    return menu;
-                }
-
-                @Override
-                protected void createTopoLayers() {
-                    super.createTopoLayers();
-                    if(circleStyle == null) {
-                        Number max = Collections.max(new FeatureAttributeCollection<Double>(getNodeLayer().getFeatures(), Project.CAPA_ATTR));
-                        Number min = Collections.min(new FeatureAttributeCollection<Double>(getNodeLayer().getFeatures(), Project.CAPA_ATTR));
-                        circleStyle = new CircleStyle(Project.CAPA_ATTR, min.doubleValue(), max.doubleValue(), new Color(0xcbcba7/*0x951012*/), new Color(0x212d19));
-                    } else {
-                        circleStyle.setStyle(nodeStyle);
-                    }
-                    getNodeLayer().setStyle(circleStyle);
-                }
-
-                @Override
-                protected void createSpatialLayers() {
-                    nodeStyle.setStyle(circleStyle);
-                    super.createSpatialLayers();
-//                    getNodeLayer().setStyle(circleStyle);
-                }
-                
-
-            }; 
-            FeatureLayer fl = new FeatureLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Components"), new FeatureGetter() {
-                    @Override
-                    public Collection getFeatures() {
-                        return getComponentFeatures();
-                    }
-                }, MainFrame.project.getZone(), new FeatureStyle(null, Color.BLACK), MainFrame.project.getCRS());
-
-            if(getGraph().getEdges().size() > 500000) {
-                layers.getEdgeLayer().setVisible(false);
-            }
-            layers.addLayer(fl);
+            layers = new GraphLayers(name, this, MainFrame.project.getCRS());   
         }
 
         return layers;
     }
 
+    /**
+     * Creates the graph and stores it in graph.
+     */
     protected void createGraph() {
         BasicGraphBuilder gen = new BasicGraphBuilder();
         HashMap<DefaultFeature, Node> patchNodes = new HashMap<>();
@@ -616,10 +418,15 @@ public class GraphGenerator {
         graph = gen.getGraph();
 
         if(type == MST) {
-            MinSpanTree span = new MinSpanTree(graph, new MinSpanTree.Weighter() {
+            MinSpanTree span = new MinSpanTree(graph, new EdgeWeighter() {
                 @Override
                 public double getWeight(Edge e) {
                     return getCost(e);
+                }
+
+                @Override
+                public double getToGraphWeight(double dist) {
+                    return 0;
                 }
             });
 
@@ -628,10 +435,16 @@ public class GraphGenerator {
 
     }
     
-    protected void createPathGraph() {
+    /**
+     * Calculates the pathgraph used for intrapatch distances and stores it in pathGraph.
+     * Stores also the mapping between nodes of the upper graph and the pathgraph nodes.
+     * If this graph does not use intrapatch distances set pathGraph to graph and node2PathNodes to null
+     */
+    private void createPathGraph() {
 
         if(!intraPatchDist) {
             pathGraph = getGraph();
+            node2PathNodes = null;
             return;
         }
         
@@ -697,11 +510,15 @@ public class GraphGenerator {
             }
         }
 
-
         pathGraph = gen.getGraph();
     }
 
-    protected List<Graph> partition(Graph g) {
+    /**
+     * Calculates the components of the graph g.
+     * @param g the graph
+     * @return a list of graph, one graph for each component
+     */
+    public static List<Graph> partition(Graph g) {
         HashSet<Node> nodes = new HashSet<>(g.getNodes());
         List<Graph> comps = new ArrayList<>();
         while(!nodes.isEmpty()) {
@@ -747,7 +564,7 @@ public class GraphGenerator {
                     compFeatures.set(((Number)f.getId()).intValue()-1, f);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
             }
         } else {
             compFeatures = new ArrayList<>();
@@ -767,9 +584,15 @@ public class GraphGenerator {
         }
     }
 
-    public void calcODMatrix() throws IOException {
+    /**
+     * Computes the distance matrix between all patches.
+     * Save the result matrix in a text file
+     * @param file the file for storing the matrix
+     * @throws IOException 
+     */
+    public void calcODMatrix(File file) throws IOException {
         ProgressBar bar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix"), getNodes().size());
-        FileWriter w = new FileWriter(new File(Project.getProject().getDirectory(), getName() + "-odmatrix.txt"));
+        
         Comparator<Node> cmpPatchId = new Comparator<Node>() {
             @Override
             public int compare(Node n1, Node n2) {
@@ -778,25 +601,32 @@ public class GraphGenerator {
         };
         TreeSet<Node> nodes = new TreeSet<>(cmpPatchId);
         nodes.addAll(getNodes());
-        
-        w.write("ID");
-        for (Node n1 : nodes) {
-            w.write("\t" + Project.getPatch(n1).getId());
-        }
-        for (Node n1 : nodes) {
-            w.write("\n" + Project.getPatch(n1).getId());
-            PathFinder pathfinder = getPathFinder(n1);
-            for (Node n2 : nodes) {
-                Double c = pathfinder.getCost(n2);
-                w.write("\t" + (c == null ? Double.NaN : c));
+        try(FileWriter w = new FileWriter(file)) {
+            w.write("ID");
+            for (Node n1 : nodes) {
+                w.write("\t" + Project.getPatch(n1).getId());
             }
-            bar.incProgress(1);
+            for (Node n1 : nodes) {
+                w.write("\n" + Project.getPatch(n1).getId());
+                GraphPathFinder pathfinder = getPathFinder(n1);
+                for (Node n2 : nodes) {
+                    Double c = pathfinder.getCost(n2);
+                    w.write("\t" + (c == null ? Double.NaN : c));
+                }
+                bar.incProgress(1);
+            }
+        } finally {
+            bar.close();
         }
-        w.close();
-        bar.close();
     }
     
-    public void calcODMatrixCircuit() throws IOException {
+    /**
+     * Computes the resistance matrix between all patches using the graph as an electric circuit.
+     * Save the result matrix in a text file
+     * @param file the file for storing the matrix
+     * @throws IOException 
+     */
+    public void calcODMatrixCircuit(File file) throws IOException {
         ProgressBar bar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("OD_matrix_circuit"), getNodes().size());
         Comparator<Node> cmpPatchId = new Comparator<Node>() {
             @Override
@@ -807,19 +637,15 @@ public class GraphGenerator {
         TreeSet<Node> nodes = new TreeSet<>(cmpPatchId);
         nodes.addAll(getNodes());
         Circuit circuit = new Circuit(this);
-        try(FileWriter w = new FileWriter(new File(Project.getProject().getDirectory(), getName() + "-odmatrix-circuit.txt"))) {
+        try(FileWriter w = new FileWriter(file)) {
             w.write("ID");
             for (Node n1 : nodes) {
                 w.write("\t" + Project.getPatch(n1).getId());
             }
             for (Node n1 : nodes) {
                 w.write("\n" + Project.getPatch(n1).getId());
-//                Map<Node, Double> mapR = circuit.computeRs(n1);
                 for (Node n2 : nodes) {
                     double r = circuit.computeR(n1, n2);
-//                    double r = Double.POSITIVE_INFINITY;
-//                    if(mapR.containsKey(n2))
-//                        r = mapR.get(n2);
                     w.write("\t" + r);
                 }
                 bar.incProgress(1);
@@ -830,31 +656,54 @@ public class GraphGenerator {
         
     }
     
+    /**
+     * @return the name of the graph
+     */
     @Override
     public String toString() {
         return name;
     }
 
+    /**
+     * @return the linkset used by this graph
+     */
     public Linkset getLinkset() {
         return cost;
     }
 
+    /**
+     * May be COST_LENGTH or DIST_LENGTH
+     * @return the distance type of the linkset
+     */
     public int getDist_type() {
         return cost.getType_length();
     }
 
+    /**
+     * May be COMPLETE, THRESHOLD or MST
+     * @return the type of the graph
+     */
     public int getType() {
         return type;
     }
 
+    /**
+     * @return the name of the graph
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return the edge threshold
+     */
     public double getThreshold() {
         return threshold;
     }
 
+    /**
+     * @return graph informations
+     */
     public String getInfo() {
         ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/graph/Bundle");
         
@@ -881,6 +730,12 @@ public class GraphGenerator {
         return info;
     }
     
+    /**
+     * Clones the graph and removes some nodes and edges
+     * @param idNodes a collection of patch id to remove
+     * @param idEdges a collection of path id to remove
+     * @return a dupplicated graph without idNodes and idEdges
+     */
     public final Graph dupGraphWithout(Collection idNodes, Collection idEdges) {
         Graph g = getGraph();
 
@@ -912,6 +767,14 @@ public class GraphGenerator {
         return builder.getGraph();
     }
 
+    /**
+     * Inverse function of Arrays.deepToString. Convert a string to a list.
+     * The element are separated by comma.
+     * The string can have squared brackets, the string "[1,2]" is the same as "1,2"
+     * @param sArray the string representing an array
+     * @param patch if true convet elements to integer
+     * @return the list of elements contained in the string
+     */
     private List stringToList(String sArray, boolean patch) {
         String[] split = sArray.replace("[", "").replace("]", "").split(",");
         List lst = new ArrayList();

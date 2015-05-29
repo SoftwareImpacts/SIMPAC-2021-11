@@ -4,7 +4,7 @@ package org.thema.graphab.metric.local;
 import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphGenerator.PathFinder;
+import org.thema.graphab.graph.GraphPathFinder;
 
 /**
  * Closeness Centrality metric.
@@ -21,7 +21,7 @@ public class ClosenessLocalMetric extends LocalMetric {
     @Override
     public double calcMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
-        PathFinder pathFinder = gen.getPathFinder(node);
+        GraphPathFinder pathFinder = gen.getPathFinder(node);
         double sum = 0;
         int nb = 0;
         for(Node n : pathFinder.getComputedNodes()) { 

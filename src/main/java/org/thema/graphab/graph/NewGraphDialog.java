@@ -1,13 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * NewGraphDialog.java
- *
- * Created on 7 mai 2010, 20:08:32
- */
 
 package org.thema.graphab.graph;
 
@@ -16,27 +6,37 @@ import javax.swing.DefaultComboBoxModel;
 import org.thema.graphab.links.Linkset;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for creating a new graph.
+ * 
+ * @author Gilles Vuidel
  */
 public class NewGraphDialog extends javax.swing.JDialog {
 
+    /** has user clicked Ok ? */
     public boolean isOk = false;
+    /** name of the graph */
     public String name;
-    public Linkset cost;
+    /** the linkset used by the graph */
+    public Linkset linkset;
+    /** the threshold if any */
     public double threshold;
+    /** type of graph : COMPLETE, THRESHOLD or MST */
     public int type;
-//    public int impedance;
+    /** Use intrapatch distances for path calculation ? */
     public boolean intraPatchDist;
 
-    /** Creates new form NewGraphDialog */
-    public NewGraphDialog(java.awt.Frame parent, Collection<Linkset> costs) {
+    /** 
+     * Creates new form NewGraphDialog
+     * @param parent the parent window
+     * @param linksets the project linksets
+     */
+    public NewGraphDialog(java.awt.Frame parent, Collection<Linkset> linksets) {
         super(parent, true);
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
 
-        costComboBox.setModel(new DefaultComboBoxModel(costs.toArray()));
+        costComboBox.setModel(new DefaultComboBoxModel(linksets.toArray()));
         costComboBoxActionPerformed(null);
     }
 
@@ -224,7 +224,7 @@ public class NewGraphDialog extends javax.swing.JDialog {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         name = nameTextField.getText();
-        cost = (Linkset) costComboBox.getSelectedItem();
+        linkset = (Linkset) costComboBox.getSelectedItem();
         threshold = (Double)thresholdSpinner.getValue();
 
         if(completeRadioButton.isSelected()) {

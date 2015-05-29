@@ -21,6 +21,8 @@ import org.thema.data.feature.Feature;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphPathFinder;
+import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.metric.Circuit;
 import org.thema.graphab.links.SpacePathFinder;
 
@@ -28,7 +30,8 @@ import org.thema.graphab.links.SpacePathFinder;
  * Dialog for calculating several distance matrices between the pointset.
  * It supports :
  * <ul>
- * <li>Raster distance</li>
+ * <li>Least cost raster distance</li>
+ * <li>Circuit raster distance</li>
  * <li>Simple graph distance</li>
  * <li>Circuit graph distance</li>
  * <li>Flow graph distance</li>
@@ -84,9 +87,10 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
 
         buttonGroup1 = new javax.swing.ButtonGroup();
         buttonGroup2 = new javax.swing.ButtonGroup();
+        buttonGroup3 = new javax.swing.ButtonGroup();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
-        costRadioButton = new javax.swing.JRadioButton();
+        rasterRadioButton = new javax.swing.JRadioButton();
         jLabel2 = new javax.swing.JLabel();
         costComboBox = new javax.swing.JComboBox();
         jLabel3 = new javax.swing.JLabel();
@@ -95,16 +99,20 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
         jLabel5 = new javax.swing.JLabel();
         graphCostComboBox = new javax.swing.JComboBox();
         simpleRadioButton = new javax.swing.JRadioButton();
-        circuitRadioButton = new javax.swing.JRadioButton();
+        circuitGraphRadioButton = new javax.swing.JRadioButton();
         flowRadioButton = new javax.swing.JRadioButton();
         jLabel1 = new javax.swing.JLabel();
         distSpinner = new javax.swing.JSpinner();
+        costRadioButton = new javax.swing.JRadioButton();
+        circuitRasterRadioButton = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/pointset/Bundle"); // NOI18N
         setTitle(bundle.getString("PointsetDistanceDialog.title")); // NOI18N
+        setName("Form"); // NOI18N
 
         okButton.setText(bundle.getString("PointsetDistanceDialog.okButton.text")); // NOI18N
+        okButton.setName("okButton"); // NOI18N
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okButtonActionPerformed(evt);
@@ -112,66 +120,96 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
         });
 
         cancelButton.setText(bundle.getString("PointsetDistanceDialog.cancelButton.text")); // NOI18N
+        cancelButton.setName("cancelButton"); // NOI18N
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
 
-        buttonGroup1.add(costRadioButton);
-        costRadioButton.setSelected(true);
-        costRadioButton.setText(bundle.getString("PointsetDistanceDialog.costRadioButton.text")); // NOI18N
+        buttonGroup1.add(rasterRadioButton);
+        rasterRadioButton.setSelected(true);
+        rasterRadioButton.setText(bundle.getString("PointsetDistanceDialog.rasterRadioButton.text")); // NOI18N
+        rasterRadioButton.setName("rasterRadioButton"); // NOI18N
 
         jLabel2.setText(bundle.getString("PointsetDistanceDialog.jLabel2.text")); // NOI18N
+        jLabel2.setName("jLabel2"); // NOI18N
 
-        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, costRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel2, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, rasterRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel2, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, costRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), costComboBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        costComboBox.setName("costComboBox"); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, rasterRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), costComboBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
         jLabel3.setText(bundle.getString("PointsetDistanceDialog.jLabel3.text")); // NOI18N
+        jLabel3.setName("jLabel3"); // NOI18N
 
         fileTextField.setText(bundle.getString("PointsetDistanceDialog.fileTextField.text")); // NOI18N
+        fileTextField.setName("fileTextField"); // NOI18N
 
         buttonGroup1.add(costGraphRadioButton);
         costGraphRadioButton.setText(bundle.getString("PointsetDistanceDialog.costGraphRadioButton.text")); // NOI18N
+        costGraphRadioButton.setName("costGraphRadioButton"); // NOI18N
 
         jLabel5.setText(bundle.getString("PointsetDistanceDialog.jLabel5.text")); // NOI18N
+        jLabel5.setName("jLabel5"); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, costGraphRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel5, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
+
+        graphCostComboBox.setName("graphCostComboBox"); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, costGraphRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), graphCostComboBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
         buttonGroup2.add(simpleRadioButton);
-        simpleRadioButton.setSelected(true);
         simpleRadioButton.setText(bundle.getString("PointsetDistanceDialog.simpleRadioButton.text")); // NOI18N
+        simpleRadioButton.setName("simpleRadioButton"); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, costGraphRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), simpleRadioButton, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        buttonGroup2.add(circuitRadioButton);
-        circuitRadioButton.setText(bundle.getString("PointsetDistanceDialog.circuitRadioButton.text")); // NOI18N
+        buttonGroup2.add(circuitGraphRadioButton);
+        circuitGraphRadioButton.setText(bundle.getString("PointsetDistanceDialog.circuitGraphRadioButton.text")); // NOI18N
+        circuitGraphRadioButton.setName("circuitGraphRadioButton"); // NOI18N
 
-        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, costGraphRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), circuitRadioButton, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, costGraphRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), circuitGraphRadioButton, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
         buttonGroup2.add(flowRadioButton);
         flowRadioButton.setText(bundle.getString("PointsetDistanceDialog.flowRadioButton.text")); // NOI18N
+        flowRadioButton.setName("flowRadioButton"); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, costGraphRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), flowRadioButton, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
         jLabel1.setText(bundle.getString("PointsetDistanceDialog.jLabel1.text")); // NOI18N
+        jLabel1.setName("jLabel1"); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, flowRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel1, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
         distSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1000.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        distSpinner.setName("distSpinner"); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, flowRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), distSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        buttonGroup3.add(costRadioButton);
+        costRadioButton.setSelected(true);
+        costRadioButton.setText(bundle.getString("PointsetDistanceDialog.costRadioButton.text")); // NOI18N
+        costRadioButton.setName("costRadioButton"); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, rasterRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), costRadioButton, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        buttonGroup3.add(circuitRasterRadioButton);
+        circuitRasterRadioButton.setText(bundle.getString("PointsetDistanceDialog.circuitRasterRadioButton.text")); // NOI18N
+        circuitRasterRadioButton.setName("circuitRasterRadioButton"); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, rasterRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), circuitRasterRadioButton, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
@@ -182,12 +220,15 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(costRadioButton)
-                            .add(costGraphRadioButton))
-                        .add(0, 0, Short.MAX_VALUE))
+                        .add(costGraphRadioButton)
+                        .add(80, 99, Short.MAX_VALUE))
                     .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(layout.createSequentialGroup()
+                                .add(114, 114, 114)
+                                .add(jLabel1)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(distSpinner))
                             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                                 .add(0, 0, Short.MAX_VALUE)
                                 .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -196,7 +237,21 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                             .add(layout.createSequentialGroup()
                                 .add(jLabel3)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(fileTextField))
+                                .add(fileTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE))
+                            .add(layout.createSequentialGroup()
+                                .add(12, 12, 12)
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(layout.createSequentialGroup()
+                                        .add(12, 12, 12)
+                                        .add(costRadioButton)
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                        .add(circuitRasterRadioButton)
+                                        .add(0, 0, Short.MAX_VALUE))
+                                    .add(layout.createSequentialGroup()
+                                        .add(jLabel2)
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                        .add(costComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .add(rasterRadioButton)
                             .add(layout.createSequentialGroup()
                                 .add(12, 12, 12)
                                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -204,25 +259,14 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                                         .add(12, 12, 12)
                                         .add(simpleRadioButton)
                                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(circuitRadioButton)
+                                        .add(circuitGraphRadioButton)
                                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(flowRadioButton)
-                                        .add(0, 0, Short.MAX_VALUE))
+                                        .add(flowRadioButton))
                                     .add(layout.createSequentialGroup()
-                                        .add(jLabel2)
-                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(costComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                                         .add(jLabel5)
                                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                         .add(graphCostComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                         .addContainerGap())))
-            .add(layout.createSequentialGroup()
-                .add(126, 126, 126)
-                .add(jLabel1)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(distSpinner)
-                .addContainerGap())
         );
 
         layout.linkSize(new java.awt.Component[] {cancelButton, okButton}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
@@ -231,12 +275,16 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .add(costRadioButton)
+                .add(rasterRadioButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel2)
                     .add(costComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(18, 18, 18)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(costRadioButton)
+                    .add(circuitRasterRadioButton))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(costGraphRadioButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
@@ -245,13 +293,13 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(simpleRadioButton)
-                    .add(circuitRadioButton)
+                    .add(circuitGraphRadioButton)
                     .add(flowRadioButton))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel1)
                     .add(distSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 33, Short.MAX_VALUE)
+                .add(30, 30, 30)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel3)
                     .add(fileTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -278,27 +326,57 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                 ProgressBar mon = Config.getProgressBar("Distances...", exos.size());
 
                 final double [][][] distances = new double[exos.size()][exos.size()][2];  
-                if(costRadioButton.isSelected()) {
+                if(rasterRadioButton.isSelected()) {
+                    Linkset costDist = (Linkset) costComboBox.getSelectedItem();
                     final List<Coordinate> dests = new ArrayList<>();
                     for(Feature f : exos) {
                         dests.add(f.getGeometry().getCoordinate());
                     }
-                    final Linkset costDist = (Linkset) costComboBox.getSelectedItem();
-                    IterParallelTask task = new IterParallelTask(exos.size(), mon) {
-                        @Override
-                        protected void executeOne(Integer ind) {
-                            try {
-                                SpacePathFinder pathFinder = project.getPathFinder(costDist);
-                                List<double[]> dist = pathFinder.calcPaths(exos.get(ind).getGeometry().getCoordinate(), dests);
-                                for(int j = 0; j < exos.size(); j++) {
-                                    distances[ind][j][0] = dist.get(j)[0];
-                                    distances[ind][j][1] = dist.get(j)[1];
-                                }
-                            } catch (IOException ex) {
-                                Logger.getLogger(PointsetDistanceDialog.class.getName()).log(Level.SEVERE, null, ex);
-                            } 
+                    IterParallelTask task;
+                    if(costRadioButton.isSelected()) {
+                        final Linkset linkset = costDist.getCostVersion();
+                        task = new IterParallelTask(exos.size(), mon) {
+                            @Override
+                            protected void executeOne(Integer ind) {
+                                try {
+                                    SpacePathFinder pathFinder = project.getPathFinder(linkset);
+                                    List<double[]> dist = pathFinder.calcPaths(exos.get(ind).getGeometry().getCoordinate(), dests);
+                                    for(int j = 0; j < exos.size(); j++) {
+                                        if(j <= ind) {
+                                            continue;
+                                        }
+                                        distances[ind][j][0] = dist.get(j)[0];
+                                        distances[ind][j][1] = dist.get(j)[1];
+                                        distances[j][ind][0] = distances[ind][j][0];
+                                        distances[j][ind][1] = distances[ind][j][1];
+                                    }
+                                } catch (IOException ex) {
+                                    throw new RuntimeException(ex);
+                                } 
+                            }
+                        };
+                    } else {
+                        final CircuitRaster circuit;
+                        try {
+                            circuit = project.getRasterCircuit(costDist.getCircuitVersion());
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
                         }
-                    };
+                        task = new IterParallelTask(exos.size(), mon) {
+                            @Override
+                            protected void executeOne(Integer ind) {
+                                for(int j = 0; j < exos.size(); j++) {
+                                    if(j <= ind) {
+                                        continue;
+                                    }
+                                    distances[ind][j][0] = circuit.getODCircuit(dests.get(ind), dests.get(j)).getR();
+                                    distances[ind][j][1] = Double.NaN;
+                                    distances[j][ind][0] = distances[ind][j][0];
+                                    distances[j][ind][1] = Double.NaN;
+                                }
+                            }
+                        };
+                    }
                     new ParallelFExecutor(task).executeAndWait();
                     if(task.isCanceled()) {
                         return;
@@ -309,7 +387,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                         for(int i = 0; i < exos.size(); i++) {
                             Feature exo1 = exos.get(i);
                             Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
-                            GraphGenerator.PathFinder finder = graph.getPathFinder(graph.getNode(patch1));
+                            GraphPathFinder finder = graph.getPathFinder(graph.getNode(patch1));
                             for(int j = 0; j < exos.size(); j++) {
                                 if(i == j) {
                                     continue;
@@ -332,7 +410,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                         for(int i = 0; i < exos.size(); i++) {
                             Feature exo1 = exos.get(i);
                             Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
-                            GraphGenerator.PathFinder finder = graph.getFlowPathFinder(graph.getNode(patch1), alpha);
+                            GraphPathFinder finder = graph.getFlowPathFinder(graph.getNode(patch1), alpha);
                             for(int j = 0; j < exos.size(); j++) {
                                 if(i == j) {
                                     continue;
@@ -351,8 +429,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                             }
                             mon.incProgress(1);
                         }
-                    }                        
-                    else {
+                    } else {
                         Circuit circuit = new Circuit(graph);
 
                         for(int i = 0; i < exos.size(); i++) {
@@ -405,8 +482,10 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
+    private javax.swing.ButtonGroup buttonGroup3;
     private javax.swing.JButton cancelButton;
-    private javax.swing.JRadioButton circuitRadioButton;
+    private javax.swing.JRadioButton circuitGraphRadioButton;
+    private javax.swing.JRadioButton circuitRasterRadioButton;
     private javax.swing.JComboBox costComboBox;
     private javax.swing.JRadioButton costGraphRadioButton;
     private javax.swing.JRadioButton costRadioButton;
@@ -419,6 +498,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JButton okButton;
+    private javax.swing.JRadioButton rasterRadioButton;
     private javax.swing.JRadioButton simpleRadioButton;
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables

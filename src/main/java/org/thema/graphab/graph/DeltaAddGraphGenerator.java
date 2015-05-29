@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.graph;
 
@@ -13,14 +9,22 @@ import org.geotools.graph.structure.Node;
 import org.thema.data.feature.Feature;
 
 /**
- *
- * @author gvuidel
+ * A graph where removed elements (nodes or edges) can be added and removed one at a time.
+ * 
+ * @author Gilles Vuidel
  */
 public class DeltaAddGraphGenerator extends GraphGenerator {
 
     private GraphGenerator gen;
     private Graphable addedElem;
 
+    /**
+     * Creates a new DeltaAddGraphGenerator.
+     * Dupplicates the parent graph and removes all remIdNodes and remIdEdges
+     * @param gen the parent graph
+     * @param remIdNodes the collection of patches id to remove
+     * @param remIdEdges the collection of links id to remove
+     */
     public DeltaAddGraphGenerator(GraphGenerator gen, Collection remIdNodes, Collection remIdEdges) {
         super(gen, "Delta");
         this.gen = gen;
@@ -28,6 +32,12 @@ public class DeltaAddGraphGenerator extends GraphGenerator {
         graph = gen.dupGraphWithout(remIdNodes, remIdEdges);
     }
 
+    /**
+     * Add an element (node or edge) removed from the parent graph.
+     * The patch or link must be exist in the parent graph.
+     * @param id the identifier of the patch or the link to add
+     * @throws IllegalStateException if an element has already been added
+     */
     public void addElem(Object id) {
 
         if(addedElem != null) {
@@ -92,6 +102,9 @@ public class DeltaAddGraphGenerator extends GraphGenerator {
         node2PathNodes = null;
     }
 
+    /**
+     * If an element has been added, removes this element from the graph.
+     */
     public void reset() {
         if(addedElem instanceof Edge) {
             Edge e = (Edge) addedElem;

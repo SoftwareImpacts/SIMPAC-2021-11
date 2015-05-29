@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.thema.graphab.Project;
-import org.thema.graphab.metric.global.PCMetric;
 
 /**
  *
@@ -44,19 +43,6 @@ public class MetricTest {
                 exception.expect(IllegalArgumentException.class);
                 m.setParamFromDetailName(m.getShortName());
             }
-        }
-    }
-
-
-   
-    public class MetricImpl extends Metric {
-
-        public String getShortName() {
-            return "";
-        }
-
-        public Type getType() {
-            return null;
         }
     }
     

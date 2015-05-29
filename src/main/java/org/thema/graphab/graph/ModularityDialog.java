@@ -1,21 +1,7 @@
-/*
- * Copyright (C) 2015 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+
 package org.thema.graphab.graph;
 
+import org.thema.graph.Modularity;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import java.awt.Color;
@@ -26,6 +12,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.SpinnerListModel;
 import org.geotools.feature.SchemaException;
 import org.geotools.graph.structure.Node;
 import org.thema.common.Config;
@@ -40,21 +28,30 @@ import org.thema.drawshape.style.table.FeatureAttributeIterator;
 import org.thema.graphab.Project;
 
 /**
- *
- * @author gvuidel
+ * Dialog for navigating in modularity partitionning results.
+ * 
+ * @author Gilles Vuidel
  */
 public class ModularityDialog extends javax.swing.JDialog {
 
+    private final GraphGenerator graph;
     private final Modularity mod;
+    
     /**
      * Creates new form ModularityDialog
+     * @param parent the parent frame, may be null
+     * @param graph the graph
+     * @param mod the modularity results
      */
-    public ModularityDialog(java.awt.Frame parent, Modularity mod) {
+    public ModularityDialog(java.awt.Frame parent, GraphGenerator graph, Modularity mod) {
         super(parent, false);
         this.mod = mod;
+        this.graph = graph;
         initComponents();
         setLocationRelativeTo(parent);
+        List<Integer> sizes = new ArrayList<>(mod.getPartitionSize());
         
+        nbSpinner.setModel(new SpinnerListModel(sizes));
         nbSpinner.setValue(mod.getBestPartition().size());
         
         showButtonActionPerformed(null);
@@ -190,7 +187,7 @@ public class ModularityDialog extends javax.swing.JDialog {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ProgressBar progressBar = Config.getProgressBar("Merge voronoi...");
+                ProgressBar progressBar = Config.getProgressBar("Optim partition...");
                 progressBar.setIndeterminate(true);
                 Set<Modularity.Cluster> partition = optimCheckBox.isSelected() ? mod.getOptimPartition((int) nbSpinner.getValue())
                         : mod.getPartition((int) nbSpinner.getValue());
@@ -199,6 +196,7 @@ public class ModularityDialog extends javax.swing.JDialog {
                 } else {
                     optimLabel.setText("");
                 }
+                progressBar.setNote("Merge voronoi...");
                 List<Feature> clusters = new ArrayList<>();
                 List<String> attrNames = Arrays.asList("modularity");
                 for(Modularity.Cluster c : partition) {
@@ -215,10 +213,10 @@ public class ModularityDialog extends javax.swing.JDialog {
                 l.setVisible(true);
                 l.setRemovable(true);
 
-                mod.getGraphGenerator().getLayers().addLayer(l);
+                graph.getLayers().addLayer(l);
                 
                 // set cluster id for all patches
-                String attrName = mod.getGraphGenerator().getName() + "_cluster" + partition.size();
+                String attrName = graph.getName() + "_cluster" + partition.size();
                 for(Modularity.Cluster c : partition) {
                     for(Node n : c.getNodes())  {
                         Project.getPatch(n).addAttribute(attrName, c.getId());
@@ -239,9 +237,10 @@ public class ModularityDialog extends javax.swing.JDialog {
         Set<Modularity.Cluster> partition = optimCheckBox.isSelected() ? mod.getOptimPartition((int) nbSpinner.getValue())
                         : mod.getPartition((int) nbSpinner.getValue());
         try {
-            Project.getProject().addGraph(new ModGraphGenerator(mod.getGraphGenerator(), partition), true);
+            Project.getProject().addGraph(new ModGraphGenerator(graph, partition), true);
         } catch (IOException | SchemaException ex) {
             Logger.getLogger(ModularityDialog.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "Error while creating the graph : " + ex);
         }
     }//GEN-LAST:event_graphButtonActionPerformed
 

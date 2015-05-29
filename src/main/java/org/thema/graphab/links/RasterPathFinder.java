@@ -71,7 +71,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         this.project = prj;
         this.rasterPatch = project.getRasterPatch();
         this.costRaster = codeRaster;
-        this.cost = cost;
+        this.cost = cost != null ? Arrays.copyOf(cost, cost.length) : null;
         this.coefSlope = coefSlope;
         int w = rasterPatch.getWidth();
         IND = new int[] {-1, -w, +w, +1, -w-1, +w-1, -w+1, +w+1};

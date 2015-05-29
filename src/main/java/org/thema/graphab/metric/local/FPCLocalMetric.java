@@ -7,7 +7,7 @@ import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphGenerator.PathFinder;
+import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
@@ -25,7 +25,7 @@ public class FPCLocalMetric extends LocalMetric {
     public double calcMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
         double srcCapa = Project.getPatchCapacity(node);
-        PathFinder pathFinder = gen.getPathFinder(node);
+        GraphPathFinder pathFinder = gen.getPathFinder(node);
         double sum = 0;
         for(Node n : pathFinder.getComputedNodes()) {
             sum += Math.exp(-alphaParam.getAlpha() * pathFinder.getCost(n)) * Math.pow(srcCapa * Project.getPatchCapacity(n), alphaParam.getBeta());            

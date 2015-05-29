@@ -7,7 +7,7 @@ import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphGenerator.PathFinder;
+import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
@@ -22,7 +22,7 @@ public class FLocalMetric extends LocalMetric {
 
     @Override
     public double calcMetric(Graphable g, GraphGenerator gen) {
-        PathFinder pathFinder = gen.getPathFinder((Node)g);
+        GraphPathFinder pathFinder = gen.getPathFinder((Node)g);
         double sum = 0;
         for(Node node : pathFinder.getComputedNodes()) {
             if (node != g) {
