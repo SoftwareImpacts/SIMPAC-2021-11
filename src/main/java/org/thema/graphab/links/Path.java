@@ -152,8 +152,8 @@ public class Path extends DefaultFeature {
         String [] elems = new String[p.getAttributeNames().size()];
         elems[0] = p.patch1.getId().toString();
         elems[1] = p.patch2.getId().toString();
-        elems[2] = String.valueOf(p.getCost());//String.format("%g", p.getCost());
-        elems[3] = String.valueOf(p.getDist());//String.format("%g", p.getDist());
+        elems[2] = String.valueOf(p.getCost());
+        elems[3] = String.valueOf(p.getDist());
         for(int i = 4; i < p.getAttributeNames().size(); i++) {
             elems[i] = p.getAttribute(i).toString();
         }

@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.links;
 
@@ -26,14 +22,16 @@ import java.util.List;
 import java.util.PriorityQueue;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
-import org.thema.graphab.Project;/**
+import org.thema.graphab.Project;
+
+/**
+ * Calculates leastcost path between patches or between points.
  * This class is not thread safe.<br/>
- * Create one instance for each thread
+ * Create one instance for each thread.
+ * Uses dijkstra algorithm.
  * 
  * @author Gilles Vuidel
  */
-
-
 public final class RasterPathFinder implements SpacePathFinder {
 
     private final Raster rasterPatch;
@@ -61,8 +59,8 @@ public final class RasterPathFinder implements SpacePathFinder {
 
     /**
      * Create pathfinder from landscape map 
-     * @param prj
-     * @param codeRaster
+     * @param prj the project
+     * @param codeRaster 
      * @param cost
      * @param coefSlope 0 = ignore slope     
      * @throws IOException 
@@ -83,7 +81,7 @@ public final class RasterPathFinder implements SpacePathFinder {
 
     /**
      * Create pathfinder from external cost raster
-     * @param prj
+     * @param prj the project 
      * @param costRaster
      * @param coefSlope 0 = ignore slope
      * @throws IOException 
@@ -262,15 +260,6 @@ public final class RasterPathFinder implements SpacePathFinder {
         return paths;
     }
 
-    /**
-     * Calcule les chemins à partir de oPatch vers tous les patch dont l'id est supérieur à oPatch
-     * si all == false et dont le cout est inférieur ou égal à maxCost
-     * @param oPatch
-     * @param maxCost
-     * @param realPath
-     * @param all
-     * @return
-     */
     @Override
     public HashMap<Feature, Path> calcPaths(Feature oPatch, double maxCost, boolean realPath, boolean all) {
 
@@ -328,12 +317,7 @@ public final class RasterPathFinder implements SpacePathFinder {
 
         return distances;
     }
-    
-    /**
-     * Calc nearest patch from point p
-     * @param p
-     * @return an array with id of nearest patch, cost and dist
-     */
+
     @Override
     public double [] calcPathNearestPatch(Point p) {
         Coordinate cp = project.getSpace2grid().transform(p.getCoordinate(), new Coordinate());
@@ -342,8 +326,8 @@ public final class RasterPathFinder implements SpacePathFinder {
 
     /**
      * Calc nearest patch from raster coordinate
-     * @param rx
-     * @param ry
+     * @param rx the x coordinate on the raster
+     * @param ry the y coordinate on the raster
      * @return an array with id of nearest patch, cost and dist
      */
     public double[] calcPathNearestPatch(int rx, int ry) {
@@ -399,7 +383,7 @@ public final class RasterPathFinder implements SpacePathFinder {
     
     /**
      * Return a raster of cost distances from oPatch.<br/>
-     * The raster may be smaller than landscape raster if maxCost > 0s
+     * The raster may be smaller than landscape raster if maxCost > 0
      * @param oPatch patch origin
      * @param maxCost max cost distance, if 0 : no max
      * @return 
@@ -601,17 +585,18 @@ public final class RasterPathFinder implements SpacePathFinder {
     }
 
     /**
-     * Node for the PriorityQueue
+     * Node representing a pixel for the PriorityQueue
      */
     private static class Node implements Comparable<Node>{
-        int ind;
-        double dist;
+        private int ind;
+        private double dist;
 
         public Node(int ind, double dist) {
             this.ind = ind;
             this.dist = dist;
         }
 
+        @Override
         public final int compareTo(Node o) {
             return dist == o.dist ? 0 : dist < o.dist ? -1 : 1;
         }
