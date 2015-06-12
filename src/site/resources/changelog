@@ -1,3 +1,12 @@
+- CLI : add command --capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]] 
+- CLI : add command --metapatch [mincapa=value] 
+- CLI : --linkset add distance option for euclidean linkset
+- CLI : add auto conversion from distance to cost with {}
+- CLI : change order of global options -proc and -nosave
+- CLI : change --mpi to -mpi as other global options
+- metapatch : can create project with one patch only
+- metapatch : creating cost linkset crashes when some patches have been removed (and recoded)
+- linkset : can create linkset with no links
 version 1.3.26 (02/06/2015)
 - Shapefile export : correct geotools regression with fieldname longer than 10 character
 version 1.3.25 (29/05/2015)

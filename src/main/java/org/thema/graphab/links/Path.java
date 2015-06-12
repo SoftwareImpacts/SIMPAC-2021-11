@@ -21,7 +21,7 @@ import org.thema.graphab.util.DistanceOp;
 public class Path extends DefaultFeature {
     public static final String COST_ATTR = "Dist";
     public static final String DIST_ATTR = "DistM";
-    private static List<String> DEFAULT_ATTR_NAMES = Arrays.asList("ID1", "ID2", COST_ATTR, DIST_ATTR);
+    private static final List<String> DEFAULT_ATTR_NAMES = Arrays.asList("ID1", "ID2", COST_ATTR, DIST_ATTR);
     private static List<String> ATTR_NAMES = new ArrayList<>(DEFAULT_ATTR_NAMES);
 
     private Feature patch1, patch2;

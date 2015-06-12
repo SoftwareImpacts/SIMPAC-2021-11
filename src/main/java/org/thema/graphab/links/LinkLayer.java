@@ -1,6 +1,7 @@
 
 package org.thema.graphab.links;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -12,9 +13,18 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextArea;
+import org.jfree.data.statistics.Regression;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.thema.common.collection.HashMap2D;
+import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureGetter;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.style.LineStyle;
@@ -24,7 +34,7 @@ import org.thema.graphab.pointset.Pointset;
 
 /**
  *
- * @author gvuidel
+ * @author Gilles Vuidel
  */
 public class LinkLayer extends FeatureLayer {
     private final Project project;
@@ -75,6 +85,37 @@ public class LinkLayer extends FeatureLayer {
                 } catch (IOException ex) {
                     Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            }
+        });
+        menu.add(new AbstractAction("Dist to cost") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String res = JOptionPane.showInputDialog("Distance : ");
+                if(res == null) {
+                    return;
+                }
+                double dist = Double.parseDouble(res);
+                XYSeries s =  new XYSeries("regr");
+                for(Feature f : getFeatures()) {
+                    s.add(Math.log(((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue()), Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue()));
+                }
+                XYSeriesCollection dataregr = new XYSeriesCollection(s);
+
+                double [] coef = Regression.getOLSRegression(dataregr, 0);
+                double cost = project.getLinkset(getName()).estimCost(dist);
+                
+                JTextArea text = new JTextArea(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
+                        coef[0], coef[1], dist, cost));
+                JButton but = new JButton(new AbstractAction("Plot") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        showScatterPlot(Path.DIST_ATTR, Path.COST_ATTR, true);
+                    }
+                });
+                JPanel panel = new JPanel(new BorderLayout());
+                panel.add(text, BorderLayout.CENTER);
+                panel.add(but, BorderLayout.EAST);
+                JOptionPane.showMessageDialog(null, panel);
             }
         });
         menu.add(new AbstractAction("Extract path costs") {

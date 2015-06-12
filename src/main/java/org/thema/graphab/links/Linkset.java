@@ -39,6 +39,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.geotools.feature.SchemaException;
+import org.jfree.data.statistics.Regression;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.thema.common.Config;
 import org.thema.common.JTS;
 import org.thema.common.ProgressBar;
@@ -322,6 +325,20 @@ public class Linkset {
             }
         }
         return intraLinks;
+    }
+    
+    public double estimCost(double distance) {
+        if(type_dist == EUCLID) {
+            return distance;
+        }
+        XYSeries s =  new XYSeries("regr");
+        for(Feature f : getPaths()) {
+            s.add(Math.log(((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue()), Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue()));
+        }
+        XYSeriesCollection dataregr = new XYSeriesCollection(s);
+
+        double [] coef = Regression.getOLSRegression(dataregr, 0);
+        return Math.exp(Math.log(distance) * coef[1] + coef[0]);
     }
 
     /**
@@ -798,7 +815,9 @@ public class Linkset {
         HashMap<Object, Path> map = new HashMap<>();
         try (CSVReader r = new CSVReader(new FileReader(fCSV))) {
             String [] attrNames = r.readNext();
-            Path.newSetOfPaths(Arrays.asList(attrNames).subList(4, attrNames.length));
+            if(attrNames != null) {
+                Path.newSetOfPaths(Arrays.asList(attrNames).subList(4, attrNames.length));
+            }
             String [] tab;
             while((tab = r.readNext()) != null) {
                 Path p = Path.deserialPath(tab, prj);
@@ -806,7 +825,7 @@ public class Linkset {
             }
         }
 
-        if(realPaths) {
+        if(realPaths && !map.isEmpty()) {
             List<DefaultFeature> features = GlobalDataStore.getFeatures(
                     new File(prj.getDirectory(), name + "-links.shp"), "Id", mon);
 
@@ -820,7 +839,9 @@ public class Linkset {
     
     public void saveLinks(File dir) throws IOException, SchemaException {
         try (CSVWriter w = new CSVWriter(new FileWriter(new File(dir, name + "-links.csv")))) {
-            w.writeNext(getPaths().get(0).getAttributeNames().toArray(new String[0]));
+            if(!getPaths().isEmpty()) {
+                w.writeNext(getPaths().get(0).getAttributeNames().toArray(new String[0]));
+            }
             for(Path p : getPaths()) {
                 w.writeNext(Path.serialPath(p));
             }

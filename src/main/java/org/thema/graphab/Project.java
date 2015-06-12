@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,7 @@ import org.thema.common.Config;
 import org.thema.common.JTS;
 import org.thema.common.ProgressBar;
 import org.thema.common.io.IOFile;
+import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
@@ -93,6 +95,7 @@ import org.thema.drawshape.style.LineStyle;
 import org.thema.drawshape.style.RasterStyle;
 import org.thema.graph.shape.GraphGroupLayer;
 import org.thema.graphab.CapaPatchDialog.CapaPatchParam;
+import static org.thema.graphab.MainFrame.project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.links.CircuitRaster;
@@ -464,6 +467,10 @@ public final class Project {
         return costLinks.values();
     }
 
+    public String getName() {
+        return name;
+    }
+
     private static Links createLinks(Raster voronoiRaster, List<DefaultFeature> patches, ProgressBar monitor) {
         monitor.setNote("Create link set...");
         monitor.setProgress(0);
@@ -507,14 +514,19 @@ public final class Project {
         
         cost.compute(this, progressBar);
 
-        costLinks.put(cost.getName(), cost);
+        
         if(save) {
-            if(cost.isRealPaths()) {
+            if(cost.isRealPaths() && !cost.getPaths().isEmpty()) {
                 DefaultFeature.saveFeatures(cost.getPaths(), new File(dir, cost.getName() + "-links.shp"), getCRS());
                 cost.saveIntraLinks(getDirectory());
             }
-            save(); 
             cost.saveLinks(getDirectory());
+        }
+        
+        costLinks.put(cost.getName(), cost);
+        
+        if(save) {
+            save();
         }
         
         if(linkLayers != null) {
@@ -1373,6 +1385,7 @@ public final class Project {
                 newRaster, new Envelope2D(getCRS() != null ? getCRS() : DefaultGeographicCRS.WGS84, zone));
         new GeoTiffWriter(new File(dir, "patches.tif")).write(gridCov, null);
         
+        TreeSet<Integer> newCodes = new TreeSet<>(codes);
         // recode les anciens patchs
         if(remPatch) {
             WritableRaster rasterPatch = getRasterPatch();
@@ -1393,6 +1406,7 @@ public final class Project {
             }
             gridCov = new GridCoverageFactory().create("land", land, landCov.getEnvelope2D());
             new GeoTiffWriter(new File(dir, "source.tif")).write(gridCov, null);
+            newCodes.add(newCode);
         } else {
             IOFile.copyFile(new File(getDirectory(), "source.tif"), new File(dir, "source.tif"));
         }
@@ -1448,10 +1462,13 @@ public final class Project {
                 links.addLink(new Path(p1, p2));
             }
         }
-        DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, "links.shp"), getCRS());
+        if(!links.getFeatures().isEmpty()) {
+            DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, "links.shp"), getCRS());
+        }
         
         Project prj = new Project(prjName, this);
         prj.dir = dir;
+        prj.codes = newCodes;
         prj.save();
         monitor.close();
     }
@@ -1568,13 +1585,17 @@ public final class Project {
             }
         }
 
-        features = GlobalDataStore.getFeatures(new File(prj.dir, "links.shp"), "Id", monitor.getSubProgress(100));
-        List<Path> paths = new ArrayList<>(features.size());
-        for(Feature f : features) {
-            paths.add(Path.loadPath(f, prj));
-        }
+        if(prj.patches.size() > 1) {
+            features = GlobalDataStore.getFeatures(new File(prj.dir, "links.shp"), "Id", monitor.getSubProgress(100));
+            List<Path> paths = new ArrayList<>(features.size());
+            for(Feature f : features) {
+                paths.add(Path.loadPath(f, prj));
+            }
 
-        prj.planarLinks = new Links("Links", paths, prj.patches.size());
+            prj.planarLinks = new Links(paths, prj.patches.size());
+        } else {
+            prj.planarLinks = new Links(1);
+        }
 
         if(all) {
             for(Linkset cost : prj.costLinks.values()) {
@@ -1678,10 +1699,6 @@ public final class Project {
 
     public CapaPatchParam getCapacityParams() {
         return capacityParams;
-    }
-
-    public void setCapacityParams(CapaPatchParam capacityParams) {
-        this.capacityParams = capacityParams;
     }
     
     public void setCapacity(DefaultFeature patch, double capa) {
@@ -1887,6 +1904,69 @@ public final class Project {
         getImageSource().setSample((int)cg.x, (int)cg.y, 0, removedCodes.remove(id));
         getRasterPatch().setSample((int)cg.x, (int)cg.y, 0, 0);
         patches.remove(patches.size()-1);
+    }
+    
+    public void setCapacities(CapaPatchParam param) {
+        if(param.calcArea) {
+            for(DefaultFeature patch : patches) {
+                setCapacity(patch, patch.getGeometry().getArea());
+            }
+        } else {
+            calcNeighborAreaCapacity(getLinkset(param.costName), param.maxCost, param.codes, param.weightCost);
+        }
+        capacityParams = param;
+    }
+    
+    public void calcNeighborAreaCapacity(final Linkset linkset, final double maxCost, final HashSet<Integer> codes, final boolean weight) {
+        ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("CALC PATCH CAPACITY..."), project.getPatches().size());
+        AbstractParallelFTask task = new AbstractParallelFTask(progressBar) {
+            @Override
+            protected Object execute(int start, int end) {
+                if(isCanceled()) {
+                    return null;
+                }
+               
+                try {
+                    RasterPathFinder pathfinder;
+                    if(linkset == null || linkset.getType_dist() == Linkset.EUCLID) {
+                        double [] costs = new double[project.getCodes().last()+1];
+                        Arrays.fill(costs, 1);
+                        pathfinder = new RasterPathFinder(project, project.getImageSource(), costs, 0);
+                    } else {
+                        pathfinder = project.getRasterPathFinder(linkset);
+                    }
+
+                    for(int i = start; i < end; i++) {
+                        DefaultFeature patch = patches.get(i);
+                        double capa = pathfinder.getNeighborhood(patch, maxCost,
+                                project.getImageSource(), codes, weight);
+                        project.setCapacity(patch, capa);
+                        incProgress(1);
+                    }
+                } catch (Exception ex) {
+                    cancelTask();
+                    throw new RuntimeException(ex);
+                }
+
+               return null;
+            }
+            @Override
+            public int getSplitRange() {
+                return patches.size();
+            }
+            @Override
+            public void finish(Collection results) {}
+            @Override
+            public Object getResult() {
+                return null;
+            }
+
+        };
+
+        new ParallelFExecutor(task).executeAndWait();
+
+        progressBar.close();
+        
     }
     
     /**

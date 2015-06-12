@@ -79,6 +79,7 @@ public class MetaPatchDialog extends javax.swing.JDialog {
         jLabel2 = new javax.swing.JLabel();
         minCapaSpinner = new javax.swing.JSpinner();
 
+        setTitle("Meta patch");
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 closeDialog(evt);

@@ -17,8 +17,8 @@ import org.thema.data.feature.Feature;
  * @author gvuidel
  */
 public class Links {
-    List<HashMap<Integer, Path>> conMap;
-    List<Path> links;
+    private List<HashMap<Integer, Path>> conMap;
+    private List<Path> links;
 
     public Links(int size) {
         conMap = new ArrayList<>(size);
@@ -28,7 +28,7 @@ public class Links {
         links = new ArrayList<>(size*3);
     }
 
-    public Links(String name, List<Path> paths, int size) {
+    public Links(List<Path> paths, int size) {
         links = paths;
         conMap = new ArrayList<>(size);
         for(int i = 0; i < size; i++) {

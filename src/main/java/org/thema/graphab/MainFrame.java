@@ -1,9 +1,4 @@
 
-/*
- * MainFrame.java
- *
- * Created on 14 avr. 2010, 16:34:13
- */
 
 package org.thema.graphab;
 
@@ -1006,77 +1001,17 @@ public class MainFrame extends javax.swing.JFrame {
         if(!dlg.isOk) {
             return;
         }
-        project.setCapacityParams(dlg.params);
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("CALC PATCH CAPACITY..."), project.getPatches().size());
-                final List<DefaultFeature> patches = new ArrayList(project.getPatches());
-                AbstractParallelFTask task = new AbstractParallelFTask(progressBar) {
-                    @Override
-                    protected Object execute(int start, int end) {
-                        if(isCanceled()) {
-                            return null;
-                        }
-                        if(project.getCapacityParams().calcArea) {
-                            for(int i = start; i < end; i++) {
-                                DefaultFeature patch = patches.get(i);
-                                project.setCapacity(patch, patch.getGeometry().getArea());
-                                incProgress(1);
-                            }
-                        } else {
-                            try {
-                                RasterPathFinder pathfinder;
-                                if(project.getCapacityParams().costName == null) {
-                                    double [] costs = new double[project.getCodes().last()+1];
-                                    Arrays.fill(costs, 1);
-                                    pathfinder = new RasterPathFinder(project, project.getImageSource(), costs, 0);
-                                } else {
-                                    pathfinder = project.getRasterPathFinder(project.getLinkset(project.getCapacityParams().costName));
-                                }
-
-                                for(int i = start; i < end; i++) {
-                                    DefaultFeature patch = patches.get(i);
-                                    double capa = pathfinder.getNeighborhood(patch, project.getCapacityParams().maxCost,
-                                            project.getImageSource(), project.getCapacityParams().codes, project.getCapacityParams().weightCost);
-                                    project.setCapacity(patch, capa);
-                                    incProgress(1);
-                                }
-                            } catch (Exception ex) {
-                                cancelTask();
-                                throw new RuntimeException(ex);
-                            }
-                       }
-                       return null;
-                    }
-                    @Override
-                    public int getSplitRange() {
-                        return patches.size();
-                    }
-                    @Override
-                    public void finish(Collection results) {}
-                    @Override
-                    public Object getResult() {
-                        return null;
-                    }
-
-                };
                 try {
-                    new ParallelFExecutor(task).executeAndWait();
-                
-                    if(task.isCanceled()) {
-                        return;
-                    }
-                    progressBar.setNote(progressBar.getNote() + " - saving...");
+                    project.setCapacities(dlg.params);
                     project.savePatch();
                     project.save();
-
-                } catch (IOException | SchemaException ex) {      
+                } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, ex);
-                } finally {
-                    progressBar.close();
                 }
             }
         }).start();
@@ -1299,7 +1234,7 @@ public class MainFrame extends javax.swing.JFrame {
         }
         
         // MPI Execution
-        if(args.length > 0 && args[0].equals("--mpi")) {
+        if(args.length > 0 && args[0].equals("-mpi")) {
             new MpiLauncher(Arrays.copyOfRange(args, 1, args.length)).run();
             return;
         }
