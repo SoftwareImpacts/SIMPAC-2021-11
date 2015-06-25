@@ -106,7 +106,6 @@ import org.thema.graphab.links.Path;
 import org.thema.graphab.links.RasterPathFinder;
 import org.thema.graphab.links.SpacePathFinder;
 import org.thema.graphab.metric.Metric;
-import org.thema.graphab.metric.global.AbstractLocal2GlobalMetric;
 import org.thema.graphab.metric.global.AbstractLocal2GlobalMetric.TypeElem;
 import org.thema.graphab.metric.global.CCPMetric;
 import org.thema.graphab.metric.global.DeltaPCMetric;

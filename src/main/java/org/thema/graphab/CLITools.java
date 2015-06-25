@@ -119,7 +119,11 @@ public class CLITools {
         }
         
         public double getValue(Linkset linkset) {
-            return linkset.estimCost(min);
+            if(autoDist) {
+                return linkset.estimCost(min);
+            } else {
+                return min;
+            }
         }
 
         public boolean isUnique() {
