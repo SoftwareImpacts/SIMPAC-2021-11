@@ -31,9 +31,10 @@ import org.thema.graphab.graph.GraphGenerator;
  */
 public class MetricInterpolDlg extends javax.swing.JDialog {
 
-
+    private Project project;
+    
     /** Creates new form MetricInterpolDlg */
-    public MetricInterpolDlg(java.awt.Frame parent, boolean modal) {
+    public MetricInterpolDlg(java.awt.Frame parent, Project project, boolean modal) {
         super(parent, modal);
         initComponents();
         setLocationRelativeTo(parent);
@@ -49,8 +50,8 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                 doClose();
             }
         });
-        
-        graphComboBox.setModel(new DefaultComboBoxModel(Project.getProject().getGraphs().toArray()));
+        this.project = project;
+        graphComboBox.setModel(new DefaultComboBoxModel(project.getGraphs().toArray()));
         graphComboBoxActionPerformed(null);
     }
 
@@ -299,14 +300,14 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                 ProgressBar progressBar = Config.getProgressBar();
                 okButton.setEnabled(false);
                 try {
-                    RasterLayer l = DistribModel.interpolate(Project.getProject(), (Double)resolSpinner.getValue(), varComboBox.getSelectedItem().toString(), 
+                    RasterLayer l = DistribModel.interpolate(project, (Double)resolSpinner.getValue(), varComboBox.getSelectedItem().toString(), 
                                         Double.parseDouble(alphaTextField.getText()), ((GraphGenerator)graphComboBox.getSelectedItem()).getLinkset(), 
-                                        multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), progressBar);
+                                        multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), true, progressBar);
                     progressBar.setNote("Saving");
                     l.setName(rasterNameTextField.getText());
                     l.setRemovable(true);
-                    Project.getProject().getAnalysisLayer().addLayerFirst(l);
-                    l.saveRaster(new File(Project.getProject().getDirectory(), l.getName() + ".tif"));
+                    project.getAnalysisLayer().addLayerFirst(l);
+                    l.saveRaster(new File(project.getDirectory(), l.getName() + ".tif"));
                     
                 } catch (IOException ex) {
                     Logger.getLogger(MetricInterpolDlg.class.getName()).log(Level.SEVERE, null, ex);
@@ -340,7 +341,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
     private void graphComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphComboBoxActionPerformed
 
         GraphGenerator g = (GraphGenerator) graphComboBox.getSelectedItem();
-        varComboBox.setModel(new DefaultComboBoxModel(Project.getProject().getGraphPatchAttr(g.getName()).toArray()));
+        varComboBox.setModel(new DefaultComboBoxModel(project.getGraphPatchAttr(g.getName()).toArray()));
         varComboBoxActionPerformed(null);
         if (g.getType() == GraphGenerator.THRESHOLD) { 
             dSpinner.setValue(g.getThreshold());

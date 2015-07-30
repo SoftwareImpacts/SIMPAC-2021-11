@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.links;
 
@@ -19,22 +15,22 @@ import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 
 /**
- *
- * @author gvuidel
+ * Euclidean pathfinder.
+ * 
+ * @author Gilles Vuidel
  */
 public class EuclidePathFinder implements SpacePathFinder {
 
     private Project project;
 
+    /**
+     * Creates a new Euclidean pathfinder
+     * @param project the current project
+     */
     public EuclidePathFinder(Project project) {
         this.project = project;
     }
 
-    /**
-     * Calcule la distance euclidienne à partir du point p vers toutes les 
-     * destinations dests
-     * @return les distances euclidiennes de p vers les destinations
-     */
     @Override
     public List<double[]> calcPaths(Coordinate p, List<Coordinate> dests) {
         List<double[]> distances = new ArrayList<>();
@@ -45,23 +41,11 @@ public class EuclidePathFinder implements SpacePathFinder {
         return distances;
     }
     
-    /**
-     * @param p
-     * @param maxCost
-     * @param realPath
-     * @return 
-     */
     @Override
     public HashMap<DefaultFeature, Path> calcPaths(Coordinate p, double maxCost, boolean realPath) {
         return calcPaths(new GeometryFactory().createPoint(p), maxCost, realPath);
     }
     
-    /**
-     * @param geom
-     * @param maxCost
-     * @param realPath
-     * @return 
-     */
     @Override
     public HashMap<DefaultFeature, Path> calcPaths(Geometry geom, double maxCost, boolean realPath) {
         Collection<DefaultFeature> nearPatches = project.getPatches();
@@ -87,11 +71,27 @@ public class EuclidePathFinder implements SpacePathFinder {
         return paths;
     }
 
+    /**
+     * Unsupported operation !
+     * @param oPatch
+     * @param maxCost
+     * @param realPath
+     * @param all
+     * @return 
+     * @throws UnsupportedOperationException
+     */
     @Override
     public HashMap<Feature, Path> calcPaths(Feature oPatch, double maxCost, boolean realPath, boolean all) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Unsupported operation !
+     * @param oPatch
+     * @param dPatch
+     * @return 
+     * @throws UnsupportedOperationException
+     */
     @Override
     public HashMap<Feature, Path> calcPaths(Feature oPatch, Collection<Feature> dPatch) {
         throw new UnsupportedOperationException("Not supported yet.");

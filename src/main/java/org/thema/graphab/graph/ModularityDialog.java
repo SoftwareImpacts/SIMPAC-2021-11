@@ -202,7 +202,7 @@ public class ModularityDialog extends javax.swing.JDialog {
                 for(Modularity.Cluster c : partition) {
                     List<Geometry> geoms = new ArrayList<>();
                     for(Node n : c.getNodes())  {
-                        geoms.add(Project.getProject().getVoronoi((Integer)Project.getPatch(n).getId()).getGeometry());
+                        geoms.add(graph.getProject().getVoronoi((Integer)Project.getPatch(n).getId()).getGeometry());
                     }
                     clusters.add(new DefaultFeature(c.getId(), CascadedPolygonUnion.union(geoms), attrNames, Arrays.asList(c.getPartModularity())));
                 }
@@ -237,7 +237,7 @@ public class ModularityDialog extends javax.swing.JDialog {
         Set<Modularity.Cluster> partition = optimCheckBox.isSelected() ? mod.getOptimPartition((int) nbSpinner.getValue())
                         : mod.getPartition((int) nbSpinner.getValue());
         try {
-            Project.getProject().addGraph(new ModGraphGenerator(graph, partition), true);
+            graph.getProject().addGraph(new ModGraphGenerator(graph, partition), true);
         } catch (IOException | SchemaException ex) {
             Logger.getLogger(ModularityDialog.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, "Error while creating the graph : " + ex);

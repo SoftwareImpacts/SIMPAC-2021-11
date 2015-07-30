@@ -10,7 +10,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import org.thema.common.ProgressBar;
 import org.thema.common.parallel.AbstractParallelFTask;
-import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
@@ -25,7 +24,7 @@ import org.thema.graphab.links.Path;
  */
 public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, Double[]>, TreeMap<Double, Double[]>> {
 
-    private String linkName;
+    private Linkset linkset;
     private boolean distAbs;
     private double min, inc, max;
     private boolean intraPatchDist;
@@ -45,10 +44,10 @@ public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, 
      * @param launcher the global metric launcher
      * @param intraPatchDist include intra patch distance when creating the graphs ?
      */
-    public BatchGraphMetricTask(ProgressBar monitor, String linkName, boolean distAbs, 
+    public BatchGraphMetricTask(ProgressBar monitor, Linkset linkset, boolean distAbs, 
             double min, double inc, double max, GlobalMetricLauncher launcher, boolean intraPatchDist) {
         super(monitor);
-        this.linkName = linkName;
+        this.linkset = linkset;
         this.distAbs = distAbs;
         this.min = min;
         this.inc = inc;
@@ -71,7 +70,7 @@ public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, 
         // distance range
         if(distAbs) {
             TreeSet<Double> distSet = new TreeSet<>();
-            for(Path p : Project.getProject().getPaths(linkName)) {
+            for(Path p : linkset.getPaths()) {
                 distSet.add(getPathDist(p));
             }
 
@@ -87,7 +86,7 @@ public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, 
             // or nb links range
         } else {
             ArrayList<Double> distLst = new ArrayList<>();
-            for(Path p : Project.getProject().getPaths(linkName)) {
+            for(Path p : linkset.getPaths()) {
                 distLst.add(getPathDist(p));
             }
             Collections.sort(distLst);
@@ -109,7 +108,7 @@ public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, 
 
 
     private double getPathDist(Path p) {
-        return Project.getProject().getLinkset(linkName).getType_length() == Linkset.COST_LENGTH ?
+        return linkset.getType_length() == Linkset.COST_LENGTH ?
             p.getCost() : p.getDist();
     }
 
@@ -120,7 +119,7 @@ public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, 
             if(isCanceled()) {
                 return null;
             }
-            GraphGenerator gen = new GraphGenerator("g", Project.getProject().getLinkset(linkName),
+            GraphGenerator gen = new GraphGenerator("g", linkset,
                     GraphGenerator.THRESHOLD, t, intraPatchDist);
             Double[] res = launcher.calcMetric(gen, false, null);
             results.put(t, res);

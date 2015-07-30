@@ -5,11 +5,14 @@ package org.thema.graphab.model;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BandedSampleModel;
 import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,6 +32,7 @@ import org.geotools.geometry.DirectPosition2D;
 import org.opengis.coverage.CannotEvaluateException;
 import org.opengis.coverage.PointOutsideCoverageException;
 import org.opengis.geometry.DirectPosition;
+import org.thema.common.JTS;
 import org.thema.common.ProgressBar;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
@@ -41,6 +45,8 @@ import org.thema.drawshape.style.RasterStyle;
 import org.thema.graphab.Project;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
+import org.thema.graphab.links.DoubleRasterPathFinder;
+import org.thema.graphab.links.RasterPathFinder;
 import org.thema.graphab.links.SpacePathFinder;
 import org.thema.graphab.model.Logistic.LogisticFunction;
 import org.thema.graphab.pointset.Pointset;
@@ -51,16 +57,16 @@ import org.thema.graphab.pointset.Pointset;
  */
 public class DistribModel {
 
-    Project project;
+    private Project project;
 
-    Pointset exoData;
-    String varName;
-    double alpha;
-    List<String> patchVars;
-    LinkedHashMap<String, GridCoverage2D> extVars;
-    boolean bestModel;
-    boolean multiAttach;
-    double dMax;
+    private Pointset exoData;
+    private String varName;
+    private double alpha;
+    private List<String> patchVars;
+    private LinkedHashMap<String, GridCoverage2D> extVars;
+    private boolean bestModel;
+    private boolean multiAttach;
+    private double dMax;
     
     private int nVar;
     private double [][] a;
@@ -68,9 +74,9 @@ public class DistribModel {
     private List<String> varNames;
     private int usedVars;
     private RealVector stdVar;
-    Logistic regression;
+    private Logistic regression;
 
-    HashMap<Geometry, HashMap<DefaultFeature, Path>> costCache;
+    private HashMap<Geometry, HashMap<DefaultFeature, Path>> costCache;
 
     public DistribModel(Project project, Pointset data, String varName, double alpha,
             List<String> patchVars, LinkedHashMap<String, GridCoverage2D> extVars,
@@ -123,8 +129,13 @@ public class DistribModel {
     public double getCoef(String varName) {
         return regression.getCoefs()[getUsedVars().indexOf(varName)+1];
     }
+    
     public double getStdCoef(String varName) {
         return getCoef(varName) * stdVar.getEntry(getVarNames().indexOf(varName));
+    }
+
+    public HashMap<Geometry, HashMap<DefaultFeature, Path>> getCostCache() {
+        return costCache;
     }
     
     public String estimModel(TaskMonitor monitor) throws IOException, MathException {
@@ -354,79 +365,140 @@ public class DistribModel {
     
     public static RasterLayer interpolate(final Project project, final double resol, 
             final String var, final double alpha, final Linkset cost, final boolean multiAttach,
-            final double dMax, ProgressBar monitor) {
+            final double dMax, final boolean avg, ProgressBar monitor) {
 
         final int wi = (int)(project.getZone().getWidth() / resol);
         final int h = (int)(project.getZone().getHeight() / resol);
         final double minx = project.getZone().getMinX() + (project.getZone().getWidth() - wi*resol) / 2 + resol / 2;
         final double maxy = project.getZone().getMaxY() - (project.getZone().getHeight() - h*resol) / 2 - resol / 2;
 
-        final WritableRaster raster = Raster.createWritableRaster(new ComponentSampleModel(DataBuffer.TYPE_FLOAT, wi,
-                h, 1, wi, new int[] {0}), null);
+        final WritableRaster raster;
 
         monitor.setNote("Interpolate...");
 
-        AbstractParallelFTask task = new AbstractParallelFTask(monitor) {
-            @Override
-            protected Object execute(int start, int end) {
-                try {
-                    SpacePathFinder pathFinder = project.getPathFinder(cost);
+        AbstractParallelFTask<RasterLayer, Void> task;
+        if(cost.getType_dist() == Linkset.EUCLID || !multiAttach || avg || !cost.isCostLength() || wi*h < project.getPatches().size()) {
+            raster = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_FLOAT, wi, h, 1), null);
+            task = new AbstractParallelFTask(monitor) {
+                @Override
+                protected Object execute(int start, int end) {
+                    try {
+                        SpacePathFinder pathFinder = project.getPathFinder(cost);
 
-                    for(int y = start; y < end; y++) {
-                        for(int x = 0; x < wi; x++) {
-                            Coordinate c = new Coordinate(minx + x*resol, maxy - y*resol);
+                        for(int y = start; y < end; y++) {
+                            for(int x = 0; x < wi; x++) {
+                                Coordinate c = new Coordinate(minx + x*resol, maxy - y*resol);
+                                if(isCanceled()) {
+                                    return null;
+                                }
+                                if(!project.isInZone(c.x, c.y)) {
+                                    raster.setSample(x, y, 0, Float.NaN);
+                                    continue;
+                                }
+                                HashMap<DefaultFeature, Path> patchDists = new HashMap<>();
+                                if(multiAttach) {
+                                    patchDists = pathFinder.calcPaths(c, dMax, false);
+                                }
+
+                                if(patchDists.isEmpty()) {
+                                    double [] d = pathFinder.calcPathNearestPatch(new GeometryFactory().createPoint(c));
+                                    DefaultFeature patch = project.getPatch((int)d[0]);
+                                    patchDists.put(patch, new Path(patch, patch, d[1], d[2]));
+                                }
+
+                                double sum = 0;
+                                double weight = 0;
+                                for(DefaultFeature patch : patchDists.keySet()) {
+                                    double w = Math.exp(-alpha * (cost.isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
+                                    sum += ((Number)patch.getAttribute(var)).doubleValue() * w * (avg ? w : 1);
+                                    weight += w;
+                                }
+                                double val = sum / (avg ? weight : 1);
+                                raster.setSample(x, y, 0, val);
+                            }
+                            incProgress(1);
+                        }
+                    } catch(IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return null;
+                }
+
+                @Override
+                public int getSplitRange() {
+                    return h;
+                }
+                @Override
+                public void finish(Collection results) {  
+                }
+                @Override
+                public RasterLayer getResult() { 
+                    return new RasterLayer("_" + resol, 
+                        new RasterShape(raster, new Rectangle2D.Double(minx-resol/2, maxy-h*resol+resol/2, wi*resol, h*resol),
+                        new RasterStyle(), true), project.getCRS());
+                }
+            };
+        } else {
+            raster = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_DOUBLE, 
+                    project.getRasterPatch().getWidth(), project.getRasterPatch().getHeight(), 1), null);
+            task = new AbstractParallelFTask(monitor) {
+                @Override
+                protected Object execute(int start, int end) {
+                    try {
+                        RasterPathFinder pathFinder = project.getRasterPathFinder(cost);
+                        for(Feature patch : project.getPatches().subList(start, end)) {
                             if(isCanceled()) {
                                 return null;
                             }
-                            if(!project.isInZone(c.x, c.y)) {
-                                raster.setSample(x, y, 0, Float.NaN);
-                                continue;
+                            double patchVal = ((Number)patch.getAttribute(var)).doubleValue();
+                            Raster distRaster = pathFinder.getDistRaster(patch, dMax);
+                            Rectangle r = distRaster.getBounds();
+                            
+                            for(int y = (int)r.getMinY(); y < r.getMaxY(); y++) {
+                                for(int x = (int)r.getMinX(); x < r.getMaxX(); x++) {
+                                    double d = distRaster.getSampleDouble(x, y, 0);
+                                    if(d == Double.MAX_VALUE) {
+//                                        ((WritableRaster)distRaster).setSample(x, y, 0, Double.NaN);
+                                        continue;
+                                    }
+                                    double val = patchVal * Math.exp(-alpha * d);
+                                    synchronized(this) {
+                                        raster.setSample(x, y, 0, raster.getSampleDouble(x, y, 0) + val);
+                                    }
+//                                    ((WritableRaster)distRaster).setSample(x, y, 0, val);
+                                }
                             }
-                            HashMap<DefaultFeature, Path> patchDists = new HashMap<>();
-                            if(multiAttach) {
-                                patchDists = pathFinder.calcPaths(c, dMax, false);
-                            }
-  
-                            if(patchDists.isEmpty()) {
-                                double [] d = pathFinder.calcPathNearestPatch(new GeometryFactory().createPoint(c));
-                                DefaultFeature patch = project.getPatch((int)d[0]);
-                                patchDists.put(patch, new Path(patch, patch, d[1], d[2]));
-                            }
-
-                            double sum = 0;
-                            double weight = 0;
-                            for(DefaultFeature patch : patchDists.keySet()) {
-                                double w = Math.exp(-alpha * (cost.isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
-                                sum += ((Number)patch.getAttribute(var)).doubleValue() * w * w;
-                                weight += w;
-                            }
-                            double val = sum / weight;
-                                
-                            raster.setSample(x, y, 0, val);
-
+                            
+//                            new RasterLayer("", new RasterShape(distRaster, 
+//                                    JTS.envToRect(project.getGrid2space().transform(JTS.geomFromRect(r)).getEnvelopeInternal()), new RasterStyle(), true), 
+//                                    project.getCRS()).saveRaster(new File(project.getDirectory(), patch.getId() + "-interp.tif"));
+                            incProgress(1);
                         }
-                        incProgress(1);
+                    } catch(IOException e) {
+                        throw new RuntimeException(e);
                     }
-                } catch(Exception e) {
-                    throw new RuntimeException(e);
+                    return null;
                 }
-                return null;
-            }
 
-            public int getSplitRange() {
-                return h;
-            }
-            public void finish(Collection results) {  }
-            public Object getResult() { return null; }
-        };
-
+                @Override
+                public int getSplitRange() {
+                    return project.getPatches().size();
+                }
+                @Override
+                public void finish(Collection results) {  
+                }
+                @Override
+                public RasterLayer getResult() { 
+                    return new RasterLayer("_" + project.getResolution(), 
+                        new RasterShape(raster, project.getZone(), new RasterStyle(), true), project.getCRS());
+                }
+            };
+        }
         new ParallelFExecutor(task).executeAndWait();
         if(task.isCanceled()) { 
             return null;
         }
         
-        return new RasterLayer("_" + resol, 
-                new RasterShape(raster, new Rectangle2D.Double(minx-resol/2, maxy-h*resol+resol/2, wi*resol, h*resol),
-                new RasterStyle(), true), project.getCRS());
+        return task.getResult();
     }
 }

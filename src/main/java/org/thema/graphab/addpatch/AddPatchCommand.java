@@ -27,7 +27,6 @@ import org.thema.common.ProgressBar;
 import org.thema.common.collection.TreeMapList;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
-import org.thema.common.swing.TaskMonitor;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
@@ -160,7 +159,7 @@ public class AddPatchCommand {
     private List<DefaultFeature> addPatchSimple(HashMap<Geometry, Double> testGeoms,  
             ProgressBar mon, TreeMap<Integer, Double> metricValues, boolean saveDetail) throws IOException, SchemaException {
         
-        Project project = Project.getProject();
+        Project project = gen.getProject();
 
         mon.setMaximum(nbPatch);
 
@@ -175,7 +174,7 @@ public class AddPatchCommand {
         double capa = 0;
         
         for(int i = 0; i < nbPatch; i++) {
-            AddPatchTask task = new AddPatchTask(bestGeom, capa, gen.getName(), metric, testGeoms, mon.getSubProgress(1));
+            AddPatchTask task = new AddPatchTask(bestGeom, capa, gen, metric, testGeoms, mon.getSubProgress(1));
             ExecutorService.execute(task);
             TreeMapList<Double, Geometry> patchIndices = task.getResult();
             
@@ -258,7 +257,7 @@ public class AddPatchCommand {
      * @throws SchemaException 
      */
     private List<DefaultFeature> addPatchGrid(ProgressBar mon, TreeMap<Integer, Double> indiceValues, boolean saveDetail) throws IOException, SchemaException  {
-        Project project = Project.getProject();
+        Project project = gen.getProject();
         Rectangle2D rect = project.getZone();
         double dx = rect.getWidth() - Math.floor((rect.getWidth()) / res) * res;
         double dy = rect.getHeight() - Math.floor((rect.getHeight()) / res) * res;
@@ -379,17 +378,17 @@ public class AddPatchCommand {
         DefaultFeature.saveFeatures(newGraph.getLinks(), new File(dir, "links-" + name + ".shp"));
         newGraph.getLayers().getEdgeLayer().exportToShapefile(new File(dir, "topo-links-" + name + ".shp"));
         
-        new RasterLayer("", new RasterShape(Project.getProject().getImageSource(), Project.getProject().getZone(), new RasterStyle(), true), Project.getProject().getCRS())
+        new RasterLayer("", new RasterShape(gen.getProject().getImageSource(), gen.getProject().getZone(), new RasterStyle(), true), gen.getProject().getCRS())
                 .saveRaster(new File(dir, "landuse.tif"));
     }
     
     private File getResultDir() {
         String name = gen.getName() + "_" + metric.getDetailName();
         if(isGridSampling()) {
-            return new File(Project.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
+            return new File(gen.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
                     "_res" + res + "_multi" + nbMultiPatch + "_" + windowSize);
         } else {
-            return new File(Project.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
+            return new File(gen.getProject().getDirectory(), "addpatch_n" + nbPatch + "_" + name + 
                     "_shp" + shapeFile.getName());
         }
     }
@@ -406,7 +405,7 @@ public class AddPatchCommand {
      */
     private void addPatchWindow(final LinkedList<Point> points, final GridCoverage2D capaCov, final double indInit, 
             final TreeMapList<Double, Set<Point>> pointIndices, int level) throws IOException {
-        Project project = Project.getProject();
+        Project project = gen.getProject();
         Point point = points.getLast();
         if(!project.canCreatePatch(point)) {
             return ;

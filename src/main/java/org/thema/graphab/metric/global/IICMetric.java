@@ -18,7 +18,7 @@ public class IICMetric extends GlobalMetric implements PreCalcMetric<Node> {
 
     @Override
     public Double [] calcMetric(GraphGenerator g) {
-        return new Double[]{metric / Math.pow(Project.getArea(), 2)};
+        return new Double[]{metric / Math.pow(g.getProject().getArea(), 2)};
     }
 
     @Override

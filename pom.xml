@@ -4,7 +4,7 @@
 
     <groupId>org.thema</groupId>
     <artifactId>graphab</artifactId>
-    <version>1.3.27</version>
+    <version>1.3.29</version>
     <packaging>jar</packaging>
 
     <name>Graphab</name>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>common</artifactId>
-            <version>1.3.7</version>
+            <version>1.3.8</version>
         </dependency>        
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>parallel</artifactId>
-            <version>1.2.1</version>
+            <version>1.3.1</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

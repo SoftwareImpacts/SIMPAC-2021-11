@@ -34,7 +34,6 @@ import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graph.pathfinder.EdgeWeighter;
 import org.thema.graph.shape.GraphGroupLayer;
-import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
@@ -60,7 +59,7 @@ public class GraphGenerator {
     private boolean intraPatchDist;
 
     private boolean saved = false;
-
+    
     protected transient List<Graph> components;
     protected transient List<DefaultFeature> compFeatures;
     protected transient Graph graph, pathGraph;
@@ -292,7 +291,7 @@ public class GraphGenerator {
      */
     public synchronized List<Graph> getComponents() {
         if(components == null) {
-            components = partition(getGraph());
+            createComponents();
         }
         return components;
     }
@@ -317,7 +316,7 @@ public class GraphGenerator {
      */
     public synchronized List<DefaultFeature> getComponentFeatures() {
         if(compFeatures == null) {
-            createVoronoi();
+            createComponents();
         }
 
         return compFeatures;
@@ -388,7 +387,7 @@ public class GraphGenerator {
      */
     public synchronized GraphGroupLayer getLayers() {
         if(layers == null) {
-            layers = new GraphLayers(name, this, MainFrame.project.getCRS());   
+            layers = new GraphLayers(name, this, getProject().getCRS());   
         }
 
         return layers;
@@ -400,7 +399,7 @@ public class GraphGenerator {
     protected void createGraph() {
         BasicGraphBuilder gen = new BasicGraphBuilder();
         HashMap<DefaultFeature, Node> patchNodes = new HashMap<>();
-        for(DefaultFeature p : Project.getProject().getPatches()) {
+        for(DefaultFeature p : getProject().getPatches()) {
             Node n = gen.buildNode();
             n.setObject(p);
             gen.addNode(n);
@@ -554,27 +553,40 @@ public class GraphGenerator {
 
     }
 
-    private void createVoronoi() {
+    private synchronized void createComponents() {
         if(saved) {
             try {
-                List<DefaultFeature> features = Project.getProject().loadVoronoiGraph(name);
+                List<DefaultFeature> features = getProject().loadVoronoiGraph(name);
                 // reorder features
                 compFeatures = new ArrayList<>(features);
-                for(DefaultFeature f : features) {
+                for(DefaultFeature f : features) {                    
                     compFeatures.set(((Number)f.getId()).intValue()-1, f);
+                }
+                
+                components = new ArrayList<>();
+                for(Feature f : compFeatures) {
+                    List<Node> nodes = new ArrayList<>();
+                    HashSet<Edge> edges = new HashSet<>();
+                    for(Node n : getNodes()) {
+                        if(f.getGeometry().covers(Project.getPatch(n).getGeometry())) {
+                            nodes.add(n);
+                            edges.addAll(n.getEdges());
+                        }
+                    }
+                    components.add(new BasicGraph(nodes, edges));
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
         } else {
             compFeatures = new ArrayList<>();
-
+            components = partition(getGraph());
             int i = 1;
-            for(Graph gr : getComponents()) {
+            for(Graph gr : components) {
                 List<Geometry> geoms = new ArrayList<>();
                 for(Object o : gr.getNodes()) {
                     Feature f = (Feature)((Node)o).getObject();
-                    geoms.add(MainFrame.project.getVoronoi((Integer)f.getId()).getGeometry());
+                    geoms.add(getProject().getVoronoi((Integer)f.getId()).getGeometry());
                 }
                 Geometry g = CascadedPolygonUnion.union(geoms);
                 List<String> attrNames = new ArrayList<>(0);
@@ -699,6 +711,10 @@ public class GraphGenerator {
      */
     public double getThreshold() {
         return threshold;
+    }
+
+    public Project getProject() {
+        return cost.getProject();
     }
 
     /**

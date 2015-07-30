@@ -17,6 +17,7 @@ import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import org.thema.graphab.metric.global.GlobalMetric;
+import org.thema.graphab.mpi.MpiLauncher;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
@@ -49,13 +50,14 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
      * @param testGeoms the set of patch geometries to test, with their capacity
      * @param monitor th progress bar
      */
-    public AddPatchTask(Geometry addedGeom, double capaGeom, String graphName, GlobalMetric metric, 
+    public AddPatchTask(Geometry addedGeom, double capaGeom, GraphGenerator gen, GlobalMetric metric, 
             HashMap<Geometry, Double> testGeoms, ProgressBar monitor) {
         super(monitor);
         this.addedGeom = addedGeom;
         this.capaGeom = capaGeom;
         this.metric = metric;
-        this.graphName = graphName;
+        this.gen = gen;
+        this.graphName = gen.getName();
         this.testGeoms = testGeoms;
         geoms = new ArrayList<>(testGeoms.keySet());
     }
@@ -63,19 +65,23 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
     @Override
     public void init() {
         super.init();
+        // useful for mpi only cause gen is transient
+        if(gen == null) {
+            gen = MpiLauncher.getProject().getGraph(graphName);
+        }
         try {
             // si il y a un patch à ajouter et qu'il n'a pas encore été ajouté
             // utile seulement pour MPI
-            if(addedGeom != null && Project.getProject().canCreatePatch(addedGeom)) {
+            if(addedGeom != null && gen.getProject().canCreatePatch(addedGeom)) {
                 // add the new patch to the project and the graph
-                DefaultFeature patch = Project.getProject().addPatch(addedGeom, capaGeom);
+                DefaultFeature patch = gen.getProject().addPatch(addedGeom, capaGeom);
                 gen.getLinkset().addLinks(patch);
             }
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
         
-        gen = new GraphGenerator(Project.getProject().getGraph(graphName), "");
+        gen = new GraphGenerator(gen, "");
     }
 
     @Override
@@ -147,7 +153,7 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
      * @throws IOException 
      */
     public static double addPatchSoft(Geometry geom, GlobalMetric metric, GraphGenerator gen, double capa) throws IOException {
-        Project project = Project.getProject();
+        Project project = gen.getProject();
         if(!project.canCreatePatch(geom)) {
             return Double.NaN;
         }

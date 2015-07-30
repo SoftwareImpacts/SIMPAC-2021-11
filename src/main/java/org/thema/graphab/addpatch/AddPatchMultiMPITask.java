@@ -21,6 +21,7 @@ import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import org.thema.graphab.metric.global.GlobalMetric;
+import org.thema.graphab.mpi.MpiLauncher;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
@@ -79,15 +80,17 @@ public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Doubl
     @Override
     public void init() {
         super.init();
-        gen = Project.getProject().getGraph(graphName);
+        if(gen == null) {
+            gen = MpiLauncher.getProject().getGraph(graphName);
+        }
         try {
             // si il y a des patch à ajouter 
             if(addPoints != null) {
                 for(Point p : addPoints.keySet()) {
                     // on vérifie qu'il n'a pas déjà été ajouté (c'est le cas pour le master process)
-                    if(Project.getProject().canCreatePatch(p)) {
+                    if(gen.getProject().canCreatePatch(p)) {
                         // add the new patch to the project and the graph
-                        DefaultFeature patch = Project.getProject().addPatch(p, addPoints.get(p));
+                        DefaultFeature patch = gen.getProject().addPatch(p, addPoints.get(p));
                         gen.getLinkset().addLinks(patch);
                     }
                 }
@@ -145,7 +148,7 @@ public class AddPatchMultiMPITask extends AbstractParallelTask<TreeMapList<Doubl
      * @throws IOException 
      */
     private void addPatchWindow(LinkedList<Point> points, TreeMapList<Double, Set<Point>> pointMetrics, int level) throws IOException {
-        Project project = Project.getProject();
+        Project project = gen.getProject();
         Point point = points.getLast();
         if(!project.canCreatePatch(point)) {
             return ;

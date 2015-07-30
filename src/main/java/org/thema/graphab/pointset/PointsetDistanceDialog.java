@@ -41,11 +41,13 @@ import org.thema.graphab.links.SpacePathFinder;
  */
 public class PointsetDistanceDialog extends javax.swing.JDialog {
 
+    private Project project;
     private Pointset pointset;
     
     /** Creates new form PointsetDistanceDialog */
-    public PointsetDistanceDialog(java.awt.Frame parent, Pointset exo) {
+    public PointsetDistanceDialog(java.awt.Frame parent, Project project, Pointset exo) {
         super(parent, true);
+        
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
@@ -61,16 +63,17 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                 dispose();
             }
         });
+        this.project = project;
         this.pointset = exo;
         
         List<GraphGenerator> graphs = new ArrayList<>();
-        for(GraphGenerator g : Project.getProject().getGraphs()) {
+        for(GraphGenerator g : project.getGraphs()) {
             if (g.getLinkset() == exo.getLinkset()) {
                 graphs.add(g);
             }
         }
         graphCostComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
-        costComboBox.setModel(new DefaultComboBoxModel(Project.getProject().getLinksets().toArray()));
+        costComboBox.setModel(new DefaultComboBoxModel(project.getLinksets().toArray()));
         costComboBox.setSelectedItem(exo.getLinkset());
     }
 
@@ -321,7 +324,6 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final Project project = Project.getProject();
                 final List<DefaultFeature> exos = pointset.getFeatures();
                 ProgressBar mon = Config.getProgressBar("Distances...", exos.size());
 
@@ -423,7 +425,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                                 }
 
                                 distances[i][j][0] = dist - Math.log(Project.getPatchCapacity(patch1)*Project.getPatchCapacity(patch2)
-                                            / Math.pow(Project.getTotalPatchCapacity(), 2))
+                                            / Math.pow(project.getTotalPatchCapacity(), 2))
                                         + alpha * (((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
                                         ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue());
                             }
@@ -452,7 +454,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                     }
                 }
                 mon.setNote("Saving...");
-                try (FileWriter fw = new FileWriter(new File(Project.getProject().getDirectory(), fileTextField.getText()))) {
+                try (FileWriter fw = new FileWriter(new File(project.getDirectory(), fileTextField.getText()))) {
                     fw.write("Id1\tId2\tDistance\tLength\n");
                     for(int i = 0; i < exos.size(); i++) {
                         for(int j = 0; j < exos.size(); j++) {

@@ -3,6 +3,7 @@ package org.thema.graphab;
 import com.thoughtworks.xstream.XStream;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -61,9 +62,8 @@ public class ProjectTest {
         Project.loadPluginMetric(ProjectTest.class.getClassLoader());
 
         coverage = IOImage.loadTiff(new File("target/test-classes/org/thema/graphab/source.tif"));
-        project = new Project("test", new File("/tmp"), coverage, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), 1, Double.NaN, false, 0, false);
+        project = new Project("test", new File("/tmp"), coverage, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), Collections.singleton(1), Double.NaN, false, 0, false);
 //        project = Project.loadProject(new File("/tmp/test.xml"), true);
-        MainFrame.project = project;
         
         // Load project references
         XStream xstream = new XStream(); 
@@ -566,6 +566,5 @@ public class ProjectTest {
     
     private static void reloadProject() throws Exception {
         project = Project.loadProject(new File("/tmp/test.xml"), false);
-        MainFrame.project = project;
     }
 }

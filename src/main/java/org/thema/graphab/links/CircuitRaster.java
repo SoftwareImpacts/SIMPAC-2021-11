@@ -33,8 +33,9 @@ import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 
 /**
- *
- * @author gvuidel
+ * Calculates electrical circuit on raster map.
+ * 
+ * @author Gilles Vuidel
  */
 public final class CircuitRaster {
     
@@ -51,14 +52,32 @@ public final class CircuitRaster {
     private final Project project;
     
     // solver parameters
+    /** Relative error precision for stop condition */
     public static double prec = 1e-6;
+    /** Norm type for calculating error */
     public static Vector.Norm errNorm = Vector.Norm.Two;
+    /** Types of initial solution vector */
     public enum InitVector {
-        ANY, FLAT, DIST
+        /** Choose automatically the best initial solution */
+        ANY, 
+        /** Flat vector initialize to zero but the two ending nodes */
+        FLAT, 
+        /** Use the euclidean distance to estimate initial solution vector */
+        DIST
     }
+    /** the type of initial solution vector */
     public static InitVector initVector = InitVector.FLAT;
        
-    
+    /**
+     * Creates a new Circuit raster from the lanscape map.
+     * @param prj the project
+     * @param codeRaster the landscape map
+     * @param cost th cost array associating codes map with cost
+     * @param con8 8 connexity or 4 ?
+     * @param optimCirc optimize execution time by reducing raster size ?
+     * @param coefSlope the slope coefficient, 0 for no slope
+     * @throws IOException 
+     */
     public CircuitRaster(Project prj, Raster codeRaster, double [] cost, boolean con8, boolean optimCirc, double coefSlope) throws IOException {
         this.project = prj;
         this.rasterPatch = project.getRasterPatch();
@@ -72,10 +91,25 @@ public final class CircuitRaster {
         resolution = project.getResolution();
     }
 
+    /**
+     * Creates a new Circuit raster from an external cost map.
+     * @param prj the project
+     * @param costRaster the cost map
+     * @param con8 8 connexity or 4 ?
+     * @param optimCirc optimize execution time by reducing raster size ?
+     * @param coefSlope the slope coefficient, 0 for no slope
+     * @throws IOException 
+     */
     public CircuitRaster(Project prj, Raster costRaster, boolean con8, boolean optimCirc, double coefSlope) throws IOException {
         this(prj, costRaster, null, con8, optimCirc, coefSlope);
     }
     
+    /**
+     * Creates an electrical circuit between the points c1 and c2
+     * @param c1 the point in world coordinate space emitting the current
+     * @param c2 the point in world coordinate space receiving the current
+     * @return the created circuit
+     */
     public ODCircuit getODCircuit(Coordinate c1, Coordinate c2) {
         Rectangle compZone = new Rectangle(0, 0, rasterPatch.getWidth(), rasterPatch.getHeight());
         Coordinate tc1 = project.getSpace2grid().transform(c1, new Coordinate());
@@ -88,6 +122,12 @@ public final class CircuitRaster {
         return createCircuit(c1, c2, compZone, rasterZone);
     }
     
+    /**
+     * Creates an electrical circuit between the patch patch1 and patch2
+     * @param patch1 the patch emitting the current
+     * @param patch2 the patch receiving the current
+     * @return the created circuit
+     */
     public PatchODCircuit getODCircuit(Feature patch1, Feature patch2) {
         Rectangle compZone = new Rectangle(0, 0, rasterPatch.getWidth(), rasterPatch.getHeight());
         Rectangle zone = compZone;
@@ -129,6 +169,13 @@ public final class CircuitRaster {
         return (PatchODCircuit) createCircuit(patch1, patch2, zone, rasterZone2);
     }
     
+    /**
+     * Check the connexity between p1 and p2 in zone.
+     * @param p1 the first point in raster coordinate
+     * @param p2 the second point in raster coordinate
+     * @param zone the restricted zone in raster coordinate
+     * @return a raster of size zone, where pixel is 1 if connected and -1 if not, or null if p1 and p2 are not connex inside zone
+     */
     private WritableRaster checkConnexity(Point p1, Point p2, Rectangle zone) {
         final int w = rasterPatch.getWidth();
         
@@ -193,7 +240,7 @@ public final class CircuitRaster {
         }
         
         if(nbRem > 0) {
-            System.out.println(nbRem + " pixels are not connected for points (" + p1 + "-" + p2 + ") with rect : " + zone + " -> they are ignored");
+            Logger.getLogger(CircuitRaster.class.getName()).info(nbRem + " pixels are not connected for points (" + p1 + "-" + p2 + ") with rect : " + zone + " -> they are ignored");
         }
         
         if(connex) {
@@ -280,7 +327,7 @@ public final class CircuitRaster {
         }
         
         if(nbRem > 0) {
-            System.out.println(nbRem + " pixels are not connected for patches (" + patch1 + "-" + patch2 + ") with rect : " + zone + " -> they are ignored");
+            Logger.getLogger(CircuitRaster.class.getName()).info(nbRem + " pixels are not connected for patches (" + patch1 + "-" + patch2 + ") with rect : " + zone + " -> they are ignored");
         }
         
         if(connex) {
@@ -290,6 +337,14 @@ public final class CircuitRaster {
         }
     }
     
+    /**
+     * Creates the circuit between patches or points
+     * @param p1 must be a Coordinate or Feature (patch)
+     * @param p2 must be Coordinate or Feature (patch)
+     * @param zone the zone of the circuit
+     * @param rasterZone raster created by checkConnexity
+     * @return the created circuit
+     */
     private ODCircuit createCircuit(Object p1, Object p2, Rectangle zone, Raster rasterZone) {
         final int id1, id2;
         final Point po1, po2;
@@ -493,6 +548,9 @@ public final class CircuitRaster {
                 / (wd * resolution);
     }
 
+    /**
+     * Electrical circuit between 2 nodes, one emitting the current and one receiving the current.
+     */
     public abstract class ODCircuit {
         protected Rectangle zone;
         protected int [] img2mat;
@@ -502,11 +560,21 @@ public final class CircuitRaster {
         private int nbIter;
         private double initErrSum;
         
+        /**
+         * Solves the circuit if not yet done.
+         * @return the global resistance between the two nodes
+         */
         public double getR() {
             solve();
             return U.get(0) - U.get(1);
         }
         
+        /**
+         * Solves the circuit if not yet done.
+         * Just for testing
+         * @param maxCost
+         * @return the map 
+         */
         public Raster getCorridorMap(double maxCost) {
             solve(); 
             double threshold = 1 / (maxCost / getR());
@@ -523,6 +591,10 @@ public final class CircuitRaster {
             return corridor;
         }
         
+        /**
+         * Solves the circuit if not yet done.
+         * @return the current map of the circuit
+         */
         public Raster getCurrentMap() {
             solve(); 
             WritableRaster current = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_FLOAT, zone.width, zone.height, 1), null);
@@ -549,24 +621,39 @@ public final class CircuitRaster {
             return current;
         }
         
+        /**
+         * @return the number of nodes of the circuit
+         */
         public int getSize() {
             return A.numRows();
         }
 
+        /**
+         * @return the zone where the circuit has been calculated in raster coordinate
+         */
         public Rectangle getZone() {
             return zone;
         }
         
+        /**
+         * @return the zone where the circuit has been calculated in world coordinate
+         */
         public Envelope getEnvelope() {
             return project.getGrid2space().transform(JTS.geomFromRect(zone)).getEnvelopeInternal();
         }
         
+        /**
+         * @return the max error
+         */
         public double getErrMax() {
             DenseVector Zres = new DenseVector(getSize());
             A.mult(U, Zres);
             return Zres.add(-1, Z).norm(Vector.Norm.Infinity);
         }
         
+        /**
+         * @return the max error ignoring the first two nodes (emitting and receiving the current)
+         */
         public double getErrMaxWithoutFirst() {
             DenseVector Zres = new DenseVector(getSize());
             A.mult(U, Zres);
@@ -576,6 +663,10 @@ public final class CircuitRaster {
                     .norm(Vector.Norm.Infinity);
         }
         
+        /**
+         * The circuit must be solved before.
+         * @return The root of sum of squares of errors
+         */
         public double getErrSum() {
             return getErrSum(U);
         }
@@ -586,25 +677,42 @@ public final class CircuitRaster {
             return Zres.add(-1, Z).norm(Vector.Norm.Two);
         }
 
+        /**
+         * The circuit must be solved before.
+         * @return the number of iteration for solving the circuit
+         */
         public int getNbIter() {
             return nbIter;
         }
 
+        /**
+         * The circuit must be solved before.
+         * @return the initial root of sum of squares of errors
+         */
         public double getInitErrSum() {
             return initErrSum;
         }
         
+        /**
+         * @return the world coordinate of the node emitting the current, or an approximation
+         */
         protected abstract Coordinate getCoord1();
+        
+        /**
+         * @return the world coordinate of the node receiving the current, or an approximation
+         */
         protected abstract Coordinate getCoord2();
         
+        /**
+         * Solves the circuit if not yet done.
+         * @return the solution vector representing the potential at each node of the circuit
+         */
         public synchronized DenseVector solve() {
             if(U != null) {
                 return U;
             }
             
             Preconditioner P = new DiagonalPreconditioner(getSize());
-//            Preconditioner P = new AMG();
-//            Preconditioner P = new ICC(A.copy());
             P.setMatrix(A);
 
             // Z vector is null but the 2 first elements
@@ -678,7 +786,11 @@ public final class CircuitRaster {
 
         private Feature patch1, patch2;
         
-        
+        /**
+         * 
+         * @param maxCost
+         * @return a vectorial version of the corridor map
+         */
         public Geometry getCorridor(double maxCost) {
             Raster r = getCorridorMap(maxCost);
             Geometry corridor = Project.vectorize(r, new Envelope(0, zone.width, 0, zone.height), 1);

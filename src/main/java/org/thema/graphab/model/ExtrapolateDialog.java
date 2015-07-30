@@ -66,7 +66,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
 
     private DefaultGroupLayer layers;
 
-    public ExtrapolateDialog(Frame owner, Linkset cost, double d, double p, List<String> vars, double[] coefs,
+    public ExtrapolateDialog(Frame owner, Project project, Linkset cost, double d, double p, List<String> vars, double[] coefs,
             LinkedHashMap<String, GridCoverage2D> extVars, boolean multiAttach, double dMax) {
         super(owner, true);
 
@@ -76,7 +76,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
 
         table.getColumnModel().getColumn(1).setCellRenderer(new DecimalFormatRenderer());
         
-        project = Project.getProject();
+        this.project = project;
         costComboBox.setModel(new DefaultComboBoxModel(project.getLinksets().toArray()));
         resolSpinner.setValue(project.getResolution()*10);
         
@@ -98,14 +98,6 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
         }
 
     }
-
-
-
-    /** Creates new form ExtrapolateDialog */
-    public ExtrapolateDialog(java.awt.Frame parent) {
-        this(parent, null, Double.NaN, Double.NaN, null, null, null, false, 1000);
-    }
-
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -413,7 +405,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
                 layers.addLayerFirst(l);
                 
                 try {
-                    l.saveRaster(new File(Project.getProject().getDirectory(), l.getName() + ".tif"));
+                    l.saveRaster(new File(project.getDirectory(), l.getName() + ".tif"));
                 } catch (IOException ex) {
                     Logger.getLogger(ModelDialog.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(ExtrapolateDialog.this, "An error occured : \n" + ex.getLocalizedMessage());

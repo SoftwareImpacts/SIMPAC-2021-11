@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.links;
 
@@ -38,7 +34,6 @@ import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.collections.keyvalue.MultiKey;
-import org.geotools.feature.SchemaException;
 import org.jfree.data.statistics.Regression;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -56,24 +51,37 @@ import org.thema.data.GlobalDataStore;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
+import org.thema.parallel.AbstractParallelTask;
+import org.thema.parallel.ExecutorService;
+import org.thema.parallel.ParallelTask;
 
 /**
- *
- * @author gvuidel
+ * Represents a set of links (ie. paths) between the patches of the project.
+ * The topology can be COMPLETE or PLANAR.
+ * The distance can be EUCLID, COST or CIRCUIT
+ * 
+ * @author Gilles Vuidel
  */
 public class Linkset {
 
+    /** Linkset type (ie. topology) complete or planar */
     public static final int COMPLETE = 1;
+    /** Linkset type (ie. topology) complete or planar */
     public static final int PLANAR = 2;
 
+    /** Linkset distance : euclidean */
     public static final int EUCLID = 1;
+    /** Linkset distance : raster cost */
     public static final int COST = 2;
+    /** Linkset distance : raster circuit */
     public static final int CIRCUIT = 4;
 
+    /** Linkset length type for cost distance : cumulated cost */
     public static final int COST_LENGTH = 1;
+    /** Linkset length type for cost distance : least cost length */
     public static final int DIST_LENGTH = 2;
 
-
+    
     private String name;
     private int type;
     private int type_dist;
@@ -89,33 +97,37 @@ public class Linkset {
 
     private boolean optimCirc;
     
+    private transient Project project;
     private transient List<Path> paths;
     private transient HashMap<MultiKey, double[]> intraLinks;
     
     /**
-     * Jeu de lien en distance cout à partir des codes
-     * @param name
-     * @param type
-     * @param costs
-     * @param type_length
-     * @param realPaths
-     * @param removeCrossPatch
-     * @param distMax 
-     * @param coefSlope 
+     * Creates a linkset with cost distance from landscape map codes.
+     * @param project the project where adding this linkset
+     * @param name linkset name
+     * @param type linkset type (ie. topology) COMPLETE or PLANAR
+     * @param costs cost for each landscape code
+     * @param type_length length COST_LENGTH or DIST_LENGTH
+     * @param realPaths are real paths stored
+     * @param removeCrossPatch remove links crossing patch ?
+     * @param distMax max cost distance for complete topology only or 0 for no max
+     * @param coefSlope coefficient for slope or 0 to avoid slope calculation
      */
-    public Linkset(String name, int type, double[] costs, int type_length, boolean realPaths, 
+    public Linkset(Project project, String name, int type, double[] costs, int type_length, boolean realPaths, 
             boolean removeCrossPatch, double distMax, double coefSlope) {
-        this(name, type, costs, null, type_length, realPaths, removeCrossPatch, distMax, coefSlope);
+        this(project, name, type, costs, null, type_length, realPaths, removeCrossPatch, distMax, coefSlope);
     }
 
     /**
-     * Jeu de lien distance euclidienne
-     * @param name
-     * @param type
-     * @param realPaths
-     * @param distMax 
+     * Creates a linkset with euclidean distance.
+     * @param project the project where adding this linkset
+     * @param name linkset name
+     * @param type linkset type (ie. topology) COMPLETE or PLANAR
+     * @param realPaths are real paths stored
+     * @param distMax max cost distance for complete topology only or 0 for no max
      */
-    public Linkset(String name, int type, boolean realPaths, double distMax) {
+    public Linkset(Project project, String name, int type, boolean realPaths, double distMax) {
+        this.project = project;
         this.name = name;
         this.type = type;
         this.type_dist = EUCLID;
@@ -127,37 +139,41 @@ public class Linkset {
 
 
     /**
-     * Jeu de lien avec des couts externes
-     * @param name
-     * @param type
-     * @param type_length
-     * @param realPaths
-     * @param removeCrossPatch
-     * @param distMax
-     * @param extCostFile 
-     * @param coefSlope 
+     * Creates a linkset with cost distance from external map.
+     * @param project the project where adding this linkset
+     * @param name linkset name
+     * @param type linkset type (ie. topology) COMPLETE or PLANAR
+     * @param type_length length COST_LENGTH or DIST_LENGTH
+     * @param realPaths are real paths stored
+     * @param removeCrossPatch remove links crossing patch ?
+     * @param distMax max cost distance for complete topology only or 0 for no max
+     * @param extCostFile raster file containing costs
+     * @param coefSlope coefficient for slope or 0 to avoid slope calculation
      */
-    public Linkset(String name, int type, int type_length, boolean realPaths, 
+    public Linkset(Project project, String name, int type, int type_length, boolean realPaths, 
             boolean removeCrossPatch, double distMax, File extCostFile, double coefSlope) {
-        this(name, type, null, extCostFile, type_length, realPaths, removeCrossPatch, distMax, coefSlope);
+        this(project, name, type, null, extCostFile, type_length, realPaths, removeCrossPatch, distMax, coefSlope);
     }
     
     /**
-     * Jeu de lien en distance cout à partir des codes ou cout externe
-     * @param name
-     * @param type
-     * @param costs
-     * @param type_length
-     * @param realPaths
-     * @param removeCrossPatch
-     * @param distMax 
-     * @param coefSlope 
+     * Creates a linkset with cost distance from external map or from landscape map codes.
+     * @param project the project where adding this linkset
+     * @param name linkset name
+     * @param type linkset type (ie. topology) COMPLETE or PLANAR
+     * @param costs cost for each landscape code or null
+     * @param type_length length COST_LENGTH or DIST_LENGTH
+     * @param realPaths are real paths stored
+     * @param removeCrossPatch remove links crossing patch ?
+     * @param distMax max cost distance for complete topology only or 0 for no max
+     * @param extCostFile raster file containing costs or null
+     * @param coefSlope coefficient for slope or 0 to avoid slope calculation
      */
-    public Linkset(String name, int type, double[] costs, File extCostFile, int type_length, boolean realPaths, 
+    public Linkset(Project project, String name, int type, double[] costs, File extCostFile, int type_length, boolean realPaths, 
             boolean removeCrossPatch, double distMax, double coefSlope) {
         if(costs != null && extCostFile != null) {
             throw new IllegalArgumentException();
         }
+        this.project = project;
         this.name = name;
         this.type = type;
         this.type_dist = COST;
@@ -170,7 +186,7 @@ public class Linkset {
         this.distMax = distMax;
         this.coefSlope = coefSlope;
         if(extCostFile != null) {
-            String prjPath = Project.getProject().getDirectory().getAbsolutePath();
+            String prjPath = project.getDirectory().getAbsolutePath();
             if(extCostFile.getAbsolutePath().startsWith(prjPath)) {
                 this.extCostFile = new File(extCostFile.getAbsolutePath().substring(prjPath.length()+1));
             } else {
@@ -180,18 +196,20 @@ public class Linkset {
     }
     
     /**
-     * Jeu de lien distance circuit
-     * @param name
-     * @param type
-     * @param costs
-     * @param extCostFile
-     * @param optimCirc
-     * @param coefSlope 
+     * Creates a linkset with circuit distance from external map or from landscape map codes.
+     * @param project the project where adding this linkset
+     * @param name linkset name
+     * @param type linkset type (ie. topology) COMPLETE or PLANAR
+     * @param costs cost for each landscape code or null
+     * @param extCostFile raster file containing costs or null
+     * @param coefSlope coefficient for slope or 0 to avoid slope calculation
+     * @param optimCirc optimize raster size for circuit calculation ?
      */
-    public Linkset(String name, int type, double[] costs, File extCostFile, boolean optimCirc, double coefSlope) {
+    public Linkset(Project project, String name, int type, double[] costs, File extCostFile, boolean optimCirc, double coefSlope) {
         if(costs != null && extCostFile != null) {
             throw new IllegalArgumentException();
         }
+        this.project = project;
         this.name = name;
         this.type = type;
         this.type_dist = CIRCUIT;
@@ -206,7 +224,7 @@ public class Linkset {
         this.coefSlope = coefSlope;
         
         if(extCostFile != null) {
-            String prjPath = Project.getProject().getDirectory().getAbsolutePath();
+            String prjPath = project.getDirectory().getAbsolutePath();
             if(extCostFile.getAbsolutePath().startsWith(prjPath)) {
                 this.extCostFile = new File(extCostFile.getAbsolutePath().substring(prjPath.length()+1));
             } else {
@@ -215,34 +233,73 @@ public class Linkset {
         }
     }
 
+    /**
+     * @return the project attached to this linkset
+     */
+    public Project getProject() {
+        return project;
+    }
+
+    /**
+     * Sets the project attached with this linkset. Used only for project loading.
+     * @param project 
+     */
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
+    /**
+     * @return the max distance for links or zero
+     */
     public double getDistMax() {
         return distMax;
     }
 
+    /**
+     * @return the name of the linkset
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return real paths are stored ?
+     */
     public boolean isRealPaths() {
         return realPaths;
     }
 
+    /**
+     * @return links crossing patches are removed ?
+     */
     public boolean isRemoveCrossPatch() {
         return removeCrossPatch;
     }
 
+    /**
+     * @return slope is used for cost calculation ?
+     */
     public boolean isUseSlope() {
         return coefSlope != 0;
     }
 
+    /**
+     * @return the slope coefficient
+     */
     public double getCoefSlope() {
         return coefSlope;
     }
-    
+
+    /**
+     * @return the topology : COMPLETE or PLANAR
+     */
     public int getTopology() {
         return type;
     }
 
+    /**
+     * @return the distance type : EUCLID, COST or CIRCUIT
+     */
     public int getType_dist() {
         // compatibilité < 1.3
         if(type_dist == 3) {
@@ -251,27 +308,48 @@ public class Linkset {
         return type_dist;
     }
 
+    /**
+     * Useful for cost distance only.
+     * @return the type length : COST_LENGTH or DIST_LENGTH
+     */
     public int getType_length() {
         return type_length;
     }
-    
+
+    /**
+     * @return is external cost map ?
+     */
     public boolean isExtCost() {
         return extCostFile != null;
     }
 
+    /**
+     * Useful for cost distance only.
+     * @return true if the type length is COST_LENGTH
+     */    
     public boolean isCostLength() {
         return type_length == COST_LENGTH;
     }
 
+    /**
+     * Used only for COST distance without external cost map
+     * @return the cost for each code of the landscape map or null
+     */
     public double[] getCosts() {
         return costs;
     }
 
+    /**
+     * Used only for COST distance with external cost map
+     * @return the file containing the costs or null
+     */
     public File getExtCostFile() {
-        if(extCostFile.isAbsolute()) {
+        if(extCostFile == null) {
+            return null;
+        } else if(extCostFile.isAbsolute()) {
             return extCostFile;
         } else {
-            return new File(Project.getProject().getDirectory(), extCostFile.getPath());
+            return new File(project.getDirectory(), extCostFile.getPath());
         }
     }
 
@@ -285,12 +363,12 @@ public class Linkset {
 
     /**
      * load if it's not already the case and return all paths
-     * @return 
+     * @return the paths of the linkset
      */
     public synchronized List<Path> getPaths() {
         if(paths == null)  {
             try {
-                loadPaths(Project.getProject(), new TaskMonitor.EmptyMonitor());
+                loadPaths(new TaskMonitor.EmptyMonitor());
             } catch (IOException ex) {
                 Logger.getLogger(Linkset.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -298,6 +376,13 @@ public class Linkset {
         return paths;
     }
     
+    /**
+     * Returns the cost and the length between 2 coordinates of the border of a patch.
+     * The two coordinates must correspond to the endpoint of two paths connected to the same patch.
+     * @param c1 the first coordinate
+     * @param c2 the second coordinate
+     * @return the cost and the length (may be the same for euclidean distance)
+     */
     public double[] getIntraLinkCost(Coordinate c1, Coordinate c2) {
         if(c1.compareTo(c2) < 0) {
             return getIntraLinks().get(new MultiKey(c1, c2));
@@ -306,6 +391,12 @@ public class Linkset {
         }
     }
     
+    /**
+     * Returns the cost and the length between 2 paths connected to the same patch.
+     * @param p1 the first path
+     * @param p2 the second path
+     * @return the cost and the length (may be the same for euclidean distance)
+     */
     public double[] getIntraLinkCost(Path p1, Path p2) {
         Feature patch = Path.getCommonPatch(p1, p2);
         Coordinate c1 = p1.getCoordinate(patch);
@@ -319,7 +410,7 @@ public class Linkset {
         }
         if(intraLinks == null) {
             try {
-                loadIntraLinks(Project.getProject().getDirectory());
+                loadIntraLinks();
             } catch (IOException ex) {
                 Logger.getLogger(Linkset.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -327,6 +418,12 @@ public class Linkset {
         return intraLinks;
     }
     
+    /**
+     * Estimates the cost from a distance. 
+     * Do a linear regression in double log  between cost and length of all links.
+     * @param distance
+     * @return the cost corresponding to the distance
+     */
     public double estimCost(double distance) {
         if(type_dist == EUCLID) {
             return distance;
@@ -342,7 +439,7 @@ public class Linkset {
     }
 
     /**
-     * Return detailed informations of the linkset.<br/>
+     * Returns detailed informations of the linkset.<br/>
      * The language is local dependent
      * @return 
      */
@@ -372,7 +469,7 @@ public class Linkset {
                     info += bundle.getString("LinksetPanel.rasterRadioButton.text") + "\nFile : " + extCostFile.getAbsolutePath();
                 } else {
                     info += bundle.getString("LinksetPanel.costRadioButton.text") + "\n";
-                    for(Integer code : Project.getProject().getCodes()) {
+                    for(Integer code : project.getCodes()) {
                         info += code + " : " + costs[code] + "\n";
                     }
                 }       
@@ -405,7 +502,6 @@ public class Linkset {
     }
     
     /**
-     * 
      * @return the name of the linkset
      */
     @Override
@@ -426,7 +522,7 @@ public class Linkset {
             throw new IllegalArgumentException("No circuit from euclidean linkset");
         }
         
-        return new Linkset(name+"_circ", type, costs, extCostFile, true, coefSlope);
+        return new Linkset(project, name+"_circ", type, costs, extCostFile, true, coefSlope);
     }
     
     /**
@@ -442,41 +538,39 @@ public class Linkset {
             throw new IllegalArgumentException("No cost from euclidean linkset");
         }
         
-        return new Linkset(name+"_cost", type, costs, extCostFile, COST_LENGTH, true, false, Double.NaN, coefSlope);
+        return new Linkset(project, name+"_cost", type, costs, extCostFile, COST_LENGTH, true, false, Double.NaN, coefSlope);
     }
     
     /**
      * Compute all links defined in this linkset.<br/>
      * This method is called only once by the project
-     * @param prj the project
      * @param progressBar
      * @throws IOException 
      */
-    public void compute(Project prj, ProgressBar progressBar) throws IOException {
+    public void compute(ProgressBar progressBar) throws IOException {
         progressBar.setNote("Create linkset " + getName());
         
         if(getType_dist() == Linkset.EUCLID) {
-            calcEuclidLinkset(prj, progressBar);
+            calcEuclidLinkset(progressBar);
         } else if(getType_dist() == Linkset.CIRCUIT) {
-            calcCircuitLinkset(prj, progressBar);
+            calcCircuitLinkset(progressBar);
         } else {
-            calcCostLinkset(prj, progressBar);
+            calcCostLinkset(progressBar);
         }
         progressBar.reset();
         progressBar.setNote("Create intra links...");
         if(isRealPaths()) {
-            calcIntraLinks(prj, progressBar);
+            calcIntraLinks(progressBar);
         }
     }
     
     /**
      * Compute and return corridors of all paths existing in this linkset
-     * @param prj the project
      * @param progressBar
      * @param maxCost maximal cost distance 
-     * @return list of features where id equals id path and geometry is a polygon or multipolygon
+     * @return list of features where id is equal to id path and geometry is a polygon or multipolygon
      */
-    public List<Feature> computeCorridor(final Project prj, ProgressBar progressBar, final double maxCost) {
+    public List<Feature> computeCorridor(ProgressBar progressBar, final double maxCost) {
         if(getType_dist() == Linkset.EUCLID) {
             throw new IllegalArgumentException("Euclidean linkset is not supported for corridor");
         }
@@ -488,9 +582,9 @@ public class Linkset {
                 try {
                     Geometry corridor;
                     if(getType_dist() == Linkset.COST) {
-                        corridor = calcCostCorridor(prj, path, maxCost);
+                        corridor = calcCostCorridor(path, maxCost);
                     } else {
-                        corridor = calcCircuitCorridor(prj, path, maxCost);
+                        corridor = calcCircuitCorridor(path, maxCost);
                     }
                     if(!corridor.isEmpty()) {
                         corridors.add(new DefaultFeature(path.getId(), corridor));
@@ -506,17 +600,17 @@ public class Linkset {
         return corridors;
     }
     
-    private Geometry calcCircuitCorridor(Project prj, Path path, double maxCost) throws IOException {
-        CircuitRaster circuit = prj.getRasterCircuit(this);
+    private Geometry calcCircuitCorridor(Path path, double maxCost) throws IOException {
+        CircuitRaster circuit = project.getRasterCircuit(this);
         CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(path.getPatch1(), path.getPatch2());
         return odCircuit.getCorridor(maxCost);
     }
 
-    private Geometry calcCostCorridor(Project prj, Path path, double maxCost) throws IOException {
+    private Geometry calcCostCorridor(Path path, double maxCost) throws IOException {
         if(path.getCost() > maxCost) {
             return new GeometryFactory().buildGeometry(Collections.EMPTY_LIST);
         }
-        RasterPathFinder pathfinder = prj.getRasterPathFinder(this);
+        RasterPathFinder pathfinder = project.getRasterPathFinder(this);
         Raster r1 = pathfinder.getDistRaster(path.getPatch1(), maxCost);
         Raster r2 = pathfinder.getDistRaster(path.getPatch2(), maxCost);
         final Rectangle rect = r1.getBounds().intersection(r2.getBounds());
@@ -526,7 +620,7 @@ public class Linkset {
         WritableRaster corridor = Raster.createBandedRaster(DataBuffer.TYPE_BYTE, rect.width, rect.height, 1, new Point(rect.x, rect.y));
         for(int y = rect.y; y < rect.getMaxY(); y++) {
             for(int x = rect.x; x < rect.getMaxX(); x++) {
-                int id = prj.getRasterPatch().getSample(x, y, 0);
+                int id = project.getRasterPatch().getSample(x, y, 0);
                 if(id != id1 && id != id2 &&
                         r1.getSampleDouble(x, y, 0)+r2.getSampleDouble(x, y, 0) <= maxCost) {
                     corridor.setSample(x, y, 0, 1);
@@ -534,21 +628,23 @@ public class Linkset {
             }
         }
         Geometry geom =  Project.vectorize(corridor, JTS.rectToEnv(rect), 1);
-        return prj.getGrid2space().transform(geom);
+        return project.getGrid2space().transform(geom);
     }
     
-    private void calcCostLinkset(final Project prj, ProgressBar progressBar) {
+    private void calcCostLinkset(ProgressBar progressBar) {
         final boolean allLinks = getTopology() == Linkset.COMPLETE;
-        final List<Path> links = Collections.synchronizedList(new ArrayList<Path>(prj.getPatches().size() * 4));
+        
         Path.newSetOfPaths();
         long start = System.currentTimeMillis();
 
-        ParallelFTask task = new AbstractParallelFTask(progressBar) {
+        ParallelTask<List<Path>, List<Path>> task = new AbstractParallelTask<List<Path>, List<Path>>(progressBar) {
+            private List<Path> result = new ArrayList<>();
             @Override
-            protected Object execute(int start, int end) {
+            public List<Path> execute(int start, int end) {
+                List<Path> links = new ArrayList<>();
                 try {
-                    RasterPathFinder pathfinder = prj.getRasterPathFinder(Linkset.this);
-                    for(Feature orig : prj.getPatches().subList(start, end)) {
+                    RasterPathFinder pathfinder = project.getRasterPathFinder(Linkset.this);
+                    for(Feature orig : project.getPatches().subList(start, end)) {
                         if(isCanceled()) {
                             throw new CancellationException();
                         }
@@ -557,9 +653,9 @@ public class Linkset {
                             paths = pathfinder.calcPaths(orig, getDistMax(), isRealPaths(), false);
                         } else {
                             List<Feature> dests = new ArrayList<>();
-                            for(Integer dId : prj.getPlanarLinks().getNeighbors(orig)) {
+                            for(Integer dId : project.getPlanarLinks().getNeighbors(orig)) {
                                 if(((Integer)orig.getId()) < dId) {
-                                    dests.add(prj.getPatch(dId));
+                                    dests.add(project.getPatch(dId));
                                 }
                             }
                             if(dests.isEmpty()) {
@@ -567,12 +663,12 @@ public class Linkset {
                             }
                             paths = pathfinder.calcPaths(orig, dests);
                         }
-
+                        
                         for(Feature d : paths.keySet()) {
                             Path p = paths.get(d);
                             boolean add = true;
                             if(isRemoveCrossPatch() && isRealPaths()) {
-                                List lst = prj.getPatchIndex().query(p.getGeometry().getEnvelopeInternal());
+                                List lst = project.getPatchIndex().query(p.getGeometry().getEnvelopeInternal());
                                 for(Object o : lst) {
                                     Feature f = (Feature) o;
                                     if(f != orig && f != d && f.getGeometry().intersects(p.getGeometry())) {
@@ -590,22 +686,24 @@ public class Linkset {
                 } catch(IOException e) {
                     throw new RuntimeException(e);
                 }
-                return null;
+                return links;
             }
             @Override
             public int getSplitRange() {
-                return prj.getPatches().size();
+                return project.getPatches().size();
+            }
+
+            @Override
+            public List<Path> getResult() {
+                return result;
             }
             @Override
-            public void finish(Collection results) {
-            }
-            @Override
-            public Object getResult() {
-                throw new UnsupportedOperationException("Not supported.");
+            public void gather(List<Path> results) {
+                result.addAll(results);
             }
         };
 
-        new ParallelFExecutor(task).executeAndWait();
+        ExecutorService.execute(task);
 
         if(task.isCanceled()) {
             throw new CancellationException();
@@ -613,27 +711,28 @@ public class Linkset {
         
         Logger.getLogger(Linkset.class.getName()).info("Temps écoulé : " + (System.currentTimeMillis()-start));
         
-        paths = links;
+        paths = task.getResult();
     }
 
-    private void calcEuclidLinkset(final Project prj, ProgressBar progressBar) {
+    private void calcEuclidLinkset(ProgressBar progressBar) {
         final boolean allLinks = getTopology() == Linkset.COMPLETE;
         
         Path.newSetOfPaths();
         
-        final List<Path> links = Collections.synchronizedList(new ArrayList<Path>(prj.getPatches().size() * 4));
-        final STRtree index = prj.getPatchIndex();
+        final STRtree index = project.getPatchIndex();
         
         long start = System.currentTimeMillis();
-        ParallelFTask task = new AbstractParallelFTask(progressBar) {
+        ParallelTask<List<Path>, List<Path>> task = new AbstractParallelTask<List<Path>, List<Path>>(progressBar) {
+            private List<Path> result = new ArrayList<>();
             @Override
-            protected Object execute(int start, int end) {   
-                for(Feature orig : prj.getPatches().subList(start, end)) {
+            public List<Path> execute(int start, int end) {  
+                List<Path> links = new ArrayList<>();
+                for(Feature orig : project.getPatches().subList(start, end)) {
                     if(isCanceled()) {
-                        return null;
+                        throw new CancellationException();
                     }
                     if(allLinks) {
-                        List<DefaultFeature> nearPatches = prj.getPatches();
+                        List<DefaultFeature> nearPatches = project.getPatches();
                         if(getDistMax() > 0) {
                             Envelope env = orig.getGeometry().getEnvelopeInternal();
                             env.expandBy(getDistMax());
@@ -649,8 +748,8 @@ public class Linkset {
                             }
                         }
                     } else {
-                        for (Integer dId : prj.getPlanarLinks().getNeighbors(orig)) {
-                            Feature d = prj.getPatch(dId);
+                        for (Integer dId : project.getPlanarLinks().getNeighbors(orig)) {
+                            Feature d = project.getPatch(dId);
                             if (((Integer)orig.getId()) < dId) {
                                 links.add(Path.createEuclidPath(orig, d));
                             }
@@ -659,57 +758,60 @@ public class Linkset {
 
                     incProgress(1);
                 }
-                return null;
+                return links;
             }
 
             @Override
             public int getSplitRange() {
-                return prj.getPatches().size();
+                return project.getPatches().size();
             }
+
             @Override
-            public void finish(Collection results) {
+            public List<Path> getResult() {
+                return result;
             }
+
             @Override
-            public Object getResult() {
-                throw new UnsupportedOperationException("Not supported yet.");
+            public void gather(List<Path> results) {
+                result.addAll(results);
             }
         };
 
-        new ParallelFExecutor(task).executeAndWait();
+        ExecutorService.execute(task);
 
         if(task.isCanceled()) {
             throw new CancellationException();
         }
         Logger.getLogger(Linkset.class.getName()).info("Temps écoulé : " + (System.currentTimeMillis()-start));
-        paths = links;
+        paths = task.getResult();
     }
        
-    private void calcCircuitLinkset(final Project prj, ProgressBar progressBar) throws IOException {
+    private void calcCircuitLinkset(ProgressBar progressBar) throws IOException {
         final boolean allLinks = getTopology() == Linkset.COMPLETE;
-        final List<Path> links = Collections.synchronizedList(new ArrayList<Path>(prj.getPatches().size() * 4));
+        final List<Path> links = Collections.synchronizedList(new ArrayList<Path>(project.getPatches().size() * 4));
         Path.newSetOfPaths();
         long start = System.currentTimeMillis();
-        final CircuitRaster circuit = prj.getRasterCircuit(this);
-        final FileWriter w = new FileWriter(new File(prj.getDirectory(), getName() + "-stats.csv"));
+        final CircuitRaster circuit = project.getRasterCircuit(this);
+        final FileWriter w = new FileWriter(new File(project.getDirectory(), getName() + "-stats.csv"));
         w.write("Id1,Id2,Area1,Area2,W,H,T,Iter,InitSErr,R,MErr,M2Err,SErr\n");
         ParallelFTask task = new AbstractParallelFTask(progressBar) {
             @Override
             protected Object execute(int start, int end) {
-                for(Feature orig : prj.getPatches().subList(start, end)) {
+                for(Feature orig : project.getPatches().subList(start, end)) {
                     if(isCanceled()) {
                         throw new CancellationException();
                     }
                     if(allLinks) {
-                        for(Feature patch : prj.getPatches()) {
+                        for(Feature patch : project.getPatches()) {
                             if((Integer)orig.getId() < (Integer)patch.getId()) {
                                 double r = circuit.getODCircuit(orig, patch).getR();
                                 links.add(new Path(orig, patch, r, Double.NaN));
                             }
                         }
                     } else {
-                        for(Integer dId : prj.getPlanarLinks().getNeighbors(orig)) {
+                        for(Integer dId : project.getPlanarLinks().getNeighbors(orig)) {
                             if(((Integer)orig.getId()) < dId) {
-                                DefaultFeature dest = prj.getPatch(dId);
+                                DefaultFeature dest = project.getPatch(dId);
                                 long t1 = System.currentTimeMillis();
                                 CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(orig, dest);
                                 odCircuit.solve();
@@ -725,7 +827,7 @@ public class Linkset {
                                         Logger.getLogger(Linkset.class.getName()).log(Level.WARNING, null, ex);
                                     }
                                 }
-                                links.add(new Path(orig, prj.getPatch(dId), r, Double.NaN));
+                                links.add(new Path(orig, project.getPatch(dId), r, Double.NaN));
                             }
                         }
                     }
@@ -737,7 +839,7 @@ public class Linkset {
             }
             @Override
             public int getSplitRange() {
-                return prj.getPatches().size();
+                return project.getPatches().size();
             }
             @Override
             public void finish(Collection results) {
@@ -759,7 +861,7 @@ public class Linkset {
         paths = links;
     }
 
-    private void calcIntraLinks(final Project prj, ProgressBar progressBar) {
+    private void calcIntraLinks(ProgressBar progressBar) {
         final HashMapList<Feature, Path> mapLinks = new HashMapList<>();
         for(Path p : paths) {
             mapLinks.putValue(p.getPatch1(), p);
@@ -772,7 +874,7 @@ public class Linkset {
             protected void executeOne(Feature patch) {
                 SpacePathFinder pathFinder;
                 try {
-                    pathFinder = prj.getPathFinder(Linkset.this);
+                    pathFinder = project.getPathFinder(Linkset.this);
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -810,8 +912,13 @@ public class Linkset {
         intraLinks = mapIntraLinks;
     }
 
-    public void loadPaths(Project prj, ProgressBar mon) throws IOException {
-        File fCSV = new File(prj.getDirectory(), name + "-links.csv");
+    /**
+     * Loads the links from the shapefile and/or csv file
+     * @param mon
+     * @throws IOException 
+     */
+    public void loadPaths(ProgressBar mon) throws IOException {
+        File fCSV = new File(project.getDirectory(), name + "-links.csv");
         HashMap<Object, Path> map = new HashMap<>();
         try (CSVReader r = new CSVReader(new FileReader(fCSV))) {
             String [] attrNames = r.readNext();
@@ -820,14 +927,14 @@ public class Linkset {
             }
             String [] tab;
             while((tab = r.readNext()) != null) {
-                Path p = Path.deserialPath(tab, prj);
+                Path p = Path.deserialPath(tab, project);
                 map.put(p.getId(), p);
             }
         }
 
         if(realPaths && !map.isEmpty()) {
             List<DefaultFeature> features = GlobalDataStore.getFeatures(
-                    new File(prj.getDirectory(), name + "-links.shp"), "Id", mon);
+                    new File(project.getDirectory(), name + "-links.shp"), "Id", mon);
 
             for(DefaultFeature f : features) {
                 map.get(f.getId()).setGeometry(f.getGeometry());
@@ -837,8 +944,12 @@ public class Linkset {
         paths = new ArrayList<>(map.values());
     }
     
-    public void saveLinks(File dir) throws IOException, SchemaException {
-        try (CSVWriter w = new CSVWriter(new FileWriter(new File(dir, name + "-links.csv")))) {
+    /**
+     * Saves the links into a csv file in the project directory
+     * @throws IOException
+     */
+    public void saveLinks() throws IOException {
+        try (CSVWriter w = new CSVWriter(new FileWriter(new File(project.getDirectory(), name + "-links.csv")))) {
             if(!getPaths().isEmpty()) {
                 w.writeNext(getPaths().get(0).getAttributeNames().toArray(new String[0]));
             }
@@ -848,11 +959,12 @@ public class Linkset {
         }
     }
     
-    private void loadIntraLinks(File dir) throws IOException {
-        File fCSV = new File(dir, name + "-links-intra.csv");
+    private void loadIntraLinks() throws IOException {
+        File fCSV = new File(project.getDirectory(), name + "-links-intra.csv");
+        // for project compatibility
         if(!fCSV.exists()) {
-            calcIntraLinks(Project.getProject(), Config.getProgressBar("Compute intra links"));
-            saveIntraLinks(dir);
+            calcIntraLinks(Config.getProgressBar("Compute intra links"));
+            saveIntraLinks();
         }
         try (CSVReader r = new CSVReader(new FileReader(fCSV))) {
             r.readNext();
@@ -868,8 +980,12 @@ public class Linkset {
         }
     }
 
-    public void saveIntraLinks(File dir) throws IOException {
-        File fCSV = new File(dir, name + "-links-intra.csv");
+    /**
+     * Saves intra links. Called only by the project at linkset creation
+     * @throws IOException 
+     */
+    public void saveIntraLinks() throws IOException {
+        File fCSV = new File(project.getDirectory(), name + "-links-intra.csv");
         try (CSVWriter w = new CSVWriter(new FileWriter(fCSV))) {
             w.writeNext(new String[]{"Coord1", "Coord2", "Cost", "Length"});
             
@@ -883,9 +999,9 @@ public class Linkset {
     }
     
     /**
-     * Add links for the patch
+     * Calculates and add links for the new patch
      * The patch have to be added in the project before (Project.addPatch)
-     * @param patch must be point geometry
+     * @param patch must be a point geometry
      * @throws IOException 
      */
     public void addLinks(DefaultFeature patch) throws IOException {
@@ -899,18 +1015,27 @@ public class Linkset {
         }
     }
     
+    /**
+     * Calculates links for the new patch.
+     * Does not support planar topology.
+     * @param patch must be a point geometry
+     * @return the new links
+     * @throws IOException 
+     * @throws IllegalStateException if the topology is PLANAR
+     */
     public HashMap<DefaultFeature, Path> calcNewLinks(DefaultFeature patch) throws IOException {
         if(type == PLANAR) {
             throw new IllegalStateException("Planar topology is not supported !");
         }
-        SpacePathFinder pathfinder = Project.getProject().getPathFinder(this);
+        SpacePathFinder pathfinder = project.getPathFinder(this);
         HashMap<DefaultFeature, Path> newPaths = pathfinder.calcPaths(patch.getGeometry(), distMax, realPaths);
         newPaths.remove(patch); 
         return newPaths;
     }
+    
     /**
-     * Remove last links created for the new patch
-     * Links must have been created by addLinks
+     * Remove last links created for the new patch.
+     * The links must have been created by addLinks
      * @param patch 
      */
     public void removeLinks(DefaultFeature patch) {
@@ -921,19 +1046,18 @@ public class Linkset {
     
     /**
      * Extract for each path the number of pixels for each cost
-     * @param prj the project
-     * @return a 2D map (Path, cost) -> #pixels
+     * @return a 2D mapping (Path, cost) -> #pixels
      * @throws IOException 
      */
-    public HashMap2D<Path, Double, Integer> extractCostFromPath(Project prj) throws IOException {
+    public HashMap2D<Path, Double, Integer> extractCostFromPath() throws IOException {
         if(!isRealPaths()) {
             throw new IllegalStateException("Linkset must have real path.");
         }
         if(getType_dist() != COST) {
             throw new IllegalStateException("Linkset must have cost from landscape.");
         }
-        AffineTransformation trans = prj.getSpace2grid();
-        WritableRaster land = prj.getImageSource();
+        AffineTransformation trans = project.getSpace2grid();
+        WritableRaster land = project.getImageSource();
         
         Set<Double> costSet = new TreeSet<>();
         for(double c : costs) {

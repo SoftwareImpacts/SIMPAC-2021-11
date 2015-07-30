@@ -11,7 +11,9 @@
     <int>9</int>
     <int>10</int>
   </codes>
-  <patchCode>1</patchCode>
+  <patchCodes>
+      <int>1</int>
+  </patchCodes>
   <noData>NaN</noData>
   <con8>false</con8>
   <minArea>0.0</minArea>

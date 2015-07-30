@@ -1,13 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * LinksetPanel.java
- *
- * Created on 4 mai 2010, 09:53:51
- */
 
 package org.thema.graphab.links;
 
@@ -28,14 +18,15 @@ import javax.swing.table.TableModel;
 import org.thema.graphab.Project;
 
 /**
- *
- * @author gvuidel
+ * Panel for creating a new Linkset.
+ * 
+ * @author Gilles Vuidel
  */
 public class LinksetPanel extends javax.swing.JPanel {
 
     private class Editor extends DefaultCellEditor  {
 
-        public Editor() {
+        private Editor() {
             super(new JTextField());
             setClickCountToStart(1);
         }
@@ -65,7 +56,9 @@ public class LinksetPanel extends javax.swing.JPanel {
         
     }
 
-    int maxCode;
+    private int maxCode;
+    private Project project;
+
     /** Creates new form LinksetPanel */
     public LinksetPanel() {
         initComponents();
@@ -73,6 +66,20 @@ public class LinksetPanel extends javax.swing.JPanel {
         table.setDefaultEditor(Double.class, new Editor());
     }
 
+    /**
+     * Set the current project for creating the Linkset.
+     * 
+     * @param project 
+     */
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
+    /**
+     * Set the codes and default cost.
+     * @param codes the codes of the landscape map
+     * @param cost the default cost, may be null
+     */
     public void setCodes(Set<Integer> codes, double [] cost) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.setRowCount(0);
@@ -85,6 +92,10 @@ public class LinksetPanel extends javax.swing.JPanel {
         maxCode = treeCodes.last();
     }
 
+    /**
+     * {@link #setProject(org.thema.graphab.Project)} must be called before.
+     * @return the new linkset
+     */
     public Linkset getLinkset() {
         
         String name = nameTextField.getText();
@@ -107,7 +118,7 @@ public class LinksetPanel extends javax.swing.JPanel {
         
         Linkset cost;
         if(euclidRadioButton.isSelected()) {
-            cost = new Linkset(name, type, realPathCheckBox.isSelected(), distMax);
+            cost = new Linkset(project, name, type, realPathCheckBox.isSelected(), distMax);
         } else if(costRadioButton.isSelected()) {
             if(table.getCellEditor() != null) {
                 table.getCellEditor().stopCellEditing();
@@ -117,18 +128,21 @@ public class LinksetPanel extends javax.swing.JPanel {
             for(int i = 0; i < model.getRowCount(); i++) {
                 costs[(Integer)model.getValueAt(i, 0)] = (Double)model.getValueAt(i, 1);
             }
-            cost = new Linkset(name, type, costs, type_length, realPathCheckBox.isSelected(), 
+            cost = new Linkset(project, name, type, costs, type_length, realPathCheckBox.isSelected(), 
                     removeCrossPatchCheckBox.isSelected(), distMax, coefSlope);
         } else {
             File f = rasterSelectFilePanel.getSelectedFile();
-            cost = new Linkset(name, type, type_length, realPathCheckBox.isSelected(), 
+            cost = new Linkset(project, name, type, type_length, realPathCheckBox.isSelected(), 
                     removeCrossPatchCheckBox.isSelected(), distMax, f, coefSlope);
         }
 
         return cost;
     }
 
-    public String getCostName() {
+    /**
+     * @return the linkset name 
+     */
+    public String getLinksetName() {
         return nameTextField.getText();
     }
 
@@ -465,9 +479,8 @@ public class LinksetPanel extends javax.swing.JPanel {
         lengthRadioButton.setEnabled(!euclidRadioButton.isSelected());
         costDistRadioButton.setEnabled(!euclidRadioButton.isSelected());
         removeCrossPatchCheckBox.setEnabled(!euclidRadioButton.isSelected());
-        Project prj = Project.getProject();
-        useDEMCheckBox.setEnabled(!euclidRadioButton.isSelected() && prj != null && prj.isDemExist());
-        coefSlopeSpinner.setEnabled(!euclidRadioButton.isSelected() && prj != null && prj.isDemExist());
+        useDEMCheckBox.setEnabled(!euclidRadioButton.isSelected() && project != null && project.isDemExist());
+        coefSlopeSpinner.setEnabled(!euclidRadioButton.isSelected() && project != null && project.isDemExist());
     }//GEN-LAST:event_distanceRadioButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

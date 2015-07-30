@@ -24,18 +24,21 @@ public class CalcMetricDialog<T extends Metric> extends javax.swing.JDialog {
 
     private List<? extends T> metrics;
 
+    private Project project;
+    
     /**
      * Creates new form CalcMetricDialog 
      * @param parent parent frame
      * @param graphs collection of graphs
      * @param metrics list of metrics
      */
-    public CalcMetricDialog(java.awt.Frame parent, Collection<GraphGenerator> graphs, List<? extends T> metrics) {
+    public CalcMetricDialog(java.awt.Frame parent, Project project, Collection<GraphGenerator> graphs, List<? extends T> metrics) {
         super(parent, true);
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
-
+        
+        this.project = project;
         this.metrics = metrics;
         graphComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
 
@@ -175,7 +178,7 @@ public class CalcMetricDialog<T extends Metric> extends javax.swing.JDialog {
     private void indiceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indiceComboBoxActionPerformed
         paramPanel.removeAll();
         T ind = (T) indiceComboBox.getSelectedItem();
-        paramPanel.add(ind.getParamPanel(Project.getProject()), BorderLayout.CENTER);
+        paramPanel.add(ind.getParamPanel(project), BorderLayout.CENTER);
         paramPanel.revalidate();
         paramPanel.repaint();
     }//GEN-LAST:event_indiceComboBoxActionPerformed

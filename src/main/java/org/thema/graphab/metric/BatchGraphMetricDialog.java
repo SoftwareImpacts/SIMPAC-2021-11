@@ -18,7 +18,7 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
     /** has user clicked Ok ? */
     public boolean isOk = false;
     /** the selected linkset */
-    public String linksetName;
+    public Linkset linkset;
     /** the range of values for the graph thresholds in distance or nb links depending on distAbs */
     public double min, inc, max;
     /** the selected metric */
@@ -248,7 +248,7 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-        linksetName = ((Linkset)distComboBox.getSelectedItem()).getName();
+        linkset = (Linkset)distComboBox.getSelectedItem();
         min = (Double)minSpinner.getValue();
         inc = (Double)incSpinner.getValue();
         max = (Double)maxSpinner.getValue();
@@ -293,7 +293,7 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
     private void indiceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indiceComboBoxActionPerformed
         paramPanel.removeAll();
         Metric ind = (Metric) indiceComboBox.getSelectedItem();
-        paramPanel.add(ind.getParamPanel(Project.getProject()), BorderLayout.CENTER);
+        paramPanel.add(ind.getParamPanel(project), BorderLayout.CENTER);
         paramPanel.revalidate();
         paramPanel.repaint();
     }//GEN-LAST:event_indiceComboBoxActionPerformed

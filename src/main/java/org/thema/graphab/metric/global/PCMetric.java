@@ -36,7 +36,7 @@ public class PCMetric extends AbstractPathMetric {
 
     @Override
     public void endCalc(GraphGenerator g) {
-        metric = metric / Math.pow(Project.getArea(), 2);       
+        metric = metric / Math.pow(g.getProject().getArea(), 2);       
     }
     
     @Override

@@ -58,7 +58,7 @@ public class PCCircMetric extends GlobalMetric implements PreCalcMetric<Node> {
     @Override
     public void endCalc(GraphGenerator g) {
         circuit = null;
-        metric = metric / Math.pow(Project.getArea(), 2);       
+        metric = metric / Math.pow(g.getProject().getArea(), 2);       
     }
     
     @Override

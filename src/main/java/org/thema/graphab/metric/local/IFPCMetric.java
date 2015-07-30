@@ -40,7 +40,7 @@ public class IFPCMetric extends LocalMetric {
         Feature patch = (Feature) g.getObject();
         if(pathfinder == null) {
             try {
-                pathfinder = Project.getProject().getRasterPathFinder(gen.getLinkset());
+                pathfinder = gen.getProject().getRasterPathFinder(gen.getLinkset());
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }

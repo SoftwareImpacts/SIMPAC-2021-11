@@ -31,7 +31,6 @@ import org.thema.drawshape.style.LineStyle;
 import org.thema.drawshape.style.table.FeatureAttributeCollection;
 import org.thema.graph.pathfinder.EdgeWeighter;
 import org.thema.graph.shape.GraphGroupLayer;
-import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 import static org.thema.graphab.graph.GraphGenerator.COMPLETE;
 import static org.thema.graphab.graph.GraphGenerator.MST;
@@ -88,7 +87,7 @@ public class GraphLayers extends GraphGroupLayer {
                 public Collection getFeatures() {
                     return GraphLayers.this.graph.getComponentFeatures();
                 }
-            }, MainFrame.project.getZone(), new FeatureStyle(null, Color.BLACK), MainFrame.project.getCRS());
+            }, graph.getProject().getZone(), new FeatureStyle(null, Color.BLACK), graph.getProject().getCRS());
 
         if(graph.getGraph().getEdges().size() > 500000) {
             getEdgeLayer().setVisible(false);
@@ -154,7 +153,7 @@ public class GraphLayers extends GraphGroupLayer {
                     @Override
                     public void run() {
                         try {
-                            graph.calcODMatrix(new File(Project.getProject().getDirectory(), getName() + "-odmatrix.txt"));
+                            graph.calcODMatrix(new File(graph.getProject().getDirectory(), getName() + "-odmatrix.txt"));
                         } catch (IOException ex) {
                             Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
                             JOptionPane.showMessageDialog(null, "Error : " + ex);
@@ -171,7 +170,7 @@ public class GraphLayers extends GraphGroupLayer {
                     @Override
                     public void run() {
                         try {
-                            graph.calcODMatrixCircuit(new File(Project.getProject().getDirectory(), getName() + "-odmatrix-circuit.txt"));
+                            graph.calcODMatrixCircuit(new File(graph.getProject().getDirectory(), getName() + "-odmatrix-circuit.txt"));
                         } catch (IOException ex) {
                             Logger.getLogger(GraphGenerator.class.getName()).log(Level.SEVERE, null, ex);
                             JOptionPane.showMessageDialog(null, "Error : " + ex);
@@ -187,7 +186,7 @@ public class GraphLayers extends GraphGroupLayer {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Project project = Project.getProject();
+                        Project project = graph.getProject();
                         ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Set_Comp_Id") + "...", 
                                 project.getPatches().size());
                         String attrName = "comp_" + graph.getName();
@@ -217,7 +216,7 @@ public class GraphLayers extends GraphGroupLayer {
                     return;
                 }
 
-                Project.getProject().removeGraph(graph.getName());
+                graph.getProject().removeGraph(graph.getName());
             }
         });
 

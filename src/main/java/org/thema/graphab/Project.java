@@ -95,14 +95,15 @@ import org.thema.drawshape.style.LineStyle;
 import org.thema.drawshape.style.RasterStyle;
 import org.thema.graph.shape.GraphGroupLayer;
 import org.thema.graphab.CapaPatchDialog.CapaPatchParam;
-import static org.thema.graphab.MainFrame.project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.EuclidePathFinder;
-import org.thema.graphab.links.Links;
+import org.thema.graphab.links.FloatRasterPathFinder;
+import org.thema.graphab.links.PlanarLinks;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
+import org.thema.graphab.links.DoubleRasterPathFinder;
 import org.thema.graphab.links.RasterPathFinder;
 import org.thema.graphab.links.SpacePathFinder;
 import org.thema.graphab.metric.Metric;
@@ -128,9 +129,12 @@ import org.thema.graphab.metric.local.EccentricityLocalMetric;
 import org.thema.graphab.metric.local.FLocalMetric;
 import org.thema.graphab.metric.local.FPCLocalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.mpi.MpiLauncher;
 import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.util.DistanceOp;
 import org.thema.graphab.util.RSTGridReader;
+import org.thema.parallel.AbstractParallelTask;
+import org.thema.parallel.ExecutorService;
 
 
 /**
@@ -157,7 +161,7 @@ public final class Project {
     private String name;
     
     private TreeSet<Integer> codes;
-    private int patchCode;
+    private Set<Integer> patchCodes;
     private double noData;
     private boolean con8;
     /**
@@ -186,7 +190,7 @@ public final class Project {
     private transient List<DefaultFeature> patches;
     private transient List<Feature> voronoi;
 
-    private transient Links planarLinks;
+    private transient PlanarLinks planarLinks;
 
     private transient DefaultGroupLayer rootLayer, linkLayers, exoLayers, graphLayers, analysisLayers;
     private transient STRtree patchIndex;
@@ -198,18 +202,23 @@ public final class Project {
     private transient Ref<WritableRaster> patchRaster;
     private transient HashMap<File, SoftRef<Raster>> extRasters;
 
-    public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, int code,
+    public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, Set<Integer> patchCodes,
             double noData, boolean con8, double minArea, boolean simplify) throws IOException, SchemaException {
+        this(name, prjPath, cov, codes, patchCodes, noData, con8, minArea, simplify, true);
+    }
+    
+    public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, Set<Integer> patchCodes,
+            double noData, boolean con8, double minArea, boolean simplify, boolean calcVoronoi) throws IOException, SchemaException {
 
         this.name = name;
-        dir = prjPath;
+        this.dir = prjPath;
         this.codes = codes;
-        patchCode = code;
+        this.patchCodes = patchCodes;
         this.noData = noData;
         this.con8 = con8;
         this.minArea = minArea;
         this.simplify = simplify;
-        capacityParams = new CapaPatchDialog.CapaPatchParam();
+        this.capacityParams = new CapaPatchDialog.CapaPatchParam();
         
         Envelope2D gZone = cov.getEnvelope2D();
         zone = gZone.getBounds2D();
@@ -219,7 +228,7 @@ public final class Project {
         }
         TreeMap<Integer, Envelope> envMap = new TreeMap<>();
 
-        WritableRaster rasterPatchs = extractPatch(cov.getRenderedImage(), (int)patchCode, noData, con8, envMap);      
+        WritableRaster rasterPatchs = extractPatch(cov.getRenderedImage(), patchCodes, noData, con8, envMap);      
 
         Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb patch : " + envMap.size());
 
@@ -276,6 +285,7 @@ public final class Project {
         }
         monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
         monitor.setIndeterminate(true);
+        dir.mkdirs();
         
         GridCoverageBuilder covBuilder = new GridCoverageBuilder();
         covBuilder.setEnvelope(extZone);
@@ -285,8 +295,8 @@ public final class Project {
         covBuilder.newVariable("Cluster", null);
         covBuilder.setSampleRange(1, patches.size());
         GridCoverage2D clustCov = covBuilder.getGridCoverage2D();
-        new GeoTiffWriter(new File(prjPath, "source.tif")).write(cov, null);
-        new GeoTiffWriter(new File(prjPath, "patches.tif")).write(clustCov, null);
+        new GeoTiffWriter(new File(dir, "source.tif")).write(cov, null);
+        new GeoTiffWriter(new File(dir, "patches.tif")).write(clustCov, null);
         DefaultFeature.saveFeatures(patches, new File(dir, "patches.shp"), crs);
         
         clustCov = null;
@@ -294,14 +304,16 @@ public final class Project {
 
         Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb small patch removed : " + nbRem);
 
-        WritableRaster voronoiR = rasterPatchs;
-        planarLinks = neighborhoodEuclid(patches, simplify, voronoiR, grid2space, resolution);
-        monitor.setNote("Saving...");
-        DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"), getCRS());
-        
-        voronoi = (List<Feature>) vectorizeVoronoi(voronoiR, grid2space);
-        DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"), crs);
+        if(calcVoronoi) {
+            WritableRaster voronoiR = rasterPatchs;
+            planarLinks = neighborhoodEuclid(patches, simplify, voronoiR, grid2space, resolution);
+            monitor.setNote("Saving...");
+            DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"), getCRS());
 
+            voronoi = (List<Feature>) vectorizeVoronoi(voronoiR, grid2space);
+            DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"), crs);
+        }
+        
         exoDatas = new TreeMap<>();
 
         graphs = new TreeMap<>();
@@ -310,13 +322,11 @@ public final class Project {
         
         removedCodes = new HashMap<>();
         
-        MainFrame.project = this;
-        
         save();
         
         monitor.close();
         
-        createLayers();
+//        createLayers();
     }
     
     /**
@@ -327,7 +337,7 @@ public final class Project {
     private Project(String name, Project prj) {
         this.name = name;
         codes = prj.codes;
-        patchCode = prj.patchCode;
+        patchCodes = prj.patchCodes;
         noData = prj.noData;
         con8 = prj.con8;
         minArea = prj.minArea;
@@ -345,7 +355,7 @@ public final class Project {
     }
     
     // using strtree.nearest
-    private static Links neighborhoodEuclid(List<DefaultFeature> patches, boolean simplify, final WritableRaster voronoi, 
+    private static PlanarLinks neighborhoodEuclid(List<DefaultFeature> patches, boolean simplify, final WritableRaster voronoi, 
             final AffineTransformation grid2space, double resolution) throws IOException, SchemaException {
         ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), voronoi.getHeight());
         final STRtree index = new STRtree();
@@ -379,62 +389,77 @@ public final class Project {
             }
         }
 
-
-        SimpleParallelTask task = new SimpleParallelTask.IterParallelTask(voronoi.getHeight(), monitor) {
+        AbstractParallelTask task = new AbstractParallelTask<Void, Void>(monitor) {
             @Override
-            protected void executeOne(Integer y) {
+            public Void execute(int start, int end) {
                 Coordinate c = new Coordinate();
                 Envelope env = new Envelope();
         
-                for(int x = 0; x < voronoi.getWidth(); x++) {
-                    if(voronoi.getSample(x, y, 0) == 0) {
-                        c.x = x+0.5; c.y = y+0.5;
-                        grid2space.transform(c, c);
-                        env.init(c);
-                        DefaultFeature f = new DefaultFeature("c", factory.createPoint(c));
-                        Feature nearest = (Feature)index.nearestNeighbour(env, f, new ItemDistance() {
-                            @Override
-                            public double distance(ItemBoundable i1, ItemBoundable i2) {
-                                Geometry g1 = ((Feature)i1.getItem()).getGeometry();
-                                Geometry g2 = ((Feature)i2.getItem()).getGeometry();
-                                Coordinate c = g1 instanceof Point ? ((Point)g1).getCoordinate() : ((Point)g2).getCoordinate();
-                                Geometry geom = g1 instanceof Point ? g2 : g1;
-                                if(geom instanceof LineString) {
-                                    return DistanceOp.distancePointLine(c, geom.getCoordinates());
-                                } else {
-                                    double d = Double.MAX_VALUE;
-                                    for(int g = 0; g < geom.getNumGeometries(); g++) {
-                                        Polygon poly = ((Polygon)geom.getGeometryN(g));
-                                        double dd = DistanceOp.distancePointLine(c, poly.getExteriorRing().getCoordinates());
-                                        if(dd < d) {
-                                            d = dd;
-                                        }
-                                        int n = poly.getNumInteriorRing();
-                                        for(int i = 0; i < n; i++) {
-                                            dd = DistanceOp.distancePointLine(c, poly.getInteriorRingN(i).getCoordinates());
+                for(int y = start; y < end; y++) {
+                    for(int x = 0; x < voronoi.getWidth(); x++) {
+                        if(voronoi.getSample(x, y, 0) == 0) {
+                            c.x = x+0.5; c.y = y+0.5;
+                            grid2space.transform(c, c);
+                            env.init(c);
+                            DefaultFeature f = new DefaultFeature("c", factory.createPoint(c));
+                            Feature nearest = (Feature)index.nearestNeighbour(env, f, new ItemDistance() {
+                                @Override
+                                public double distance(ItemBoundable i1, ItemBoundable i2) {
+                                    Geometry g1 = ((Feature)i1.getItem()).getGeometry();
+                                    Geometry g2 = ((Feature)i2.getItem()).getGeometry();
+                                    Coordinate c = g1 instanceof Point ? ((Point)g1).getCoordinate() : ((Point)g2).getCoordinate();
+                                    Geometry geom = g1 instanceof Point ? g2 : g1;
+                                    if(geom instanceof LineString) {
+                                        return DistanceOp.distancePointLine(c, geom.getCoordinates());
+                                    } else {
+                                        double d = Double.MAX_VALUE;
+                                        for(int g = 0; g < geom.getNumGeometries(); g++) {
+                                            Polygon poly = ((Polygon)geom.getGeometryN(g));
+                                            double dd = DistanceOp.distancePointLine(c, poly.getExteriorRing().getCoordinates());
                                             if(dd < d) {
                                                 d = dd;
                                             }
+                                            int n = poly.getNumInteriorRing();
+                                            for(int i = 0; i < n; i++) {
+                                                dd = DistanceOp.distancePointLine(c, poly.getInteriorRingN(i).getCoordinates());
+                                                if(dd < d) {
+                                                    d = dd;
+                                                }
+                                            }
                                         }
+                                        return d;
                                     }
-                                    return d;
                                 }
-                            }
-                        });
+                            });
 
-                        voronoi.setSample(x, y, 0, (Integer)nearest.getId());
+                            voronoi.setSample(x, y, 0, (Integer)nearest.getId());
+                        }
                     }
                 }
+                return null;
+            }
+
+            @Override
+            public int getSplitRange() {
+                return voronoi.getHeight();
+            }
+
+            @Override
+            public void gather(Void results) {
+            }
+            @Override
+            public Void getResult() {
+                throw new UnsupportedOperationException(); 
             }
         };
         
         long time = System.currentTimeMillis();
         
-        new ParallelFExecutor(task).executeAndWait();
+        ExecutorService.execute(task);
 
         System.out.println("Temps calcul : " + (System.currentTimeMillis() - time) / 1000);
 
-        Links links = createLinks(voronoi, patches, monitor);
+        PlanarLinks links = createLinks(voronoi, patches, monitor);
 
         monitor.close();
 
@@ -450,7 +475,10 @@ public final class Project {
         return null;
     }
 
-    public Links getPlanarLinks() {
+    public PlanarLinks getPlanarLinks() {
+        if(planarLinks == null) {
+            throw new IllegalStateException("The project does not contain voronoi.");
+        }
         return planarLinks;
     }
 
@@ -470,13 +498,13 @@ public final class Project {
         return name;
     }
 
-    private static Links createLinks(Raster voronoiRaster, List<DefaultFeature> patches, ProgressBar monitor) {
+    private static PlanarLinks createLinks(Raster voronoiRaster, List<DefaultFeature> patches, ProgressBar monitor) {
         monitor.setNote("Create link set...");
         monitor.setProgress(0);
 
         Path.newSetOfPaths();
         
-        Links links = new Links(patches.size());
+        PlanarLinks links = new PlanarLinks(patches.size());
 
         for(int y = 1; y < voronoiRaster.getHeight()-1; y++) {
             monitor.setProgress(y);
@@ -511,15 +539,19 @@ public final class Project {
     public void addLinkset(Linkset cost, boolean save) throws IOException, SchemaException {
         ProgressBar progressBar = Config.getProgressBar();
         
-        cost.compute(this, progressBar);
+        if(cost.getProject() == null) {
+            cost.setProject(this);
+        }
+        
+        cost.compute(progressBar);
 
         
         if(save) {
             if(cost.isRealPaths() && !cost.getPaths().isEmpty()) {
                 DefaultFeature.saveFeatures(cost.getPaths(), new File(dir, cost.getName() + "-links.shp"), getCRS());
-                cost.saveIntraLinks(getDirectory());
+                cost.saveIntraLinks();
             }
-            cost.saveLinks(getDirectory());
+            cost.saveLinks();
         }
         
         costLinks.put(cost.getName(), cost);
@@ -529,7 +561,7 @@ public final class Project {
         }
         
         if(linkLayers != null) {
-            Layer l = new LinkLayer(cost.getName(), this);
+            Layer l = new LinkLayer(cost);
             if(cost.getTopology() == Linkset.COMPLETE && cost.getDistMax() == 0) {
                 l.setVisible(false);
             }
@@ -899,11 +931,11 @@ public final class Project {
     /**
      *
      * @param r
-     * @param code
+     * @param codes
      * @param con8
      * @return  un raster avec un bord d'un pixel de large ayant la valeur -1
      */
-    private WritableRaster extractPatch(RenderedImage img, int code, double noData, boolean con8, Map<Integer, Envelope> envMap) {
+    private WritableRaster extractPatch(RenderedImage img, Set<Integer> codes, double noData, boolean con8, Map<Integer, Envelope> envMap) {
         TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_patch"), "", 0, img.getHeight());
         WritableRaster clust = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_INT, img.getWidth()+2, img.getHeight()+2, 1), null);
         int k = 0;
@@ -914,7 +946,7 @@ public final class Project {
             monitor.setProgress(j-1);
             for(int i = 1; i <= img.getWidth(); i++) {
                 int val = r.getSample(i-1, j-1, 0);
-                if(val == code) {
+                if(codes.contains(val)) {
                     set.add(clust.getSample(i-1, j, 0));
                     set.add(clust.getSample(i, j-1, 0));
                     if(con8) {
@@ -953,6 +985,7 @@ public final class Project {
             }
         }
 
+        // sets the border to -1
         for(int j = 0; j < clust.getHeight(); j++) {
             clust.setSample(0, j, 0, -1);
             clust.setSample(clust.getWidth()-1, j, 0, -1);
@@ -1032,12 +1065,20 @@ public final class Project {
         if(linkset.isExtCost()) {
             if(linkset.getExtCostFile().exists()) {
                 Raster extRaster = getExtRaster(linkset.getExtCostFile());
-                return new RasterPathFinder(this, extRaster, linkset.getCoefSlope());
+                if(MpiLauncher.IsMPIWorker()) {
+                    return new FloatRasterPathFinder(this, extRaster, linkset.getCoefSlope());
+                } else {
+                    return new DoubleRasterPathFinder(this, extRaster, linkset.getCoefSlope());
+                }
             } else {
                 throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
             }
         } else {
-            return new RasterPathFinder(this, getImageSource(), linkset.getCosts(), linkset.getCoefSlope());
+            if(MpiLauncher.IsMPIWorker()) {
+                return new FloatRasterPathFinder(this, getImageSource(), linkset.getCosts(), linkset.getCoefSlope());
+            } else {
+                return new DoubleRasterPathFinder(this, getImageSource(), linkset.getCosts(), linkset.getCoefSlope());
+            }
         }
     }
     
@@ -1061,7 +1102,7 @@ public final class Project {
         ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Create_graph..."));
         progressBar.setIndeterminate(true);
         
-        if(save) {
+        if(save && hasVoronoi()) {
             DefaultFeature.saveFeatures(graphGen.getComponentFeatures(),
                     new File(dir, graphGen.getName() + "-voronoi.shp"), getCRS());
 
@@ -1131,7 +1172,7 @@ public final class Project {
         }
 
         try {
-            g.getLinkset().saveLinks(getDirectory());
+            g.getLinkset().saveLinks();
             savePatch();
             save();
         } catch (IOException | SchemaException ex) {
@@ -1214,10 +1255,18 @@ public final class Project {
         }
     }
 
+    public boolean hasVoronoi() {
+        return new File(dir, "voronoi.shp").exists();
+    }
+    
     public synchronized List<Feature> getVoronoi() {
         if(voronoi == null) {
+            File file = new File(dir, "voronoi.shp");
+            if(!file.exists()) {
+                throw new IllegalStateException("The project does not contain voronoi.");
+            }
             try {
-                List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(dir, "voronoi.shp"), "Id", null);
+                List<DefaultFeature> features = GlobalDataStore.getFeatures(file, "Id", null);
                 voronoi = new ArrayList<Feature>(features);
                 for(Feature f : features) {
                     voronoi.set((Integer)f.getId()-1, f);
@@ -1269,37 +1318,42 @@ public final class Project {
         return features;
     }
 
-    public synchronized WritableRaster getRasterPatch() throws IOException {
+    public synchronized WritableRaster getRasterPatch() {
         WritableRaster raster = patchRaster != null ? patchRaster.get() : null;
         if(raster == null) {
-            RenderedImage img = IOImage.loadTiffWithoutCRS(new File(dir, "patches.tif")).getRenderedImage();
-            if(img.getNumXTiles() == 1 && img.getNumYTiles() == 1) {
-                raster = (WritableRaster) img.getTile(0, 0);
-            } else {
-                raster = (WritableRaster) img.getData();
+            try {
+                RenderedImage img = IOImage.loadTiffWithoutCRS(new File(dir, "patches.tif")).getRenderedImage();
+                if(img.getNumXTiles() == 1 && img.getNumYTiles() == 1) {
+                    raster = (WritableRaster) img.getTile(0, 0);
+                } else {
+                    raster = (WritableRaster) img.getData();
+                }
+                patchRaster = new SoftRef<>(raster);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
-            patchRaster = new SoftRef<>(raster);
         }
         
         return raster;
     }
 
-    public synchronized WritableRaster getImageSource() throws IOException {
+    public synchronized WritableRaster getImageSource() {
         WritableRaster raster = srcRaster != null ? srcRaster.get() : null;
         if(raster == null) {
-            Raster r = IOImage.loadTiffWithoutCRS(new File(dir, "source.tif")).getRenderedImage().getData();
-            // on copie le raster dans un writableraster
-            raster = r.createCompatibleWritableRaster();
-            raster.setRect(r);
-            raster = raster.createWritableTranslatedChild(1, 1);
-            srcRaster = new SoftRef<>(raster);
+            try {
+                WritableRaster r = IOImage.loadTiffWithoutCRS(new File(dir, "source.tif")).getRenderedImage().copyData(null);
+                raster = r.createWritableTranslatedChild(1, 1);
+                srcRaster = new SoftRef<>(raster);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
         return raster;
     }
 
     public void saveGraphVoronoi(String graph) throws IOException, SchemaException {
         List<DefaultFeature> comps = graphs.get(graph).getComponentFeatures();
-        try (CSVWriter w = new CSVWriter(new FileWriter(dir.getAbsolutePath() + File.separator + graph + "-voronoi.csv"))) {
+        try (CSVWriter w = new CSVWriter(new FileWriter(new File(dir, graph + "-voronoi.csv")))) {
             List<String> header = new ArrayList<>();
             header.add("Id");
             header.addAll(comps.get(0).getAttributeNames());
@@ -1317,7 +1371,7 @@ public final class Project {
     }
 
     public void savePatch() throws IOException, SchemaException {
-        try (CSVWriter w = new CSVWriter(new FileWriter(dir.getAbsolutePath() + File.separator + "patches.csv"))) {
+        try (CSVWriter w = new CSVWriter(new FileWriter(new File(dir, "patches.csv")))) {
             w.writeNext(patches.get(0).getAttributeNames().toArray(new String[0]));
             String [] tab = new String[patches.get(0).getAttributeNames().size()];
             for(Feature f : getPatches()) {
@@ -1429,40 +1483,46 @@ public final class Project {
                     capa += getPatchCapacity(patch);
                 }
                 metaPatch.add(patch.getGeometry());
-                metaVoronoi.add(getVoronoi((Integer)patch.getId()).getGeometry());
+                if(hasVoronoi()) {
+                    metaVoronoi.add(getVoronoi((Integer)patch.getId()).getGeometry());
+                }
             }
             Geometry patchGeom = JTS.flattenGeometryCollection(new GeometryFactory().buildGeometry(metaPatch));
             metaPatches.add(new DefaultFeature(i+1, patchGeom, PATCH_ATTRS, 
                     Arrays.asList(i+1, patchGeom.getArea(), patchGeom.getBoundary().getLength(), capa)));
-            Geometry voronoiGeom = CascadedPolygonUnion.union(metaVoronoi);
-            metaVoronois.add(new DefaultFeature(i+1, voronoiGeom, new ArrayList<String>(0), new ArrayList(0)));
+            if(hasVoronoi()) {
+                Geometry voronoiGeom = CascadedPolygonUnion.union(metaVoronoi);
+                metaVoronois.add(new DefaultFeature(i+1, voronoiGeom, new ArrayList<String>(0), new ArrayList(0)));
+            }
         }
         
         DefaultFeature.saveFeatures(metaPatches, new File(dir, "patches.shp"), getCRS());
-        if(!remPatch) {
+        if(!remPatch && hasVoronoi()) {
             DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
         }
         
-        Links links;
-        if(remPatch) {
-            links = neighborhoodEuclid(metaPatches, simplify, newRaster, grid2space, resolution);
-            metaVoronois = (List<DefaultFeature>) vectorizeVoronoi(newRaster, grid2space);
-            DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
-        } else {
-            links = new Links(metaPatches.size());
-            for(Path p : planarLinks.getFeatures()) {
-                int id1 = idMetaPatch[(Integer)p.getPatch1().getId()];
-                int id2 = idMetaPatch[(Integer)p.getPatch2().getId()];
-                DefaultFeature p1 = metaPatches.get(id1-1);
-                DefaultFeature p2 = metaPatches.get(id2-1);
-                if(id1 == id2 || links.isLinkExist(p1, p2)) {
-                    continue;
+        if(hasVoronoi()) {
+            PlanarLinks links;
+            if(remPatch) {
+                links = neighborhoodEuclid(metaPatches, simplify, newRaster, grid2space, resolution);
+                metaVoronois = (List<DefaultFeature>) vectorizeVoronoi(newRaster, grid2space);
+                DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
+            } else {
+                links = new PlanarLinks(metaPatches.size());
+                for(Path p : planarLinks.getFeatures()) {
+                    int id1 = idMetaPatch[(Integer)p.getPatch1().getId()];
+                    int id2 = idMetaPatch[(Integer)p.getPatch2().getId()];
+                    DefaultFeature p1 = metaPatches.get(id1-1);
+                    DefaultFeature p2 = metaPatches.get(id2-1);
+                    if(id1 == id2 || links.isLinkExist(p1, p2)) {
+                        continue;
+                    }
+                    links.addLink(new Path(p1, p2));
                 }
-                links.addLink(new Path(p1, p2));
             }
-        }
-        if(!links.getFeatures().isEmpty()) {
-            DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, "links.shp"), getCRS());
+            if(!links.getFeatures().isEmpty()) {
+                DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, "links.shp"), getCRS());
+            }
         }
         
         Project prj = new Project(prjName, this);
@@ -1480,6 +1540,22 @@ public final class Project {
         return dir;
     }
 
+    public boolean isCon8() {
+        return con8;
+    }
+
+    public double getMinArea() {
+        return minArea;
+    }
+
+    public boolean isSimplify() {
+        return simplify;
+    }
+
+    public double getNoData() {
+        return noData;
+    }
+
     private void createLayers() {
         CoordinateReferenceSystem crs = getCRS();
         rootLayer = new DefaultGroupLayer(name, true);
@@ -1489,33 +1565,31 @@ public final class Project {
         linkLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Link_sets"));
         rootLayer.addLayerFirst(linkLayers);
        
-        try {
-            RasterLayer l = new RasterLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Landscape_map"), new RasterShape(
-                getImageSource().getParent(), zone, new RasterStyle(), true), crs);
-            l.getStyle().setNoDataValue(noData);
-            l.setVisible(false);
-            l.setDrawLegend(false);
-            rootLayer.addLayerLast(l);
-        } catch (IOException ex) {
-            Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        for(String linkName : costLinks.keySet()) {
-            Layer l = new LinkLayer(linkName, this);
+        RasterLayer lr = new RasterLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Landscape_map"), new RasterShape(
+            getImageSource().getParent(), zone, new RasterStyle(), true), crs);
+        lr.getStyle().setNoDataValue(noData);
+        lr.setVisible(false);
+        lr.setDrawLegend(false);
+        rootLayer.addLayerLast(lr);
+        
+        for(Linkset linkset : costLinks.values()) {
+            Layer l = new LinkLayer(linkset);
             l.setVisible(false);
             linkLayers.addLayerLast(l);
         }
 
-        Layer l = new FeatureLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Voronoi_links"), 
-                planarLinks.getFeatures(), new LineStyle(new Color(0xbcc3ac)), crs);
-        l.setVisible(false);
-        linkLayers.addLayerLast(l);
-
+        if(planarLinks != null) {
+            Layer l = new FeatureLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Voronoi_links"), 
+                    planarLinks.getFeatures(), new LineStyle(new Color(0xbcc3ac)), crs);
+            l.setVisible(false);
+            linkLayers.addLayerLast(l);
+        }
+        
         graphLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Graphs"));
         rootLayer.addLayerFirst(graphLayers);      
         for(GraphGenerator g : graphs.values()) {
             try {
-                l = g.getLayers();
+                Layer l = g.getLayers();
                 l.setVisible(false);
                 graphLayers.addLayerLast(l);
             } catch(Exception e) {
@@ -1526,7 +1600,7 @@ public final class Project {
         exoLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Exo_data"));
         rootLayer.addLayerFirst(exoLayers);
         for(Pointset dataset : exoDatas.values())  {
-            l = new PointsetLayer(dataset, this);
+            Layer l = new PointsetLayer(dataset, this);
             l.setVisible(false);
             exoLayers.addLayerLast(l);
         }
@@ -1584,21 +1658,23 @@ public final class Project {
             }
         }
 
-        if(prj.patches.size() > 1) {
-            features = GlobalDataStore.getFeatures(new File(prj.dir, "links.shp"), "Id", monitor.getSubProgress(100));
+        File linkFile = new File(prj.dir, "links.shp");
+        if(linkFile.exists()) {
+            features = GlobalDataStore.getFeatures(linkFile, "Id", monitor.getSubProgress(100));
             List<Path> paths = new ArrayList<>(features.size());
             for(Feature f : features) {
                 paths.add(Path.loadPath(f, prj));
             }
 
-            prj.planarLinks = new Links(paths, prj.patches.size());
-        } else {
-            prj.planarLinks = new Links(1);
+            prj.planarLinks = new PlanarLinks(paths, prj.patches.size());
+        } else if(prj.patches.size() == 1) {
+            prj.planarLinks = new PlanarLinks(1);
         }
 
-        if(all) {
-            for(Linkset cost : prj.costLinks.values()) {
-                cost.loadPaths(prj, monitor.getSubProgress(100));
+        for(Linkset linkset : prj.costLinks.values()) {
+            linkset.setProject(prj);
+            if(all) {
+                linkset.loadPaths(monitor.getSubProgress(100));
             }
         }
 
@@ -1660,8 +1736,8 @@ public final class Project {
         return raster;
     }
 
-    public static double getArea() {
-        return getProject().zone.getWidth()*getProject().zone.getHeight();
+    public double getArea() {
+        return zone.getWidth()*zone.getHeight();
     }
 
     public static double getPatchArea(org.geotools.graph.structure.Node node) {
@@ -1672,16 +1748,16 @@ public final class Project {
         return ((Number)patch.getAttribute(Project.AREA_ATTR)).doubleValue();
     }
 
-    public static synchronized double getTotalPatchCapacity() {
-        if(MainFrame.project.totalPatchCapacity == 0) {
+    public synchronized double getTotalPatchCapacity() {
+        if(totalPatchCapacity == 0) {
             double sum = 0;
-            for(Feature f : MainFrame.project.getPatches()) {
-                sum += ((Number)f.getAttribute(Project.CAPA_ATTR)).doubleValue();
+            for(Feature f : getPatches()) {
+                sum += getPatchCapacity(f);
             }
-            MainFrame.project.totalPatchCapacity = sum;
+            totalPatchCapacity = sum;
         }
 
-        return MainFrame.project.totalPatchCapacity;
+        return totalPatchCapacity;
     }
 
     public static DefaultFeature getPatch(org.geotools.graph.structure.Node node) {
@@ -1709,12 +1785,12 @@ public final class Project {
         if(demFile.isAbsolute()) {
             return getExtRaster(demFile);
         } else {
-            return getExtRaster(new File(Project.getProject().getDirectory(), demFile.getPath()));
+            return getExtRaster(new File(getDirectory(), demFile.getPath()));
         }
     }
     
     public void setDemFile(File demFile) throws IOException {
-        String prjPath = Project.getProject().getDirectory().getAbsolutePath();
+        String prjPath = getDirectory().getAbsolutePath();
         if(demFile.getAbsolutePath().startsWith(prjPath)) { 
             this.demFile = new File(demFile.getAbsolutePath().substring(prjPath.length()+1));
         } else {
@@ -1752,8 +1828,8 @@ public final class Project {
         return null;
     }
     
-    public int getPatchCode() {
-        return patchCode;
+    public Set<Integer> getPatchCodes() {
+        return patchCodes;
     }
     
     /**
@@ -1786,6 +1862,7 @@ public final class Project {
         }
         DefaultFeature patch = createPatch(point, capa);
         int id = (Integer)patch.getId();
+        int patchCode = this.patchCodes.iterator().next();
         Coordinate cg = space2grid.transform(point.getCoordinate(), new Coordinate());
         // on passe les raster en strong reference pour qu'ils ne puissent pas être supprimé
         patchRaster = new StrongRef<>(getRasterPatch());
@@ -1810,10 +1887,10 @@ public final class Project {
                     
         DefaultFeature patch = createPatch(geom, capa);
         int id = (Integer)patch.getId();
+        int patchCode = this.patchCodes.iterator().next();
         // on passe les raster en strong reference pour qu'ils ne puissent pas être supprimé
         patchRaster = new StrongRef<>(getRasterPatch());
         srcRaster = new StrongRef<>(getImageSource());
-
         GeometryFactory geomFactory = geom.getFactory();
         Geometry geomGrid = getSpace2grid().transform(geom);
         Envelope env = geomGrid.getEnvelopeInternal();
@@ -1893,7 +1970,7 @@ public final class Project {
             throw new IllegalArgumentException("Cannot remove patch with geometry different of Point");
         }
         Coordinate cg = space2grid.transform(patch.getGeometry().getCoordinate(), new Coordinate());
-        if(getImageSource().getSample((int)cg.x, (int)cg.y, 0) != patchCode) {
+        if(!patchCodes.contains(getImageSource().getSample((int)cg.x, (int)cg.y, 0))) {
             throw new RuntimeException("No patch to remove at " + patch.getGeometry());
         }
         int id = (Integer)patch.getId();
@@ -1917,7 +1994,7 @@ public final class Project {
     }
     
     public void calcNeighborAreaCapacity(final Linkset linkset, final double maxCost, final HashSet<Integer> codes, final boolean weight) {
-        ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("CALC PATCH CAPACITY..."), project.getPatches().size());
+        ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("CALC PATCH CAPACITY..."), getPatches().size());
         AbstractParallelFTask task = new AbstractParallelFTask(progressBar) {
             @Override
             protected Object execute(int start, int end) {
@@ -1928,18 +2005,18 @@ public final class Project {
                 try {
                     RasterPathFinder pathfinder;
                     if(linkset == null || linkset.getType_dist() == Linkset.EUCLID) {
-                        double [] costs = new double[project.getCodes().last()+1];
+                        double [] costs = new double[getCodes().last()+1];
                         Arrays.fill(costs, 1);
-                        pathfinder = new RasterPathFinder(project, project.getImageSource(), costs, 0);
+                        pathfinder = new FloatRasterPathFinder(Project.this, getImageSource(), costs, 0);
                     } else {
-                        pathfinder = project.getRasterPathFinder(linkset);
+                        pathfinder = getRasterPathFinder(linkset);
                     }
 
                     for(int i = start; i < end; i++) {
                         DefaultFeature patch = patches.get(i);
                         double capa = pathfinder.getNeighborhood(patch, maxCost,
-                                project.getImageSource(), codes, weight);
-                        project.setCapacity(patch, capa);
+                                getImageSource(), codes, weight);
+                        setCapacity(patch, capa);
                         incProgress(1);
                     }
                 } catch (Exception ex) {
@@ -1966,14 +2043,6 @@ public final class Project {
 
         progressBar.close();
         
-    }
-    
-    /**
-     * The project associated with MainFrame
-     * @return the current project
-     */
-    public static Project getProject() {
-        return MainFrame.project;
     }
     
     public static String getDetailName(GlobalMetric indice, int indResult) {

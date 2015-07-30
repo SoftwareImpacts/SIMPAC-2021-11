@@ -48,7 +48,7 @@ public final class AlphaParamMetric implements Serializable {
         this.d = d;
         this.p = p;
         this.beta = beta;
-        alpha = -Math.log(p) / d;
+        alpha = getAlpha(d, p);
     }
     
     /**
@@ -72,7 +72,7 @@ public final class AlphaParamMetric implements Serializable {
             throw new IllegalArgumentException("Parameter " + BETA + " not found");
         }
 
-        alpha = -Math.log(p) / d;
+        alpha = getAlpha(d, p);
     }
 
     /**
@@ -92,5 +92,15 @@ public final class AlphaParamMetric implements Serializable {
      */
     public ParamPanel getParamPanel(Project project) {
         return new DistProbaPanel(d, p, beta);
+    }
+    
+    /**
+     * Calculates alpha exponent given distance and probability
+     * @param dist distance
+     * @param proba probability
+     * @return alpha exponent
+     */
+    public static double getAlpha(double dist, double proba) {
+        return -Math.log(proba) / dist;
     }
 }

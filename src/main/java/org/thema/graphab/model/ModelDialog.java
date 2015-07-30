@@ -1,19 +1,10 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * ModelDialog.java
- *
- * Created on 19 janv. 2011, 10:51:38
- */
 
 package org.thema.graphab.model;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import java.awt.Frame;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -49,19 +40,19 @@ import org.thema.graphab.util.RSTGridReader;
  */
 public class ModelDialog extends javax.swing.JDialog {
 
-    Project project;
+    private Project project;
 
-    Pointset data;
-    String varName;
-    double alpha;
-    List<String> patchVars;
-    LinkedHashMap<String, GridCoverage2D> extVars;
-    boolean bestModel;
-    boolean multiAttach;
-    double dMax;
-    HashMap<Geometry, HashMap<DefaultFeature, Path>> costCache;
+    private Pointset data;
+    private String varName;
+    private double alpha;
+    private List<String> patchVars;
+    private LinkedHashMap<String, GridCoverage2D> extVars;
+    private boolean bestModel;
+    private boolean multiAttach;
+    private double dMax;
+    private HashMap<Geometry, HashMap<DefaultFeature, Path>> costCache;
 
-    DistribModel model;
+    private DistribModel model;
 
     
 
@@ -531,13 +522,14 @@ public class ModelDialog extends javax.swing.JDialog {
         }
 
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     TaskMonitor monitor = new TaskMonitor(ModelDialog.this, "Model...", "Loading data...", 0, 100);
                     monitor.setMillisToDecideToPopup(0);
                     String msg = model.estimModel(monitor);
                     if(multiAttach) {
-                        costCache = model.costCache;
+                        costCache = model.getCostCache();
                     }
                     infoResTextArea.setText(msg);
                     DefaultTableModel table = (DefaultTableModel)varTable.getModel();
@@ -666,7 +658,7 @@ public class ModelDialog extends javax.swing.JDialog {
             coefs[i] = model.getCoef(var);
             i++;
         }
-        new ExtrapolateDialog(null, data.getLinkset(), (Double)dSpinner.getValue(), (Double)pSpinner.getValue(), 
+        new ExtrapolateDialog((Frame) getParent(), project, data.getLinkset(), (Double)dSpinner.getValue(), (Double)pSpinner.getValue(), 
                 vars, coefs, extVars, multiAttach, dMax).setVisible(true);
     }//GEN-LAST:event_extrapolateButtonActionPerformed
 

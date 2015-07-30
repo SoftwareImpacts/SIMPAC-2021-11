@@ -31,7 +31,7 @@ public class FPCLocalMetric extends LocalMetric {
             sum += Math.exp(-alphaParam.getAlpha() * pathFinder.getCost(n)) * Math.pow(srcCapa * Project.getPatchCapacity(n), alphaParam.getBeta());            
         }            
         
-        return sum / Math.pow(Project.getArea(), 2);
+        return sum / Math.pow(gen.getProject().getArea(), 2);
     }
 
     @Override

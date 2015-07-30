@@ -87,7 +87,7 @@ public class PointsetLayer extends FeatureLayer {
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DISTANCE MATRIX")) {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new PointsetDistanceDialog(null, pointset).setVisible(true);
+                new PointsetDistanceDialog(null, project, pointset).setVisible(true);
             }
         });
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove...")) {

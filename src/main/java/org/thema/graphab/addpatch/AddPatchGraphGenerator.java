@@ -55,7 +55,7 @@ public class AddPatchGraphGenerator extends GraphGenerator {
         
         BasicGraphBuilder builder = new BasicGraphBuilder();
         // crée le noeud
-        DefaultFeature patch = Project.getProject().createPatch(geom, capa);
+        DefaultFeature patch = getProject().createPatch(geom, capa);
         Node node = builder.buildNode();
         node.setObject(patch);
         graph.getNodes().add(node);

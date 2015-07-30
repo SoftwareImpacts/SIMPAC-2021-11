@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.links;
 
@@ -13,25 +9,26 @@ import org.thema.data.feature.Feature;
 
 
 /**
- *
- * @author gvuidel
+ * Stores planar topology.
+ * 
+ * @author Gilles Vuidel
  */
-public class Links {
+public class PlanarLinks {
     private List<HashMap<Integer, Path>> conMap;
     private List<Path> links;
 
-    public Links(int size) {
-        conMap = new ArrayList<>(size);
-        for(int i = 0; i < size; i++) {
+    public PlanarLinks(int nbPatch) {
+        conMap = new ArrayList<>(nbPatch);
+        for(int i = 0; i < nbPatch; i++) {
             conMap.add(new HashMap<Integer, Path>());
         }
-        links = new ArrayList<>(size*3);
+        links = new ArrayList<>(nbPatch*3);
     }
 
-    public Links(List<Path> paths, int size) {
+    public PlanarLinks(List<Path> paths, int nbPatch) {
         links = paths;
-        conMap = new ArrayList<>(size);
-        for(int i = 0; i < size; i++) {
+        conMap = new ArrayList<>(nbPatch);
+        for(int i = 0; i < nbPatch; i++) {
             conMap.add(new HashMap<Integer, Path>());
         }
 
@@ -62,6 +59,5 @@ public class Links {
     public List<Path> getFeatures() {
         return links;
     }
-
 
 }

@@ -10,9 +10,9 @@ import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
 import org.thema.common.ProgressBar;
 import org.thema.data.feature.Feature;
-import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.PreCalcMetric.TypeParam;
+import org.thema.graphab.mpi.MpiLauncher;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
@@ -62,7 +62,7 @@ public class PreCalcMetricTask extends AbstractParallelTask<Void, List> implemen
         super.init();
         // useful only for MPI
         if(gen == null) {
-            gen = Project.getProject().getGraph(graphName);
+            gen = MpiLauncher.getProject().getGraph(graphName);
             if(gen == null) {
                 throw new IllegalStateException("Graph " + graphName + " not found in project.\n Modified graph cannot be used in MPI environment");
             }

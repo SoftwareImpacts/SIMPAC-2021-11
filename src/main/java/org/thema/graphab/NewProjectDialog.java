@@ -17,7 +17,10 @@ import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -106,9 +109,10 @@ public class NewProjectDialog extends javax.swing.JDialog {
         con4RadioButton = new javax.swing.JRadioButton();
         con8RadioButton = new javax.swing.JRadioButton();
         jLabel4 = new javax.swing.JLabel();
-        codeComboBox = new javax.swing.JComboBox();
         noDataComboBox = new javax.swing.JComboBox();
         simplifyCheckBox = new javax.swing.JCheckBox();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        codesList = new javax.swing.JList();
         panel3 = new org.thema.graphab.links.LinksetPanel();
         cancelButton = new javax.swing.JButton();
         prevButton = new javax.swing.JButton();
@@ -146,7 +150,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(panel1Layout.createSequentialGroup()
-                        .addComponent(prjPathTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 317, Short.MAX_VALUE)
+                        .addComponent(prjPathTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(selectPathButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(prjNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -164,7 +168,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
                     .addComponent(prjPathLabel)
                     .addComponent(prjPathTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(selectPathButton))
-                .addContainerGap(441, Short.MAX_VALUE))
+                .addContainerGap(544, Short.MAX_VALUE))
         );
 
         globalPanel.add(panel1, "panel1");
@@ -220,6 +224,8 @@ public class NewProjectDialog extends javax.swing.JDialog {
         simplifyCheckBox.setSelected(true);
         simplifyCheckBox.setText(bundle.getString("NewProjectDialog.simplifyCheckBox.text")); // NOI18N
 
+        jScrollPane1.setViewportView(codesList);
+
         javax.swing.GroupLayout panel2Layout = new javax.swing.GroupLayout(panel2);
         panel2.setLayout(panel2Layout);
         panel2Layout.setHorizontalGroup(
@@ -228,29 +234,31 @@ public class NewProjectDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(panel2Layout.createSequentialGroup()
-                        .addComponent(imgSelectFilePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addContainerGap())
-                    .addGroup(panel2Layout.createSequentialGroup()
-                        .addComponent(simplifyCheckBox)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panel2Layout.createSequentialGroup()
-                        .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(connexPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panel2Layout.createSequentialGroup()
+                        .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(simplifyCheckBox)
+                            .addGroup(panel2Layout.createSequentialGroup()
                                 .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel1)
-                                    .addComponent(jLabel2)
-                                    .addComponent(jLabel3))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(minAreaSpinner)
-                                    .addComponent(codeComboBox, 0, 1, Short.MAX_VALUE)
+                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addGroup(panel2Layout.createSequentialGroup()
-                                        .addComponent(noDataComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(0, 0, Short.MAX_VALUE)))))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel4)
-                        .addGap(186, 186, 186))))
+                                        .addComponent(jLabel3)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(noDataComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(connexPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(panel2Layout.createSequentialGroup()
+                        .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(imgSelectFilePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
+                            .addGroup(panel2Layout.createSequentialGroup()
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(minAreaSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 157, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel4)
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addContainerGap())))
         );
         panel2Layout.setVerticalGroup(
             panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -258,23 +266,24 @@ public class NewProjectDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addComponent(imgSelectFilePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(noDataComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(26, 26, 26)
-                .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(codeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panel2Layout.createSequentialGroup()
+                        .addComponent(connexPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3)
+                            .addComponent(noDataComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
                 .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(minAreaSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4))
                 .addGap(18, 18, 18)
-                .addComponent(connexPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
                 .addComponent(simplifyCheckBox)
-                .addContainerGap(211, Short.MAX_VALUE))
+                .addContainerGap(213, Short.MAX_VALUE))
         );
 
         globalPanel.add(panel2, "panel2");
@@ -393,7 +402,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
             }
             
             codes = getCodes(coverage);
-            codeComboBox.setModel(new DefaultComboBoxModel(codes.toArray()));
+            codesList.setModel(new DefaultComboBoxModel(codes.toArray()));
             DefaultComboBoxModel model = new DefaultComboBoxModel(codes.toArray());
             model.insertElementAt("(None)", 0);
             noDataComboBox.setModel(model);
@@ -461,8 +470,8 @@ public class NewProjectDialog extends javax.swing.JDialog {
                 }
                 return true;
             case 1:
-                if(codeComboBox.getSelectedItem().equals(noDataComboBox.getSelectedItem())) {
-                    JOptionPane.showMessageDialog(this, "Habitat and no data codes are equals.", "Error", JOptionPane.ERROR_MESSAGE);
+                if(getHabitatCodes().contains(noDataComboBox.getSelectedItem())) {
+                    JOptionPane.showMessageDialog(this, "Habitat codes contain nodata code.", "Error", JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
                 double noData = noDataComboBox.getSelectedIndex() == 0 ? Double.NaN : ((Number)noDataComboBox.getSelectedItem()).doubleValue();
@@ -521,11 +530,16 @@ public class NewProjectDialog extends javax.swing.JDialog {
 
     }
 
+    private Set<Integer> getHabitatCodes() {
+        List list = codesList.getSelectedValuesList();
+        if(list.size() == 1) {
+            return Collections.singleton((Integer)list.get(0));
+        }
+        return new HashSet<>(list);
+    }
+    
     public Project createProject() throws IOException, SchemaException {
         File prjPath = new File(prjPathTextField.getText());
-        prjPath.mkdir();
-
-        int code = (Integer)codeComboBox.getSelectedItem();
 
         // on le convertit d'ha en m2 Attention on suppose que le système de coordonnées est en mètre
         double minArea = (Double)minAreaSpinner.getValue() * 10000;
@@ -535,8 +549,8 @@ public class NewProjectDialog extends javax.swing.JDialog {
             codes.remove((int)noData);
         }
 
-        Project prj = new Project(prjNameTextField.getText(), prjPath, coverage, codes, code, noData, con8, minArea, simplifyCheckBox.isSelected());
-
+        Project prj = new Project(prjNameTextField.getText(), prjPath, coverage, codes, getHabitatCodes(), noData, con8, minArea, simplifyCheckBox.isSelected());
+        panel3.setProject(prj);
         prj.addLinkset(panel3.getLinkset(), true);
 
         return prj;
@@ -544,7 +558,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
-    private javax.swing.JComboBox codeComboBox;
+    private javax.swing.JList codesList;
     private javax.swing.JRadioButton con4RadioButton;
     private javax.swing.JRadioButton con8RadioButton;
     private javax.swing.ButtonGroup connexButtonGroup;
@@ -556,6 +570,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSpinner minAreaSpinner;
     private javax.swing.JButton nextButton;
     private javax.swing.JComboBox noDataComboBox;

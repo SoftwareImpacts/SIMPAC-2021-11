@@ -61,7 +61,6 @@ import org.thema.graphab.Project.Method;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.NewGraphDialog;
 import org.thema.graphab.links.LinksetPanel;
-import org.thema.graphab.links.RasterPathFinder;
 import org.thema.graphab.metric.BatchGraphMetricDialog;
 import org.thema.graphab.metric.BatchGraphMetricTask;
 import org.thema.graphab.metric.BatchParamMetricDialog;
@@ -88,7 +87,7 @@ import org.thema.parallel.ExecutorService;
 public class MainFrame extends javax.swing.JFrame {
 
 
-    public static Project project;
+    private Project project;
     
     private LoggingDialog logFrame;
 
@@ -454,6 +453,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void costDistMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_costDistMenuItemActionPerformed
         final LinksetPanel panel = new LinksetPanel();
+        panel.setProject(project);
         panel.setCodes(project.getCodes(), project.getLastCosts());
 
         int res = JOptionPane.showConfirmDialog(this, panel, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Cost_distances"), 
@@ -462,8 +462,8 @@ public class MainFrame extends javax.swing.JFrame {
             return;
         }
 
-        if(project.getLinksetNames().contains(panel.getCostName())) {
-            JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("The_name_already_exists") + panel.getCostName());
+        if(project.getLinksetNames().contains(panel.getLinksetName())) {
+            JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("The_name_already_exists") + panel.getLinksetName());
             return;
         }
         new Thread(new Runnable() {
@@ -553,7 +553,7 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_addPointDataMenuItemActionPerformed
 
     private void calcIndiceMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_calcIndiceMenuItemActionPerformed
-        final CalcMetricDialog<GlobalMetric> dlg = new CalcMetricDialog(this, project.getGraphs(), Project.getGlobalMetricsFor(Method.GLOBAL));
+        final CalcMetricDialog<GlobalMetric> dlg = new CalcMetricDialog(this, project, project.getGraphs(), Project.getGlobalMetricsFor(Method.GLOBAL));
         dlg.setVisible(true);
         if(!dlg.isOk) {
             return;
@@ -595,7 +595,7 @@ public class MainFrame extends javax.swing.JFrame {
                     0, 100);
                 GlobalMetric indice = dlg.metric;
 
-                BatchGraphMetricTask task = new BatchGraphMetricTask(monitor, dlg.linksetName, dlg.distAbs, 
+                BatchGraphMetricTask task = new BatchGraphMetricTask(monitor, dlg.linkset, dlg.distAbs, 
                     dlg.min, dlg.inc, dlg.max, launcher, dlg.intraPatchDist);
 
                 new ParallelFExecutor(task).executeAndWait();
@@ -643,7 +643,7 @@ public class MainFrame extends javax.swing.JFrame {
 }//GEN-LAST:event_batchGraphIndiceMenuItemActionPerformed
 
     private void deltaIndiceMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deltaIndiceMenuItemActionPerformed
-        final CalcMetricDialog<GlobalMetric> dlg = new CalcMetricDialog<>(this, project.getGraphs(), Project.getGlobalMetricsFor(Method.DELTA));
+        final CalcMetricDialog<GlobalMetric> dlg = new CalcMetricDialog<>(this, project, project.getGraphs(), Project.getGlobalMetricsFor(Method.DELTA));
         dlg.setVisible(true);
         if(!dlg.isOk) {
             return;
@@ -681,14 +681,14 @@ public class MainFrame extends javax.swing.JFrame {
                         }
                         if((nodeEdge & 1) == 1) {
                             DefaultFeature.addAttribute("d_" + Project.getDetailName(indice, i) + "_" + dlg.graph.getName(),
-                                MainFrame.project.getPatches(), Double.NaN);
+                                project.getPatches(), Double.NaN);
                         }
                     }
 
                     Map<Object, Double[]> result = task.getResult();
 
                     if((nodeEdge & 1) == 1) {
-                        for(DefaultFeature f : MainFrame.project.getPatches()) {
+                        for(DefaultFeature f : project.getPatches()) {
                             if(result.keySet().contains(f.getId())) {
                                 Double[] res = result.get(f.getId());
                                 for(int j = 0; j < indice.getResultNames().length; j++) {
@@ -713,10 +713,10 @@ public class MainFrame extends javax.swing.JFrame {
                     monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
                 
                     if((nodeEdge & 2) == 2) {
-                        dlg.graph.getLinkset().saveLinks(MainFrame.project.getDirectory());
+                        dlg.graph.getLinkset().saveLinks();
                     }
                     if((nodeEdge & 1) == 1) {
-                        MainFrame.project.savePatch();
+                        project.savePatch();
                     }
                     // show the result
                     viewMetricResult(dlg.graph, "d_" + Project.getDetailName(indice, 0) + "_" + dlg.graph.getName(), 
@@ -731,7 +731,7 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_deltaIndiceMenuItemActionPerformed
 
     private void localIndiceMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_localIndiceMenuItemActionPerformed
-        final CalcMetricDialog<LocalMetric> dlg = new CalcMetricDialog<>(this, project.getGraphs(), Project.getLocalMetrics());
+        final CalcMetricDialog<LocalMetric> dlg = new CalcMetricDialog<>(this, project, project.getGraphs(), Project.getLocalMetrics());
         dlg.setVisible(true);
         if(!dlg.isOk) {
             return;
@@ -753,8 +753,8 @@ public class MainFrame extends javax.swing.JFrame {
                 System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
 
                 monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
-                dlg.graph.getLinkset().saveLinks(MainFrame.project.getDirectory());
-                MainFrame.project.savePatch();
+                dlg.graph.getLinkset().saveLinks();
+                project.savePatch();
                 
                 // show the result
                 viewMetricResult(dlg.graph, dlg.metric.getDetailName() + "_" + dlg.graph.getName(), dlg.metric.calcNodes(), dlg.metric.calcEdges());
@@ -770,7 +770,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void compIndiceMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compIndiceMenuItemActionPerformed
        
-        final CalcMetricDialog<GlobalMetric> dlg = new CalcMetricDialog<>(this, project.getGraphs(), Project.getGlobalMetricsFor(Method.COMP));
+        final CalcMetricDialog<GlobalMetric> dlg = new CalcMetricDialog<>(this, project, project.getGraphs(), Project.getGlobalMetricsFor(Method.COMP));
         dlg.setVisible(true);
         if(!dlg.isOk) {
             return;
@@ -778,30 +778,29 @@ public class MainFrame extends javax.swing.JFrame {
         new Thread(new Runnable() {
             @Override
             public void run() {
-            try {
-                
-                TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_component_metric..."), "", 0,
-                        100);
+                ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_component_metric..."));
+                try {
+                    List<String> attrs = calcCompIndice(monitor, dlg.graph, dlg.metric, Double.NaN);
 
-                List<String> attrs = calcCompIndice(monitor, dlg.graph, dlg.metric, Double.NaN);
+                    monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
 
-                monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
+                    project.saveGraphVoronoi(dlg.graph.getName());
 
-                MainFrame.project.saveGraphVoronoi(dlg.graph.getName());
-                
-                project.getRootLayer().setLayersVisible(false);
-                project.getGraphLayers().setExpanded(true);
-                GraphGroupLayer gl = dlg.graph.getLayers();
-                gl.setExpanded(true);
-                FeatureLayer compLayer = (FeatureLayer) gl.getLayers().get(0);
-                compLayer.setStyle(new FeatureStyle(attrs.get(0), new ColorRamp(ColorRamp.RAMP_SYM_GREEN_RED, 
-                        new FeatureAttributeIterator<Number>(dlg.graph.getComponentFeatures(), attrs.get(0)))));
-                compLayer.setVisible(true);
-                monitor.close();
-            } catch(IOException | SchemaException ex) {
-                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-                JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
-            }
+                    project.getRootLayer().setLayersVisible(false);
+                    project.getGraphLayers().setExpanded(true);
+                    GraphGroupLayer gl = dlg.graph.getLayers();
+                    gl.setExpanded(true);
+                    FeatureLayer compLayer = (FeatureLayer) gl.getLayers().get(0);
+                    compLayer.setStyle(new FeatureStyle(attrs.get(0), new ColorRamp(ColorRamp.RAMP_SYM_GREEN_RED, 
+                            new FeatureAttributeIterator<Number>(dlg.graph.getComponentFeatures(), attrs.get(0)))));
+                    compLayer.setVisible(true);
+
+                } catch(IOException | SchemaException ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    JOptionPane.showMessageDialog(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("An_error_occured") + ex.getLocalizedMessage());
+                } finally {
+                    monitor.close();
+                }
             }
         }).start();
     }//GEN-LAST:event_compIndiceMenuItemActionPerformed
@@ -836,7 +835,7 @@ public class MainFrame extends javax.swing.JFrame {
             }
         }
         final BatchParamMetricDialog<LocalMetric> dlg = new BatchParamMetricDialog<>
-                (this, project.getGraphs(), metrics);
+                (this, project, project.getGraphs(), metrics);
         dlg.setVisible(true);
         if(!dlg.isOk) {
             return;
@@ -862,8 +861,8 @@ public class MainFrame extends javax.swing.JFrame {
 
                 monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
 
-                dlg.graph.getLinkset().saveLinks(MainFrame.project.getDirectory());
-                MainFrame.project.savePatch();
+                dlg.graph.getLinkset().saveLinks();
+                project.savePatch();
 
                 monitor.close();
             } catch(IOException | SchemaException ex) {
@@ -882,7 +881,7 @@ public class MainFrame extends javax.swing.JFrame {
             }
         }
         final BatchParamMetricDialog<GlobalMetric> dlg = new BatchParamMetricDialog<>
-                (this, project.getGraphs(), metrics);
+                (this, project, project.getGraphs(), metrics);
         dlg.setVisible(true);
         if(!dlg.isOk) {
             return;
@@ -1028,7 +1027,7 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_logMenuItemActionPerformed
 
     private void interpMetricMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_interpMetricMenuItemActionPerformed
-        new MetricInterpolDlg(this, true).setVisible(true);
+        new MetricInterpolDlg(this, project, true).setVisible(true);
     }//GEN-LAST:event_interpMetricMenuItemActionPerformed
 
     private void metaPatchMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_metaPatchMenuItemActionPerformed
@@ -1127,7 +1126,7 @@ public class MainFrame extends javax.swing.JFrame {
      * @return list of created attributes
      * @throws Throwable 
      */
-    public static List<String> calcCompIndice(TaskMonitor monitor, GraphGenerator graph,
+    public static List<String> calcCompIndice(ProgressBar monitor, GraphGenerator graph,
                 GlobalMetric indice, double maxCost) {
         GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice);
         List<String> attrNames = new ArrayList<>();
@@ -1140,12 +1139,13 @@ public class MainFrame extends javax.swing.JFrame {
         monitor.setMaximum(graph.getComponents().size());
 
         for(int i = 0; i < graph.getComponents().size(); i++) {
-            Double [] res = launcher.calcMetric(graph.getComponentGraphGen(i), true, monitor.getSubMonitor(0, 100, 1));
+            Double [] res = launcher.calcMetric(graph.getComponentGraphGen(i), true, null);
             DefaultFeature f = graph.getComponentFeatures().get(i);
             String [] names = indice.getResultNames();
             for(int j = 0; j < names.length; j++) {
                 f.setAttribute(indice.getDetailName() + "_" + names[j] + "_" + graph.getName(), res[j]);
             }
+            monitor.incProgress(1);
         }
 
         return attrNames;
@@ -1165,7 +1165,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         if(indice.calcNodes()) {
             DefaultFeature.addAttribute(indice.getDetailName() + "_" + graph.getName(),
-                MainFrame.project.getPatches(), Double.NaN);
+                graph.getProject().getPatches(), Double.NaN);
             List<Node> nodes = new ArrayList(graph.getGraph().getNodes());
             SimpleParallelTask<Node> task = new SimpleParallelTask<Node>(nodes, monitor.getSubProgress(nodes.size())) {
                 @Override
@@ -1180,7 +1180,7 @@ public class MainFrame extends javax.swing.JFrame {
             new ParallelFExecutor(task).executeAndWait();
             if(task.isCanceled()) {
                 DefaultFeature.removeAttribute(indice.getDetailName() + "_" + graph.getName(),
-                    MainFrame.project.getPatches());          
+                    graph.getProject().getPatches());          
                 return true;
             }
         }
@@ -1220,17 +1220,17 @@ public class MainFrame extends javax.swing.JFrame {
     */
     public static void main(String[] args) throws Exception {
         
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                Logger.getLogger("").log(Level.SEVERE, null, e);
-            }
-        });
+//        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+//            @Override
+//            public void uncaughtException(Thread t, Throwable e) {
+//                Logger.getLogger("").log(Level.SEVERE, null, e);
+//            }
+//        });
         
         try {
             Project.loadPluginMetric();
         } catch (Exception ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MainFrame.class.getName()).log(Level.WARNING, null, ex);
         }
         
         // MPI Execution

@@ -29,17 +29,20 @@ public class BatchParamMetricDialog<T extends Metric> extends javax.swing.JDialo
     
     private List<? extends T> metrics;
 
+    private Project project;
+    
     /**
      * Creates new form BatchParamMetricDialog
      * @param parent parent frame
      * @param graphs collection of graphs
      * @param metrics list of metrics
      */
-    public BatchParamMetricDialog(java.awt.Frame parent, Collection<GraphGenerator> graphs, List<? extends T> metrics) {
+    public BatchParamMetricDialog(java.awt.Frame parent, Project project, Collection<GraphGenerator> graphs, List<? extends T> metrics) {
         super(parent, true);
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
+        this.project = project;
         this.metrics = metrics;
         graphComboBox.setModel(new DefaultComboBoxModel(graphs.toArray()));
         graphComboBoxActionPerformed(null);
@@ -276,7 +279,7 @@ public class BatchParamMetricDialog<T extends Metric> extends javax.swing.JDialo
         
         paramPanel.removeAll();
         T ind = (T) indiceComboBox.getSelectedItem();
-        paramPanel.add(ind.getParamPanel(Project.getProject()), BorderLayout.CENTER);
+        paramPanel.add(ind.getParamPanel(project), BorderLayout.CENTER);
         paramPanel.revalidate();
         paramPanel.repaint();
     }//GEN-LAST:event_indiceComboBoxActionPerformed

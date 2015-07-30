@@ -7,14 +7,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Graphable;
 import org.thema.common.ProgressBar;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
-import org.thema.graphab.Project;
 import org.thema.graphab.graph.DeltaGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.mpi.MpiLauncher;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
@@ -91,7 +92,7 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
         super.init(); 
         // useful for MPI mode, cause gen is transient, not serialized
         if(gen == null) {
-            gen = Project.getProject().getGraph(graphName);
+            gen = MpiLauncher.getProject().getGraph(graphName);
         }
     }
 
@@ -117,7 +118,7 @@ public class DeltaMetricTask extends AbstractParallelTask<Map<Object, Double[]>,
 
         for(Graphable elem : elems) {
             if(isCanceled()) {
-                return null;
+                throw new CancellationException();
             }
             deltaGen.removeElem(elem);
             Double[] res = launcher.calcMetric(deltaGen, false, null);

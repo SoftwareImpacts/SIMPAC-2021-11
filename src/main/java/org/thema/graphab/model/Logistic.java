@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package org.thema.graphab.model;
 
@@ -17,35 +13,45 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 
 /**
- *
- * @author gvuidel
+ * Calculates a multivariate logistic regression.
+ * 
+ * @author Gilles Vuidel
  */
 public class Logistic {
 
+    /**
+     * Represents a multivariate logistic function
+     */
     public static class LogisticFunction implements MultivariateRealFunction {
-        RealVector beta;
+        private RealVector beta;
 
         public LogisticFunction(double[] beta) {
             this.beta = MatrixUtils.createRealVector(beta);
         }
 
+        @Override
         public double value(double[] point) {
             return 1 / (1 + Math.exp(-beta.dotProduct(point)));
         }
     }
 
-    public static int maxIter = 500;
-    public static double epsilon = 1e-10;
+    private static int maxIter = 500;
+    private static double epsilon = 1e-10;
 
-    RealVector params;
+    private RealVector params;
 
-    RealMatrix A;
-    RealVector Y;
-    int nVar, n;
+    private RealMatrix A;
+    private RealVector Y;
+    private int nVar, n;
 
     private LogisticFunction estim;
     private Logistic constLog;
 
+    /**
+     * Creates a new logistic regression
+     * @param a the matrix of explained variables
+     * @param y the binary variable (0 or 1) to explain
+     */
     public Logistic(double[][] a, double [] y) {
         Y = MatrixUtils.createRealVector(y);
         nVar = a[0].length;
@@ -69,10 +75,18 @@ public class Logistic {
         }
     }
 
+    /**
+     * @return the coefficients of the logistic function, the first is the constant
+     */
     public double[] getCoefs() {
         return params.getData();
     }
     
+    /**
+     * Calculates the logisitic regression and returns the coefficients
+     * @return
+     * @throws FunctionEvaluationException 
+     */
     public double [] regression() throws FunctionEvaluationException  {
        
         RealVector X = new ArrayRealVector(nVar+1);
@@ -87,12 +101,14 @@ public class Logistic {
             RealVector adjY = A.operate(X);
             RealVector expY = adjY.copy();
             expY.mapToSelf(new UnivariateRealFunction() {
+                @Override
                 public double value(double x)  {
                     return 1 / (1 + Math.exp(-x));
                 }
             });
             RealVector deriv = expY.copy();
             deriv.mapToSelf(new UnivariateRealFunction() {
+                @Override
                 public double value(double x) {
                     return x * (1-x);
                 }
@@ -123,46 +139,27 @@ public class Logistic {
         return X.getData();
     }
 
+    public LogisticFunction getEstimFunction() {
+        return estim;
+    }
+
     public double [] getEstimation() {
-        LogisticFunction func = new LogisticFunction(params.getData());
         double [] y = new double[n];
         for(int i = 0; i < n; i++) {
-            y[i] = func.value(A.getRow(i));
+            y[i] = estim.value(A.getRow(i));
         }
         return y;
     }
 
-    private LogisticFunction getEstimFunction() {
-        return estim;
-    }
-
-    public double estim(double [] x) {
-        double [] xc = new double[nVar+1];
-        xc[0] = 1;
-        for(int i = 1; i < xc.length; i++) {
-            xc[i] = x[i-1];
-        }
-        return getEstimFunction().value(xc);
-    }
-
-    private double getLikelihood(double [] beta) {
-        LogisticFunction func = new LogisticFunction(beta);
+    public double getLikelihood() {
         double prod = 1;
-
         for(int i = 0; i < n; i++) {
-            prod *= Math.pow(func.value(A.getRow(i)), Y.getEntry(i)) * Math.pow(1-func.value(A.getRow(i)), 1-Y.getEntry(i));
+            prod *= Math.pow(estim.value(A.getRow(i)), Y.getEntry(i)) * Math.pow(1-estim.value(A.getRow(i)), 1-Y.getEntry(i));
         }
-
         return prod;
     }
 
-    public double getLikelihood() {
-        return getLikelihood(params.getData());
-    }
-
     public double getDiffLikelihood() {
-//        double [] betaConst = new double[params.getDimension()];
-//        betaConst[0] = params.getEntry(0);
         return -2 * Math.log(constLog.getLikelihood() / getLikelihood());
     }
 
@@ -178,29 +175,7 @@ public class Logistic {
     }
 
     public double getAIC() {
-        return 2 * nVar - 2 * Math.log(getLikelihood(params.getData()));
+        return 2 * nVar - 2 * Math.log(getLikelihood());
     }
 
-    public static void main(String [] args) throws Exception {
-        double [][] x = new double [][]
-            {{    1},
-            {    2},
-            {    3},
-            {    4},
-            {    5},
-            {    6},
-            {    7},
-            {    8},
-            {    9},
-            {   10}};
-        double [] y = new double [] {0,   0,   0,   0,   1,   0,   1,   0,   1,   1};
-        Logistic log = new Logistic(x, y);
-        double [] coef = log.regression();
-        
-        System.out.println("Attendu  : -4.35746  0.66216");
-        System.out.println("intercept : " + coef[0] + " - val : " + coef[1]);
-        System.out.println("Likelihood  : " + log.getLikelihood());
-        System.out.println("p  : " + log.getProbaTest());
-        System.out.println("AIC  : " + log.getAIC());
-    }
 }

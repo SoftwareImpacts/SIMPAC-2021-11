@@ -41,7 +41,7 @@ public class ModGraphGenerator extends GraphGenerator {
     protected void createGraph() {
         BasicGraphBuilder gen = new BasicGraphBuilder();
         HashMap<Feature, Node> patchNodes = new HashMap<>();
-        for(DefaultFeature p : Project.getProject().getPatches()) {
+        for(DefaultFeature p : getProject().getPatches()) {
             Node n = gen.buildNode();
             n.setObject(p);
             gen.addNode(n);

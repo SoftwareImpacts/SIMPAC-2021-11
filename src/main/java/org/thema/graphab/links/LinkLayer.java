@@ -14,8 +14,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -33,20 +31,21 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.pointset.Pointset;
 
 /**
- *
+ * Layer for a linkset.
+ * 
  * @author Gilles Vuidel
  */
 public class LinkLayer extends FeatureLayer {
-    private final Project project;
+    private Linkset linkset;
 
-    public LinkLayer(final String name, final Project project) {
-        super(name, new FeatureGetter<Path>() {
+    public LinkLayer(final Linkset linkset) {
+        super(linkset.getName(), new FeatureGetter<Path>() {
             @Override
             public Collection<Path> getFeatures() {
-                return project.getPaths(name);
+                return linkset.getPaths();
             }
-        }, project.getZone(), new LineStyle(new Color(project.getLinkset(name).getTopology() == Linkset.PLANAR ? 0x25372b : 0xb8c45d)), project.getCRS());
-        this.project = project;
+        }, linkset.getProject().getZone(), new LineStyle(new Color(linkset.getTopology() == Linkset.PLANAR ? 0x25372b : 0xb8c45d)), linkset.getProject().getCRS());
+        this.linkset = linkset;
     }
 
     @Override
@@ -56,7 +55,7 @@ public class LinkLayer extends FeatureLayer {
             @Override
             public void actionPerformed(ActionEvent e) {
                 List<String> exoNames = new ArrayList<>();
-                for (Pointset exo : project.getPointsets()) {
+                for (Pointset exo : linkset.getProject().getPointsets()) {
                     if (exo.getLinkset().getName().equals(getName())) {
                         exoNames.add(exo.getName());
                     }
@@ -66,7 +65,7 @@ public class LinkLayer extends FeatureLayer {
                     return;
                 }
                 List<String> graphNames = new ArrayList<>();
-                for (GraphGenerator g : project.getGraphs()) {
+                for (GraphGenerator g : linkset.getProject().getGraphs()) {
                     if (g.getLinkset().getName().equals(getName())) {
                         graphNames.add(g.getName());
                     }
@@ -77,11 +76,11 @@ public class LinkLayer extends FeatureLayer {
                 }
                 try {
                     for (String gName : graphNames) {
-                        project.removeGraph(gName);
+                        linkset.getProject().removeGraph(gName);
                     }
-                    project.getLinksetNames().remove(getName());
-                    project.save();
-                    project.getLinksetLayers().removeLayer(LinkLayer.this);
+                    linkset.getProject().getLinksetNames().remove(getName());
+                    linkset.getProject().save();
+                    linkset.getProject().getLinksetLayers().removeLayer(LinkLayer.this);
                 } catch (IOException ex) {
                     Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -102,7 +101,7 @@ public class LinkLayer extends FeatureLayer {
                 XYSeriesCollection dataregr = new XYSeriesCollection(s);
 
                 double [] coef = Regression.getOLSRegression(dataregr, 0);
-                double cost = project.getLinkset(getName()).estimCost(dist);
+                double cost = linkset.estimCost(dist);
                 
                 JTextArea text = new JTextArea(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
                         coef[0], coef[1], dist, cost));
@@ -122,8 +121,8 @@ public class LinkLayer extends FeatureLayer {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    HashMap2D map = project.getLinkset(getName()).extractCostFromPath(project);
-                    map.saveToCSV(new File(project.getDirectory(), getName() + "-links-extract-cost.csv"));
+                    HashMap2D map = linkset.extractCostFromPath();
+                    map.saveToCSV(new File(linkset.getProject().getDirectory(), getName() + "-links-extract-cost.csv"));
                     JOptionPane.showMessageDialog(null, "Costs extracted into file " + getName() + "-links-extract-cost.csv");
                 } catch (IOException ex) {
                     Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
@@ -133,7 +132,7 @@ public class LinkLayer extends FeatureLayer {
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties...")) {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null, project.getLinkset(getName()).getInfo());
+                JOptionPane.showMessageDialog(null, linkset.getInfo());
             }
         });
         return menu;

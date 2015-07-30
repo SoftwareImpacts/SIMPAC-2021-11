@@ -46,6 +46,7 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
+import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.DeltaMetricTask;
 import org.thema.graphab.metric.global.GlobalMetricLauncher;
 import org.thema.graphab.metric.Metric;
@@ -179,7 +180,7 @@ public class CLITools {
     public void execute(String [] argArray) throws IOException, SchemaException, MathException {
         if(argArray[0].equals("--help")) {
             System.out.println("Usage :\njava -jar graphab.jar --metrics\n" +
-                    "java -jar graphab.jar [-proc n] --create prjname land.tif habitat=code [nodata=val] [minarea=val] [con8] [simp] [dir=path]\n" +
+                    "java -jar graphab.jar [-proc n] --create prjname land.tif habitat=code1,...,coden [nodata=val] [minarea=val] [con8] [simp] [dir=path]\n" +
                     "java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]\n" +
                     "Commands list :\n" +
                     "--show\n" + 
@@ -204,6 +205,8 @@ public class CLITools {
                     "--remlink nlink global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "--metapatch [mincapa=value]\n" +
+                    "--landmod zone=filezones.shp id=fieldname code=fieldname [novoronoi]\n" +
+                    "--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]\n" +
                     "\nmin:inc:max -> val1,val2,val3...");
             return;
         }
@@ -241,12 +244,10 @@ public class CLITools {
         switch (p) {
             case "--create":
                 project = createProject(args);
-                MainFrame.project = project;
                 break;
             case "--project":
                 p = args.remove(0);
                 project = Project.loadProject(new File(p), false);
-                MainFrame.project = project;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown command " + p);
@@ -292,6 +293,10 @@ public class CLITools {
                 metapatch(args);
             } else if(p.equals("--capa")) {
                 capa(args);
+            } else if(p.equals("--landmod")) {
+                landmod(args);
+            } else if(p.equals("--interp")) {
+                interp(args);
             } else if(p.startsWith("--use")) {
                 useObj(p, args);
             } else if(p.startsWith("--show")) {
@@ -386,16 +391,20 @@ public class CLITools {
     public Project createProject(List<String> args) throws IOException, SchemaException {
         String name = args.remove(0);
         File land = new File(args.remove(0));
-        int code = Integer.parseInt(args.remove(0).split("=")[1]);
+        Range range = Range.parse(args.remove(0).split("=")[1]);
+        HashSet<Integer> patchCodes = new HashSet<>();
+        for(Double code : range.getValues()) {
+            patchCodes.add(code.intValue());
+        }
         double nodata = Double.NaN;
         double minArea = 0;
         boolean con8 = false;
         boolean simp = false;
         File dir = new File(".");
         
-        String p = args.isEmpty() ? null : args.remove(0);
         // parameter
-        while(p != null && !p.startsWith("--")) {
+        while(!args.isEmpty() && !args.get(0).startsWith("--")) {
+            String p = args.remove(0);
             String[] tok = p.split("=");
             switch (tok[0]) {
                 case "nodata":
@@ -416,7 +425,6 @@ public class CLITools {
                 default:
                     throw new IllegalArgumentException("Unknown parameter " + p);
             }
-            p = args.isEmpty() ? null : args.remove(0);
         }
         
         GridCoverage2D coverage;
@@ -438,7 +446,7 @@ public class CLITools {
             }
         }
 
-        return new Project(name, new File(dir, name), coverage, new TreeSet<>(codes), code, nodata, con8, minArea, simp);
+        return new Project(name, new File(dir, name), coverage, new TreeSet<>(codes), patchCodes, nodata, con8, minArea, simp);
     }
     
     public void batchModel(List<String> args) throws IOException, MathException {
@@ -518,7 +526,7 @@ public class CLITools {
             if(linkName == null) {
                 linkName = "euclid_" + (type == Linkset.COMPLETE ? ("comp"+threshold) : "plan");
             }
-            Linkset cost = new Linkset(linkName, type, true, threshold);
+            Linkset cost = new Linkset(project, linkName, type, true, threshold);
             project.addLinkset(cost, save);
             useLinksets.add(cost);
         } else {
@@ -539,8 +547,8 @@ public class CLITools {
                 if(linkName == null) {
                     linkName = (circuit ? "circ_" : "cost_") + extCost.getName();
                 } 
-                Linkset cost = circuit ? new Linkset(linkName, type, null, extCost, true, coefSlope) : 
-                        new Linkset(linkName, type, Linkset.COST_LENGTH, true, removeCrossPath, threshold, extCost, coefSlope);
+                Linkset cost = circuit ? new Linkset(project, linkName, type, null, extCost, true, coefSlope) : 
+                        new Linkset(project, linkName, type, Linkset.COST_LENGTH, true, removeCrossPath, threshold, extCost, coefSlope);
                 project.addLinkset(cost, save);
                 useLinksets.add(cost);
             } else {
@@ -581,8 +589,8 @@ public class CLITools {
                         costs[code.intValue()] = c;
                     }
                     String s = name + (multi ? "-" + c : "");
-                    Linkset cost = circuit ? new Linkset(s, type, costs, null, true, coefSlope) : 
-                            new Linkset(s, type, costs, Linkset.COST_LENGTH, true, removeCrossPath, threshold, coefSlope);
+                    Linkset cost = circuit ? new Linkset(project, s, type, costs, null, true, coefSlope) : 
+                            new Linkset(project, s, type, costs, Linkset.COST_LENGTH, true, removeCrossPath, threshold, coefSlope);
                     project.addLinkset(cost, save);
                     useLinksets.add(cost);
                 }
@@ -743,7 +751,7 @@ public class CLITools {
             }
 
             if(save) {
-                MainFrame.project.saveGraphVoronoi(graph.getName());
+                project.saveGraphVoronoi(graph.getName());
             }
         }
     }
@@ -791,8 +799,8 @@ public class CLITools {
             }
 
             if(save) {
-                graph.getLinkset().saveLinks(MainFrame.project.getDirectory());
-                MainFrame.project.savePatch();
+                graph.getLinkset().saveLinks();
+                project.savePatch();
             }
         }
     }
@@ -1301,11 +1309,48 @@ public class CLITools {
         
         String name = project.getName() + "-" + g.getName();
         project = Project.loadProject(new File(new File(project.getDirectory(), name), name + ".xml"), false);
-        MainFrame.project = project;
         
         useLinksets.clear();
         useGraphs.clear();
         useExos.clear();
+    }
+    
+    private void landmod(final List<String> args) throws IOException, SchemaException, MathException {
+        File fileZone = new File(args.remove(0).split("=")[1]);
+        String idField = args.remove(0).split("=")[1];
+        String codeField = args.remove(0).split("=")[1];
+        boolean voronoi = true;
+        if(!args.isEmpty() && args.get(0).equals("novoronoi")) {
+            args.remove(0);
+            voronoi = false;
+        }
+        LandModTask task = new LandModTask(project, fileZone, idField, codeField, voronoi, args);
+        ExecutorService.execute(task);
+
+        args.clear();
+    }
+    
+    private void interp(final List<String> args) throws IOException {
+        String name = args.remove(0);
+        double res = Double.parseDouble(args.remove(0));
+        String var = args.remove(0).split("=")[1];
+        double d = Double.parseDouble(args.remove(0).split("=")[1]);
+        double p = Double.parseDouble(args.remove(0).split("=")[1]);
+        boolean multi = false;
+        boolean avg = true;
+        double dmax = Double.NaN;
+        if(!args.isEmpty() && args.get(0).startsWith("multi=")) {
+            dmax = Double.parseDouble(args.remove(0).split("=")[1]);
+            multi = true;
+            if(!args.isEmpty() && args.get(0).equals("sum")) {
+                args.remove(0);
+                avg = false;
+            }
+        }
+        for(Linkset linkset : getLinksets()) {
+            RasterLayer raster = DistribModel.interpolate(project, res, var, AlphaParamMetric.getAlpha(d, p), linkset, multi, dmax, avg, new TaskMonitor.EmptyMonitor());
+            raster.saveRaster(new File(project.getDirectory(), name + "-" + linkset.getName() + ".tif"));
+        }
     }
 
     private void circuit(List<String> args) throws IOException, SchemaException {
@@ -1406,7 +1451,7 @@ public class CLITools {
                 continue;
             }
             System.out.println("Linkset : " + link.getName());
-            List<Feature> corridors = link.computeCorridor(project, null, maxCost);
+            List<Feature> corridors = link.computeCorridor(null, maxCost);
             
             DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
                     "-corridor-" + maxCost + ".shp"), project.getCRS());

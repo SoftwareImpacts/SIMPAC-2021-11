@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 import org.apache.commons.math.MathException;
 import org.geotools.feature.SchemaException;
 import org.thema.graphab.CLITools;
-import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 import org.thema.parallel.mpi.MainMPI;
 import org.thema.parallel.mpi.OpenMPIInterface;
@@ -20,6 +19,8 @@ import org.thema.parallel.mpi.OpenMPIInterface;
  */
 public class MpiLauncher extends MainMPI {
 
+    private static Project project;
+    
     /**
      * Creates a new MpiLauncher passing command line argument
      * @param args command line argument from public static void main method
@@ -43,7 +44,15 @@ public class MpiLauncher extends MainMPI {
             throw new IllegalArgumentException();
         }
         
-        MainFrame.project = Project.loadProject(new File(args[1]), false);
+        project = Project.loadProject(new File(args[1]), false);
+    }
+
+    public static Project getProject() {
+        return project;
+    }
+    
+    public static boolean IsMPIWorker() {
+        return project != null;
     }
     
 }
