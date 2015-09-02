@@ -1305,10 +1305,8 @@ public class CLITools {
             throw new IllegalArgumentException("--metapatch command works only for one graph. Select a graph with --usegraph.");
         }
         GraphGenerator g = getGraphs().iterator().next();
-        project.createMetaPatchProject(project.getName() + "-" + g.getName(), g, 0, minCapa);
-        
-        String name = project.getName() + "-" + g.getName();
-        project = Project.loadProject(new File(new File(project.getDirectory(), name), name + ".xml"), false);
+        File prjFile = project.createMetaPatchProject(project.getName() + "-" + g.getName(), g, 0, minCapa);
+        project = Project.loadProject(prjFile, false);
         
         useLinksets.clear();
         useGraphs.clear();

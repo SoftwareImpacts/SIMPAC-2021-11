@@ -4,7 +4,6 @@ package org.thema.graphab;
 
 import java.awt.Color;
 import java.awt.GraphicsEnvironment;
-import java.awt.HeadlessException;
 import java.awt.SplashScreen;
 import java.awt.Toolkit;
 import java.io.File;
@@ -15,7 +14,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
@@ -38,7 +36,6 @@ import org.thema.common.Config;
 import org.thema.common.JavaLoader;
 import org.thema.common.ProgressBar;
 import org.thema.common.Util;
-import org.thema.common.io.tab.CSVTabReader;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
@@ -122,6 +119,7 @@ public class MainFrame extends javax.swing.JFrame {
         openMenuItem = new javax.swing.JMenuItem();
         prefMenuItem = new javax.swing.JMenuItem();
         logMenuItem = new javax.swing.JMenuItem();
+        projectRemPatchMenuItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         quitMenuItem = new javax.swing.JMenuItem();
         graphMenu = new javax.swing.JMenu();
@@ -130,7 +128,6 @@ public class MainFrame extends javax.swing.JFrame {
         metaPatchMenuItem = new javax.swing.JMenuItem();
         dataMenu = new javax.swing.JMenu();
         calcCapaMenuItem = new javax.swing.JMenuItem();
-        importCapaMenuItem = new javax.swing.JMenuItem();
         addPointDataMenuItem = new javax.swing.JMenuItem();
         addPointMenuItem = new javax.swing.JMenuItem();
         setDEMMenuItem = new javax.swing.JMenuItem();
@@ -199,6 +196,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         fileMenu.add(logMenuItem);
+
+        projectRemPatchMenuItem.setText(bundle.getString("MainFrame.projectRemPatchMenuItem.text")); // NOI18N
+        projectRemPatchMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                projectRemPatchMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(projectRemPatchMenuItem);
         fileMenu.add(jSeparator1);
 
         quitMenuItem.setText(bundle.getString("MainFrame.quitMenuItem.text")); // NOI18N
@@ -248,14 +253,6 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         dataMenu.add(calcCapaMenuItem);
-
-        importCapaMenuItem.setText(bundle.getString("MainFrame.importCapaMenuItem.text")); // NOI18N
-        importCapaMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                importCapaMenuItemActionPerformed(evt);
-            }
-        });
-        dataMenu.add(importCapaMenuItem);
 
         addPointDataMenuItem.setText(bundle.getString("MainFrame.addPointDataMenuItem.text")); // NOI18N
         addPointDataMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -965,35 +962,6 @@ public class MainFrame extends javax.swing.JFrame {
         }).start();
     }//GEN-LAST:event_batchParamGlobalMenuItemActionPerformed
 
-    private void importCapaMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importCapaMenuItemActionPerformed
-        ImportCapacityDialog dlg = new ImportCapacityDialog(this);
-        dlg.setVisible(true);
-        if(!dlg.isOk) {
-            return;
-        }
-        try {
-            CSVTabReader r = new CSVTabReader(dlg.file);
-            r.read(dlg.idField);
-
-            if(r.getKeySet().size() < project.getPatches().size()) {
-                JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Some_patch_ids_are_missing."));
-                return;
-            }
-
-            for(Number id : (Set<Number>)r.getKeySet()) {
-                DefaultFeature p = project.getPatch(id.intValue());
-                project.setCapacity(p, ((Number)r.getValue(id, dlg.capaField)).doubleValue());
-            }
-            project.savePatch();
-            r.dispose();
-            JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Data_imported"));
-        } catch (IOException | HeadlessException | SchemaException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(this, ex);
-        }
-
-    }//GEN-LAST:event_importCapaMenuItemActionPerformed
-
     private void calcCapaMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_calcCapaMenuItemActionPerformed
         final CapaPatchDialog dlg = new CapaPatchDialog(this, project, project.getCapacityParams());
         dlg.setVisible(true);
@@ -1008,6 +976,7 @@ public class MainFrame extends javax.swing.JFrame {
                     project.setCapacities(dlg.params);
                     project.savePatch();
                     project.save();
+                    JOptionPane.showMessageDialog(MainFrame.this, "Capacity saved.");
                 } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(MainFrame.this, ex);
@@ -1046,8 +1015,8 @@ public class MainFrame extends javax.swing.JFrame {
             @Override
             public void run() {
                 try {
-                    project.createMetaPatchProject(dlg.prjName, dlg.graph, dlg.alpha, dlg.minCapa);
-                    loadProject(new File(prjDir, dlg.prjName + ".xml"));
+                    File prjFile = project.createMetaPatchProject(dlg.prjName, dlg.graph, dlg.alpha, dlg.minCapa);
+                    loadProject(prjFile);
                     ((DefaultGroupLayer)mapViewer.getLayers()).addLayerLast(new FeatureLayer("Patch voronoi", project.getVoronoi(), new FeatureStyle(null, Color.BLACK)));
                 } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1070,6 +1039,30 @@ public class MainFrame extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(MainFrame.this, "Error " + ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_setDEMMenuItemActionPerformed
+
+    private void projectRemPatchMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_projectRemPatchMenuItemActionPerformed
+        String res = JOptionPane.showInputDialog("Create a new project while removing patches with a capacity less than :", 0);
+        if(res == null) {
+            return;
+        }
+        final double minCapa = Double.parseDouble(res.trim());
+        final String name = project.getName() + "-" + res.trim();
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    File prjFile = project.createProject(name, minCapa);
+                    loadProject(prjFile);
+                } catch (IOException | SchemaException ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    JOptionPane.showMessageDialog(MainFrame.this, "Error " + ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                } 
+            }
+        }).start();
+       
+        
+    }//GEN-LAST:event_projectRemPatchMenuItemActionPerformed
 
     
     public void viewMetricResult(GraphGenerator graph, String attr, boolean node, boolean edge) {
@@ -1311,7 +1304,6 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenu graphMenu;
     private javax.swing.JMenu helpMenu;
-    private javax.swing.JMenuItem importCapaMenuItem;
     private javax.swing.JMenu indiceMenu;
     private javax.swing.JMenuItem interpMetricMenuItem;
     private javax.swing.JMenuBar jMenuBar;
@@ -1324,6 +1316,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem newProjectMenuItem;
     private javax.swing.JMenuItem openMenuItem;
     private javax.swing.JMenuItem prefMenuItem;
+    private javax.swing.JMenuItem projectRemPatchMenuItem;
     private javax.swing.JMenuItem quitMenuItem;
     private javax.swing.JMenuItem setDEMMenuItem;
     private javax.swing.JPanel statusPanel;

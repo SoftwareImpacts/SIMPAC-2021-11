@@ -20,7 +20,6 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import org.apache.commons.math.MathException;
 import org.geotools.coverage.grid.GridCoverage2D;
-import org.geotools.feature.SchemaException;
 import org.thema.common.JTS;
 import org.thema.common.Util;
 import org.thema.common.swing.TaskMonitor;
@@ -116,7 +115,6 @@ public class ModelDialog extends javax.swing.JDialog {
         extrapolateButton = new javax.swing.JButton();
         bestModelCheckBox = new javax.swing.JCheckBox();
         exportButton = new javax.swing.JButton();
-        diffButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle"); // NOI18N
@@ -367,7 +365,7 @@ public class ModelDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(resultPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 316, Short.MAX_VALUE))
+                    .addComponent(jScrollPane3))
                 .addContainerGap())
         );
         resultPanelLayout.setVerticalGroup(
@@ -399,14 +397,6 @@ public class ModelDialog extends javax.swing.JDialog {
             }
         });
 
-        diffButton.setText(bundle1.getString("ModelDialog.diffButton.text")); // NOI18N
-        diffButton.setEnabled(false);
-        diffButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                diffButtonActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -425,9 +415,7 @@ public class ModelDialog extends javax.swing.JDialog {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(12, 12, 12)
                         .addComponent(extrapolateButton)
-                        .addGap(8, 8, 8)
-                        .addComponent(diffButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGap(58, 58, 58)
                         .addComponent(exportButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(closeButton, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -446,8 +434,7 @@ public class ModelDialog extends javax.swing.JDialog {
                     .addComponent(estimButton)
                     .addComponent(extrapolateButton)
                     .addComponent(closeButton)
-                    .addComponent(exportButton)
-                    .addComponent(diffButton))
+                    .addComponent(exportButton))
                 .addContainerGap())
         );
 
@@ -662,47 +649,6 @@ public class ModelDialog extends javax.swing.JDialog {
                 vars, coefs, extVars, multiAttach, dMax).setVisible(true);
     }//GEN-LAST:event_extrapolateButtonActionPerformed
 
-    private void diffButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_diffButtonActionPerformed
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File f = Util.getFile(".shp", "Shapefile");
-                if(f == null) {
-                    return;
-                }
-                
-                double [] coefs = new double[model.getUsedVars().size()+1];
-                List<String> vars = new ArrayList<>();
-                coefs[0] = model.getConstant();
-                int i = 1;
-                for(String var : model.getUsedVars()) {
-                    vars.add(var);
-                    coefs[i] = model.getCoef(var);
-                    i++;
-                }
-                TaskMonitor mon = new TaskMonitor(ModelDialog.this, "Diff", "", 0, 100);
-                try {
-                    List<DefaultFeature> zones = DefaultFeature.loadFeatures(f, false);
-                    HashMap<DefaultFeature, Double> probas = DiffLocalModel.diff(project, data, varName, (GraphGenerator)graphComboBox.getSelectedItem(), 
-                            vars, coefs, alpha, extVars, multiAttach, dMax, zones, mon);
-
-                    DefaultFeature.addAttribute("SumProba", zones, Double.NaN);
-                    for(DefaultFeature fe : probas.keySet()) {
-                        fe.setAttribute("SumProba", probas.get(fe));
-                    }
-                
-                    DefaultFeature.saveFeatures(zones, new File(f.getParentFile(), "diffsumproba.shp"));
-                } catch (IOException | SchemaException ex) {
-                    Logger.getLogger(ModelDialog.class.getName()).log(Level.SEVERE, null, ex);
-                    JOptionPane.showMessageDialog(ModelDialog.this, "An error occured :\n" + ex.getLocalizedMessage());
-                } finally {
-                    mon.close();
-                }
-            }
-        }).start();
-       
-    }//GEN-LAST:event_diffButtonActionPerformed
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addExtButton;
@@ -712,7 +658,6 @@ public class ModelDialog extends javax.swing.JDialog {
     private javax.swing.JButton closeButton;
     private javax.swing.JSpinner dMaxSpinner;
     private javax.swing.JSpinner dSpinner;
-    private javax.swing.JButton diffButton;
     private javax.swing.JButton estimButton;
     private javax.swing.JComboBox exoDataComboBox;
     private javax.swing.JButton exportButton;

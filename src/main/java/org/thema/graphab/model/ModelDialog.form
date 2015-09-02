@@ -42,9 +42,7 @@
                   <Group type="102" attributes="0">
                       <EmptySpace min="12" pref="12" max="12" attributes="0"/>
                       <Component id="extrapolateButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
-                      <Component id="diffButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="58" max="-2" attributes="0"/>
                       <Component id="exportButton" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="closeButton" min="-2" pref="79" max="-2" attributes="0"/>
@@ -69,7 +67,6 @@
                   <Component id="extrapolateButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="closeButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="exportButton" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="diffButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
           </Group>
@@ -550,17 +547,6 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exportButtonActionPerformed"/>
-      </Events>
-    </Component>
-    <Component class="javax.swing.JButton" name="diffButton">
-      <Properties>
-        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/thema/graphab/model/Bundle.properties" key="ModelDialog.diffButton.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
-        </Property>
-        <Property name="enabled" type="boolean" value="false"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="diffButtonActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

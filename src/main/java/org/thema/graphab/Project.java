@@ -77,9 +77,9 @@ import org.thema.common.Config;
 import org.thema.common.JTS;
 import org.thema.common.ProgressBar;
 import org.thema.common.io.IOFile;
+import org.thema.common.io.tab.CSVTabReader;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
-import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.GlobalDataStore;
 import org.thema.data.IOImage;
@@ -99,11 +99,9 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.EuclidePathFinder;
-import org.thema.graphab.links.FloatRasterPathFinder;
 import org.thema.graphab.links.PlanarLinks;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
-import org.thema.graphab.links.DoubleRasterPathFinder;
 import org.thema.graphab.links.RasterPathFinder;
 import org.thema.graphab.links.SpacePathFinder;
 import org.thema.graphab.metric.Metric;
@@ -129,7 +127,6 @@ import org.thema.graphab.metric.local.EccentricityLocalMetric;
 import org.thema.graphab.metric.local.FLocalMetric;
 import org.thema.graphab.metric.local.FPCLocalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
-import org.thema.graphab.mpi.MpiLauncher;
 import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.util.DistanceOp;
 import org.thema.graphab.util.RSTGridReader;
@@ -330,7 +327,7 @@ public final class Project {
     }
     
     /**
-     * copy constructor for meta patch project
+     * copy constructor for a new project
      * @param name
      * @param prj 
      */
@@ -1065,20 +1062,12 @@ public final class Project {
         if(linkset.isExtCost()) {
             if(linkset.getExtCostFile().exists()) {
                 Raster extRaster = getExtRaster(linkset.getExtCostFile());
-                if(MpiLauncher.IsMPIWorker()) {
-                    return new FloatRasterPathFinder(this, extRaster, linkset.getCoefSlope());
-                } else {
-                    return new DoubleRasterPathFinder(this, extRaster, linkset.getCoefSlope());
-                }
+                return new RasterPathFinder(this, extRaster, linkset.getCoefSlope());
             } else {
                 throw new RuntimeException("Cost raster file " + linkset.getExtCostFile() + " not found");
             }
         } else {
-            if(MpiLauncher.IsMPIWorker()) {
-                return new FloatRasterPathFinder(this, getImageSource(), linkset.getCosts(), linkset.getCoefSlope());
-            } else {
-                return new DoubleRasterPathFinder(this, getImageSource(), linkset.getCosts(), linkset.getCoefSlope());
-            }
+            return new RasterPathFinder(this, getImageSource(), linkset.getCosts(), linkset.getCoefSlope());
         }
     }
     
@@ -1394,7 +1383,7 @@ public final class Project {
         }
     }
 
-    public void createMetaPatchProject(String prjName, GraphGenerator graph, double alpha, double minCapa) throws IOException, SchemaException {
+    public File createMetaPatchProject(String prjName, GraphGenerator graph, double alpha, double minCapa) throws IOException, SchemaException {
         ProgressBar monitor = Config.getProgressBar("Meta patch...");
         monitor.setIndeterminate(true);
         File dir = new File(getDirectory(), prjName);
@@ -1530,6 +1519,80 @@ public final class Project {
         prj.codes = newCodes;
         prj.save();
         monitor.close();
+        return prj.getProjectFile();
+    }
+    
+    public File createProject(String prjName, double minCapa) throws IOException, SchemaException {
+        ProgressBar monitor = Config.getProgressBar("Create project...");
+        monitor.setIndeterminate(true);
+        File dir = new File(getDirectory(), prjName);
+        dir.mkdir();
+        
+        int [] idPatch = new int[patches.size()+1];
+        // create patches
+        List<DefaultFeature> patchList = new ArrayList<>();
+        int ind = 1;
+        for(Feature patch : patches) {
+            if(getPatchCapacity(patch) < minCapa) {
+                continue;
+            }
+            idPatch[(Integer)patch.getId()] = ind;
+            patchList.add(new DefaultFeature(ind, patch.getGeometry(), PATCH_ATTRS, 
+                    Arrays.asList(ind, patch.getGeometry().getArea(), patch.getGeometry().getBoundary().getLength(), getPatchCapacity(patch))));
+            ind++;
+        }
+        
+        DefaultFeature.saveFeatures(patchList, new File(dir, "patches.shp"), getCRS());
+        
+        // create new raster patch
+        WritableRaster newRaster = getRasterPatch().createCompatibleWritableRaster();
+        newRaster.setRect(getRasterPatch());
+        DataBufferInt buf = (DataBufferInt) newRaster.getDataBuffer();
+        for(int i = 0; i < buf.getSize(); i++) {
+            if(buf.getElem(i) <= 0) {
+                continue;
+            }
+            buf.setElem(i, idPatch[buf.getElem(i)]);
+        }
+
+        GridCoverage2D gridCov = new GridCoverageFactory().create("rasterpatch",
+                newRaster, new Envelope2D(getCRS() != null ? getCRS() : DefaultGeographicCRS.WGS84, zone));
+        new GeoTiffWriter(new File(dir, "patches.tif")).write(gridCov, null);
+        
+        TreeSet<Integer> newCodes = new TreeSet<>(codes);
+        // recode les anciens patchs
+        WritableRaster rasterPatch = getRasterPatch();
+        GridCoverage2D landCov = IOImage.loadTiffWithoutCRS(new File(getDirectory(), "source.tif"));
+        WritableRaster land = (WritableRaster) landCov.getRenderedImage().getData();
+        int newCode = codes.last()+1;
+        for(int y = 0; y < rasterPatch.getHeight(); y++) {
+            for(int x = 0; x < rasterPatch.getWidth(); x++) {
+                int id = rasterPatch.getSample(x, y, 0);
+                if(id > 0 && idPatch[id] == 0) {
+                    land.setSample(x-1, y-1, 0, newCode);
+                }
+            }
+        }
+        gridCov = new GridCoverageFactory().create("land", land, landCov.getEnvelope2D());
+        new GeoTiffWriter(new File(dir, "source.tif")).write(gridCov, null);
+        newCodes.add(newCode);
+        
+        if(hasVoronoi()) {
+            PlanarLinks links = neighborhoodEuclid(patchList, simplify, newRaster, grid2space, resolution);
+            List<? extends Feature> voronois = vectorizeVoronoi(newRaster, grid2space);
+            DefaultFeature.saveFeatures(voronois, new File(dir, "voronoi.shp"), getCRS());
+            
+            if(!links.getFeatures().isEmpty()) {
+                DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, "links.shp"), getCRS());
+            }
+        }
+        
+        Project prj = new Project(prjName, this);
+        prj.dir = dir;
+        prj.codes = newCodes;
+        prj.save();
+        monitor.close();
+        return prj.getProjectFile();
     }
     
     public File getProjectFile() {
@@ -1982,8 +2045,21 @@ public final class Project {
         patches.remove(patches.size()-1);
     }
     
-    public void setCapacities(CapaPatchParam param) {
-        if(param.calcArea) {
+    public void setCapacities(CapaPatchParam param) throws IOException {
+        if(param.importFile != null) {
+            CSVTabReader r = new CSVTabReader(param.importFile);
+            r.read(param.idField);
+
+            if(r.getKeySet().size() < getPatches().size()) {
+                throw new IOException(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Some_patch_ids_are_missing."));
+            }
+
+            for(Number id : (Set<Number>)r.getKeySet()) {
+                DefaultFeature p = getPatch(id.intValue());
+                setCapacity(p, ((Number)r.getValue(id, param.capaField)).doubleValue());
+            }
+            r.dispose();
+        } else if(param.calcArea) {
             for(DefaultFeature patch : patches) {
                 setCapacity(patch, patch.getGeometry().getArea());
             }
@@ -2007,7 +2083,7 @@ public final class Project {
                     if(linkset == null || linkset.getType_dist() == Linkset.EUCLID) {
                         double [] costs = new double[getCodes().last()+1];
                         Arrays.fill(costs, 1);
-                        pathfinder = new FloatRasterPathFinder(Project.this, getImageSource(), costs, 0);
+                        pathfinder = new RasterPathFinder(Project.this, getImageSource(), costs, 0);
                     } else {
                         pathfinder = getRasterPathFinder(linkset);
                     }

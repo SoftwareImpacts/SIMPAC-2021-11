@@ -11,9 +11,15 @@
 
 package org.thema.graphab;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
+import org.thema.common.io.tab.CSVTabReader;
 
 /**
  *
@@ -22,11 +28,16 @@ import javax.swing.DefaultComboBoxModel;
 public class CapaPatchDialog extends javax.swing.JDialog {
 
     public static class CapaPatchParam {
+        // Area capacity
         boolean calcArea = true;
+        // Neighborhood capacity
         String costName;
         HashSet<Integer> codes;
         double maxCost;
         boolean weightCost;
+        // External capacity
+        File importFile = null;
+        String idField, capaField;
     }
 
     public boolean isOk = false;
@@ -52,20 +63,30 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         codeList.setModel(model);
 
         if(!params.calcArea) {
-            neighborhoodRadioButton.setSelected(true);
-            if(params.costName == null) {
-                costComboBox.setSelectedIndex(0);
+            if(params.importFile == null) {
+                neighborhoodRadioButton.setSelected(true);
+                if(params.costName == null) {
+                    costComboBox.setSelectedIndex(0);
+                } else {
+                    costComboBox.setSelectedItem(params.costName);
+                }
+                maxCostSpinner.setValue(params.maxCost);
+                costWeightedCheckBox.setSelected(params.weightCost);
+                int [] selInds = new int[params.codes.size()];
+                int i = 0;
+                for(Integer val : params.codes) {
+                    selInds[i++] = model.getIndexOf(val);
+                }
+                codeList.setSelectedIndices(selInds);
             } else {
-                costComboBox.setSelectedItem(params.costName);
+                csvImportRadioButton.setSelected(true);
+                selectFilePanel.setSelectedFile(params.importFile);
+                if(params.importFile.exists()) {
+                    selectFilePanelActionPerformed(null);
+                    idComboBox.setSelectedItem(params.idField);
+                    capaComboBox.setSelectedItem(params.capaField);
+                }
             }
-            maxCostSpinner.setValue(params.maxCost);
-            costWeightedCheckBox.setSelected(params.weightCost);
-            int [] selInds = new int[params.codes.size()];
-            int i = 0;
-            for(Integer val : params.codes) {
-                selInds[i++] = model.getIndexOf(val);
-            }
-            codeList.setSelectedIndices(selInds);
         }
     }
 
@@ -94,6 +115,13 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         jScrollPane1 = new javax.swing.JScrollPane();
         codeList = new javax.swing.JList();
         jLabel3 = new javax.swing.JLabel();
+        csvImportRadioButton = new javax.swing.JRadioButton();
+        jPanel2 = new javax.swing.JPanel();
+        selectFilePanel = new org.thema.common.swing.SelectFilePanel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        capaComboBox = new javax.swing.JComboBox();
+        idComboBox = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle"); // NOI18N
@@ -119,8 +147,6 @@ public class CapaPatchDialog extends javax.swing.JDialog {
 
         buttonGroup1.add(neighborhoodRadioButton);
         neighborhoodRadioButton.setText(bundle.getString("CapaPatchDialog.neighborhoodRadioButton.text")); // NOI18N
-
-        jPanel1.setEnabled(true);
 
         costComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
@@ -164,19 +190,19 @@ public class CapaPatchDialog extends javax.swing.JDialog {
             .add(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(jLabel2)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(maxCostSpinner))
                     .add(costWeightedCheckBox)
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(jLabel1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(costComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(jLabel2)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(maxCostSpinner)))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .add(jLabel3))
+                        .add(costComboBox, 0, 172, Short.MAX_VALUE)))
+                .add(27, 27, 27)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(jLabel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -187,18 +213,89 @@ public class CapaPatchDialog extends javax.swing.JDialog {
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(costComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(jLabel1)
-                            .add(jLabel3))
+                            .add(jLabel1))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(jLabel2)
                             .add(maxCostSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .add(18, 18, 18)
-                        .add(costWeightedCheckBox)
-                        .addContainerGap(59, Short.MAX_VALUE))
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .add(26, 26, 26)
-                        .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 136, Short.MAX_VALUE))))
+                        .add(costWeightedCheckBox))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(jLabel3)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+
+        buttonGroup1.add(csvImportRadioButton);
+        csvImportRadioButton.setText(bundle.getString("CapaPatchDialog.csvImportRadioButton.text")); // NOI18N
+
+        selectFilePanel.setDescription(bundle.getString("CapaPatchDialog.selectFilePanel.description")); // NOI18N
+        selectFilePanel.setFileDesc(bundle.getString("CapaPatchDialog.selectFilePanel.fileDesc")); // NOI18N
+        selectFilePanel.setFileExts(bundle.getString("CapaPatchDialog.selectFilePanel.fileExts")); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, csvImportRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), selectFilePanel, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        selectFilePanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                selectFilePanelActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setText(bundle.getString("CapaPatchDialog.jLabel4.text")); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, csvImportRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel4, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        jLabel5.setText(bundle.getString("CapaPatchDialog.jLabel5.text")); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, csvImportRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel5, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, csvImportRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), capaComboBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, csvImportRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), idComboBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(selectFilePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addContainerGap())
+            .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(jPanel2Layout.createSequentialGroup()
+                    .addContainerGap()
+                    .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jLabel4)
+                        .add(jLabel5))
+                    .add(40, 40, 40)
+                    .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(idComboBox, 0, 239, Short.MAX_VALUE)
+                        .add(capaComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(12, 12, 12)))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(selectFilePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(97, Short.MAX_VALUE))
+            .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(jPanel2Layout.createSequentialGroup()
+                    .add(66, 66, 66)
+                    .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(jLabel4)
+                        .add(idComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                    .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(jLabel5)
+                        .add(capaComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
@@ -210,15 +307,23 @@ public class CapaPatchDialog extends javax.swing.JDialog {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(layout.createSequentialGroup()
+                        .add(csvImportRadioButton)
+                        .add(0, 0, Short.MAX_VALUE))
+                    .add(layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(areaRadioButton)
-                            .add(neighborhoodRadioButton)
+                            .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(layout.createSequentialGroup()
-                                .add(170, 170, 170)
-                                .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(cancelButton)))
+                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(areaRadioButton)
+                                    .add(neighborhoodRadioButton))
+                                .add(0, 0, Short.MAX_VALUE)))
                         .addContainerGap())))
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(cancelButton)
+                .addContainerGap())
         );
 
         layout.linkSize(new java.awt.Component[] {cancelButton, okButton}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
@@ -232,7 +337,11 @@ public class CapaPatchDialog extends javax.swing.JDialog {
                 .add(neighborhoodRadioButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(18, 18, 18)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(csvImportRadioButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
@@ -246,7 +355,12 @@ public class CapaPatchDialog extends javax.swing.JDialog {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         params.calcArea = areaRadioButton.isSelected();
-        if(!params.calcArea) {
+        params.importFile = null;
+        if(csvImportRadioButton.isSelected()) {
+            params.idField = idComboBox.getSelectedItem().toString();
+            params.capaField = capaComboBox.getSelectedItem().toString();
+            params.importFile = selectFilePanel.getSelectedFile();
+        } else if(!params.calcArea) {
             if(costComboBox.getSelectedIndex() > 0) {
                 params.costName = costComboBox.getSelectedItem().toString();
             } else {
@@ -267,22 +381,41 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         dispose();
     }//GEN-LAST:event_cancelButtonActionPerformed
 
+    private void selectFilePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectFilePanelActionPerformed
+        try {
+            CSVTabReader r = new CSVTabReader(selectFilePanel.getSelectedFile());
+            idComboBox.setModel(new DefaultComboBoxModel(r.getVarNames().toArray()));
+            capaComboBox.setModel(new DefaultComboBoxModel(r.getVarNames().toArray()));
+            r.dispose();
+        } catch (IOException ex) {
+            Logger.getLogger(CapaPatchDialog.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "Error while loading file :\n" + ex.getLocalizedMessage());
+        }
+    }//GEN-LAST:event_selectFilePanelActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JRadioButton areaRadioButton;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton cancelButton;
+    private javax.swing.JComboBox capaComboBox;
     private javax.swing.JList codeList;
     private javax.swing.JComboBox costComboBox;
     private javax.swing.JCheckBox costWeightedCheckBox;
+    private javax.swing.JRadioButton csvImportRadioButton;
+    private javax.swing.JComboBox idComboBox;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSpinner maxCostSpinner;
     private javax.swing.JRadioButton neighborhoodRadioButton;
     private javax.swing.JButton okButton;
+    private org.thema.common.swing.SelectFilePanel selectFilePanel;
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 
