@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 
 package org.thema.graphab.model;
 
@@ -25,13 +43,17 @@ public class Logistic {
     public static class LogisticFunction implements MultivariateRealFunction {
         private RealVector beta;
 
+        /**
+         * Creates a new LogisticFunction
+         * @param beta the coefficients, first is the constant
+         */
         public LogisticFunction(double[] beta) {
             this.beta = MatrixUtils.createRealVector(beta);
         }
 
         @Override
-        public double value(double[] point) {
-            return 1 / (1 + Math.exp(-beta.dotProduct(point)));
+        public double value(double[] x) {
+            return 1 / (1 + Math.exp(-beta.dotProduct(x)));
         }
     }
 
@@ -76,6 +98,7 @@ public class Logistic {
     }
 
     /**
+     * The method {@link #regression() } must be called before
      * @return the coefficients of the logistic function, the first is the constant
      */
     public double[] getCoefs() {
@@ -84,7 +107,7 @@ public class Logistic {
     
     /**
      * Calculates the logisitic regression and returns the coefficients
-     * @return
+     * @return the coefficients of the logistic function
      * @throws FunctionEvaluationException 
      */
     public double [] regression() throws FunctionEvaluationException  {
@@ -139,10 +162,18 @@ public class Logistic {
         return X.getData();
     }
 
+    /**
+     * The method {@link #regression() } must be called before
+     * @return the estimated function
+     */
     public LogisticFunction getEstimFunction() {
         return estim;
     }
 
+    /**
+     * The method {@link #regression() } must be called before
+     * @return the estimated values (ŷ)
+     */
     public double [] getEstimation() {
         double [] y = new double[n];
         for(int i = 0; i < n; i++) {
@@ -151,6 +182,10 @@ public class Logistic {
         return y;
     }
 
+    /**
+     * The method {@link #regression() } must be called before
+     * @return the likelihood of the regression
+     */
     public double getLikelihood() {
         double prod = 1;
         for(int i = 0; i < n; i++) {
@@ -159,10 +194,18 @@ public class Logistic {
         return prod;
     }
 
+    /**
+     * The method {@link #regression() } must be called before
+     * @return the likelihood ratio
+     */
     public double getDiffLikelihood() {
         return -2 * Math.log(constLog.getLikelihood() / getLikelihood());
     }
 
+    /**
+     * The method {@link #regression() } must be called before
+     * @return the p-value of the chi square test
+     */
     public double getProbaTest() throws MathException {
         if(Double.isInfinite(getDiffLikelihood())) {
             return Double.NaN;
@@ -170,10 +213,18 @@ public class Logistic {
         return 1 - new ChiSquaredDistributionImpl(nVar).cumulativeProbability(getDiffLikelihood());
     }
 
+    /**
+     * The method {@link #regression() } must be called before
+     * @return the r square of the regression
+     */
     public double getR2() {
         return 1 - Math.log(getLikelihood()) / Math.log(constLog.getLikelihood());
     }
 
+    /**
+     * The method {@link #regression() } must be called before
+     * @return the AIC of the regression
+     */
     public double getAIC() {
         return 2 * nVar - 2 * Math.log(getLikelihood());
     }

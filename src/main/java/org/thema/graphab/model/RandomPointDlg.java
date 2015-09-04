@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * RandomPointDlg.java
- *
- * Created on 1 févr. 2011, 10:00:57
- */
 
 package org.thema.graphab.model;
 
@@ -40,17 +48,22 @@ import org.thema.msca.operation.AbstractAgregateOperation;
 import org.thema.msca.operation.AbstractLayerOperation;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for generating stratified random points of pseudo-absence from a point set of species presence.
+ * 
+ * @author Gilles Vuidel
  */
 public class RandomPointDlg extends javax.swing.JDialog {
 
-    Project project;
-    RasterLayer gridLayer;
-    SquareGrid grid;
-    DefaultFeatureCoverage<DefaultFeature> coverage;
+    private Project project;
+    private RasterLayer gridLayer;
+    private SquareGrid grid;
+    private DefaultFeatureCoverage<DefaultFeature> coverage;
 
-    /** Creates new form RandomPointDlg */
+    /** 
+     * Creates new form RandomPointDlg
+     * @param parent parent frame
+     * @param prj the current project
+     */
     public RandomPointDlg(java.awt.Frame parent, Project prj) {
         super(parent, false);
         initComponents();
@@ -244,6 +257,7 @@ public class RandomPointDlg extends javax.swing.JDialog {
         
         grid.execute(new AbstractLayerOperation() {
             int i = 1;
+            @Override
             public void perform(Cell cell) {
                 if(cell.getLayerValue("presence") == 0) {
                     return;
@@ -368,6 +382,7 @@ public class RandomPointDlg extends javax.swing.JDialog {
         grid = new SquareGrid(JTS.geomFromRect(rect).getEnvelopeInternal(), res);
         grid.addLayer("presence", DataBuffer.TYPE_BYTE, 0);
         grid.execute(new AbstractLayerOperation() {
+            @Override
             public void perform(Cell cell) {
                 try {
                     Point2D p = cell.getCentroid();
@@ -397,6 +412,7 @@ public class RandomPointDlg extends javax.swing.JDialog {
         project.addLayer(gridLayer);
 
         int nbCell = grid.agregate(new AbstractAgregateOperation<Integer>(0, 0) {
+            @Override
             public void perform(Cell cell) {
                 if(cell.getLayerValue("presence") == 1) {
                     result++;
@@ -405,6 +421,7 @@ public class RandomPointDlg extends javax.swing.JDialog {
         });
         if(keepOneCheckBox.isSelected()) {
             int nbCellPres = grid.agregate(new AbstractAgregateOperation<Integer>(0, 0) {
+                @Override
                 public void perform(Cell cell) {
                     if(cell.getLayerValue("presence") == 2) {
                         result++;

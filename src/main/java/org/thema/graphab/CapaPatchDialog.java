@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * CapaPatchDialog.java
- *
- * Created on 10 oct. 2011, 08:45:55
- */
 
 package org.thema.graphab;
 
@@ -22,11 +30,16 @@ import javax.swing.JOptionPane;
 import org.thema.common.io.tab.CSVTabReader;
 
 /**
- *
- * @author gvuidel
+ * Dialog form for setting the capacities of the patches with 3 choices :
+ * area, neighborhood or external file.
+ * 
+ * @author Gilles Vuidel
  */
 public class CapaPatchDialog extends javax.swing.JDialog {
 
+    /**
+     * Parameter class for setting the patch capacity
+     */
     public static class CapaPatchParam {
         // Area capacity
         boolean calcArea = true;
@@ -40,11 +53,19 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         String idField, capaField;
     }
 
+    /** has user clicked Ok ? */
     public boolean isOk = false;
+    
+    /** the parameters for setting patch capacity */
     public CapaPatchParam params;
 
 
-    /** Creates new form CapaPatchDialog */
+    /** 
+     * Creates new form CapaPatchDialog.
+     * @param parent the parent frame
+     * @param project the current project
+     * @param capaParam the current project parameters or null
+     */
     public CapaPatchDialog(java.awt.Frame parent, Project project, CapaPatchParam capaParam) {
         super(parent, true);
         initComponents();

@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * ExtrapolateDialog.java
- *
- * Created on 9 mai 2011, 08:45:12
- */
 
 package org.thema.graphab.model;
 
@@ -15,7 +23,6 @@ import java.awt.Component;
 import java.awt.Frame;
 import java.io.File;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,34 +46,40 @@ import org.thema.graphab.links.Linkset;
 import org.thema.graphab.util.RSTGridReader;
 
 /**
- *
- * @author gvuidel
+ * Extrapolate a presence probability from a distribution model to the whole area.
+ * 
+ * @author Gilles Vuidel
  */
 public class ExtrapolateDialog extends javax.swing.JDialog {
 
-    static class DecimalFormatRenderer extends DefaultTableCellRenderer {
-        private static final NumberFormat formatter = NumberFormat.getNumberInstance();
-
+    private static class DecimalFormatRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(
             JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-
             value = String.valueOf(((Number)value).doubleValue());
-
             return super.getTableCellRendererComponent(
                 table, value, isSelected, hasFocus, row, column );
         }
     }
 
-    public boolean isOk = false;
-
     private Project project;
-
     private LinkedHashMap<String, GridCoverage2D> extVars;
-
     private DefaultGroupLayer layers;
 
-    public ExtrapolateDialog(Frame owner, Project project, Linkset cost, double d, double p, List<String> vars, double[] coefs,
+    /**
+     * Creates a new ExtrapolateDialog form 
+     * @param owner the parent frame
+     * @param project the current project
+     * @param linkset the linkset for cost distance
+     * @param d the distance associated with p
+     * @param p th probability associated with d
+     * @param vars the variables of the model
+     * @param coefs the variable coefficients of the model 
+     * @param extVars the external variables (other rasters)
+     * @param multiAttach is multi patch attachment ?
+     * @param dMax the max distance for multi attachment
+     */
+    public ExtrapolateDialog(Frame owner, Project project, Linkset linkset, double d, double p, List<String> vars, double[] coefs,
             LinkedHashMap<String, GridCoverage2D> extVars, boolean multiAttach, double dMax) {
         super(owner, true);
 
@@ -80,8 +93,8 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
         costComboBox.setModel(new DefaultComboBoxModel(project.getLinksets().toArray()));
         resolSpinner.setValue(project.getResolution()*10);
         
-        if(cost != null) {
-            costComboBox.setSelectedItem(cost);
+        if(linkset != null) {
+            costComboBox.setSelectedItem(linkset);
             this.extVars = extVars;
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             model.setValueAt(coefs[0], 0, 1);
@@ -94,7 +107,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
             multiAttachCheckBox.setSelected(multiAttach);
             dMaxSpinner.setValue(dMax);
         } else {
-            extVars = new LinkedHashMap<>();
+            this.extVars = new LinkedHashMap<>();
         }
 
     }

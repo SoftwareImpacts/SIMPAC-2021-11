@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 
 package org.thema.graphab.links;
 
@@ -31,6 +49,7 @@ import no.uib.cipr.matrix.sparse.Preconditioner;
 import org.thema.common.JTS;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
+import org.thema.graphab.util.SpatialOp;
 
 /**
  * Calculates electrical circuit on raster map.
@@ -793,7 +812,7 @@ public final class CircuitRaster {
          */
         public Geometry getCorridor(double maxCost) {
             Raster r = getCorridorMap(maxCost);
-            Geometry corridor = Project.vectorize(r, new Envelope(0, zone.width, 0, zone.height), 1);
+            Geometry corridor = SpatialOp.vectorize(r, new Envelope(0, zone.width, 0, zone.height), 1);
             corridor = AffineTransformation.translationInstance(zone.x, zone.y).transform(corridor);
             corridor = project.getGrid2space().transform(corridor);
             List<Geometry> geomTouches = new ArrayList<>();

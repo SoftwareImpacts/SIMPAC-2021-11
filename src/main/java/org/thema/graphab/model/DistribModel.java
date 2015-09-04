@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 
 
 package org.thema.graphab.model;
@@ -49,8 +67,9 @@ import org.thema.graphab.model.Logistic.LogisticFunction;
 import org.thema.graphab.pointset.Pointset;
 
 /**
- *
- * @author gvuidel
+ * Implementation for Species Distribution Model (SDM)
+ * 
+ * @author Gilles Vuidel
  */
 public class DistribModel {
 
@@ -75,6 +94,19 @@ public class DistribModel {
 
     private HashMap<Geometry, HashMap<DefaultFeature, Path>> costCache;
 
+    /**
+     * Creates a new distribution model
+     * @param project the current project
+     * @param data the presence/absence point set
+     * @param varName the binary variable (absence = 0, presence =1) in the point set
+     * @param alpha the coefficient of exponential decrease of the distance
+     * @param patchVars the patch predictive variable
+     * @param extVars the raster predictive variable (external data)
+     * @param bestModel is testing all combination of variables to find the best model ?
+     * @param multiAttach is multiple patch attachment or the nearest only ?
+     * @param dMax the max distance for multi attachment
+     * @param costCache the distance cache from a previous execution, can be null
+     */
     public DistribModel(Project project, Pointset data, String varName, double alpha,
             List<String> patchVars, LinkedHashMap<String, GridCoverage2D> extVars,
             boolean bestModel, boolean multiAttach, double dMax,
@@ -93,22 +125,42 @@ public class DistribModel {
         nVar = patchVars.size()+extVars.size();
     }
 
+    /**
+     * The method {@link #estimModel } must be called before.
+     * @return a 2d array containing all predictive variables values
+     */
     public double [][] getVarExp() {
         return a;
     }
 
+    /**
+     * The method {@link #estimModel } must be called before.
+     * @return the estimated values (ŷ)
+     */
     public double [] getVarEstim() {
         return regression.getEstimation();
     }
 
+    /**
+     * The method {@link #estimModel } must be called before.
+     * @return all the predictive variable names ie. patch variables and external variables
+     */
     public List<String> getVarNames() {
         return varNames;
     }
 
+    /**
+     *  The method {@link #estimModel } must be called before.
+     * @return the logistic model
+     */
     public Logistic getLogisticModel() {
         return regression;
     }
     
+    /**
+     * The method {@link #estimModel } must be called before.
+     * @return the variable names used in the model
+     */
     public List<String> getUsedVars() {
         List<String> vars = new ArrayList<>();
         for(int j = 0; j < nVar; j++) {
@@ -119,22 +171,45 @@ public class DistribModel {
         return vars;
     }
 
+    /**
+     * The method {@link #estimModel } must be called before.
+     * @return the constant value of the model
+     */
     public double getConstant() {
         return regression.getCoefs()[0];
     }
     
+    /**
+     * varName must be contained in {@link #getUsedVars() }.
+     * The method {@link #estimModel } must be called before.
+     * @param varName the predictive variable name
+     * @return the coefficient for the predictive variable
+     */
     public double getCoef(String varName) {
         return regression.getCoefs()[getUsedVars().indexOf(varName)+1];
     }
     
+    /**
+     * varName must be contained in {@link #getUsedVars() }.
+     * The method {@link #estimModel } must be called before.
+     * @param varName the predictive variable name
+     * @return the standard coefficient for the predictive variable
+     */
     public double getStdCoef(String varName) {
         return getCoef(varName) * stdVar.getEntry(getVarNames().indexOf(varName));
     }
 
-    public HashMap<Geometry, HashMap<DefaultFeature, Path>> getCostCache() {
+    HashMap<Geometry, HashMap<DefaultFeature, Path>> getCostCache() {
         return costCache;
     }
     
+    /**
+     * Estimates the model
+     * @param monitor the progress monitor
+     * @return a string containing the results in human readable format
+     * @throws IOException
+     * @throws MathException 
+     */
     public String estimModel(TaskMonitor monitor) throws IOException, MathException {
         monitor.setProgress(1);
         List<DefaultFeature> data = exoData.getFeatures();
@@ -257,10 +332,24 @@ public class DistribModel {
         return msg;
     }
 
-
+    /**
+     * Interpolates the distribution model to the whole area.
+     * 
+     * @param project the project 
+     * @param resol the resolution of the resulting raster
+     * @param vars the variables of the model
+     * @param coefs the variable coefficients of the model
+     * @param alpha the coefficient of exponential decrease of the distance
+     * @param extVars the external variables (rasters)
+     * @param linkset the linkset used for distance calculation
+     * @param multiAttach is multiple patch attachment
+     * @param dMax the max distance for multi attachment in the linkset unit
+     * @param monitor the progress monitor
+     * @return the raster containing the interpolated values of the distribution model
+     */
     public static RasterLayer extrapolate(final Project project, final double resol, 
             final List<String> vars, final double [] coefs, final double alpha,
-            final Map<String, GridCoverage2D> extVars, final Linkset cost, final boolean multiAttach,
+            final Map<String, GridCoverage2D> extVars, final Linkset linkset, final boolean multiAttach,
             final double dMax, ProgressBar monitor)  {
         monitor.setProgress(1);
 
@@ -280,7 +369,7 @@ public class DistribModel {
             @Override
             protected Object execute(int start, int end) {
                 try {
-                    SpacePathFinder pathFinder = project.getPathFinder(cost);
+                    SpacePathFinder pathFinder = project.getPathFinder(linkset);
 
                     for(int y = start; y < end; y++) {
                         for(int x = 0; x < wi; x++) {
@@ -318,7 +407,7 @@ public class DistribModel {
                                     double sum = 0;
                                     double weight = 0;
                                     for(DefaultFeature patch : patchDists.keySet()) {
-                                        double w = Math.exp(-alpha * (cost.isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
+                                        double w = Math.exp(-alpha * (linkset.isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
                                         sum += ((Number)patch.getAttribute(var)).doubleValue() * w * w;
                                         weight += w;
                                     }
@@ -360,8 +449,22 @@ public class DistribModel {
                 new RasterStyle(), true), project.getCRS());
     }
     
+    /**
+     * Method for interpolating a patch metric in the whole area.
+     * The calculation is parallelized.
+     * @param project the project
+     * @param resol the resolution of the resulting raster
+     * @param var the patch variable to interpolate
+     * @param alpha the coefficient of exponential decrease of the distance
+     * @param linkset the linkset for the distance calculation
+     * @param multiAttach is multiple patch attachment
+     * @param dMax the max distance for multi attachment in the linkset unit
+     * @param avg is average or just the sum for multi attachment
+     * @param monitor the progress monitor
+     * @return the raster containing the interpolated values of the patch metric
+     */
     public static RasterLayer interpolate(final Project project, final double resol, 
-            final String var, final double alpha, final Linkset cost, final boolean multiAttach,
+            final String var, final double alpha, final Linkset linkset, final boolean multiAttach,
             final double dMax, final boolean avg, ProgressBar monitor) {
 
         final int wi = (int)(project.getZone().getWidth() / resol);
@@ -374,13 +477,15 @@ public class DistribModel {
         monitor.setNote("Interpolate...");
 
         AbstractParallelFTask<RasterLayer, Void> task;
-        if(cost.getType_dist() == Linkset.EUCLID || !multiAttach || avg || !cost.isCostLength() || wi*h < project.getPatches().size()) {
+        // calculates the distances from the pixel or from the patches ?
+        // It depends on a lot of criteria. The first solution can be used in all cases, but the second is faster for multiAttach in most cases
+        if(linkset.getType_dist() == Linkset.EUCLID || !multiAttach || avg || !linkset.isCostLength() || wi*h < project.getPatches().size()) {
             raster = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_FLOAT, wi, h, 1), null);
             task = new AbstractParallelFTask(monitor) {
                 @Override
                 protected Object execute(int start, int end) {
                     try {
-                        SpacePathFinder pathFinder = project.getPathFinder(cost);
+                        SpacePathFinder pathFinder = project.getPathFinder(linkset);
 
                         for(int y = start; y < end; y++) {
                             for(int x = 0; x < wi; x++) {
@@ -406,7 +511,7 @@ public class DistribModel {
                                 double sum = 0;
                                 double weight = 0;
                                 for(DefaultFeature patch : patchDists.keySet()) {
-                                    double w = Math.exp(-alpha * (cost.isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
+                                    double w = Math.exp(-alpha * (linkset.isCostLength() ? patchDists.get(patch).getCost() : patchDists.get(patch).getDist()));
                                     sum += ((Number)patch.getAttribute(var)).doubleValue() * w * (avg ? w : 1);
                                     weight += w;
                                 }
@@ -442,7 +547,7 @@ public class DistribModel {
                 @Override
                 protected Object execute(int start, int end) {
                     try {
-                        RasterPathFinder pathFinder = project.getRasterPathFinder(cost);
+                        RasterPathFinder pathFinder = project.getRasterPathFinder(linkset);
                         for(Feature patch : project.getPatches().subList(start, end)) {
                             if(isCanceled()) {
                                 return null;
@@ -455,20 +560,15 @@ public class DistribModel {
                                 for(int x = (int)r.getMinX(); x < r.getMaxX(); x++) {
                                     double d = distRaster.getSampleDouble(x, y, 0);
                                     if(d == Double.MAX_VALUE) {
-//                                        ((WritableRaster)distRaster).setSample(x, y, 0, Double.NaN);
                                         continue;
                                     }
                                     double val = patchVal * Math.exp(-alpha * d);
                                     synchronized(this) {
                                         raster.setSample(x, y, 0, raster.getSampleDouble(x, y, 0) + val);
                                     }
-//                                    ((WritableRaster)distRaster).setSample(x, y, 0, val);
                                 }
                             }
                             
-//                            new RasterLayer("", new RasterShape(distRaster, 
-//                                    JTS.envToRect(project.getGrid2space().transform(JTS.geomFromRect(r)).getEnvelopeInternal()), new RasterStyle(), true), 
-//                                    project.getCRS()).saveRaster(new File(project.getDirectory(), patch.getId() + "-interp.tif"));
                             incProgress(1);
                         }
                     } catch(IOException e) {

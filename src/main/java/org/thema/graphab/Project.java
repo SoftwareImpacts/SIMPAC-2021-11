@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 
 package org.thema.graphab;
 
@@ -11,7 +29,6 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
@@ -19,13 +36,10 @@ import com.vividsolutions.jts.geom.util.NoninvertibleTransformationException;
 import com.vividsolutions.jts.index.strtree.ItemBoundable;
 import com.vividsolutions.jts.index.strtree.ItemDistance;
 import com.vividsolutions.jts.index.strtree.STRtree;
-import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
-import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 import java.awt.Color;
 import java.awt.color.ColorSpace;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BandedSampleModel;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
@@ -49,7 +63,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeMap;
@@ -57,8 +70,6 @@ import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.media.jai.iterator.RandomIter;
-import javax.media.jai.iterator.RandomIterFactory;
 import javax.swing.JOptionPane;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageBuilder;
@@ -80,7 +91,6 @@ import org.thema.common.io.IOFile;
 import org.thema.common.io.tab.CSVTabReader;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
-import org.thema.common.swing.TaskMonitor;
 import org.thema.data.GlobalDataStore;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
@@ -130,13 +140,24 @@ import org.thema.graphab.metric.local.LocalMetric;
 import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.util.DistanceOp;
 import org.thema.graphab.util.RSTGridReader;
+import org.thema.graphab.util.SpatialOp;
 import org.thema.parallel.AbstractParallelTask;
 import org.thema.parallel.ExecutorService;
 
-
 /**
- *
- * @author gib
+ * Contains all the data of a project.
+ * - the landscape raster
+ * - the patch raster
+ * - the feature patches
+ * - the linksets
+ * - the graphs
+ * - the pointsets
+ * - the DEM raster if any
+ * - and all project parameters
+ * The class is serialized into the xml project file.
+ * This class creates new project, loads and saves whole project.
+ * 
+ * @author Gilles Vuidel
  */
 public final class Project {
 
@@ -199,11 +220,42 @@ public final class Project {
     private transient Ref<WritableRaster> patchRaster;
     private transient HashMap<File, SoftRef<Raster>> extRasters;
 
+    /**
+     * Generates a new project and saves it.
+     * The planar topology is calculated, but no linkset.
+     * @param name the name of the project
+     * @param prjPath the directory of the project
+     * @param cov the landscape map
+     * @param codes the value set of the landscape map
+     * @param patchCodes the codes for the patches
+     * @param noData the nodata value or NaN
+     * @param con8 is 8 connex or 4 connex for patch extraction ?
+     * @param minArea the minimum area for a patch
+     * @param simplify if patch polygons are simplified for calculating planar topology for faster execution ?
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, Set<Integer> patchCodes,
             double noData, boolean con8, double minArea, boolean simplify) throws IOException, SchemaException {
         this(name, prjPath, cov, codes, patchCodes, noData, con8, minArea, simplify, true);
     }
     
+    /**
+     * Generates a new project and saves it.
+     * No linkset is created.
+     * @param name the name of the project
+     * @param prjPath the directory of the project
+     * @param cov the landscape map
+     * @param codes the value set of the landscape map
+     * @param patchCodes the codes for the patches
+     * @param noData the nodata value or NaN
+     * @param con8 is 8 connex or 4 connex for patch extraction ?
+     * @param minArea the minimum area for a patch
+     * @param simplify if patch polygons are simplified for calculating planar topology for faster execution ?
+     * @param calcVoronoi calculate planar topology ?
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, Set<Integer> patchCodes,
             double noData, boolean con8, double minArea, boolean simplify, boolean calcVoronoi) throws IOException, SchemaException {
 
@@ -225,7 +277,7 @@ public final class Project {
         }
         TreeMap<Integer, Envelope> envMap = new TreeMap<>();
 
-        WritableRaster rasterPatchs = extractPatch(cov.getRenderedImage(), patchCodes, noData, con8, envMap);      
+        WritableRaster rasterPatchs = SpatialOp.extractPatch(cov.getRenderedImage(), patchCodes, noData, con8, envMap);      
 
         Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb patch : " + envMap.size());
 
@@ -254,20 +306,20 @@ public final class Project {
             Geometry g = geomFac.toGeometry(envMap.get(id));
             g.apply(grid2space);
             if(minArea == 0 || (g.getArea() / minArea) > (1-1E-9)) {
-                Geometry geom = vectorize(rasterPatchs, envMap.get(id), id.doubleValue());
+                Geometry geom = SpatialOp.vectorize(rasterPatchs, envMap.get(id), id.doubleValue());
                 geom.apply(grid2space);
                 if(minArea == 0 || (geom.getArea() / minArea) > (1-1E-9)) {
                     List lst = new ArrayList(Arrays.asList(n, geom.getArea(), geom.getLength(), geom.getArea()));
                     patches.add(new DefaultFeature(n, geom, attrNames, lst));
-                    recodePatch(rasterPatchs, geom, id, n);
+                    SpatialOp.recode(rasterPatchs, geom, id, n, space2grid);
                     n++;
                 }
                 else {
-                    recodePatch(rasterPatchs, geom, id, 0);
+                    SpatialOp.recode(rasterPatchs, geom, id, 0, space2grid);
                     nbRem++;
                 }
             } else {
-                recodePatch(rasterPatchs, g, id, 0);
+                SpatialOp.recode(rasterPatchs, g, id, 0, space2grid);
                 nbRem++;
             }
 
@@ -307,7 +359,7 @@ public final class Project {
             monitor.setNote("Saving...");
             DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"), getCRS());
 
-            voronoi = (List<Feature>) vectorizeVoronoi(voronoiR, grid2space);
+            voronoi = (List<Feature>) SpatialOp.vectorizeVoronoi(voronoiR, grid2space);
             DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"), crs);
         }
         
@@ -322,12 +374,10 @@ public final class Project {
         save();
         
         monitor.close();
-        
-//        createLayers();
     }
     
     /**
-     * copy constructor for a new project
+     * copy constructor for a new sub project
      * @param name
      * @param prj 
      */
@@ -351,7 +401,18 @@ public final class Project {
         graphs = new TreeMap<>();
     }
     
-    // using strtree.nearest
+    /**
+     * Creates planar topology.
+     * Fill the raster voronoi with the nearest patch id.
+     * @param patches
+     * @param simplify
+     * @param voronoi an empty raster
+     * @param grid2space
+     * @param resolution
+     * @return the planar topology
+     * @throws IOException
+     * @throws SchemaException 
+     */
     private static PlanarLinks neighborhoodEuclid(List<DefaultFeature> patches, boolean simplify, final WritableRaster voronoi, 
             final AffineTransformation grid2space, double resolution) throws IOException, SchemaException {
         ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Neighbor"), voronoi.getHeight());
@@ -360,7 +421,7 @@ public final class Project {
         final GeometryFactory factory = new GeometryFactory();
         List<DefaultFeature> simpPatches = patches;
         if(simplify) {
-            simpPatches = simplify(patches, resolution);
+            simpPatches = SpatialOp.simplify(patches, resolution);
         }
         for(Feature f : simpPatches) {
             Geometry geom = f.getGeometry();
@@ -463,6 +524,9 @@ public final class Project {
         return links;
     }
 
+    /**
+     * @return the costs associated with a existing Linkset if any, null otherwise
+     */
     public double[] getLastCosts() {
         for(Linkset cost : costLinks.values()) {
             if(cost.getType_dist() == Linkset.COST) {
@@ -472,6 +536,9 @@ public final class Project {
         return null;
     }
 
+    /**
+     * @return the planar topology
+     */
     public PlanarLinks getPlanarLinks() {
         if(planarLinks == null) {
             throw new IllegalStateException("The project does not contain voronoi.");
@@ -479,22 +546,42 @@ public final class Project {
         return planarLinks;
     }
 
+    /**
+     * @param linkName a linkset name
+     * @return the linkset named linkName or null if it does not exist
+     */
     public Linkset getLinkset(String linkName) {
         return costLinks.get(linkName);
     }
 
+    /**
+     * @return all linkset names
+     */
     public Set<String> getLinksetNames() {
         return costLinks.keySet();
     }
     
+    /**
+     * @return all linksets
+     */
     public Collection<Linkset> getLinksets() {
         return costLinks.values();
     }
 
+    /**
+     * @return the project's name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Create the planar topology from the voronoi calculated by {@link #neighborhoodEuclid }
+     * @param voronoiRaster
+     * @param patches
+     * @param monitor
+     * @return 
+     */
     private static PlanarLinks createLinks(Raster voronoiRaster, List<DefaultFeature> patches, ProgressBar monitor) {
         monitor.setNote("Create link set...");
         monitor.setProgress(0);
@@ -533,33 +620,40 @@ public final class Project {
         return links;
     }
 
-    public void addLinkset(Linkset cost, boolean save) throws IOException, SchemaException {
+    /**
+     * Calculates the new linkset and add it to the project
+     * @param linkset the linkset to create
+     * @param save save the linkset and the project ?
+     * @throws IOException
+     * @throws SchemaException 
+     */
+    public void addLinkset(Linkset linkset, boolean save) throws IOException, SchemaException {
         ProgressBar progressBar = Config.getProgressBar();
         
-        if(cost.getProject() == null) {
-            cost.setProject(this);
+        if(linkset.getProject() == null) {
+            linkset.setProject(this);
         }
         
-        cost.compute(progressBar);
+        linkset.compute(progressBar);
 
         
         if(save) {
-            if(cost.isRealPaths() && !cost.getPaths().isEmpty()) {
-                DefaultFeature.saveFeatures(cost.getPaths(), new File(dir, cost.getName() + "-links.shp"), getCRS());
-                cost.saveIntraLinks();
+            if(linkset.isRealPaths() && !linkset.getPaths().isEmpty()) {
+                DefaultFeature.saveFeatures(linkset.getPaths(), new File(dir, linkset.getName() + "-links.shp"), getCRS());
+                linkset.saveIntraLinks();
             }
-            cost.saveLinks();
+            linkset.saveLinks();
         }
         
-        costLinks.put(cost.getName(), cost);
+        costLinks.put(linkset.getName(), linkset);
         
         if(save) {
             save();
         }
         
         if(linkLayers != null) {
-            Layer l = new LinkLayer(cost);
-            if(cost.getTopology() == Linkset.COMPLETE && cost.getDistMax() == 0) {
+            Layer l = new LinkLayer(linkset);
+            if(linkset.getTopology() == Linkset.COMPLETE && linkset.getDistMax() == 0) {
                 l.setVisible(false);
             }
             linkLayers.addLayerFirst(l);
@@ -567,8 +661,17 @@ public final class Project {
         
         progressBar.close();
     }
-
-    public void addPointset(Pointset exoData, List<String> attrNames, List<DefaultFeature> features, boolean save) throws SchemaException, IOException {
+    
+    /**
+     * Calculates and add a new pointset to the project
+     * @param pointset the definition of the new point set
+     * @param attrNames the attributes to retain from the point features
+     * @param features the point features
+     * @param save save the pointset and the project ?
+     * @throws SchemaException
+     * @throws IOException 
+     */
+    public void addPointset(Pointset pointset, List<String> attrNames, List<DefaultFeature> features, boolean save) throws SchemaException, IOException {
         for(Feature f : features){
             Coordinate c = f.getGeometry().getCoordinate();
             if(!zone.contains(c.x, c.y)) {
@@ -580,11 +683,11 @@ public final class Project {
         attrNames.remove(Project.EXO_IDPATCH);
         attrNames.remove(Project.EXO_COST);
 
-        if(exoData.isAgreg()) {
+        if(pointset.isAgreg()) {
             for(String attr : attrNames) {
-                DefaultFeature.addAttribute(exoData.getName() + "." + attr, patches, Double.NaN);
+                DefaultFeature.addAttribute(pointset.getName() + "." + attr, patches, Double.NaN);
             }
-            DefaultFeature.addAttribute(exoData.getName() + ".NbPoint", patches, 0);
+            DefaultFeature.addAttribute(pointset.getName() + ".NbPoint", patches, 0);
         }
 
         // recréé les features avec les 2 attributs en plus
@@ -629,7 +732,7 @@ public final class Project {
 
 //        monitor.setNote("Point outside patch...");
 
-        Linkset linkset = exoData.getLinkset();
+        Linkset linkset = pointset.getLinkset();
         boolean circuit = false;
         if(linkset.getType_dist() == Linkset.CIRCUIT) {
             linkset = linkset.getCostVersion();
@@ -658,23 +761,23 @@ public final class Project {
                 }
             }
             
-            if(exoData.isAgreg()) {
-                double alpha = -Math.log(0.05) / exoData.getMaxCost();
-                HashMap<DefaultFeature, Path> distPatch = pathFinder.calcPaths(f.getGeometry().getCoordinate(), exoData.getMaxCost(), false);
+            if(pointset.isAgreg()) {
+                double alpha = -Math.log(0.05) / pointset.getMaxCost();
+                HashMap<DefaultFeature, Path> distPatch = pathFinder.calcPaths(f.getGeometry().getCoordinate(), pointset.getMaxCost(), false);
                 for(DefaultFeature p : distPatch.keySet()) {
                     for(String attr : attrNames) {
-                       double val = ((Number)p.getAttribute(exoData.getName() + "." + attr)).doubleValue();
+                       double val = ((Number)p.getAttribute(pointset.getName() + "." + attr)).doubleValue();
                        if(Double.isNaN(val)) {
                            val = 0;
                        }
-                       double dist = exoData.getLinkset().isCostLength() ? distPatch.get(p).getCost() : distPatch.get(p).getDist();
+                       double dist = pointset.getLinkset().isCostLength() ? distPatch.get(p).getCost() : distPatch.get(p).getDist();
                        double s = 0;
                        if(f.getAttribute(attr) != null) {
                            s = ((Number)f.getAttribute(attr)).doubleValue() * Math.exp(-alpha*dist);
                        }
-                       p.setAttribute(exoData.getName() + "." + attr, s + val);
+                       p.setAttribute(pointset.getName() + "." + attr, s + val);
                    }
-                   p.setAttribute(exoData.getName() + ".NbPoint", 1+(Integer)p.getAttribute(exoData.getName() + ".NbPoint"));
+                   p.setAttribute(pointset.getName() + ".NbPoint", 1+(Integer)p.getAttribute(pointset.getName() + ".NbPoint"));
                 }
             }
             
@@ -687,18 +790,18 @@ public final class Project {
             }
         }
 
-        exoData.setFeatures(exoFeatures);
-        exoDatas.put(exoData.getName(), exoData);
+        pointset.setFeatures(exoFeatures);
+        exoDatas.put(pointset.getName(), pointset);
         
         if(save) {
-            DefaultFeature.saveFeatures(exoFeatures, new File(dir, "Exo-" + exoData.getName() + ".shp"));
+            DefaultFeature.saveFeatures(exoFeatures, new File(dir, "Exo-" + pointset.getName() + ".shp"));
             savePatch();
             save();
         }
 
         if(exoLayers != null) {
             exoLayers.setExpanded(true);
-            exoLayers.addLayerFirst(new PointsetLayer(exoData, this));
+            exoLayers.addLayerFirst(new PointsetLayer(pointset, this));
         }
         monitor.close();
 
@@ -707,6 +810,10 @@ public final class Project {
         }
     }
 
+    /**
+     * Creates the layers of the project if not already created.
+     * @return the root group layer of the project
+     */
     public synchronized DefaultGroupLayer getRootLayer() {
         if(rootLayer == null) {
             createLayers();
@@ -714,6 +821,10 @@ public final class Project {
         return rootLayer;
     }
     
+    /**
+     * Creates the layers of the project if not already created.
+     * @return the group layer of the linksets
+     */
     public synchronized DefaultGroupLayer getLinksetLayers() {
         if(linkLayers == null) {
             createLayers();
@@ -721,6 +832,10 @@ public final class Project {
         return linkLayers;
     }
     
+    /**
+     * Creates the layers of the project if not already created.
+     * @return the group layer of the graphs
+     */
     public synchronized DefaultGroupLayer getGraphLayers() {
         if(graphLayers == null) {
             createLayers();
@@ -728,6 +843,10 @@ public final class Project {
         return graphLayers;
     }
     
+    /**
+     * Creates the layers of the project if not already created.
+     * @return the group layer of the pointsets
+     */
     public synchronized DefaultGroupLayer getPointsetLayers() {
         if(exoLayers == null) {
             createLayers();
@@ -735,6 +854,10 @@ public final class Project {
         return exoLayers;
     }
     
+    /**
+     * Creates the layers of the project if not already created.
+     * @return the group layer for other analysis
+     */
     public synchronized DefaultGroupLayer getAnalysisLayer() {
         if(analysisLayers == null) {
             analysisLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle")
@@ -744,14 +867,26 @@ public final class Project {
         return analysisLayers;
     }
 
+    /**
+     * Add a layer to the root project layer
+     * @param l the layer to add
+     */
     public void addLayer(Layer l) {
         getRootLayer().addLayerLast(l);
     }
 
+    /**
+     * Remove a layer from the root project layer
+     * @param l the layer to remove
+     */
     public void removeLayer(Layer l) {
         getRootLayer().removeLayer(l);
     }
 
+    /**
+     * Creates the index if it does not exist already
+     * @return a spatial index on patch features
+     */
     public synchronized STRtree getPatchIndex() {
         if(patchIndex == null) {
             patchIndex = new STRtree();
@@ -763,18 +898,11 @@ public final class Project {
         return patchIndex;
     }
 
-    private static List<DefaultFeature> simplify(List<DefaultFeature> patches, double resolution) {
-        List<DefaultFeature> simpPatches = new ArrayList<>();
-        ProgressBar monitor = Config.getProgressBar("Simplify", patches.size());
-        for(Feature f : patches) {
-            simpPatches.add(new DefaultFeature(f.getId(), TopologyPreservingSimplifier.simplify(f.getGeometry(), resolution*1.5), null, null));
-            monitor.incProgress(1);
-        }
-        monitor.close();
-
-        return simpPatches;
-    }
-
+    /**
+     * @param id the identifier of the patch
+     * @return the patch with identifier id
+     * @throws IllegalArgumentException if the patch does not exist
+     */
     public final DefaultFeature getPatch(int id) {
         if(id > 0 && id <= patches.size()) {
             return patches.get(id-1);
@@ -783,270 +911,46 @@ public final class Project {
         }
     }
 
+    /**
+     * The voronoi polygon associated with the patch id
+     * @param id the patch identifier
+     * @return a polygon feature representing the voronoi polygon of the patch id
+     */
     public final Feature getVoronoi(int id) {
         return getVoronoi().get(id-1);
     }
 
+    /**
+     * @return the boundary of the map
+     */
     public Rectangle2D getZone() {
         return zone;
     }
 
-    private void recodePatch(WritableRaster rasterPatchs, Geometry patch, int oldCode, int newCode) {
-        Envelope env = patch.getEnvelopeInternal();
-        Geometry gEnv = new GeometryFactory().toGeometry(env);
-        gEnv.apply(space2grid);
-        env = gEnv.getEnvelopeInternal();
-
-        for(int i = (int)env.getMinY(); i <= env.getMaxY(); i++) {
-            for(int j = (int)env.getMinX(); j <= env.getMaxX(); j++) {
-                if(rasterPatchs.getSample(j, i, 0) == oldCode) {
-                    ((WritableRaster)rasterPatchs).setSample(j, i, 0, newCode);
-                }
-            }
-        }
-
-    }
-
-    private static List<? extends Feature> vectorizeVoronoi(Raster voronoi, AffineTransformation grid2space) {
-        ProgressBar monitor = Config.getProgressBar("Vectorize voronoi");
-        TreeMap<Integer, Envelope> envMap = new TreeMap<>();
-        for(int j = 1; j < voronoi.getHeight()-1; j++) {
-            for(int i = 1; i < voronoi.getWidth()-1; i++) {
-                if(voronoi.getSample(i, j, 0) > 0) {
-                    int id = voronoi.getSample(i, j, 0);
-                    Envelope env = envMap.get(id);
-                    if(env == null) {
-                        envMap.put(id, new Envelope(new Coordinate(i, j)));
-                    } else {
-                        env.expandToInclude(i, j);
-                    }
-                    
-                }
-            }
-        }
-        monitor.setMaximum(envMap.size());
-        for(Envelope env : envMap.values()) {
-            env.expandBy(0.5);
-            env.translate(0.5, 0.5);
-        }
-
-        List<DefaultFeature> features = new ArrayList<>();
-        for(Integer id : envMap.keySet()) {
-            Geometry geom = vectorize(voronoi, envMap.get(id), id);
-            geom.apply(grid2space);
-            features.add(new DefaultFeature(id, geom, null, null));
-            monitor.incProgress(1);
-        }
-        monitor.close();
-
-        return features;
-    }
-
-    public static Geometry vectorize(Raster patchs, Envelope env, double val) {
-        GeometryFactory factory = new GeometryFactory();
-        List<LineString> lines = new ArrayList<>();
-
-        for(int y = (int) env.getMinY(); y < env.getMaxY(); y++) {
-            for(int x = (int) env.getMinX(); x < env.getMaxX(); x++) {
-                if(patchs.getSampleDouble(x, y, 0) == val) {
-                    // LEFT
-                    if(patchs.getSampleDouble(x-1, y, 0) != val) {
-                        lines.add(factory.createLineString(new Coordinate[] {new Coordinate(x, y), new Coordinate(x, y+1)}));
-                    }
-                    // RIGHT
-                    if(patchs.getSampleDouble(x+1, y, 0) != val) {
-                        lines.add(factory.createLineString(new Coordinate[] {new Coordinate(x+1, y), new Coordinate(x+1, y+1)}));
-                    }
-                    // TOP
-                    if(patchs.getSampleDouble(x, y-1, 0) != val) {
-                        lines.add(factory.createLineString(new Coordinate[] {new Coordinate(x, y), new Coordinate(x+1, y)}));
-                    }
-                    // BOTTOM
-                    if(patchs.getSampleDouble(x, y+1, 0) != val) {
-                        lines.add(factory.createLineString(new Coordinate[] {new Coordinate(x, y+1), new Coordinate(x+1, y+1)}));
-                    }
-                }
-            }
-        }
-
-        Polygonizer polygonizer = new Polygonizer();
-        polygonizer.add(lines);
-        Collection polys = polygonizer.getPolygons();
-
-        List<Polygon> finalPolys = new ArrayList<>();
-        for(Object p : polys) {
-            Polygon g = ((Polygon)p);
-            double y = g.getEnvelopeInternal().getMinY();
-            double minX = g.getEnvelopeInternal().getMaxX();
-            for(Coordinate c : g.getCoordinates()) {
-                if(c.y == y && c.x < minX) {
-                    minX = c.x;
-                }
-            }
-            if(patchs.getSampleDouble((int)minX, (int)y, 0) == val) {
-                finalPolys.add(g);
-            }
-
-        }
-
-        // remove points not needed on straight line
-        List<Polygon> simpPolys = new ArrayList<>();
-        for(Polygon p : finalPolys) {
-            LinearRing [] interior = new LinearRing[p.getNumInteriorRing()];
-            for(int i = 0; i < interior.length; i++) {
-                interior[i] = p.getFactory().createLinearRing(simpRing(p.getInteriorRingN(i).getCoordinates()));
-            }
-
-            simpPolys.add(p.getFactory().createPolygon(p.getFactory().createLinearRing(
-                    simpRing(p.getExteriorRing().getCoordinates())), interior));
-        }
-
-        return factory.buildGeometry(simpPolys);
-    }
-
     /**
-     * Remove unneeded points from straight line
-     * @param coords
-     * @return
+     * The patches are ordered by their id.
+     * list(0) -> patch id 1
+     * list(n-1) -> patch id n
+     * @return all the patches
      */
-    private static Coordinate [] simpRing(Coordinate[] coords) {
-        ArrayList<Coordinate> newCoords = new ArrayList<>();
-        Coordinate prec = coords[coords.length-1], cur = coords[0], next;
-        for(int i = 1; i < coords.length; i++) {
-            next = coords[i];
-            if(!(next.x-cur.x == cur.x-prec.x && next.y-cur.y == cur.y-prec.y)) {
-                newCoords.add(cur);
-            }
-            prec = cur;
-            cur = next;
-        }
-        newCoords.add(new Coordinate(newCoords.get(0)));
-
-        return newCoords.toArray(new Coordinate[newCoords.size()]);
-    }
-
-    /**
-     *
-     * @param r
-     * @param codes
-     * @param con8
-     * @return  un raster avec un bord d'un pixel de large ayant la valeur -1
-     */
-    private WritableRaster extractPatch(RenderedImage img, Set<Integer> codes, double noData, boolean con8, Map<Integer, Envelope> envMap) {
-        TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_patch"), "", 0, img.getHeight());
-        WritableRaster clust = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_INT, img.getWidth()+2, img.getHeight()+2, 1), null);
-        int k = 0;
-        TreeSet<Integer> set = new TreeSet<>();
-        ArrayList<Integer> idClust = new ArrayList<>();
-        RandomIter r = RandomIterFactory.create(img, null);
-        for(int j = 1; j <= img.getHeight(); j++) {
-            monitor.setProgress(j-1);
-            for(int i = 1; i <= img.getWidth(); i++) {
-                int val = r.getSample(i-1, j-1, 0);
-                if(codes.contains(val)) {
-                    set.add(clust.getSample(i-1, j, 0));
-                    set.add(clust.getSample(i, j-1, 0));
-                    if(con8) {
-                        set.add(clust.getSample(i-1, j-1, 0));
-                        set.add(clust.getSample(i+1, j-1, 0));
-                    }
-                    set.remove(0);
-                    set.remove(-1);
-                    if(set.isEmpty()) {
-                        k++;
-                        clust.setSample(i, j, 0, k);
-                        idClust.add(k);
-                    } else if(set.size() == 1) {
-                        int id = set.iterator().next();
-                        clust.setSample(i, j, 0, idClust.get(id-1));
-                    } else {
-                        int minId = Integer.MAX_VALUE;
-                        for(Integer id : set) {
-                            int min = getMinId(idClust, id);
-                            if(min < minId) {
-                                minId = min;
-                            }
-                        }
-
-                        for(Integer id : set) {
-                            idClust.set(getMinId(idClust, id)-1, minId);
-                        }
-
-                        clust.setSample(i, j, 0, minId);
-
-                    }
-                    set.clear();
-                } else if(val == noData) {
-                    clust.setSample(i, j, 0, -1);
-                }
-            }
-        }
-
-        // sets the border to -1
-        for(int j = 0; j < clust.getHeight(); j++) {
-            clust.setSample(0, j, 0, -1);
-            clust.setSample(clust.getWidth()-1, j, 0, -1);
-        }
-        for(int j = 0; j < clust.getWidth(); j++) {
-            clust.setSample(j, 0, 0, -1);
-            clust.setSample(j, clust.getHeight()-1, 0, -1);
-        }
-
-        for(int i = 0; i < idClust.size(); i++) {
-            int m = i+1;
-            while(idClust.get(m-1) != m) {
-                m = idClust.get(m-1);
-            }
-            idClust.set(i, m);
-        }
-
-
-        for(int j = 1; j < clust.getHeight()-1; j++) {
-            for(int i = 1; i < clust.getWidth()-1; i++) {
-                if(clust.getSample(i, j, 0) > 0) {
-                    int id = idClust.get(clust.getSample(i, j, 0)-1);
-                    Envelope env = envMap.get(id);
-                    if(env == null) {
-                        envMap.put(id, new Envelope(new Coordinate(i, j)));
-                    } else {
-                        env.expandToInclude(i, j);
-                    }
-
-                    clust.setSample(i, j, 0, id);
-                }
-            }
-        }
-
-
-        for(Envelope env : envMap.values()) {
-            env.expandBy(0.5);
-            env.translate(0.5, 0.5);
-        }
-
-        monitor.close();
-
-        return clust;
-    }
-
-    private int getMinId(List<Integer> ids, int id) {
-        while(ids.get(id-1) != id) {
-            id = ids.get(id-1);
-        }
-        return id;
-    }
-
-    public List<Path> getPaths(String name) {
-        return costLinks.get(name).getPaths();
-    }
-
     public List<DefaultFeature> getPatches() {
         return patches;
     }
 
+    /**
+     * @return the landscape map codes
+     */
     public TreeSet<Integer> getCodes() {
         return codes;
     }
 
+    /**
+     * Creates a pathfinder for the given linkset
+     * @param linkset a linkset
+     * @return a new pathfinder
+     * @throws IOException 
+     * @throws IllegalArgumentException if the linkset is a circuit linkset
+     */
     public SpacePathFinder getPathFinder(Linkset linkset) throws IOException {
         if(linkset.getType_dist() == Linkset.CIRCUIT) {
             throw new IllegalArgumentException("Circuit linkset is not supported");
@@ -1055,6 +959,13 @@ public final class Project {
             new EuclidePathFinder(this) : getRasterPathFinder(linkset);
     }
     
+    /**
+     * Creates a raster pathfinder for the given linkset
+     * @param linkset a linkset of COST type
+     * @return a new raster pathfinder
+     * @throws IOException 
+     * @throws IllegalArgumentException if the linkset if not of type COST
+     */
     public RasterPathFinder getRasterPathFinder(Linkset linkset) throws IOException {
         if(linkset.getType_dist() != Linkset.COST) {
             throw new IllegalArgumentException();
@@ -1071,6 +982,13 @@ public final class Project {
         }
     }
     
+    /**
+     * Creates a raster circuit for the given linkset
+     * @param linkset a linkset of CIRCUIT type
+     * @return a new raster circuit
+     * @throws IOException 
+     * @throws IllegalArgumentException if the linkset if not of type CIRCUIT
+     */
     public CircuitRaster getRasterCircuit(Linkset linkset) throws IOException {
         if(linkset.getType_dist() != Linkset.CIRCUIT) {
             throw new IllegalArgumentException();
@@ -1087,6 +1005,13 @@ public final class Project {
         }
     }
 
+    /**
+     * Creates and add the graph to the project
+     * @param graphGen the graph definition
+     * @param save save the graph and the project ?
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public void addGraph(GraphGenerator graphGen, boolean save) throws IOException, SchemaException {
         ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Create_graph..."));
         progressBar.setIndeterminate(true);
@@ -1114,6 +1039,10 @@ public final class Project {
         progressBar.close();
     }
 
+    /**
+     * @param graphName a name of a graph
+     * @return the patch attribute names containing the graph name
+     */
     public List<String> getGraphPatchAttr(String graphName) {
         List<String> attrs = new ArrayList<>();
         for(String attr : patches.get(0).getAttributeNames()) {
@@ -1125,9 +1054,9 @@ public final class Project {
     }
 
     /**
-     * 
-     * @param graphName
-     * @return list of detailed name metrics calculated for graph graphName
+     * Returns the metrics detailed names calculated for graph graphName
+     * @param graphName a graph name
+     * @return the attribute names containing the graph name removing the graph name
      */
     public List<String> getGraphPatchVar(String graphName) {
         List<String> attrs = new ArrayList<>();
@@ -1139,7 +1068,11 @@ public final class Project {
         return attrs;
     }
 
-    List<String> getGraphLinkAttr(GraphGenerator g) {
+    /**
+     * @param g a project graph
+     * @return the path attribute names containing the graph name
+     */
+    private List<String> getGraphLinkAttr(GraphGenerator g) {
         List<String> attrs = new ArrayList<>();
         for(String attr : g.getLinkset().getPaths().get(0).getAttributeNames()) {
             if(attr.endsWith("_" + g.getName())) {
@@ -1149,6 +1082,12 @@ public final class Project {
         return attrs;
     }
 
+    /**
+     * Removes a graph from the project and saves the project.
+     * Removes patch and path attributes associated with this graph.
+     * Deletes the voronoi shape file of the graph and removes the graph layer.
+     * @param name a name of a graph
+     */
     public void removeGraph(final String name) {
         GraphGenerator g = graphs.remove(name);
 
@@ -1185,10 +1124,20 @@ public final class Project {
         }
     }
 
+    /**
+     * @return all graph in the project
+     */
     public Collection<GraphGenerator> getGraphs() {
         return graphs.values();
     }
     
+    /**
+     * Return the corresponding graph.
+     * If the graph name contains "!", creates a new graph removing patches and paths following "!"
+     * @param name the name of a graph
+     * @return the graph 
+     * @throws IllegalArgumentException if the graph does not exist
+     */
     public GraphGenerator getGraph(String name) {
         if(graphs.containsKey(name)) {
             return graphs.get(name);
@@ -1200,22 +1149,43 @@ public final class Project {
         throw new IllegalArgumentException("Unknown graph " + name);
     }
     
+    /**
+     * @return all graph names
+     */
     public Set<String> getGraphNames() {
         return graphs.keySet();
     }
 
+    /**
+     * @return all pointset names
+     */
     public Set<String> getPointsetNames() {
         return exoDatas.keySet();
     }
     
+    /**
+     * @param name a pointset name
+     * @return the poinset or null
+     */
     public Pointset getPointset(String name) {
         return exoDatas.get(name);
     }
 
+    /**
+     * @return all pointsets
+     */
     public Collection<Pointset> getPointsets() {
         return exoDatas.values();
     }
 
+    /**
+     * Removes a pointset from the project and saves the project.
+     * Removes patch attributes associated with this pointset.
+     * Deletes the pointset shapefile
+     * @param name a pointset name
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public void removePointset(final String name) throws IOException, SchemaException {
         exoDatas.remove(name);
 
@@ -1244,10 +1214,17 @@ public final class Project {
         }
     }
 
+    /**
+     * @return true if the project has voronoi ie. planar topology
+     */
     public boolean hasVoronoi() {
         return new File(dir, "voronoi.shp").exists();
     }
     
+    /**
+     * @return the voronoi features 
+     * @throws IllegalStateException if the project has no voronoi
+     */
     public synchronized List<Feature> getVoronoi() {
         if(voronoi == null) {
             File file = new File(dir, "voronoi.shp");
@@ -1268,6 +1245,13 @@ public final class Project {
         return voronoi;
     }
 
+    /**
+     * Loads the polygon features representing components of the graph, based on voronoi polygon.
+     * Loads the shapefile and the CSV file if exists, containing component metric results.
+     * @param name a name of a graph
+     * @return the polygon features
+     * @throws IOException 
+     */
     public List<DefaultFeature> loadVoronoiGraph(String name) throws IOException {
         List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(dir, name + "-voronoi.shp"), "Id", null);
 
@@ -1307,6 +1291,10 @@ public final class Project {
         return features;
     }
 
+    /**
+     * If it is not already loaded, load the raster.
+     * @return the raster patch
+     */
     public synchronized WritableRaster getRasterPatch() {
         WritableRaster raster = patchRaster != null ? patchRaster.get() : null;
         if(raster == null) {
@@ -1326,6 +1314,10 @@ public final class Project {
         return raster;
     }
 
+    /**
+     * If it is not already loaded, load the landscape map.
+     * @return the landscape raster map
+     */
     public synchronized WritableRaster getImageSource() {
         WritableRaster raster = srcRaster != null ? srcRaster.get() : null;
         if(raster == null) {
@@ -1340,6 +1332,12 @@ public final class Project {
         return raster;
     }
 
+    /**
+     * Saves the csv file containing component metric results of the graph.
+     * @param graph a graph name
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public void saveGraphVoronoi(String graph) throws IOException, SchemaException {
         List<DefaultFeature> comps = graphs.get(graph).getComponentFeatures();
         try (CSVWriter w = new CSVWriter(new FileWriter(new File(dir, graph + "-voronoi.csv")))) {
@@ -1359,6 +1357,11 @@ public final class Project {
         }
     }
 
+    /**
+     * Saves the csv file containing patch metric results.
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public void savePatch() throws IOException, SchemaException {
         try (CSVWriter w = new CSVWriter(new FileWriter(new File(dir, "patches.csv")))) {
             w.writeNext(patches.get(0).getAttributeNames().toArray(new String[0]));
@@ -1372,6 +1375,10 @@ public final class Project {
         }
     }
 
+    /**
+     * Saves the xml project file.
+     * @throws IOException 
+     */
     public void save() throws IOException {
         XStream xstream = new XStream();
         xstream.alias("Project", Project.class);
@@ -1383,6 +1390,18 @@ public final class Project {
         }
     }
 
+    /**
+     * Creates a new project based on this one by aggregating patches in meta patch.
+     * The project is created in a subfolder of this project.
+     * In the landscape map, patch codes that are not contained in patch any more are recoded to maxcode+1
+     * @param prjName the new project name
+     * @param graph the graph for aggregating patches
+     * @param alpha the exponential coefficient for distance decreasing or zero
+     * @param minCapa the minimum capacity for metapatch
+     * @return the new project file
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public File createMetaPatchProject(String prjName, GraphGenerator graph, double alpha, double minCapa) throws IOException, SchemaException {
         ProgressBar monitor = Config.getProgressBar("Meta patch...");
         monitor.setIndeterminate(true);
@@ -1494,7 +1513,7 @@ public final class Project {
             PlanarLinks links;
             if(remPatch) {
                 links = neighborhoodEuclid(metaPatches, simplify, newRaster, grid2space, resolution);
-                metaVoronois = (List<DefaultFeature>) vectorizeVoronoi(newRaster, grid2space);
+                metaVoronois = (List<DefaultFeature>) SpatialOp.vectorizeVoronoi(newRaster, grid2space);
                 DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
             } else {
                 links = new PlanarLinks(metaPatches.size());
@@ -1522,6 +1541,16 @@ public final class Project {
         return prj.getProjectFile();
     }
     
+    /**
+     * Creates a new project based on this one by removing patches with capacity lower than minCapa.
+     * The project is created in a subfolder of this project.
+     * In the landscape map, patch codes that are not contained in patch any more are recoded to maxcode+1
+     * @param prjName the new project name
+     * @param minCapa the minimum capacity for the patch
+     * @return the new project file
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public File createProject(String prjName, double minCapa) throws IOException, SchemaException {
         ProgressBar monitor = Config.getProgressBar("Create project...");
         monitor.setIndeterminate(true);
@@ -1579,7 +1608,7 @@ public final class Project {
         
         if(hasVoronoi()) {
             PlanarLinks links = neighborhoodEuclid(patchList, simplify, newRaster, grid2space, resolution);
-            List<? extends Feature> voronois = vectorizeVoronoi(newRaster, grid2space);
+            List<? extends Feature> voronois = SpatialOp.vectorizeVoronoi(newRaster, grid2space);
             DefaultFeature.saveFeatures(voronois, new File(dir, "voronoi.shp"), getCRS());
             
             if(!links.getFeatures().isEmpty()) {
@@ -1595,30 +1624,51 @@ public final class Project {
         return prj.getProjectFile();
     }
     
+    /**
+     * @return the xml project file
+     */
     public File getProjectFile() {
         return new File(dir, name + ".xml");
     }
 
+    /**
+     * @return the directory of the project
+     */
     public File getDirectory() {
         return dir;
     }
 
+    /**
+     * @return is patch extraction is 8 connex or 4 connex ?
+     */
     public boolean isCon8() {
         return con8;
     }
 
+    /**
+     * @return the minimal area for patches
+     */
     public double getMinArea() {
         return minArea;
     }
 
+    /**
+     * @return are patches simplified for calculating planar topology (voronoi) ?
+     */
     public boolean isSimplify() {
         return simplify;
     }
 
+    /**
+     * @return no data value of landscape map
+     */
     public double getNoData() {
         return noData;
     }
 
+    /**
+     * Create project layers
+     */
     private void createLayers() {
         CoordinateReferenceSystem crs = getCRS();
         rootLayer = new DefaultGroupLayer(name, true);
@@ -1670,6 +1720,13 @@ public final class Project {
         
     }
 
+    /**
+     * Loads a project.
+     * @param file the xml project file
+     * @param all preloads all linksets ?
+     * @return the loaded project 
+     * @throws IOException 
+     */
     public static synchronized Project loadProject(File file, boolean all) throws IOException {
         
         XStream xstream = new XStream();
@@ -1753,8 +1810,16 @@ public final class Project {
         return prj;
     }
 
-
-    public GridCoverage2D loadCoverage(File file) throws IOException {
+    /**
+     * Loads a coverage.
+     * Supported formats are : tif, asc, and rst.
+     * Checks if the grid geometry matches the landscape map.
+     * @param file the file coverage
+     * @return the grid coverage
+     * @throws IOException 
+     * @throws IllegalArgumentException if the grid geometry does not match the landscape map
+     */
+    private GridCoverage2D loadCoverage(File file) throws IOException {
         GridCoverage2D cov;
         if(file.getName().toLowerCase().endsWith(".tif")) {
             cov = IOImage.loadTiffWithoutCRS(file);
@@ -1780,6 +1845,15 @@ public final class Project {
         return cov;
     }
     
+    /**
+     * Loads an external raster.
+     * The raster is cached in soft reference to avoid multiple loading.
+     * Supported formats are : tif, asc, and rst.
+     * Checks if the grid geometry matches the landscape map.
+     * @param file the image file
+     * @return the raster
+     * @throws IOException 
+     */
     public synchronized Raster getExtRaster(File file) throws IOException {
         Raster raster = null;
         
@@ -1799,18 +1873,32 @@ public final class Project {
         return raster;
     }
 
+    /**
+     * @return the area of the landscape map
+     */
     public double getArea() {
         return zone.getWidth()*zone.getHeight();
     }
 
+    /**
+     * @param node a node of a graph
+     * @return the area of the patch associated with this graph node
+     */
     public static double getPatchArea(org.geotools.graph.structure.Node node) {
         return getPatchArea((Feature)node.getObject());
     }
 
+    /**
+     * @param patch a patch
+     * @return the area of the patch 
+     */
     public static double getPatchArea(Feature patch) {
         return ((Number)patch.getAttribute(Project.AREA_ATTR)).doubleValue();
     }
 
+    /**
+     * @return the sum of the capacity of all patches
+     */
     public synchronized double getTotalPatchCapacity() {
         if(totalPatchCapacity == 0) {
             double sum = 0;
@@ -1823,28 +1911,57 @@ public final class Project {
         return totalPatchCapacity;
     }
 
+    /**
+     * @param node a node of a graph
+     * @return the patch associated with this graph node
+     */
     public static DefaultFeature getPatch(org.geotools.graph.structure.Node node) {
         return (DefaultFeature)node.getObject();
     }
     
+    /**
+     * @param node a node of a graph
+     * @return the capacity of the patch associated with this graph node
+     */
     public static double getPatchCapacity(org.geotools.graph.structure.Node node) {
         return getPatchCapacity((Feature)node.getObject());
     }
     
+    /**
+     * @param patch a patch
+     * @return the capacity of the patch 
+     */
     public static double getPatchCapacity(Feature patch) {
         return ((Number)patch.getAttribute(Project.CAPA_ATTR)).doubleValue();
     }
 
+    /**
+     * @return the parameters used for calculating the capacity of the patches
+     */
     public CapaPatchParam getCapacityParams() {
         return capacityParams;
     }
     
-    public void setCapacity(DefaultFeature patch, double capa) {
+    /**
+     * Sets the capcity of a patch.
+     * Reset the total capacity.
+     * @param patch a patch
+     * @param capa the new capacity
+     */
+    private void setCapacity(DefaultFeature patch, double capa) {
         patch.setAttribute(Project.CAPA_ATTR, capa);
         totalPatchCapacity = 0;
     }
 
+    /**
+     * @return the DEM raster
+     * @throws IOException 
+     * @throws IllegalStateException if the project does not contain a DEM file
+     */
     public Raster getDemRaster() throws IOException {
+        if(!isDemExist()) {
+            throw new IllegalStateException("No DEM file");
+        }
         if(demFile.isAbsolute()) {
             return getExtRaster(demFile);
         } else {
@@ -1852,6 +1969,12 @@ public final class Project {
         }
     }
     
+    /**
+     * Sets the DEM file for this project, loads it and save the project.
+     * The file format can be tif, asc or rst.
+     * @param demFile the DEM file
+     * @throws IOException 
+     */
     public void setDemFile(File demFile) throws IOException {
         String prjPath = getDirectory().getAbsolutePath();
         if(demFile.getAbsolutePath().startsWith(prjPath)) { 
@@ -1864,22 +1987,37 @@ public final class Project {
         save();
     }
     
+    /**
+     * @return is the project contain a DEM
+     */
     public boolean isDemExist() {
         return demFile != null;
     }
     
+    /**
+     * @return the resolution of the landscape map
+     */
     public double getResolution() {
         return resolution;
     }
 
+    /**
+     * @return the transformation between the grid coordinate and the world coordinate
+     */
     public AffineTransformation getGrid2space() {
         return grid2space;
     }
 
+    /**
+     * @return the transformation between the world coordinate and the grid coordinate
+     */
     public AffineTransformation getSpace2grid() {
         return space2grid;
     }
 
+    /**
+     * @return the projection of the landscape if exists, null otherwise.
+     */
     public CoordinateReferenceSystem getCRS() {
         if(wktCRS != null && !wktCRS.isEmpty()) {
             try {
@@ -1891,15 +2029,18 @@ public final class Project {
         return null;
     }
     
+    /**
+     * @return the codes defining patches in the landscape map
+     */
     public Set<Integer> getPatchCodes() {
         return patchCodes;
     }
     
     /**
-     * Check if point (x,y) in world coordinate lies in study area
-     * @param x
-     * @param y
-     * @return
+     * Check if point (x,y) in world coordinate lies in the landscape map, and does not fall in nodata pixel.
+     * @param x in world coordinate
+     * @param y in world coordinate
+     * @return true if this coordinate is in the study area
      */
     public boolean isInZone(double x, double y) throws IOException {
         if(!zone.contains(x, y)) {
@@ -1909,6 +2050,12 @@ public final class Project {
         return getImageSource().getSample((int)cg.x, (int)cg.y, 0) != noData;
     }
 
+    /**
+     * Create a patch without adding it in the project
+     * @param geom the geometry of the patch (Point or Polygon)
+     * @param capa the capacity of the patch
+     * @return the new patch
+     */
     public DefaultFeature createPatch(Geometry geom, double capa) {
         List<String> attrNames = new ArrayList<>(PATCH_ATTRS);
         List attrs = new ArrayList(Arrays.asList(new Double[attrNames.size()]));
@@ -1918,6 +2065,15 @@ public final class Project {
         return new DefaultFeature(patches.size()+1, geom, attrNames, attrs);
     }
     
+    /**
+     * Creates and adds a new patch into the project.
+     * The rasters patch and landscape are modified
+     * @param point the geometry of the patch 
+     * @param capa the capacity of the patch
+     * @return the new patch
+     * @throws IOException 
+     * @throws IllegalArgumentException if a patch already exists at the same position
+     */
     public synchronized DefaultFeature addPatch(Point point, double capa) throws IOException {
         // tester si pas dans un patch ou touche un patch
         if(!canCreatePatch(point)) {
@@ -1939,6 +2095,15 @@ public final class Project {
         return patch;
     }
     
+    /**
+     * Creates and adds a new patch into the project.
+     * The rasters patch and landscape are modified
+     * @param point the geometry of the patch 
+     * @param capa the capacity of the patch
+     * @return the new patch
+     * @throws IOException 
+     * @throws IllegalArgumentException if a patch already exists at the same position
+     */
     public synchronized DefaultFeature addPatch(Geometry geom, double capa) throws IOException {
         if(geom instanceof Point) { // pas sûr que ce soit utile...
             return addPatch((Point) geom, capa);
@@ -1971,6 +2136,12 @@ public final class Project {
         return patch;
     }
 
+    /**
+     * Checks if the geometry is contained in the landscape map and if none of the pixels belong to a patch 
+     * @param geom the geometry to test
+     * @return true if the patch can be created
+     * @throws IOException 
+     */
     public boolean canCreatePatch(Geometry geom) throws IOException {
         if(geom instanceof Point) {// pas sûr que ce soit utile...
             return canCreatePatch((Point) geom);
@@ -1992,6 +2163,12 @@ public final class Project {
         return true;
     }
     
+    /**
+     * Checks if the point is contained in the landscape map and if the pixel does not belong to a patch 
+     * @param geom the point to test
+     * @return true if the patch can be created
+     * @throws IOException 
+     */
     public boolean canCreatePatch(Point p) throws IOException {
         if(!isInZone(p.getX(), p.getY())) {
             return false;
@@ -2028,6 +2205,13 @@ public final class Project {
         return true;
     }
     
+    /**
+     * Remove a point patch previously added by {@link #addPatch }.
+     * Only the latter added patch can be removed.
+     * @param patch the patch to remove
+     * @throws IOException 
+     * @throws IllegalArgumentException if the patch geometry is not a Point or if the patch is not the last
+     */
     public synchronized void removePointPatch(Feature patch) throws IOException {
         if(!(patch.getGeometry() instanceof Point)) {
             throw new IllegalArgumentException("Cannot remove patch with geometry different of Point");
@@ -2038,14 +2222,20 @@ public final class Project {
         }
         int id = (Integer)patch.getId();
         if(id != patches.size()) {
-            throw new RuntimeException("The patch to remove is not the last one - id : " + patch.getId());
+            throw new IllegalArgumentException("The patch to remove is not the last one - id : " + patch.getId());
         }
         getImageSource().setSample((int)cg.x, (int)cg.y, 0, removedCodes.remove(id));
         getRasterPatch().setSample((int)cg.x, (int)cg.y, 0, 0);
         patches.remove(patches.size()-1);
     }
     
-    public void setCapacities(CapaPatchParam param) throws IOException {
+    /**
+     * Sets the capacities of the patches given the parameters
+     * @param param the parameters for calculating the new capacities
+     * @param save save the project ?
+     * @throws IOException 
+     */
+    public void setCapacities(CapaPatchParam param, boolean save) throws IOException, SchemaException {
         if(param.importFile != null) {
             CSVTabReader r = new CSVTabReader(param.importFile);
             r.read(param.idField);
@@ -2067,9 +2257,14 @@ public final class Project {
             calcNeighborAreaCapacity(getLinkset(param.costName), param.maxCost, param.codes, param.weightCost);
         }
         capacityParams = param;
+        
+        if(save) {
+            savePatch();
+            save();
+        }
     }
     
-    public void calcNeighborAreaCapacity(final Linkset linkset, final double maxCost, final HashSet<Integer> codes, final boolean weight) {
+    private void calcNeighborAreaCapacity(final Linkset linkset, final double maxCost, final HashSet<Integer> codes, final boolean weight) {
         ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("CALC PATCH CAPACITY..."), getPatches().size());
         AbstractParallelFTask task = new AbstractParallelFTask(progressBar) {
             @Override
@@ -2121,17 +2316,9 @@ public final class Project {
         
     }
     
-    public static String getDetailName(GlobalMetric indice, int indResult) {
-        if(indice.getResultNames().length == 1) {
-            return indice.getDetailName();
-        }
-        return indice.getDetailName() + "|" + indice.getResultNames()[indResult];
-    }
-
     /**
-     * Renvoie les métriques globales pour une méthode donnée
      * @param method
-     * @return 
+     * @return the global metrics which can be used for a given method
      */
     public static List<GlobalMetric> getGlobalMetricsFor(Method method) {
         List<GlobalMetric> indices = new ArrayList<>();
@@ -2143,6 +2330,9 @@ public final class Project {
         return indices;
     }
     
+    /**
+     * @return the local metrics
+     */
     public static List<LocalMetric> getLocalMetrics() {
         List<LocalMetric> indices = new ArrayList<>();
         for(LocalMetric ind : LOCAL_METRICS) {
@@ -2151,6 +2341,11 @@ public final class Project {
         return indices;
     }
     
+    /**
+     * @param shortName the short name of the global metric
+     * @return the global metric given its short name
+     * @throws IllegalArgumentException if the metric is not found
+     */
     public static GlobalMetric getGlobalMetric(String shortName) {
         for(GlobalMetric ind : GLOBAL_METRICS) {
             if(ind.getShortName().equals(shortName)) {
@@ -2160,6 +2355,11 @@ public final class Project {
         throw new IllegalArgumentException("Unknown metric " + shortName);
     }
 
+    /**
+     * @param shortName the short name of the local metric
+     * @return the local metric given its short name
+     * @throws IllegalArgumentException if the metric is not found
+     */
     public static LocalMetric getLocalMetric(String shortName) {
         for(LocalMetric ind : LOCAL_METRICS) {
             if(ind.getShortName().equals(shortName)) {
@@ -2169,8 +2369,11 @@ public final class Project {
         throw new IllegalArgumentException("Unknown metric " + shortName);
     }
     
+    /** Global metrics available */
     public static List<GlobalMetric> GLOBAL_METRICS;
+    /** Local metrics available */
     public static List<LocalMetric> LOCAL_METRICS;
+    
     static {
         GLOBAL_METRICS = new ArrayList(Arrays.asList(new SumLocal2GlobalMetric(new FLocalMetric(), TypeElem.NODE), 
                 new PCMetric(), new IICMetric(), new CCPMetric(),
@@ -2181,7 +2384,11 @@ public final class Project {
                 new EccentricityLocalMetric()));
     }
     
-    
+    /**
+     * Loads additional metrics available in the subdirectory named plugins of the directory where is the jar file.
+     * 
+     * @throws Exception 
+     */
     public static void loadPluginMetric() throws Exception {
         URL url = Project.class.getProtectionDomain().getCodeSource().getLocation();
         File dir = new File(url.toURI()).getParentFile();
@@ -2207,6 +2414,11 @@ public final class Project {
         loadPluginMetric(ucl);
     }
     
+    /**
+     * Loads other metrics given a specific class loader
+     * @param loader
+     * @throws Exception 
+     */
     public static void loadPluginMetric(ClassLoader loader) throws Exception {
         ServiceLoader<Metric> sl = ServiceLoader.load(Metric.class, loader);
         Iterator<Metric> it = sl.iterator();
@@ -2222,14 +2434,30 @@ public final class Project {
         }
     }
 
-    public static interface Ref<T> {
+    /**
+     * A reference to an object of type T
+     * @param <T> 
+     */
+    public interface Ref<T> {
+        /**
+         * @return the object or null if the object has been cleared
+         */
         public T get();
     }
     
+    /**
+     * Soft reference to an object of type T.
+     * Encapsulates the java class {@link SoftReference} to implement interface {@link Ref}
+     * @param <T> 
+     */
     public static class SoftRef<T> implements Ref<T>{
 
         private final SoftReference<T> ref;
 
+        /**
+         * Creates a SoftReference to the object val
+         * @param val an object
+         */
         public SoftRef(T val) {
             ref = new SoftReference<>(val);
         }
@@ -2238,13 +2466,21 @@ public final class Project {
         public T get() {
             return ref.get();   
         }
-        
     }
     
+    /**
+     * Strong reference to an object of type T.
+     * Keeps a reference to an object to ensure that it will not claimed by the garbage collector
+     * @param <T> 
+     */
     public static class StrongRef<T> implements Ref<T>{
 
         private final T ref;
 
+        /**
+         * Keeps the object val
+         * @param val 
+         */
         public StrongRef(T val) {
             ref = val;
         }
@@ -2253,6 +2489,5 @@ public final class Project {
         public T get() {
             return ref;   
         }
-        
     }
 }

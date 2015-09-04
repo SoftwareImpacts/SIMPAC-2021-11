@@ -1,10 +1,11 @@
 /*
- * Copyright (C) 2015 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.thema.graphab;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -40,7 +42,9 @@ import org.thema.graphab.mpi.MpiLauncher;
 import org.thema.parallel.AbstractParallelTask;
 
 /**
- *
+ * Parallel task for creating multiple projects from land modifications and executing CLI commands for each.
+ * This task works in theaded and MPI mode.
+ * 
  * @author Gilles Vuidel
  */
 public class LandModTask extends AbstractParallelTask<Void, Void> implements Serializable {
@@ -56,6 +60,15 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
     private transient List<String> zoneIds;
     private transient Envelope2D landEnv;
 
+    /**
+     * Creates a new LandmodTask
+     * @param project the initial project 
+     * @param fileZone the shapefile containing polygons of land modifications
+     * @param idField the shapefile field containing identifier
+     * @param codeField the shapefile field containing the new land code
+     * @param voronoi is voronoi (ie. planar topology) must be calculated for new projects ?
+     * @param args the CLI commands to execute after creating each project
+     */
     public LandModTask(Project project, File fileZone, String idField, String codeField, boolean voronoi, List<String> args) {
         this.project = project;
         this.fileZone = fileZone;
@@ -67,7 +80,7 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
 
     @Override
     public void init() {
-        // useful for MPI only, cause project is transient
+        // useful for MPI only, because project is not serializable
         if(project == null) {
             project = MpiLauncher.getProject();
         }
@@ -121,12 +134,23 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
     public void gather(Void results) {
     }
 
+    /**
+     * @return never
+     * @throws UnsupportedOperationException
+     */
     @Override
     public Void getResult() {
         throw new UnsupportedOperationException(); 
     }
 
-
+    /**
+     * Creates a new Project based on the initial project while changing the landmap on areas covering the features zones
+     * @param id the identifier for the new project
+     * @param zones the zones to change in the land map
+     * @return the new created project
+     * @throws IOException
+     * @throws SchemaException 
+     */
     private Project createProject(String id, List<DefaultFeature> zones) throws IOException, SchemaException {
         WritableRaster src = project.getImageSource();
         WritableRaster raster0 = project.getImageSource().createCompatibleWritableRaster();

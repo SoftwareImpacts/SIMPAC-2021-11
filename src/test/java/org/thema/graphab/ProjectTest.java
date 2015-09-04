@@ -369,7 +369,7 @@ public class ProjectTest {
             double err = indName.equals("CBC") ? 1e-3 : isCircuit(indName) ? 1e-4 : 1e-9;
             LocalMetric indice = Project.getLocalMetric(indName);
             indice.setParamFromDetailName(varName.replace("_"+gen.getName(), ""));
-            MainFrame.calcLocalIndice(new TaskMonitor.EmptyMonitor(), gen, indice, Double.NaN);
+            MainFrame.calcLocalMetric(new TaskMonitor.EmptyMonitor(), gen, indice, Double.NaN);
             for(Object id : r.getKeySet()) {
                 double ref = (Double)r.getValue(id, varName);
                 

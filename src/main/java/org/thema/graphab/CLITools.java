@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 
 package org.thema.graphab;
 
@@ -60,123 +78,25 @@ import org.thema.parallel.ExecutorService;
 import org.thema.parallel.ParallelExecutor;
 
 /**
- *
+ * Command Line Interface class.
+ * 
  * @author Gilles Vuidel
  */
 public class CLITools {
-
-    private static class Range {
-        private double min, max, inc;
-        private List<Double> values;
-        private boolean autoDist;
-
-        public Range(double val, boolean autoDist) {
-            this(val, 1, val, autoDist);
-        }
-
-        public Range(double min, double max, boolean autoDist) {
-            this(min, 1, max, autoDist);
-        }
-
-        public Range(double min, double inc, double max, boolean autoDist) {
-            this.min = min;
-            this.max = max;
-            this.inc = inc;
-            this.autoDist = autoDist;
-        }
- 
-        public Range(List<Double> values, boolean autoDist) {
-            this.values = values;
-            this.min = Collections.min(values);
-            this.max = Collections.max(values);
-            this.autoDist = autoDist;
-        }
-
-        public List<Double> getValues() {
-            if(autoDist) {
-                throw new IllegalStateException("No values without linkset");
-            }
-            if(values == null) {
-                List<Double> lst = new ArrayList<>();
-                for(double v = min; v <= max; v += inc) {
-                    lst.add(v);
-                }
-                return lst;
-            } else {
-                return values;
-            }
-        }
-        
-        public List<Double> getValues(Linkset linkset) {
-            if(autoDist) {
-                List<Double> lst = new ArrayList<>();
-                for(double v = min; v <= max; v += inc) {
-                    lst.add(linkset.estimCost(v));
-                }
-                return lst;
-            } else {
-                return getValues();
-            }
-        }
-        
-        public double getValue(Linkset linkset) {
-            if(autoDist) {
-                return linkset.estimCost(min);
-            } else {
-                return min;
-            }
-        }
-
-        public boolean isUnique() {
-            return getSize() == 1;
-        }
-
-        public int getSize() {
-            if(values == null) {
-                int n = 0;
-                for(double v = min; v <= max; v += inc) {
-                    n++;
-                }
-                return n;
-            } else {
-                return values.size();
-            }
-        }
-        
-        public static Range parse(String s) {
-            boolean auto = false;
-            if(s.startsWith("{")) {
-                s = s.substring(1, s.length()-1).trim();
-                auto = true;
-            }
-            String [] tok = s.split(":");
-            if(tok.length == 1) {
-                tok = s.split(",");
-                if(tok.length == 1) {
-                    return new Range(Double.parseDouble(tok[0]), auto);
-                } else {
-                    List<Double> values = new ArrayList<>(tok.length);
-                    for(String tok1 : tok) {
-                        values.add(Double.parseDouble(tok1));
-                    }
-                    return new Range(values, auto);
-                }
-
-            } else if(tok.length == 2) {
-                return new Range(Double.parseDouble(tok[0]), Double.parseDouble(tok[1]), auto);
-            } else if(tok.length == 3) {
-                return new Range(Double.parseDouble(tok[0]), Double.parseDouble(tok[1]), Double.parseDouble(tok[2]), auto);
-            }
-            return  null;
-        }
-    }
 
     private Project project;
     private List<Linkset> useLinksets = new ArrayList<>();
     private List<GraphGenerator> useGraphs = new ArrayList<>();
     private List<Pointset> useExos = new ArrayList<>();
     private boolean save = true;
-
+    
+    /**
+     * Executes the commands from the command line
+     * @param argArray the command line arguments
+     * @throws IOException
+     * @throws SchemaException
+     * @throws MathException 
+     */
     public void execute(String [] argArray) throws IOException, SchemaException, MathException {
         if(argArray[0].equals("--help")) {
             System.out.println("Usage :\njava -jar graphab.jar --metrics\n" +
@@ -260,19 +180,19 @@ public class CLITools {
             if(p.equals("--model")) {
                 batchModel(args);
             } else if(p.equals("--linkset")) {
-                batchCost(args);
+                createLinkset(args);
             } else if(p.equals("--graph")) {
-                batchGraph(args);
+                createGraph(args);
             } else if(p.equals("--pointset")) {
-                batchExo(args);
+                createPointset(args);
             } else if(p.equals("--gmetric")) {
-                batchGlobalIndice(args);
+                calcGlobalMetric(args);
             } else if(p.equals("--cmetric")) {
-                batchCompIndice(args);
+                calcCompMetric(args);
             } else if(p.equals("--lmetric")) {
-                batchLocalIndice(args);
+                calcLocalMetric(args);
             } else if(p.equals("--delta")) {
-                deltaIndice(args);
+                calcDeltaMetric(args);
             } else if(p.equals("--gtest")) {
                 addGlobal(args);
             } else if(p.equals("--ltest")) {
@@ -290,9 +210,9 @@ public class CLITools {
             } else if(p.equals("--corridor")) {
                 corridor(args);
             } else if(p.equals("--metapatch")) {
-                metapatch(args);
+                createMetapatch(args);
             } else if(p.equals("--capa")) {
-                capa(args);
+                calcCapa(args);
             } else if(p.equals("--landmod")) {
                 landmod(args);
             } else if(p.equals("--interp")) {
@@ -388,7 +308,7 @@ public class CLITools {
     }
 
     
-    public Project createProject(List<String> args) throws IOException, SchemaException {
+    private Project createProject(List<String> args) throws IOException, SchemaException {
         String name = args.remove(0);
         File land = new File(args.remove(0));
         Range range = Range.parse(args.remove(0).split("=")[1]);
@@ -491,7 +411,7 @@ public class CLITools {
         } 
     }
 
-    private void batchCost(List<String> args) throws IOException, SchemaException {
+    private void createLinkset(List<String> args) throws IOException, SchemaException {
         int type = Linkset.PLANAR;
         double threshold = 0;
         String linkName = null;
@@ -561,13 +481,13 @@ public class CLITools {
                     String [] tok = args.remove(0).split("=");
                     Range codes = Range.parse(tok[0]);
                     Range cost = Range.parse(tok[1]);
-                    if(cost.isUnique()) {
+                    if(cost.isSingle()) {
                         for(Double code : codes.getValues()) {
-                            costs[code.intValue()] = cost.min;
+                            costs[code.intValue()] = cost.getMin();
                         }
                     }
-                    if(rangeCost == null || !cost.isUnique()) {
-                        if(rangeCost != null && !rangeCost.isUnique()) {
+                    if(rangeCost == null || !cost.isSingle()) {
+                        if(rangeCost != null && !rangeCost.isSingle()) {
                             throw new IllegalArgumentException("Only one range can be defined for linkset");
                         }
                         rangeCost = cost;
@@ -576,7 +496,7 @@ public class CLITools {
                     }
                 }
 
-                boolean multi = !rangeCost.isUnique();
+                boolean multi = !rangeCost.isSingle();
                 if(linkName == null) {
                     name = (circuit ? "circ_" : "cost_") + name;
                 } else {
@@ -598,7 +518,7 @@ public class CLITools {
         }
     }
 
-    private void batchExo(List<String> args) throws IOException, SchemaException {
+    private void createPointset(List<String> args) throws IOException, SchemaException {
         File f = new File(args.remove(0));
         String name = f.getName().substring(0, f.getName().length()-4);
         List<DefaultFeature> features = DefaultFeature.loadFeatures(f, true);
@@ -612,7 +532,7 @@ public class CLITools {
         }
     }
 
-    private void batchGraph(List<String> args) throws IOException, SchemaException {
+    private void createGraph(List<String> args) throws IOException, SchemaException {
         int type = GraphGenerator.COMPLETE;
         boolean intra = true;
         Range range = null;
@@ -644,7 +564,7 @@ public class CLITools {
         }
     }
 
-    private void batchGlobalIndice(List<String> args) throws IOException {
+    private void calcGlobalMetric(List<String> args) throws IOException {
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
 
@@ -708,7 +628,7 @@ public class CLITools {
         }
     }
     
-    private void batchCompIndice(List<String> args) throws IOException, SchemaException {
+    private void calcCompMetric(List<String> args) throws IOException, SchemaException {
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
 
@@ -730,7 +650,7 @@ public class CLITools {
 
                 System.out.println(graph.getName() + " : " + indice.getDetailName());
 
-                MainFrame.calcCompIndice(new TaskMonitor.EmptyMonitor(), graph, indice, maxCost);
+                MainFrame.calcCompMetric(new TaskMonitor.EmptyMonitor(), graph, indice, maxCost);
 
                 if(indParam.length > 0) {
                     indParam[0]++;
@@ -756,7 +676,7 @@ public class CLITools {
         }
     }
     
-    private void batchLocalIndice(List<String> args) throws IOException, SchemaException {
+    private void calcLocalMetric(List<String> args) throws IOException, SchemaException {
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
 
@@ -778,7 +698,7 @@ public class CLITools {
 
                 System.out.println(graph.getName() + " : " + indice.getDetailName());
 
-                MainFrame.calcLocalIndice(new TaskMonitor.EmptyMonitor(), graph, indice, maxCost);
+                MainFrame.calcLocalMetric(new TaskMonitor.EmptyMonitor(), graph, indice, maxCost);
 
                 if(indParam.length > 0) {
                     indParam[0]++;
@@ -805,15 +725,15 @@ public class CLITools {
         }
     }
 
-    private void deltaIndice(List<String> args) throws IOException {
+    private void calcDeltaMetric(List<String> args) throws IOException {
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
         HashMap<String, Object> params = new HashMap<>();
         while(!args.get(0).startsWith("obj=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
-            if(r.isUnique()) {
-                params.put(tok[0], r.min);
+            if(r.isSingle()) {
+                params.put(tok[0], r.getMin());
             } else {
                 throw new IllegalArgumentException("No range for metric params in --delta");
             }
@@ -883,8 +803,8 @@ public class CLITools {
         while(!args.get(0).startsWith("obj=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
-            if(r.isUnique()) {
-                params.put(tok[0], r.min);
+            if(r.isSingle()) {
+                params.put(tok[0], r.getMin());
             } else {
                 throw new IllegalArgumentException("No range for metric params in --gtest");
             }
@@ -964,8 +884,8 @@ public class CLITools {
             for(int i = 0; i < nParam && !args.isEmpty(); i++) {
                 String [] tok = args.remove(0).split("=");
                 Range r = Range.parse(tok[1]);
-                if(r.isUnique()) {
-                    params.put(tok[0], r.min);
+                if(r.isSingle()) {
+                    params.put(tok[0], r.getMin());
                 } else {
                     throw new IllegalArgumentException("No range for indice params in --gtest");
                 }
@@ -1018,8 +938,8 @@ public class CLITools {
         while(!args.get(0).startsWith("obj=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
-            if(r.isUnique()) {
-                params.put(tok[0], r.min);
+            if(r.isSingle()) {
+                params.put(tok[0], r.getMin());
             } else {
                 throw new IllegalArgumentException("No range for indice params in --ltest");
             }
@@ -1094,8 +1014,8 @@ public class CLITools {
             for(int i = 0; i < nParam && !args.isEmpty(); i++) {
                 String [] tok = args.remove(0).split("=");
                 Range r = Range.parse(tok[1]);
-                if(r.isUnique()) {
-                    params.put(tok[0], r.min);
+                if(r.isSingle()) {
+                    params.put(tok[0], r.getMin());
                 } else {
                     throw new IllegalArgumentException("No range for metric params in --rempatch");
                 }
@@ -1164,8 +1084,8 @@ public class CLITools {
         while(!args.get(0).startsWith("gridres=") && !args.get(0).startsWith("patchfile=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
-            if(r.isUnique()) {
-                params.put(tok[0], r.min);
+            if(r.isSingle()) {
+                params.put(tok[0], r.getMin());
             } else {
                 throw new IllegalArgumentException("No range for metric params in --addpatch");
             }
@@ -1248,7 +1168,7 @@ public class CLITools {
         for(Object id : ids) {
             System.out.println("Object : " + id);
             deltaGraph.addElem(id);
-            MainFrame.calcLocalIndice(new TaskMonitor.EmptyMonitor(), deltaGraph,
+            MainFrame.calcLocalMetric(new TaskMonitor.EmptyMonitor(), deltaGraph,
                         indice, maxCost);
             double val;
             if(patch) {
@@ -1264,7 +1184,7 @@ public class CLITools {
         return values;
     }
     
-    private void capa(List<String> args) throws IOException, SchemaException {
+    private void calcCapa(List<String> args) throws IOException, SchemaException {
         
         CapaPatchDialog.CapaPatchParam params = new CapaPatchDialog.CapaPatchParam();
         if(!args.isEmpty() && args.get(0).startsWith("maxcost=")) {
@@ -1288,14 +1208,10 @@ public class CLITools {
         } else {
             params.calcArea = true;
         }
-        project.setCapacities(params);
-        if(save) {
-            project.savePatch();
-            project.save();
-        }
+        project.setCapacities(params, save);
     }
     
-    private void metapatch(List<String> args) throws IOException, SchemaException {
+    private void createMetapatch(List<String> args) throws IOException, SchemaException {
         double minCapa = 0;
         if(!args.isEmpty() && args.get(0).startsWith("mincapa=")) {
             minCapa = Double.parseDouble(args.remove(0).split("=")[1]);
@@ -1328,7 +1244,7 @@ public class CLITools {
         args.clear();
     }
     
-    private void interp(final List<String> args) throws IOException {
+    private void interp(List<String> args) throws IOException {
         String name = args.remove(0);
         double res = Double.parseDouble(args.remove(0));
         String var = args.remove(0).split("=")[1];
@@ -1486,5 +1402,156 @@ public class CLITools {
             ranges.put(tok[0], r);
         }
         return ranges;
+    }
+}
+
+
+
+/**
+ * CLI range parsing and distance conversion.
+ * 
+ * @author Gilles Vuidel
+ */
+class Range {
+    private double min, max, inc;
+    private List<Double> values;
+    private boolean convDist;
+
+    private Range(double val, boolean convDist) {
+        this(val, 1, val, convDist);
+    }
+
+    private Range(double min, double max, boolean convDist) {
+        this(min, 1, max, convDist);
+    }
+
+    private Range(double min, double inc, double max, boolean convDist) {
+        this.min = min;
+        this.max = max;
+        this.inc = inc;
+        this.convDist = convDist;
+    }
+
+    private Range(List<Double> values, boolean convDist) {
+        this.values = values;
+        this.min = Collections.min(values);
+        this.max = Collections.max(values);
+        this.convDist = convDist;
+    }
+
+    /**
+     * @return all values of the range
+     * @throws IllegalStateException if the range must convert the values
+     */
+    public List<Double> getValues() {
+        if(convDist) {
+            throw new IllegalStateException("Cannot convert distance without linkset");
+        }
+        if(values == null) {
+            List<Double> lst = new ArrayList<>();
+            for(double v = min; v <= max; v += inc) {
+                lst.add(v);
+            }
+            return lst;
+        } else {
+            return values;
+        }
+    }
+
+    /**
+     * May convert the values from distance to cost.
+     * @param linkset the linkset for conversion if needed
+     * @return all the values
+     */
+    public List<Double> getValues(Linkset linkset) {
+        if(convDist) {
+            List<Double> lst = new ArrayList<>();
+            for(double v = min; v <= max; v += inc) {
+                lst.add(linkset.estimCost(v));
+            }
+            return lst;
+        } else {
+            return getValues();
+        }
+    }
+
+    /**
+     * Returns the first value (minimum value).
+     * May convert the value from distance to cost
+     * @param linkset the linkset for conversion if needed
+     * @return the first value
+     */
+    public double getValue(Linkset linkset) {
+        if(convDist) {
+            return linkset.estimCost(min);
+        } else {
+            return min;
+        }
+    }
+
+    /**
+     * @return if this range contains only one number
+     */
+    public boolean isSingle() {
+        return getSize() == 1;
+    }
+
+    /**
+     * @return the minimum value (this value is never converted)
+     */
+    public double getMin() {
+        return min;
+    }
+
+    /**
+     * @return the number of values
+     */
+    public int getSize() {
+        if(values == null) {
+            int n = 0;
+            for(double v = min; v <= max; v += inc) {
+                n++;
+            }
+            return n;
+        } else {
+            return values.size();
+        }
+    }
+
+    /**
+     * Parse the string and extract the range.
+     * It can be :
+     * - a single number
+     * - a list of number separated by comma
+     * - a real range of the form min:max or min:inc:max
+     * All three cases can be surrounded by bracket for automatic conversion from distance to cost
+     * @param s the string containing the number 
+     * @return the new range
+     */
+    public static Range parse(String s) {
+        boolean conv = false;
+        if(s.startsWith("{")) {
+            s = s.substring(1, s.length()-1).trim();
+            conv = true;
+        }
+        String [] tok = s.split(":");
+        if(tok.length == 1) {
+            tok = s.split(",");
+            if(tok.length == 1) {
+                return new Range(Double.parseDouble(tok[0]), conv);
+            } else {
+                List<Double> values = new ArrayList<>(tok.length);
+                for(String tok1 : tok) {
+                    values.add(Double.parseDouble(tok1));
+                }
+                return new Range(values, conv);
+            }
+
+        } else if(tok.length == 2) {
+            return new Range(Double.parseDouble(tok[0]), Double.parseDouble(tok[1]), conv);
+        } else if(tok.length == 3) {
+            return new Range(Double.parseDouble(tok[0]), Double.parseDouble(tok[1]), Double.parseDouble(tok[2]), conv);
+        }
+        return  null;
     }
 }

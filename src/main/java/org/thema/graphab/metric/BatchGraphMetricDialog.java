@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 
 package org.thema.graphab.metric;
 
@@ -271,7 +289,7 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
         max = 0;
         Linkset linkset = (Linkset) distComboBox.getSelectedItem();
         if(distTypeRadioButton.isSelected()) {
-            for(Path p : project.getPaths(distComboBox.getSelectedItem().toString()))  {
+            for(Path p : linkset.getPaths())  {
                 double v = linkset.getType_length() == Linkset.COST_LENGTH ? p.getCost() : p.getDist();
                 if(v > max) {
                     max = v;
@@ -280,7 +298,7 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
             max++;
         }
         else {
-            max = project.getPaths(distComboBox.getSelectedItem().toString()).size();
+            max = linkset.getPaths().size();
         }
 
         maxSpinner.setValue(max);

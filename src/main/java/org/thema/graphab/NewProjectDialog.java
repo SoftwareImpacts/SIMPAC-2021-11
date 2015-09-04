@@ -1,13 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2014 Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté
+ * http://thema.univ-fcomte.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * NewProjectDialog.java
- *
- * Created on 4 mai 2010, 09:26:29
- */
 
 package org.thema.graphab;
 
@@ -38,14 +46,16 @@ import org.thema.data.IOImage;
 import org.thema.graphab.util.RSTGridReader;
 
 /**
- *
- * @author gvuidel
+ * Dailog form for creating a new project.
+ * 
+ * @author Gilles Vuidel
  */
 public class NewProjectDialog extends javax.swing.JDialog {
 
     private static final int NBPANEL = 3;
     private int indPanel;
 
+    /** has user validated the form ? */
     public boolean isOk = false;
 
     private TreeSet<Integer> codes;
@@ -53,7 +63,10 @@ public class NewProjectDialog extends javax.swing.JDialog {
     private GridCoverage2D coverage;
 
 
-    /** Creates new form NewProjectDialog */
+    /** 
+     * Creates new form NewProjectDialog
+     * @param parent the parent frame
+     */
     public NewProjectDialog(java.awt.Frame parent) {
         super(parent, true);
         initComponents();
@@ -417,6 +430,11 @@ public class NewProjectDialog extends javax.swing.JDialog {
         setCursor(Cursor.getDefaultCursor());
 }//GEN-LAST:event_imgSelectFilePanelActionPerformed
 
+    /**
+     * 
+     * @param cov the landscape map
+     * @return the set of values contained in this coverage
+     */
     public static TreeSet<Integer> getCodes(GridCoverage2D cov) {
         HashSet<Integer> codes = new HashSet<>();
         RenderedImage img = cov.getRenderedImage();
@@ -538,6 +556,13 @@ public class NewProjectDialog extends javax.swing.JDialog {
         return new HashSet<>(list);
     }
     
+    /**
+     * Creates the project after the user has validated the form.
+     * isOk must be true
+     * @return the new created project
+     * @throws IOException
+     * @throws SchemaException 
+     */
     public Project createProject() throws IOException, SchemaException {
         File prjPath = new File(prjPathTextField.getText());
 
