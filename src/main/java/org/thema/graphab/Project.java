@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package org.thema.graphab;
 
 import org.thema.graphab.pointset.PointsetLayer;
@@ -662,6 +661,42 @@ public final class Project {
         progressBar.close();
     }
     
+    
+    /**
+     * Removes the linkset from the project and saves the project.
+     * @param linkset the linkset to remove
+     * @param force remove graphs using this linkset ?
+     * @throws IOException 
+     * @throws IllegalStateException if the linkset is used by pointsets or if force == false and the linkset is used by graphs
+     */
+    public void removeLinkset(Linkset linkset, boolean force) throws IOException {
+        List<String> exoNames = new ArrayList<>();
+        for (Pointset exo : getPointsets()) {
+            if (exo.getLinkset().getName().equals(getName())) {
+                exoNames.add(exo.getName());
+            }
+        }
+        if (!exoNames.isEmpty()) {
+            throw new IllegalStateException(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Links_is_used_by_exogenous_data") + Arrays.deepToString(exoNames.toArray()));
+        }
+        
+        List<String> graphNames = new ArrayList<>();
+        for (GraphGenerator g : getGraphs()) {
+            if (g.getLinkset().getName().equals(getName())) {
+                graphNames.add(g.getName());
+            }
+        }
+        if(!graphNames.isEmpty() && !force) {
+            throw new IllegalStateException("The linkset is used by the graphs : " + Arrays.deepToString(exoNames.toArray()));
+        }
+        for(String gName : graphNames) {
+            removeGraph(gName);
+        }
+        costLinks.remove(linkset.getName());
+        save();
+    }
+    
+    
     /**
      * Calculates and add a new pointset to the project
      * @param pointset the definition of the new point set
@@ -1117,9 +1152,11 @@ public final class Project {
             f.delete();
         }
 
-        for(Layer l : new ArrayList<>(graphLayers.getLayers())) {
-            if(l.getName().equals(name)) {
-                graphLayers.removeLayer(l);
+        if(graphLayers != null) {
+            for(Layer l : new ArrayList<>(graphLayers.getLayers())) {
+                if(l.getName().equals(name)) {
+                    graphLayers.removeLayer(l);
+                }
             }
         }
     }
@@ -2417,19 +2454,26 @@ public final class Project {
     /**
      * Loads other metrics given a specific class loader
      * @param loader
-     * @throws Exception 
      */
-    public static void loadPluginMetric(ClassLoader loader) throws Exception {
+    public static void loadPluginMetric(ClassLoader loader)  {
         ServiceLoader<Metric> sl = ServiceLoader.load(Metric.class, loader);
         Iterator<Metric> it = sl.iterator();
         while (it.hasNext()) {
-            Metric ind = it.next();
-            if(ind instanceof GlobalMetric) {
-                GLOBAL_METRICS.add((GlobalMetric)ind);
-            } else if(ind instanceof LocalMetric) {
-                LOCAL_METRICS.add((LocalMetric)ind);
+            Metric metric = it.next();
+            if(metric instanceof GlobalMetric) {
+                try {
+                    getGlobalMetric(metric.getShortName());
+                } catch(IllegalArgumentException e) {
+                    GLOBAL_METRICS.add((GlobalMetric)metric);
+                }
+            } else if(metric instanceof LocalMetric) {
+                try {
+                    getLocalMetric(metric.getShortName());
+                } catch(IllegalArgumentException e) {
+                    LOCAL_METRICS.add((LocalMetric)metric);
+                }
             } else {
-                throw new RuntimeException("Class " +ind.getClass().getCanonicalName() + " does not inherit from GraphIndice or LocalIndice");
+                throw new RuntimeException("Class " +metric.getClass().getCanonicalName() + " does not inherit from GlobalMetric or LocalMetric");
             }
         }
     }

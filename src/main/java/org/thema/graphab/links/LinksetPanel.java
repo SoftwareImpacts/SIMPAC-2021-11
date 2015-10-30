@@ -226,7 +226,6 @@ public class LinksetPanel extends javax.swing.JPanel {
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, completeRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), dMaxSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        removeCrossPatchCheckBox.setSelected(true);
         removeCrossPatchCheckBox.setText(bundle.getString("LinksetPanel.removeCrossPatchCheckBox.text")); // NOI18N
         removeCrossPatchCheckBox.setEnabled(false);
 
@@ -236,6 +235,12 @@ public class LinksetPanel extends javax.swing.JPanel {
         bindingGroup.addBinding(binding);
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, completeRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), realPathCheckBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
+
+        realPathCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                realPathCheckBoxActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout topoPanelLayout = new javax.swing.GroupLayout(topoPanel);
         topoPanel.setLayout(topoPanelLayout);
@@ -496,10 +501,14 @@ public class LinksetPanel extends javax.swing.JPanel {
     private void distanceRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_distanceRadioButtonActionPerformed
         lengthRadioButton.setEnabled(!euclidRadioButton.isSelected());
         costDistRadioButton.setEnabled(!euclidRadioButton.isSelected());
-        removeCrossPatchCheckBox.setEnabled(!euclidRadioButton.isSelected());
+        removeCrossPatchCheckBox.setEnabled(!euclidRadioButton.isSelected() && realPathCheckBox.isSelected());
         useDEMCheckBox.setEnabled(!euclidRadioButton.isSelected() && project != null && project.isDemExist());
         coefSlopeSpinner.setEnabled(!euclidRadioButton.isSelected() && project != null && project.isDemExist());
     }//GEN-LAST:event_distanceRadioButtonActionPerformed
+
+    private void realPathCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_realPathCheckBoxActionPerformed
+        removeCrossPatchCheckBox.setEnabled(!euclidRadioButton.isSelected() && realPathCheckBox.isSelected());
+    }//GEN-LAST:event_realPathCheckBoxActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package org.thema.graphab;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -1238,6 +1237,8 @@ public class CLITools {
             args.remove(0);
             voronoi = false;
         }
+        // in threaded mode, does not manage reentrant call with old executor, solution : set nb proc to one
+        ParallelFExecutor.setNbProc(1);
         LandModTask task = new LandModTask(project, fileZone, idField, codeField, voronoi, args);
         ExecutorService.execute(task);
 

@@ -182,7 +182,6 @@
         </Component>
         <Component class="javax.swing.JCheckBox" name="removeCrossPatchCheckBox">
           <Properties>
-            <Property name="selected" type="boolean" value="true"/>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
               <ResourceString bundle="org/thema/graphab/links/Bundle.properties" key="LinksetPanel.removeCrossPatchCheckBox.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
             </Property>
@@ -199,6 +198,9 @@
             <BindingProperty name="selected" source="planarRadioButton" sourcePath="${selected}" target="realPathCheckBox" targetPath="selected" updateStrategy="1" immediately="false"/>
             <BindingProperty name="enabled" source="completeRadioButton" sourcePath="${selected}" target="realPathCheckBox" targetPath="enabled" updateStrategy="0" immediately="false"/>
           </BindingProperties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="realPathCheckBoxActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

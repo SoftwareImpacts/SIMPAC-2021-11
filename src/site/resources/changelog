@@ -1,3 +1,6 @@
+version 1.3.31(30/10/2015)
+- CLI : --landmod command uses too much threads in threaded mode
+- UI linkset creation : "Remove crossing patch" is now unchecked by default
 version 1.3.30 (02/09/2015)
 - add menu "Remove patches" : create a sub project in just retaining patches with a minimal capacity
 - remove Diff button in SDM dialog

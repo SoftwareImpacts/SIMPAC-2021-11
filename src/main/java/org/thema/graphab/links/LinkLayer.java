@@ -76,16 +76,6 @@ public class LinkLayer extends FeatureLayer {
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Remove...")) {
             @Override
             public void actionPerformed(ActionEvent e) {
-                List<String> exoNames = new ArrayList<>();
-                for (Pointset exo : linkset.getProject().getPointsets()) {
-                    if (exo.getLinkset().getName().equals(getName())) {
-                        exoNames.add(exo.getName());
-                    }
-                }
-                if (!exoNames.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Links_is_used_by_exogenous_data") + Arrays.deepToString(exoNames.toArray()));
-                    return;
-                }
                 List<String> graphNames = new ArrayList<>();
                 for (GraphGenerator g : linkset.getProject().getGraphs()) {
                     if (g.getLinkset().getName().equals(getName())) {
@@ -97,11 +87,7 @@ public class LinkLayer extends FeatureLayer {
                     return;
                 }
                 try {
-                    for (String gName : graphNames) {
-                        linkset.getProject().removeGraph(gName);
-                    }
-                    linkset.getProject().getLinksetNames().remove(getName());
-                    linkset.getProject().save();
+                    linkset.getProject().removeLinkset(linkset, true);
                     linkset.getProject().getLinksetLayers().removeLayer(LinkLayer.this);
                 } catch (IOException ex) {
                     Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
