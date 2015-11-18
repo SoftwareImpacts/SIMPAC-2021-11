@@ -166,7 +166,6 @@ public class MainFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle"); // NOI18N
         setTitle(bundle.getString("MainFrame.title")); // NOI18N
-        setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
 
         javax.swing.GroupLayout statusPanelLayout = new javax.swing.GroupLayout(statusPanel);
         statusPanel.setLayout(statusPanelLayout);
@@ -982,7 +981,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
         JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle")
-                .getString("MainFrame.AboutMessage"), "Graphab - " + getVersion(), JOptionPane.PLAIN_MESSAGE, new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/org/thema/graphab/ressources/ico64_graphab.png"))));
+                .getString("MainFrame.AboutMessage"), "Graphab - " + getVersion(), JOptionPane.PLAIN_MESSAGE, new ImageIcon(getIconImage()));
     }//GEN-LAST:event_aboutMenuItemActionPerformed
 
     private void logMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logMenuItemActionPerformed

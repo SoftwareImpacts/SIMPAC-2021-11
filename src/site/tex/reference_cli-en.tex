@@ -1,0 +1,753 @@
+\documentclass[a4paper,10pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fancyvrb}
+\newenvironment{cmd}
+{\quote\Verbatim}
+{\endVerbatim\endquote}
+
+% Title Page
+\title{Reference Manual\\
+Graphab 1.2\\
+Command Line Interface }
+
+
+\begin{document}
+\maketitle
+
+
+\parindent 0pt
+
+\tableofcontents
+
+\chapter{Prerequisite}
+
+Graphab can be used in command line interface (CLI) from version 1.2.
+It is useful for executing graphab on a distant computer without a graphical interface, or batching some processes that are not available in the graphical user interface (GUI).
+
+\section{Launch Graphab in CLI mode}
+First you have to open a terminal window.
+Then, go to the directory of the Graphab program with \textit{cd} command.
+Finally, type the following command to display the Graphab help screen :
+\begin{cmd}
+java -jar graphab-1.2.jar --help
+\end{cmd}
+Result
+\begin{verbatim}
+Usage :
+java -jar graphab.jar --project prjfile.xml [--proc n]
+...
+...
+\end{verbatim}
+You're ready to use Graphab in CLI mode !
+
+\section{Syntax}
+\subsection{Definition}
+Commands always start with a double dash.\\
+A global option starts with only one dash.\\
+A parameter does not have a dash.\\
+\subsection{Character separator}
+Blank spaces are used to separate commands and parameters. You cannot have a name containing blank spaces.\\
+\textbf{Avoid blank spaces in the project's name and the project's elements.}
+\subsection{Optional parameter}
+Parameters enclosed in brackets are optional. 
+Therefore, parameters not in brackets are mandatory.
+\subsection{Range and value list}
+Defining a range of values for a given parameter (rather than a single value) executes the command several times for each value defined by the range.
+Ranges are defined by a minimum, increment and a maximum value, with inclusive bounds :
+\begin{cmd}
+min:inc:max
+\end{cmd}
+A range from 0 to 10 by step of 2 will create 6 values : 0,2,4,6,8,10 :
+\begin{cmd}
+0:2:10
+\end{cmd}
+The minimum value is always included, but the maximum value is included only if the incremented value falls exactly on the maximum, 
+otherwise the last value will be the maximum incremented value smaller than the maximum value.
+A range from 0 to 9 by step of 2 will create 5 values : 0,2,4,6,8 :
+\begin{cmd}
+0:2:9
+\end{cmd}
+Decimal values can be used, with a period for the decimal separator : 
+\begin{cmd}
+1.5:0.5:4
+\end{cmd}
+To process a non-consecutive set of parameter values, comma separated values can be used in place of a range :
+\begin{cmd}
+0,1,4,8,10
+\end{cmd}
+\textbf{The value list cannot contain blank spaces.}
+
+In all cases, a single value can be used instead of a range if we don't want several executions.
+If a command contains several ranges for different parameters, all combinations of ranges will be computed.
+
+\subsection{Command execution}
+Graphab can be launched with several commands on one line, except for the \textit{--help} and \textit{--metrics} commands.
+The \textit{--project} command can be used only once and must be the first command. 
+After the \textit{--project} command, all other commands will be executed sequentially with the same order as the command line.
+
+\begin{cmd}
+java -jar graphab-1.2.jar --project prj.xml --graph --gmetric NC  
+\end{cmd}
+Load a project, then execute the graph command and after that, execute the gmetric command.
+
+
+
+\chapter{Command reference}
+\section{General command}
+\subsection{--help : display help}
+Command :
+\begin{cmd}
+java -jar graphab-1.2.jar --help
+\end{cmd}
+Result :
+\begin{verbatim}
+Usage :
+java -jar graphab.jar --metrics
+java -jar graphab.jar --project prjfile.xml [-proc n] [-nosave] command1 [command2 ...]
+Commands list :
+--show
+--linkset [complete[=dmax]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max
+--uselinkset linkset1,...,linksetn
+--graph [nointra] [threshold=min:inc:max]
+--usegraph graph1,...,graphn
+--pointset pointset.shp
+--usepointset pointset1,...,pointsetn
+--gmetric global_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
+--cmetric comp_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
+--lmetric local_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
+--model variable distW=min:inc:max
+--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn]
+--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...
+--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...
+--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=...
+--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] 
+
+min:inc:max -> val1,val2,val3...
+\end{verbatim}
+
+\subsection{--metrics : list available metrics}
+This command lists all available metrics with their short name, description, and applicable parameters if needed.
+
+Command :
+\begin{cmd}
+java -jar graphab-1.2.jar --metrics
+\end{cmd}
+Result :
+\begin{cmd}
+===== Global metrics =====
+S#F -  Flux (F)
+       params : d, p, beta
+PC - Probability of Connectivity (PC)
+       params : d, p, beta
+IIC - Integral index of connectivity (IIC)
+CCP - Class coincidence probability (CCP)
+MSC - Mean size of the components (MSC)
+SLC - Size of the largest component (SLC)
+ECS - Expected Cluster Size (ECS)
+GD - Graph diameter (GD)
+H - Harary index (H)
+NC - Number of components (NC)
+dPC - Delta PC decomposed (dPC)
+       params : d, p, beta
+
+===== Local metrics =====
+F : Flux (F)
+       params : d, p, beta
+BC : Betweeness centrality (BC)
+       params : d, p, beta
+FPC : Flow PC (FPC)
+       params : d, p, beta
+Dg : Node degree (Dg)
+CC : Clustering Coefficient (CC)
+CCe : Closeness centrality (CCe)
+CCor : Connectivity Correlation (CCor)
+Ec : Eccentricity (Ec)
+
+\end{cmd}
+
+\subsection{--project : load project}
+This command sets the path to the project xml file.
+\begin{cmd}
+java -jar graphab-1.2.jar --project path2myproject/myproject.xml
+\end{cmd}
+This command loads the project myproject contained in the path2myproject folder.
+You cannot create a project in CLI mode, you must to create it beforehand in the GUI.
+The \textit{--project} command can be used only once and must be the first command.
+All of the following commands below require a loaded project. 
+
+\subsection{--show : list project elements}
+Lists linksets, graphs and pointsets contained in the selected project. This command is useful to retrieve exact name of an element to be used in the command line.
+
+Command :
+\begin{cmd}
+java -jar graphab-1.2.jar --project path2myproject/myproject.xml --show
+\end{cmd}
+Result :
+\begin{cmd}
+===== Link sets =====
+Complete_Euclid
+Complete_cost
+Planar_Euclid
+Planar_cost
+
+===== Graphs =====
+2000m-3500cost
+2000m-3500cost_comp
+2000m_euclid
+2000m_euclid_comp
+
+===== Point sets =====
+Presence_absence
+\end{cmd}
+Pay attention to the element's name. The CLI is case sensitive and does not manage blank spaces in element names.
+
+\section{Graph management}
+
+\subsection{--linkset : create cost linkset}
+\begin{verbatim}
+--linkset [complete[=dmax]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max
+\end{verbatim}
+Creates a new linkset in the loaded project and saves the project unless the \textit{-nosave} option is used. 
+For the moment, this command does not permit using either euclidean distance or an external cost surface.
+The linkset's name is derived from the cost definition.
+
+This command will create a planar linkset \textit{cost\_1\_2\_3\_4\_5\_6\_7-1.0} with all costs equal to 1 :
+\begin{cmd}
+--linkset 1,2,3,4,5,6,7=1
+\end{cmd}
+
+This command will create a planar linkset \textit{cost\_1\_2\_3-1.0} with cost equal to 1 for landscape values 1, 2 and 3, and cost equal to 2 for landscape values 4, 5, 6 and 7 :
+\begin{cmd}
+--linkset 1,2,3=1 4,5,6,7=2
+\end{cmd}
+
+
+The default topology is planar; use the \textit{complete} option to create a complete topology linkset :
+\begin{cmd}
+--linkset complete 1,2,3,4,5,6,7=1
+\end{cmd}
+
+With a complete topology, you can prescribe a threshold to avoid the creation of too many links (threshold = 100) :
+\begin{cmd}
+--linkset complete=100 1,2,3,4,5,6,7=1
+\end{cmd}
+
+A range or value list can be used to create multiple linksets :
+\begin{cmd}
+--linkset 4,5,6,7=10 1,2,3=100:50:200
+or
+--linkset 4,5,6,7=10 1,2,3=100,150,200
+\end{cmd}
+Result : the command above created 3 linksets \textit{cost\_1\_2\_3-100.0 cost\_1\_2\_3-150.0 cost\_1\_2\_3-200.0}
+where raster codes 1,2 and 3 were 100, 150 and 200 respectively.
+
+The \textit{--linkset} command does not accept several ranges.
+
+After \textit{--linkset} command execution, ensuing linkset selection is set to created linksets. 
+
+\subsection{--uselinkset : select linkset}
+\begin{verbatim}
+--uselinkset linkset1,..,linksetn
+\end{verbatim}
+Selects linksets to be used in following commands.\\
+The linkset name is case sensitive and must not contain blank spaces.\\
+By default, all linksets are selected.
+
+\subsection{--graph : create graph}
+\begin{verbatim}
+--graph [nointra] [threshold=min:inc:max]
+\end{verbatim}
+Creates a graph from selected linksets and saves the project unless \textit{-nosave} option is used. 
+Currently, this command does not permit the Minimum Spanning Tree option.
+
+Without set parameters, the command will create one graph without a threshold for each selected linkset :
+\begin{cmd}
+--graph
+\end{cmd}
+The graph name will be the concatenation of \textit{comp\_} and linkset name.
+
+If a unique value threshold is specified, the command will create one graph with the given threshold for each selected linkset :
+\begin{cmd}
+--graph threshold=100
+\end{cmd}
+The graph name will be the concatenation of \textit{thresh\_100.0\_} and the linkset name.
+
+If the threshold parameter is defined with a value list or a range, it will create a thresholded graph for each linkset and each threshold :
+\begin{cmd}
+--graph threshold=1000:100:1500
+or
+--graph threshold=1000,1100,1200,1300,1400,1500
+\end{cmd}
+Result : this command created 6 graphs for each selected linkset.
+
+The \textit{nointra} option disables intra-patch distances for this graph.
+
+After \textit{--graph} command execution, ensuing graph selection is set to the created graphs.
+
+\subsection{--usegraph : select graph}
+\begin{verbatim}
+--usegraph graph1,..,graphn
+\end{verbatim}
+Selects graphs to be used in following commands.\\
+The graph name is case sensitive and must not contain blank spaces.\\
+By default, all graphs are selected.
+
+
+\section{Calculate metric}
+
+\subsection{--gmetric : calculate global metric}
+\begin{verbatim}
+--gmetric global_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
+\end{verbatim}
+Calculates a given global metric on each selected graph. 
+The metric's name is the short name as shown in \textit{--metrics} command.
+If the metric requires parameters, they can be specified in any order.
+Results are stored in a text file in the project folder. The file name corresponds to the metric short name.
+
+To calculate the NC metric on selected graphs :
+\begin{cmd}
+--gmetric NC
+\end{cmd}
+Results are stored in the file NC.txt in the project folder :
+\begin{cmd}
+Graph                NC
+2000m-3500cost       25.0
+2000m-3500cost_comp  24.0
+2000m_euclid         9.0
+2000m_euclid_comp    9.0
+\end{cmd}
+
+For metrics requiring parameters, you can test several sets of parameters in one command. 
+The following command executes 6 PC metrics for each graph with the parameter d equal to 1000,1500 or 2000 and beta equal to 0 or 1 :
+\begin{cmd}
+--gmetric PC d=1000:500:2000 p=0.05 beta=0,1
+\end{cmd}
+Results are stored in file the PC.txt :
+\begin{cmd}
+Graph               d     	p   	beta	PC
+2000m-3500cost      1000.0	0.05	0.0	2.108166945899072E-15
+2000m-3500cost      1500.0	0.05	0.0	2.4839095790785042E-15
+2000m-3500cost      2000.0	0.05	0.0	2.866220685546806E-15
+2000m-3500cost      1000.0	0.05	1.0	1.317091007462398E-6
+2000m-3500cost      1500.0	0.05	1.0	1.4758311225154786E-6
+2000m-3500cost      2000.0	0.05	1.0	1.5884005111333579E-6
+2000m-3500cost_comp 1000.0	0.05	0.0	2.1106833149811817E-15
+2000m-3500cost_comp 1500.0	0.05	0.0	2.493027588606987E-15
+2000m-3500cost_comp 2000.0	0.05	0.0	2.887027144684246E-15
+2000m-3500cost_comp 1000.0	0.05	1.0	1.3171878007185563E-6
+2000m-3500cost_comp 1500.0	0.05	1.0	1.476224502635306E-6
+2000m-3500cost_comp 2000.0	0.05	1.0	1.5892024206564504E-6
+2000m_euclid        1000.0	0.05	0.0	2.8238137481213476E-15
+2000m_euclid        1500.0	0.05	0.0	3.516516320195261E-15
+2000m_euclid        2000.0	0.05	0.0	4.285009196943927E-15
+2000m_euclid        1000.0	0.05	1.0	1.7079340030649911E-6
+2000m_euclid        1500.0	0.05	1.0	1.8176869551880345E-6
+2000m_euclid        2000.0	0.05	1.0	1.8976284261240914E-6
+2000m_euclid_comp   1000.0	0.05	0.0	2.867215798466552E-15
+2000m_euclid_comp   1500.0	0.05	0.0	3.581685718161269E-15
+2000m_euclid_comp   2000.0	0.05	0.0	4.374805768414666E-15
+2000m_euclid_comp   1000.0	0.05	1.0	1.7172345329380555E-6
+2000m_euclid_comp   1500.0	0.05	1.0	1.8277346595840518E-6
+2000m_euclid_comp   2000.0	0.05	1.0	1.9080569002930505E-6
+\end{cmd}
+
+If the \textit{maxcost} parameter is defined, paths greater than \textit{maxcost} are not calculated. It can reduce the time execution for path-based metric but results may be inaccurate. 
+
+\subsection{--cmetric : calculate component metric}
+\begin{verbatim}
+--cmetric comp_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
+\end{verbatim}
+Calculates a given global metric on each component on each selected graph.
+The result is saved in the project unless \textit{-nosave} option is used. The \textit{-nosave} option is useful only with the \textit{--model} command.
+
+Whith metrics requiring parameters, you can test several sets of parameters in one command.
+\begin{cmd}
+--cmetric PC d=1000:500:2000 p=0.05 beta=0,1
+\end{cmd}
+Six PC are calculated for each component of each selected graph :
+\begin{itemize}
+ \item PC\_d1000\_p0.05\_beta0
+ \item PC\_d1500\_p0.05\_beta0
+ \item PC\_d2000\_p0.05\_beta0
+ \item PC\_d1000\_p0.05\_beta1
+ \item PC\_d1500\_p0.05\_beta1
+ \item PC\_d2000\_p0.05\_beta1
+\end{itemize}
+
+
+If the \textit{maxcost} parameter is defined, paths greater than \textit{maxcost} are not calculated. It can reduce the time execution for the path-based metric but the result may be inaccurate. 
+
+\subsection{--lmetric : calculate local metric}
+\begin{verbatim}
+--lmetric local_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]] 
+\end{verbatim}
+Calculates a given local metric on each selected graph.
+The result is saved in the project unless the \textit{-nosave} option is used. The \textit{-nosave} option is useful only with the \textit{--model} command.
+
+With metrics requiring parameters, you can test several sets of parameters in one command.
+\begin{cmd}
+--lmetric F d=1000:500:2000 p=0.05 beta=0,1
+\end{cmd}
+Six F metrics are calculated for each selected graph :
+\begin{itemize}
+ \item F\_d1000\_p0.05\_beta0
+ \item F\_d1500\_p0.05\_beta0
+ \item F\_d2000\_p0.05\_beta0
+ \item F\_d1000\_p0.05\_beta1
+ \item F\_d1500\_p0.05\_beta1
+ \item F\_d2000\_p0.05\_beta1
+\end{itemize}
+
+If the \textit{maxcost} parameter is defined, paths greater than \textit{maxcost} are not calculated. It can reduce the time execution for the path-based metric but the result may be inaccurate.
+
+\section{SDM}
+\subsection{--pointset : import pointset}
+\begin{verbatim}
+--pointset pointset.shp
+\end{verbatim}
+Creates a new pointset from the shapefile parameter for each selected linkset and saves the project unless \textit{-nosave} option is used.
+The pointset name is a concatenation of the shapefile name and the linkset name.
+
+After \textit{--pointset} command execution, pointset selection is set to the created pointsets only.
+
+\subsection{--usepointset : select pointset}
+\begin{verbatim}
+--usepointset ps1,..,psn
+\end{verbatim}
+Selects pointsets to be used in the following \textit{--model} command.
+By default, all pointsets are selected.
+
+\subsection{--model : calculate SDM}
+\begin{verbatim}
+--model variable distW=min:inc:maxcost
+\end{verbatim}
+Calculates SDM on each metric existing in all selected graphs for the binary pointset \textit{variable}.
+The \textit{variable} must exist in all selected pointsets.
+For each graph, the command search for a pointset which have the same linkset as the graph. If none exists, it will throw an error, if several exist, it will use any.
+The parameter \textit{distW} defines the distance weighting between patch and point with probability 0.05.
+\begin{cmd}
+--model PRESENCE distW=1000,2000
+\end{cmd}
+The result is stored in the file model-PRESENCE-dW1000,2000.txt in the project folder :
+\begin{cmd}[tabsize=3]
+Graph           Metric                DistWeight R2        AIC       Coef
+2000m-3500cost  BC_d3500_p0.05_beta1  1000.00	0.229898	56.0689	3.63230e-07
+2000m-3500cost  BC_d3500_p0.05_beta1  2000.00	0.134672	62.7547	4.89398e-08
+2000m-3500cost  F_d3500_p0.05_beta1   1000.00	0.522162	35.5490	0.00155784
+2000m-3500cost  F_d3500_p0.05_beta1   2000.00	0.266793	53.4785	0.000145906
+2000m-3500cost  d_PC                  1000.00	0.296785	51.3727	471.384
+2000m-3500cost  d_PC                  2000.00	0.292047	51.7054	460.552
+\end{cmd}
+
+\section{Adding/Removal}
+\subsection{--delta}
+\begin{verbatim}
+--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link 
+  [sel=id1,id2,...,idn]
+\end{verbatim}
+
+Calculates global metric in delta mode on patches or links depending on \textit{obj} parameter for each selected graph. 
+If the \textit{sel} parameter is defined, it calculates only for elements listed in \textit{sel}.
+Results are stored in a text file for each graph in the project folder. The file name is the concatenation of 'delta-' + metric short name + graph name. 
+
+To execute the NC metric in delta mode for each patch :
+\begin{cmd}
+--delta NC obj=patch
+\end{cmd}
+
+To execute the PC metric in delta mode for only patch id 2 and 3 :
+\begin{cmd}
+--delta PC d=1000 p=0.05 beta=1 obj=patch sel=2,3
+\end{cmd}
+Results are stored in one file for each graph. One sample :
+\begin{cmd}
+Id    d_PC
+Init  1.3170910074623971E-5
+2     2.68908916812349E-3
+3     1.738640713802898E-4
+\end{cmd}
+Init corresponds to the initial PC value, without removing element. Following values correspond to the relative loss of the metric value when removing the element from the graph.
+Removing the patch with id equal to 2, the PC decreases by 0.269\%
+
+Ranges are not allowed in delta metric parameters.
+
+If the \textit{maxcost} parameter is defined, paths greater than \textit{maxcost} are not calculated. It can reduce the time execution for the path-based metric but the result may be inaccurate.
+
+\subsection{--gremove}
+\begin{verbatim}
+--gremove global_metric_name [maxcost=valcost] [param1=val ...] 
+  [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]
+\end{verbatim}
+
+Removes listed patches and/or links on each selected graph and calculates the given global metric.
+The list of ids can be given on the command line or in a text file.
+
+The following command computes the NC metric on each selected graph after removing patches with id 2 and 3 :
+\begin{cmd}
+--gremove NC patch=2,3
+\end{cmd}
+Result : 
+\begin{cmd}
+Global indice NC
+Graph 2000m-3500cost
+Remove 2 patches and 5 links
+NC : 25.0
+
+Graph 2000m-3500cost_comp
+Remove 2 patches and 8 links
+NC : 24.0
+
+Graph 2000m_euclid
+Remove 2 patches and 7 links
+NC : 9.0
+
+Graph 2000m_euclid_comp
+Remove 2 patches and 9 links
+NC : 9.0
+\end{cmd}
+Results are only displayed.
+For each graph, graphab show the number of patches and links truly removed. The number of patches does not vary, but the number of links can vary since links connected to a removed patch are also removed. If an id does not exist, it will be ignored.
+
+The same command can be written as :
+\begin{cmd}
+--gremove NC fpatch=patch.txt
+\end{cmd}
+With the file patch.txt in the current directory, containing one id by line :
+\begin{cmd}
+2
+3
+\end{cmd}
+
+Ranges are not allowed in metric parameters.
+
+If the \textit{maxcost} parameter is defined, paths greater than \textit{maxcost} are not calculated. It can reduce the time execution for the path-based metric but the result may be inaccurate.
+
+\subsection{--gtest}
+\begin{verbatim}
+--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link 
+  sel=id1,id2,...,idn
+\end{verbatim}
+
+Not yet documented
+
+Ranges are not allowed in metric parameters.
+
+If the \textit{maxcost} parameter is defined, paths greater than \textit{maxcost} are not calculated. It can reduce the time execution for the path-based metric but the result may be inaccurate.
+
+\subsection{--ltest}
+\begin{verbatim}
+--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link 
+  sel=id1,id2,...,idn
+\end{verbatim}
+
+Not yet documented
+
+Ranges are not allowed in metric parameters.
+
+If the \textit{maxcost} parameter is defined, paths greater than \textit{maxcost} are not calculated. It can reduce the time execution for the path-based metric but the result may be inaccurate.
+
+\subsection{--addpatch : adding patches}
+\begin{verbatim}
+--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] 
+  [multi=npatch,size]]|[pointfile=file.shp [capa=capa_field]]
+\end{verbatim}
+
+This command tests successively the adding of a new patch from a predefined set of points and retains the patch which maximizes the given global metric.
+This process is repeated as many times as the \textit{npatch} parameter and for each selected graph. 
+Results are stored in a project subdirectory created for each graph.
+
+For each testing of a new patch, the graph is recomputed including the new patch and the links connecting this patch to the others, then the given metric is calculated on this new graph.
+When all the possible patches was tested, the one maximizing the metric is added to the project.
+This process is iterated until having \textit{npatch} new patches in the project.
+
+The created patches have a size of one pixel, if the corresponding land cover pixel is already habitat or is outside of the study area, the patch is skipped.
+Patches location to be tested can be given through a regular grid or a set of points from a shapefile.
+
+\subsubsection{Point set test}
+\begin{verbatim}
+--addpatch npatch global_metric_name [param1=val ...] pointfile=file.shp [capa=capa_field]
+\end{verbatim}
+
+For each point of the shapefile, the program tests the addition of a patch on the pixel covering the point, if the pixel is not NoData or already in the habitat class.
+
+The \textit{capa} parameter defines an attribute of the shapefile containing a capacity value for each tested patch.
+If the \textit{capa} parameter is not specified, the capacity of new patches will be 1.
+
+
+\subsubsection{Regular grid test}
+\begin{verbatim}
+--addpatch npatch global_metric_name [param1=val ...] gridres=min:inc:max [capa=capa_file] 
+  [multi=nbpatch,size]
+\end{verbatim}
+Tests patches addition on a regular grid. The size of the grid cell is set by \textit{gridres}.
+
+The \textit{capa} parameter is used to define a raster file (TIFF or AsciiGrid format) giving a value of potential capacity at any point of the study area.
+If the capacity is zero, no patch will be tested at this position. The raster file can have a different resolution than the grid or the landscape map.
+If the \textit{capa} parameter is not specified, the capacity of new patches will be 1.
+
+The \textit{multi} parameter is used to test the simultaneous addition of \textit{nbpatch} patches, in a neighborhood of radius \textit{size}*\textit{gridres}.
+
+\subsubsection{Examples}
+
+\begin{cmd}
+--addpatch 5 IIC gridres=100
+\end{cmd}
+
+Adds 5 patches maximizing metric IIC, testing the addition of a patch every 100 meters.
+Results are stored in \textit{addpatch\_n5\_graph\_IIC\_res100\_multi1\_1} subdirectory :
+\begin{itemize}
+ \item addpatch\_graph\_IIC.shp : contains the added patches and the metric value 
+ \item addpatch\_graph\_IIC.txt : contains for each added patch the metric value 
+ \item links\_graph\_IIC.shp : contains the linkset of the final graph
+ \item topo-links\_graph\_IIC.shp : contains the topological linkset of the final graph
+ \item detail/ : subdirectory containing the detail of each test for each step
+ \item detal/detail\_i.shp : tested points set for the addition of the i-th patch 
+\end{itemize}
+
+
+The command line below is equivalent to the previous one but will run at 3 different resolutions (100 200 500). The results will be stored in three folders, one for each resolution.
+\begin{cmd}
+--addpatch 5 IIC gridres=100,200,500
+\end{cmd}
+
+Another example with a shapefile points set :
+\begin{cmd}
+--addpatch 5 IIC pointfile=testpoint.shp
+\end{cmd}
+Results are stored in \textit{addpatch\_n5\_graph\_IIC\_shptestpoint.shp} subfolder.
+
+\subsubsection{Limitations}
+The \textit{--addpatch} command only works with graphs from complete topology linkset.
+
+This command changes the number of patches in the project; executing commands after it can lead to inconsistencies.
+Therefore, it is not recommended to add commands after the command \textit{--addpatch}.
+
+
+Ranges are not allowed in metric parameters.
+
+
+\section{Options}
+\subsection{-nosave}
+This option prevents saving a project. It is useful when you don't want commands to modify the project, 
+like \textit{--linkset}, \textit{--graph}, \textit{--pointset}, \textit{--cmetric} and \textit{--lmetric}.
+
+\subsection{-proc}
+Defines the number of processors (or cores) used by Graphab.
+By default, CLI mode uses the value defined in the preferences window.
+See the paralellism section for more details.
+
+
+\chapter{Command examples}
+All the following examples can be tested with the sample project available on Graphab website. 
+
+\section{Display project}
+First, display project elements :
+\begin{cmd}
+java -jar graphab-1.2.jar --project sample_project/Project.xml --show
+\end{cmd}
+Result :
+\begin{cmd}
+===== Link sets =====
+Complete_Euclid
+Complete_cost
+Planar_Euclid
+Planar_cost
+
+===== Graphs =====
+2000m-3500cost
+2000m-3500cost_comp
+2000m_euclid
+2000m_euclid_comp
+
+===== Point sets =====
+Presence_absence
+\end{cmd}
+
+\section{Batch metric parameter}
+Calculates PC metric on the graph \textit{2000m-3500cost} varying \textit{d} parameter from 1000 to 5000 by step of 1000 :
+\begin{cmd}
+java -jar graphab-1.2.jar --project sample_project/Project.xml 
+  --usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
+\end{cmd}
+Results are written in the file PC.txt in the project folder :
+\begin{cmd}
+Graph	d	p	beta	PC
+2000m-3500cost	1000.0	0.05	1.0	1.3170910074623973E-6
+2000m-3500cost	2000.0	0.05	1.0	1.5884005111333572E-6
+2000m-3500cost	3000.0	0.05	1.0	1.7406772135728036E-6
+2000m-3500cost	4000.0	0.05	1.0	1.8425812214129719E-6
+2000m-3500cost	5000.0	0.05	1.0	1.918332024845314E-6
+\end{cmd}
+
+\section{Batch thresholded graph and global metric}
+Creates 6 thresholded graphs from the linkset \textit{Complete\_cost} and computes the IIC metric :
+\begin{cmd}
+java -jar graphab-1.2.jar --project sample_project/Project.xml --uselinkset Complete_cost
+  --graph 2000:100:2500 --gmetric IIC
+\end{cmd}
+Results are written in the file IIC.txt in the project folder :
+\begin{cmd}
+Graph	IIC
+thresh_2000.0_Complete_cost	1.3740319506984741E-6
+thresh_2100.0_Complete_cost	1.3742497768764619E-6
+thresh_2200.0_Complete_cost	1.3749834046381206E-6
+thresh_2300.0_Complete_cost	1.3754601882078134E-6
+thresh_2400.0_Complete_cost	1.3857662689627643E-6
+thresh_2500.0_Complete_cost	1.4197576370824857E-6
+\end{cmd}
+
+\section{Complete SDM sequence}
+Calculates a graph from the linkset Planar\_Euclid, calculates 2 metrics (Dg and F) on the created graph, adds pointset on Planar\_Euclid linkset 
+and calculates SDM for the two metrics versus the PRESENCE variable, without modifying the project.
+\begin{cmd}
+java -jar graphab-1.2.jar --project sample_project/Project.xml -nosave 
+  --uselinkset Planar_Euclid 
+  --graph 
+  --lmetric Dg --lmetric F d=1000 p=0.05 beta=1 
+  --pointset sample_project/Exo-Presence_absence.shp 
+  --model PRESENCE distW=1000
+\end{cmd}
+Results are stored in the file model-PRESENCE-dW1000.txt in the project folder :
+\begin{cmd}
+Graph               Metric              DistWeight R2        AIC      Coef
+comp_Planar_Euclid  Dg                  1000.00    0.999744  2.01795  24.8994
+comp_Planar_Euclid  F_d1000_p0.05_beta1 1000.00    0.108353  64.6026  2.38405e-05
+\end{cmd}
+
+\chapter{Performance tuning}
+\section{Parallelism to speed up execution}
+\subsection{One computer : threads}
+If your computer has more than one core (most of them), you can take advantage of parallelization. 
+Most Graphab commands are parallelized. You can speed up command execution by defining the number
+of cores (or processors) used by Graphab with the option \textit{-proc} after the project command :
+\begin{cmd}
+java -jar graphab-1.2.jar --project path2myproject/myproject.xml -proc 8 ...
+\end{cmd}
+By default, CLI mode uses the number of processors defined in the preferences window of the GUI.
+\subsection{Computer cluster : mpi}
+Graphab can be run on computer clusters wich support Java for OpenMPI.
+\begin{cmd}
+mpirun java -jar graphab-1.2.jar --mpi --project path2myproject/myproject.xml ...
+\end{cmd}
+Only some commands can be used in mpi environments : --gmetric, --cmetric, --lmetric, --delta, --addpatch
+\section{Memory management}
+In CLI mode, the memory configuration defined in the preferences window cannot be used.
+By default, the amount of memory available for Graphab is system dependent. It can vary from 128 Mb to several Gb.
+In most cases, Graphab will run normally. But if you have a large project, some commands would be slow or even crash due to memory limitation.
+If Graphab execution terminates with OutOfMemoryError or GC overhead, you need to increase memory allocated to Graphab.
+
+To define manually the maximum amount of memory allocated to Graphab, use Java option -Xmx :
+\begin{cmd}
+java -Xmx2g -jar graphab-1.2.jar ... # 2Gb allocated
+java -Xmx1500m -jar graphab-1.2.jar ... # 1500 Mb -> 1.5Gb allocated
+\end{cmd}
+If you cannot allocate more than 1Gb or 1.5G and your computer has more memory available, you have probably a
+ 32-bit version of Java, which is limited to less than 2Gb of memory.
+Check your Java version :
+\begin{cmd}
+java -version
+\end{cmd}
+If it is a 32-bit version, install a 64-bit Java version to handle all your computer memory.
+
+\end{document}          

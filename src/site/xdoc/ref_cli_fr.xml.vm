@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<document>
+    <body>
+
+        <section name="Manuel de référence - Ligne de commande">
+            <iframe src="reference_cli-fr.html" width="100%" height="1000"></iframe>
+        </section>
+    </body>
+</document>
