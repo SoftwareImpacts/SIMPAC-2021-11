@@ -1,7 +1,13 @@
 ## Changelog
 
-##### version 1.3.31 (30/10/2015)
+##### version 1.3.32 (15/12/2015)
+- UI enable add patch menu 
+- CLI : add fsel parameter for --ltest and --gtest command
+- UI metric interpolation : add sum option for multiple connections
+- Metric : include CF and BCCirc metrics
+- CLI : move to advanced mode the commands --circuit, --landmod, --gtest, --ltest and --linkset circuit
 
+##### version 1.3.31 (30/10/2015)
 - CLI : --landmod command uses too much threads in threaded mode
 - UI linkset creation : "Remove crossing patch" is now unchecked by default
 

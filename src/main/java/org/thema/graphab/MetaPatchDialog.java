@@ -103,48 +103,49 @@ public class MetaPatchDialog extends javax.swing.JDialog {
         jLabel2 = new javax.swing.JLabel();
         minCapaSpinner = new javax.swing.JSpinner();
 
-        setTitle("Meta patch");
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle"); // NOI18N
+        setTitle(bundle.getString("MetaPatchDialog.title")); // NOI18N
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 closeDialog(evt);
             }
         });
 
-        okButton.setText("OK");
+        okButton.setText(bundle.getString("MetaPatchDialog.okButton.text")); // NOI18N
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okButtonActionPerformed(evt);
             }
         });
 
-        cancelButton.setText("Cancel");
+        cancelButton.setText(bundle.getString("MetaPatchDialog.cancelButton.text")); // NOI18N
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
 
-        jLabel1.setText("Project name");
+        jLabel1.setText(bundle.getString("MetaPatchDialog.jLabel1.text")); // NOI18N
 
-        prjNameTextField.setText("MetaPatchPrj");
+        prjNameTextField.setText(bundle.getString("MetaPatchDialog.prjNameTextField.text")); // NOI18N
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Aggregate capacity"));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("MetaPatchDialog.jPanel1.border.title"))); // NOI18N
 
         buttonGroup1.add(sumRadioButton);
         sumRadioButton.setSelected(true);
-        sumRadioButton.setText("Sum");
+        sumRadioButton.setText(bundle.getString("MetaPatchDialog.sumRadioButton.text")); // NOI18N
 
         buttonGroup1.add(weightRadioButton);
-        weightRadioButton.setText("Weighted distance");
+        weightRadioButton.setText(bundle.getString("MetaPatchDialog.weightRadioButton.text")); // NOI18N
 
-        jLabel5.setText("d");
+        jLabel5.setText(bundle.getString("MetaPatchDialog.jLabel5.text")); // NOI18N
 
         distSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1000.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, weightRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), distSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        jLabel6.setText("p");
+        jLabel6.setText(bundle.getString("MetaPatchDialog.jLabel6.text")); // NOI18N
 
         probaSpinner.setModel(new javax.swing.SpinnerNumberModel(0.05d, 0.0d, 1.0d, 0.01d));
 
@@ -187,9 +188,9 @@ public class MetaPatchDialog extends javax.swing.JDialog {
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jLabel3.setText("Graph");
+        jLabel3.setText(bundle.getString("MetaPatchDialog.jLabel3.text")); // NOI18N
 
-        jLabel2.setText("Min. capacity");
+        jLabel2.setText(bundle.getString("MetaPatchDialog.jLabel2.text")); // NOI18N
 
         minCapaSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(0.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
 

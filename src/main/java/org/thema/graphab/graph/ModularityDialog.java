@@ -95,17 +95,18 @@ public class ModularityDialog extends javax.swing.JDialog {
         graphButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Modularity");
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/graph/Bundle"); // NOI18N
+        setTitle(bundle.getString("ModularityDialog.title")); // NOI18N
         setAlwaysOnTop(true);
 
-        closeButton.setText("Close");
+        closeButton.setText(bundle.getString("ModularityDialog.closeButton.text")); // NOI18N
         closeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 closeButtonActionPerformed(evt);
             }
         });
 
-        jLabel1.setText("Nb clusters");
+        jLabel1.setText(bundle.getString("ModularityDialog.jLabel1.text")); // NOI18N
 
         nbSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
         nbSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -114,24 +115,24 @@ public class ModularityDialog extends javax.swing.JDialog {
             }
         });
 
-        showButton.setText("Show");
+        showButton.setText(bundle.getString("ModularityDialog.showButton.text")); // NOI18N
         showButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 showButtonActionPerformed(evt);
             }
         });
 
-        modLabel.setText("Modularity");
+        modLabel.setText(bundle.getString("ModularityDialog.modLabel.text")); // NOI18N
 
         optimCheckBox.setSelected(true);
-        optimCheckBox.setText("Optimize");
+        optimCheckBox.setText(bundle.getString("ModularityDialog.optimCheckBox.text")); // NOI18N
 
-        optimLabel.setText("Modularity");
+        optimLabel.setText(bundle.getString("ModularityDialog.optimLabel.text")); // NOI18N
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, optimCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), optimLabel, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        graphButton.setText("Graph");
+        graphButton.setText(bundle.getString("ModularityDialog.graphButton.text")); // NOI18N
         graphButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 graphButtonActionPerformed(evt);

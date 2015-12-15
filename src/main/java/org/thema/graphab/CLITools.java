@@ -103,10 +103,9 @@ public class CLITools {
                     "java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]\n" +
                     "Commands list :\n" +
                     "--show\n" + 
-                    "--linkset distance=euclid|cost|circuit [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]\n" +
+                    "--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
                     "--corridor maxcost=valcost\n" +
-                    "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "--graph [nointra] [threshold=[{]min:inc:max[}]]\n" +
                     "--usegraph graph1,...,graphn\n" +
                     "--pointset pointset.shp\n" +
@@ -116,17 +115,23 @@ public class CLITools {
                     "--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--model variable distW=min:inc:max\n" +
-                    "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
-                    "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
-                    "--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn\n" +
+                    "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +                    
                     "--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[patchfile=file.shp [capa=capa_field]]\n" +
                     "--rempatch npatch global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--remlink nlink global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "--metapatch [mincapa=value]\n" +
-                    "--landmod zone=filezones.shp id=fieldname code=fieldname [novoronoi]\n" +
                     "--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]\n" +
                     "\nmin:inc:max -> val1,val2,val3...");
+            return;
+        }
+        if(argArray[0].equals("--advanced")) {
+            System.out.println("Advanced commands :\n" +
+                    "--linkset distance=circuit [name=linkname] [complete[=dmax]] [slope=coef] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]\n" +
+                    "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n" +
+                    "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
+                    "--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
+                    "--landmod zone=filezones.shp id=fieldname code=fieldname [novoronoi]\n");
             return;
         }
         
@@ -812,9 +817,19 @@ public class CLITools {
         boolean patch = args.remove(0).split("=")[1].equals("patch");
 
         List lstIds = new ArrayList();
-        String [] toks = args.remove(0).split("=")[1].split(",");
-        for(String tok : toks) {
-            lstIds.add(patch ? Integer.parseInt(tok) : tok);
+        if(args.get(0).startsWith("sel=")) {
+            String [] toks = args.remove(0).split("=")[1].split(",");
+            for(String tok : toks) {
+                lstIds.add(patch ? Integer.parseInt(tok) : tok);
+            }
+        } else if(args.get(0).startsWith("fsel=")) {
+            File f = new File(args.remove(0).split("=")[1]);
+            List<String> lst = readFile(f);
+            for(String id : lst) {
+                lstIds.add(patch ? Integer.parseInt(id) : id);
+            }
+        } else {
+            throw new IllegalArgumentException("sel or fsel parameter is missing");
         }
 
         GlobalMetric indice = Project.getGlobalMetric(indName);
@@ -947,13 +962,19 @@ public class CLITools {
         boolean patch = args.remove(0).split("=")[1].equals("patch");
 
         List lstIds = new ArrayList();
-        String [] toks = args.remove(0).split("=")[1].split(",");
-        for(String tok : toks) {
-            if (patch) {
-                lstIds.add(Integer.parseInt(tok));
-            } else {
-                lstIds.add(tok);
+        if(args.get(0).startsWith("sel=")) {
+            String [] toks = args.remove(0).split("=")[1].split(",");
+            for(String tok : toks) {
+                lstIds.add(patch ? Integer.parseInt(tok) : tok);
             }
+        } else if(args.get(0).startsWith("fsel=")) {
+            File f = new File(args.remove(0).split("=")[1]);
+            List<String> lst = readFile(f);
+            for(String id : lst) {
+                lstIds.add(patch ? Integer.parseInt(id) : id);
+            }
+        } else {
+            throw new IllegalArgumentException("sel or fsel parameter is missing");
         }
 
         LocalMetric indice = Project.getLocalMetric(indName);

@@ -179,20 +179,20 @@ public class AddPatchCommand {
         
         Project project = gen.getProject();
 
-        mon.setMaximum(nbPatch);
+        mon.setMaximum(nbPatch*100);
 
         List<DefaultFeature> addedPatches = new ArrayList<>();
             
         double currentInd = new GlobalMetricLauncher(metric).calcMetric(gen, true, null)[0];
         metricValues.put(0, currentInd);
-        mon.incProgress(1);
+
         Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, "Initial " + metric.getShortName() + " : " + currentInd); 
         
         Geometry bestGeom = null;
         double capa = 0;
         
         for(int i = 0; i < nbPatch; i++) {
-            AddPatchTask task = new AddPatchTask(bestGeom, capa, gen, metric, testGeoms, mon.getSubProgress(1));
+            AddPatchTask task = new AddPatchTask(bestGeom, capa, gen, metric, testGeoms, mon.getSubProgress(100));
             ExecutorService.execute(task);
             TreeMapList<Double, Geometry> patchIndices = task.getResult();
             

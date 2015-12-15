@@ -71,6 +71,7 @@ import org.thema.drawshape.style.table.FeatureAttributeIterator;
 import org.thema.drawshape.style.table.StrokeRamp;
 import org.thema.graph.shape.GraphGroupLayer;
 import org.thema.graphab.Project.Method;
+import org.thema.graphab.addpatch.AddPatchDialog;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.NewGraphDialog;
 import org.thema.graphab.links.LinksetPanel;
@@ -160,6 +161,7 @@ public class MainFrame extends javax.swing.JFrame {
         analysisMenu = new javax.swing.JMenu();
         estimMenuItem = new javax.swing.JMenuItem();
         interpMetricMenuItem = new javax.swing.JMenuItem();
+        addPatchMenuItem = new javax.swing.JMenuItem();
         helpMenu = new javax.swing.JMenu();
         aboutMenuItem = new javax.swing.JMenuItem();
 
@@ -377,6 +379,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         analysisMenu.add(interpMetricMenuItem);
+
+        addPatchMenuItem.setText(bundle.getString("MainFrame.addPatchMenuItem.text")); // NOI18N
+        addPatchMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addPatchMenuItemActionPerformed(evt);
+            }
+        });
+        analysisMenu.add(addPatchMenuItem);
 
         jMenuBar.add(analysisMenu);
 
@@ -1057,6 +1067,10 @@ public class MainFrame extends javax.swing.JFrame {
         
     }//GEN-LAST:event_projectRemPatchMenuItemActionPerformed
 
+    private void addPatchMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPatchMenuItemActionPerformed
+        new AddPatchDialog(this, project).setVisible(true);
+    }//GEN-LAST:event_addPatchMenuItemActionPerformed
+
     /**
      * Changes the current view, to show the result of a local or delta metric.
      * 
@@ -1299,6 +1313,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem aboutMenuItem;
+    private javax.swing.JMenuItem addPatchMenuItem;
     private javax.swing.JMenuItem addPointDataMenuItem;
     private javax.swing.JMenuItem addPointMenuItem;
     private javax.swing.JMenu analysisMenu;

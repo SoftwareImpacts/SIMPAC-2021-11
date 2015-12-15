@@ -127,8 +127,10 @@ import org.thema.graphab.metric.global.NCMetric;
 import org.thema.graphab.metric.global.PCMetric;
 import org.thema.graphab.metric.global.SLCMetric;
 import org.thema.graphab.metric.global.SumLocal2GlobalMetric;
+import org.thema.graphab.metric.local.BCCircuitLocalMetric;
 import org.thema.graphab.metric.local.BCLocalMetric;
 import org.thema.graphab.metric.local.CCLocalMetric;
+import org.thema.graphab.metric.local.CFLocalMetric;
 import org.thema.graphab.metric.local.ClosenessLocalMetric;
 import org.thema.graphab.metric.local.ConCorrLocalMetric;
 import org.thema.graphab.metric.local.DgLocalMetric;
@@ -2418,7 +2420,7 @@ public final class Project {
                 new DeltaPCMetric()));
         LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new FPCLocalMetric(),
                 new DgLocalMetric(), new CCLocalMetric(), new ClosenessLocalMetric(), new ConCorrLocalMetric(),
-                new EccentricityLocalMetric()));
+                new EccentricityLocalMetric(), new BCCircuitLocalMetric(), new CFLocalMetric()));
     }
     
     /**

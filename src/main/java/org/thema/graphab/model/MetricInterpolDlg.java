@@ -85,6 +85,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
     private void initComponents() {
         bindingGroup = new org.jdesktop.beansbinding.BindingGroup();
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
@@ -98,6 +99,8 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
         multiAttachCheckBox = new javax.swing.JCheckBox();
         dMaxSpinner = new javax.swing.JSpinner();
         jLabel3 = new javax.swing.JLabel();
+        sumRadioButton = new javax.swing.JRadioButton();
+        avgRadioButton = new javax.swing.JRadioButton();
         jLabel9 = new javax.swing.JLabel();
         graphComboBox = new javax.swing.JComboBox();
         varComboBox = new javax.swing.JComboBox();
@@ -168,6 +171,19 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, multiAttachCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel3, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
+        buttonGroup1.add(sumRadioButton);
+        sumRadioButton.setSelected(true);
+        sumRadioButton.setText(bundle.getString("MetricInterpolDlg.sumRadioButton.text")); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, multiAttachCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), sumRadioButton, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        buttonGroup1.add(avgRadioButton);
+        avgRadioButton.setText(bundle.getString("MetricInterpolDlg.avgRadioButton.text")); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, multiAttachCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), avgRadioButton, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -175,13 +191,6 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
             .add(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(multiAttachCheckBox)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(jLabel3)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 102, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(jLabel5)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -197,7 +206,20 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                         .add(jLabel7)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(pSpinner)
-                        .add(43, 43, 43))))
+                        .add(43, 43, 43))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .add(multiAttachCheckBox)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(sumRadioButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(avgRadioButton))
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(jLabel3)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 102, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .addContainerGap())))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -217,7 +239,11 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                     .add(multiAttachCheckBox)
                     .add(dMaxSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel3))
-                .addContainerGap())
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(sumRadioButton)
+                    .add(avgRadioButton))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
 
         jLabel9.setText(bundle.getString("ModelDialog.jLabel9.text")); // NOI18N
@@ -289,7 +315,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                     .add(varComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel2))
                 .add(18, 18, 18)
-                .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(18, 18, 18)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(resolSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -298,7 +324,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel1)
                     .add(rasterNameTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 10, Short.MAX_VALUE)
+                .add(18, 18, 18)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
@@ -321,7 +347,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
                 try {
                     RasterLayer l = DistribModel.interpolate(project, (Double)resolSpinner.getValue(), varComboBox.getSelectedItem().toString(), 
                                         Double.parseDouble(alphaTextField.getText()), ((GraphGenerator)graphComboBox.getSelectedItem()).getLinkset(), 
-                                        multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), true, progressBar);
+                                        multiAttachCheckBox.isSelected(), (Double)dMaxSpinner.getValue(), avgRadioButton.isSelected(), progressBar);
                     progressBar.setNote("Saving");
                     l.setName(rasterNameTextField.getText());
                     l.setRemovable(true);
@@ -380,6 +406,8 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField alphaTextField;
+    private javax.swing.JRadioButton avgRadioButton;
+    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton cancelButton;
     private javax.swing.JSpinner dMaxSpinner;
     private javax.swing.JSpinner dSpinner;
@@ -399,6 +427,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
     private javax.swing.JSpinner pSpinner;
     private javax.swing.JTextField rasterNameTextField;
     private javax.swing.JSpinner resolSpinner;
+    private javax.swing.JRadioButton sumRadioButton;
     private javax.swing.JComboBox varComboBox;
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
