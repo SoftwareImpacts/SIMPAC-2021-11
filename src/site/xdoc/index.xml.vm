@@ -22,6 +22,13 @@
             </subsection>
             <subsection name="Documentation">
                 <p>
+                    User manual :
+                    <ul>
+                        <li>User manual (EN) <a href="manual-en.pdf">[PDF]</a> <a href="doc_en.html">[HTML]</a></li>
+                        <li>Manuel d'utilisation (FR) <a href="manual-fr.pdf">[PDF]</a> <a href="doc_fr.html">[HTML]</a></li>
+                    </ul>
+                </p>
+                <p>
                     Command line interface documentation :
                     <ul>
                         <li>CLI reference manual (english) <a href="reference_cli-en.pdf">[PDF]</a> <a href="ref_cli_en.html">[HTML]</a></li>

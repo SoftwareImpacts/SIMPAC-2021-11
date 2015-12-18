@@ -2381,6 +2381,21 @@ public final class Project {
     }
     
     /**
+     * 
+     * @param metrics a list of metrics
+     * @param shortName the shortname metric to search
+     * @return true if the list contains a metric with this short name
+     */
+    private static boolean containsMetric(List<? extends Metric> metrics, String shortName) {
+        for(Metric ind : metrics) {
+            if(ind.getShortName().equals(shortName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * @param shortName the short name of the global metric
      * @return the global metric given its short name
      * @throws IllegalArgumentException if the metric is not found
@@ -2393,7 +2408,7 @@ public final class Project {
         }
         throw new IllegalArgumentException("Unknown metric " + shortName);
     }
-
+    
     /**
      * @param shortName the short name of the local metric
      * @return the local metric given its short name
@@ -2463,15 +2478,11 @@ public final class Project {
         while (it.hasNext()) {
             Metric metric = it.next();
             if(metric instanceof GlobalMetric) {
-                try {
-                    getGlobalMetric(metric.getShortName());
-                } catch(IllegalArgumentException e) {
+                if(!containsMetric(GLOBAL_METRICS, metric.getShortName())) {
                     GLOBAL_METRICS.add((GlobalMetric)metric);
                 }
             } else if(metric instanceof LocalMetric) {
-                try {
-                    getLocalMetric(metric.getShortName());
-                } catch(IllegalArgumentException e) {
+                if(!containsMetric(LOCAL_METRICS, metric.getShortName())) {
                     LOCAL_METRICS.add((LocalMetric)metric);
                 }
             } else {

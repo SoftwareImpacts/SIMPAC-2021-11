@@ -8,7 +8,7 @@
 
 % Title Page
 \title{Reference Manual\\
-Graphab 1.2\\
+Graphab 1.3\\
 Command Line Interface }
 
 
@@ -30,12 +30,12 @@ First you have to open a terminal window.
 Then, go to the directory of the Graphab program with \textit{cd} command.
 Finally, type the following command to display the Graphab help screen :
 \begin{cmd}
-java -jar graphab-1.2.jar --help
+java -jar graphab-2.0.jar --help
 \end{cmd}
 Result
 \begin{verbatim}
 Usage :
-java -jar graphab.jar --project prjfile.xml [--proc n]
+java -jar graphab.jar --project prjfile.xml
 ...
 ...
 \end{verbatim}
@@ -83,11 +83,11 @@ If a command contains several ranges for different parameters, all combinations 
 
 \subsection{Command execution}
 Graphab can be launched with several commands on one line, except for the \textit{--help} and \textit{--metrics} commands.
-The \textit{--project} command can be used only once and must be the first command. 
-After the \textit{--project} command, all other commands will be executed sequentially with the same order as the command line.
+The \textit{--create} and \textit{--project} commands can be used only once and must be the first command. 
+After one of these commands, all other commands will be executed sequentially with the same order as the command line.
 
 \begin{cmd}
-java -jar graphab-1.2.jar --project prj.xml --graph --gmetric NC  
+java -jar graphab-2.0.jar --project prj.xml --graph --gmetric NC  
 \end{cmd}
 Load a project, then execute the graph command and after that, execute the gmetric command.
 
@@ -98,30 +98,35 @@ Load a project, then execute the graph command and after that, execute the gmetr
 \subsection{--help : display help}
 Command :
 \begin{cmd}
-java -jar graphab-1.2.jar --help
+java -jar graphab-2.0.jar --help
 \end{cmd}
 Result :
 \begin{verbatim}
 Usage :
 java -jar graphab.jar --metrics
-java -jar graphab.jar --project prjfile.xml [-proc n] [-nosave] command1 [command2 ...]
+java -jar graphab.jar [-proc n] --create prjname land.tif habitat=code1,...,coden [nodata=val] [minarea=val] [con8] [simp] [dir=path]
+java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]
 Commands list :
 --show
---linkset [complete[=dmax]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max
+--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]
 --uselinkset linkset1,...,linksetn
---graph [nointra] [threshold=min:inc:max]
+--corridor maxcost=valcost
+--graph [nointra] [threshold=[{]min:inc:max[}]]
 --usegraph graph1,...,graphn
 --pointset pointset.shp
 --usepointset pointset1,...,pointsetn
---gmetric global_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
---cmetric comp_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
---lmetric local_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
+--capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]
+--gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
+--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
+--lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --model variable distW=min:inc:max
---delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn]
---gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...
---ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...
---gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=...
---addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] 
+--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]
+--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[patchfile=file.shp [capa=capa_field]]
+--rempatch npatch global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]
+--remlink nlink global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]
+--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]
+--metapatch [mincapa=value]
+--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]
 
 min:inc:max -> val1,val2,val3...
 \end{verbatim}
@@ -131,15 +136,15 @@ This command lists all available metrics with their short name, description, and
 
 Command :
 \begin{cmd}
-java -jar graphab-1.2.jar --metrics
+java -jar graphab-2.0.jar --metrics
 \end{cmd}
 Result :
 \begin{cmd}
 ===== Global metrics =====
-S#F -  Flux (F)
-       params : d, p, beta
+S#F - Sum Flux (F)
+	params : [d, p, beta]
 PC - Probability of Connectivity (PC)
-       params : d, p, beta
+	params : [d, p, beta]
 IIC - Integral index of connectivity (IIC)
 CCP - Class coincidence probability (CCP)
 MSC - Mean size of the components (MSC)
@@ -149,30 +154,43 @@ GD - Graph diameter (GD)
 H - Harary index (H)
 NC - Number of components (NC)
 dPC - Delta PC decomposed (dPC)
-       params : d, p, beta
+	params : [d, p, beta]
 
 ===== Local metrics =====
 F : Flux (F)
-       params : d, p, beta
+	params : [d, p, beta]
 BC : Betweeness centrality (BC)
-       params : d, p, beta
+	params : [d, p, beta]
 FPC : Flow PC (FPC)
-       params : d, p, beta
+	params : [d, p, beta]
 Dg : Node degree (Dg)
 CC : Clustering Coefficient (CC)
 CCe : Closeness centrality (CCe)
 CCor : Connectivity Correlation (CCor)
 Ec : Eccentricity (Ec)
-
+BCCirc : Betweeness centrality (circuit version) (BCCirc)
+	params : [d, p, beta]
+CF : Current flow (CF)
+	params : [beta]
 \end{cmd}
+
+\subsection{--create : create project}
+This commands creates a new project and loads it.
+\begin{cmd}
+java -jar graphab-2.0.jar --create prjname land.tif habitat=code1,...,coden [nodata=val]
+[minarea=val] [con8] [simp] [dir=path]
+\end{cmd}
+
+The \textit{--create} command can be used only once and must be the first command.
+Les commandes suivantes seront exécutées sur le projet nouvellement créé.
 
 \subsection{--project : load project}
 This command sets the path to the project xml file.
 \begin{cmd}
-java -jar graphab-1.2.jar --project path2myproject/myproject.xml
+java -jar graphab-2.0.jar --project path2myproject/myproject.xml
 \end{cmd}
 This command loads the project myproject contained in the path2myproject folder.
-You cannot create a project in CLI mode, you must to create it beforehand in the GUI.
+
 The \textit{--project} command can be used only once and must be the first command.
 All of the following commands below require a loaded project. 
 
@@ -181,7 +199,7 @@ Lists linksets, graphs and pointsets contained in the selected project. This com
 
 Command :
 \begin{cmd}
-java -jar graphab-1.2.jar --project path2myproject/myproject.xml --show
+java -jar graphab-2.0.jar --project path2myproject/myproject.xml --show
 \end{cmd}
 Result :
 \begin{cmd}
@@ -206,38 +224,38 @@ Pay attention to the element's name. The CLI is case sensitive and does not mana
 
 \subsection{--linkset : create cost linkset}
 \begin{verbatim}
---linkset [complete[=dmax]] [code1,..,coden=cost1 ...] codei,..,codej=min:inc:max
+--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]
 \end{verbatim}
 Creates a new linkset in the loaded project and saves the project unless the \textit{-nosave} option is used. 
-For the moment, this command does not permit using either euclidean distance or an external cost surface.
-The linkset's name is derived from the cost definition.
+
+If the \textit{name} parameter is not set, the linkset's name is derived from the cost definition.
 
 This command will create a planar linkset \textit{cost\_1\_2\_3\_4\_5\_6\_7-1.0} with all costs equal to 1 :
 \begin{cmd}
---linkset 1,2,3,4,5,6,7=1
+--linkset distance=cost 1,2,3,4,5,6,7=1
 \end{cmd}
 
 This command will create a planar linkset \textit{cost\_1\_2\_3-1.0} with cost equal to 1 for landscape values 1, 2 and 3, and cost equal to 2 for landscape values 4, 5, 6 and 7 :
 \begin{cmd}
---linkset 1,2,3=1 4,5,6,7=2
+--linkset distance=cost 1,2,3=1 4,5,6,7=2
 \end{cmd}
 
 
 The default topology is planar; use the \textit{complete} option to create a complete topology linkset :
 \begin{cmd}
---linkset complete 1,2,3,4,5,6,7=1
+--linkset distance=cost complete 1,2,3,4,5,6,7=1
 \end{cmd}
 
 With a complete topology, you can prescribe a threshold to avoid the creation of too many links (threshold = 100) :
 \begin{cmd}
---linkset complete=100 1,2,3,4,5,6,7=1
+--linkset distance=cost complete=100 1,2,3,4,5,6,7=1
 \end{cmd}
 
 A range or value list can be used to create multiple linksets :
 \begin{cmd}
---linkset 4,5,6,7=10 1,2,3=100:50:200
+--linkset distance=cost 4,5,6,7=10 1,2,3=100:50:200
 or
---linkset 4,5,6,7=10 1,2,3=100,150,200
+--linkset distance=cost 4,5,6,7=10 1,2,3=100,150,200
 \end{cmd}
 Result : the command above created 3 linksets \textit{cost\_1\_2\_3-100.0 cost\_1\_2\_3-150.0 cost\_1\_2\_3-200.0}
 where raster codes 1,2 and 3 were 100, 150 and 200 respectively.
