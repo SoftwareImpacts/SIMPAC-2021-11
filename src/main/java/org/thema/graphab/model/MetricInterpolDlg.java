@@ -262,7 +262,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
 
         jLabel11.setText(bundle.getString("ExtrapolateDialog.jLabel10.text")); // NOI18N
 
-        resolSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        resolSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(10.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
 
         jLabel1.setText(bundle.getString("MetricInterpolDlg.jLabel1.text")); // NOI18N
 

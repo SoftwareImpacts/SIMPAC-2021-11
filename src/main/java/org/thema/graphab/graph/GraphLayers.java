@@ -123,8 +123,9 @@ public class GraphLayers extends GraphGroupLayer {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        String modName = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Modularity");
                         final DistProbaPanel distProbaPanel = new DistProbaPanel(1000, 0.05, 1);
-                        int res = JOptionPane.showConfirmDialog(null, distProbaPanel, "Modularity", JOptionPane.OK_CANCEL_OPTION);
+                        int res = JOptionPane.showConfirmDialog(null, distProbaPanel, modName, JOptionPane.OK_CANCEL_OPTION);
                         if(res != JOptionPane.OK_OPTION) {
                             return;
                         }
@@ -153,8 +154,8 @@ public class GraphLayers extends GraphGroupLayer {
                         }
                         series.addSeries(serie);
 
-                        SerieFrame frm = new SerieFrame("Modularity - " + graph.getName(),
-                                series, "nb clusters", "modularity");
+                        SerieFrame frm = new SerieFrame(modName + " - " + graph.getName(),
+                                series, "Nb clusters", modName);
                         frm.pack();
                         frm.setVisible(true);
 

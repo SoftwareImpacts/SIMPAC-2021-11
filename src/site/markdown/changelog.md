@@ -1,6 +1,11 @@
 ## Changelog
 
 ##### version 1.3.32 (15/12/2015)
+
+- Metric : move BCCirc metric in plugin
+- CLI : move to normal mode the command --gtest
+
+##### version 1.3.32 (15/12/2015)
 - UI enable add patch menu 
 - CLI : add fsel parameter for --ltest and --gtest command
 - UI metric interpolation : add sum option for multiple connections

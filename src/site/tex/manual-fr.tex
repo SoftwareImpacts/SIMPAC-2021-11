@@ -27,6 +27,14 @@
 \setlength\tabcolsep{1mm}
 \renewcommand\arraystretch{1.3}
 
+% saut de page après une section
+%\let\oldsection\section
+%\renewcommand\section{\clearpage\oldsection}
+
+% saut après itemize
+\let\EndItemize\enditemize
+\def\enditemize{\EndItemize\bigskip}
+
 \begin{document}
  \begin{titlepage}
 	
@@ -51,7 +59,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2015-12-15\\
+		2016-01-08\\
 	}
 	
 \end{titlepage}
@@ -74,27 +82,34 @@ Le programme Graphab est un outil de modélisation des réseaux écologiques fon
 	\item interface de géo-visualisation
 \end{itemize}
 
-\subsubsection{Auteurs}
+La version 2.0 apporte plusieurs nouvelles fonctionnalités, dont :
+\begin{itemize}
+	\item l'ajout de taches,
+	\item la création de méta taches,
+	\item le partitionnement de graphe,
+	\item le calcul de pente dans la création des liens,
+	\item la théorie des circuits électriques.
+\end{itemize}
 
+\subsubsection{Auteurs}
 Le programme Graphab a été développé par Gilles Vuidel et Jean-Christophe Foltête au laboratoire \href{http://thema.univ-fcomte.fr}{ThéMA} (\href{http://www.univ-fcomte.fr}{Université de Franche-Comté} – \href{http://www.cnrs.fr}{CNRS}). Le développement du logiciel a été financé par le ministère de l'écologie, du développement durable, des transports et du logement dans le cadre du programme \href{http://www.ittecop.fr/}{ITTECOP}. Le logo de Graphab a été conçu par \href{http://www.gachwell.com/}{Gachwell}. 
 
 \subsubsection{Conditions d’utilisation}
-
-Le programme Graphab est disponible librement sous licence GPL. Les utilisateurs de Graphab sont invités à citer la référence suivante dans leurs travaux :
+Le programme Graphab est disponible librement sous licence GPL. Les utilisateurs de Graphab sont invités à citer la référence \cite{2012_graphab_EMS} dans leurs travaux :
 
 Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the modelling of landscape networks. Environmental Modelling \& Software, 38: 316-327.
 
 
 \subsection{Configuration requise}
 
-Graphab fonctionne sur n'importe quel ordinateur supportant Java 1.6 ou supérieur (PC sous Linux, Windows, Mac...). Toutefois, lorsqu'il s'agit de données très volumineuses, la quantité de mémoire vive (RAM) de l’ordinateur peut limiter le nombre maximum de nœuds et de liens qui peuvent être traités en une seule fois avec Graphab. De plus, pour certaines métriques complexes, la puissance de votre processeur va déterminer la vitesse de leur calcul. Vous trouverez plus de détails à ce sujet dans la rubrique 8 et dans la référence~citée plus haut.
+Graphab fonctionne sur n'importe quel ordinateur supportant Java 1.7 ou supérieur (PC sous Linux, Windows, Mac...). Toutefois, lorsqu'il s'agit de données très volumineuses, la quantité de mémoire vive (RAM) de l’ordinateur peut limiter le nombre maximum de nœuds et de liens qui peuvent être traités en une seule fois avec Graphab. De plus, pour certaines métriques complexes, la puissance de votre processeur va déterminer la vitesse de leur calcul. Vous trouverez plus de détails à ce sujet dans la section \ref{limit} et dans \cite{2012_graphab_EMS}.
 
 \subsection{Installation et lancement du programme}
 
 Graphab est téléchargeable à cette adresse : \url{http://thema.univ-fcomte.fr/productions/graphab}.
 
 \begin{itemize}
-	\item Télécharger et installer Java 1.7 ou + (\href{http://www.java.com}{java.com}). Si vous avez un système d’exploitation 64 bits, installez de préférence la version 64 bits de Java.
+	\item Télécharger et installer Java 1.7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
 	\item Télécharger graphab-2.0.jar
 	\item Lancer graphab-2.0.jar
 \end{itemize}
@@ -103,13 +118,13 @@ Une fois graphab-2.0.jar lancé, le menu fichier donne accès à 4 rubriques :
 \begin{itemize}
 	\item Fichier / Nouveau projet~: pour commencer la création d’un projet dans lequel toutes les données et résultats sont automatiquement enregistrés.
 	\item Fichier / Ouvrir un projet: ouvre un projet déjà créé auparavant.
-	\item Fichier / Préférences~: pour changer certains paramètres du programme : langue anglais/français ; quantité maximale de mémoire utilisable ; nombre de processeurs à utiliser. Il est recommandé d’adapter la quantité de mémoire et le nombre de processeurs aux capacités de l’ordinateur utilisé et aux traitements prévus (voir à ce sujet la rubrique 8).  
+	\item Fichier / Préférences~: pour changer certains paramètres du programme : langue anglais/français ; quantité maximale de mémoire utilisable ; nombre de processeurs à utiliser. Il est recommandé d’adapter la quantité de mémoire et le nombre de processeurs aux capacités de l’ordinateur utilisé et aux traitements prévus (voir à ce sujet la section \nameref{limit}).  
 	\item Fichier / Journal~: affiche le journal des évènements.
 \end{itemize}
 
 \section{Démarrer un projet Graphab}
 
-La mise en place d’un nouveau projet Graphab s’effectue à partir du menu : Fichier / Nouveau projet. L’utilisateur doit renseigner plusieurs fenêtres successives : identification du projet,~importation de la carte paysagère, création d’un jeu de liens. Un projet correspond à l’exploitation d’une seule carte paysagère initiale, mais il peut comporter plusieurs jeux de liens. Au terme de la phase de démarrage, le projet sera le support pour la création de multiples graphes et calculs de métriques de connectivité.
+La mise en place d’un nouveau projet Graphab s’effectue à partir du menu : Fichier / Nouveau projet. L’utilisateur doit renseigner plusieurs fenêtres successives : identification du projet, importation de la carte paysagère, création d’un jeu de liens. Un projet correspond à l’exploitation d’une seule carte paysagère initiale, mais il peut comporter plusieurs jeux de liens. Au terme de la phase de démarrage, le projet sera le support pour la création de multiples graphes et calculs de métriques de connectivité.
 
 \subsection{Identification du projet}
 
@@ -151,7 +166,7 @@ S’il est en format *.rst, le fichier doit être associé à un fichier de géo
 
 Code hors zone : code des pixels correspondant à l’absence de valeurs dans le fichier raster.
 
-Code de l’habitat : valeur des pixels correspondant à l’habitat utilisé pour la définition des taches. 
+Code de l’habitat : valeurs des pixels correspondant à l’habitat utilisé pour la définition des taches. Plusieurs valeurs peuvent être sélectionnées en maintenant la touche \verb|Ctrl|.
 
 Taille min. de l’habitat : surface minimale en hectare pour qu’une tache d’habitat devienne un nœud du graphe.
 
@@ -164,7 +179,7 @@ Connexité des taches :
 Simplifier les taches pour graphe planaire : cette option, lorsqu’elle est cochée, permet d’accélérer la création d’un graphe planaire, en simplifiant les limites des polygones des taches. Ce processus de simplification n’étant pas déterministe, la création de deux graphes planaires pour une même carte du paysage peut engendrer des limites de polygones légèrement différentes. Par conséquent, cette option ne doit pas être cochée dans le cas d’une comparaison de graphes planaires.
 
 \subsection{Création d’un jeu de liens}
-
+\label{linkset}
 La troisième fenêtre concerne la création d’un jeu de liens, ce qui implique la sélection de plusieurs paramètres : topologie et pondération des liens. La création de ce jeu de liens constitue la dernière étape dans la mise en place initiale du projet. Cependant, il est possible de créer à tout moment de nouveaux jeux de liens dans le même projet, par le menu : Graphes / Créer un jeu de liens.
 
 \begin{figure}[H]
@@ -184,11 +199,10 @@ Distance max : Cette option disponible pour la topologie complète permet de pr�
 Supprimer les liens traversant les taches : cette option cochée par défaut permet de ne pas créer de lien entre deux taches (A et C sur la figure suivante) passant par une tache intermédiaire (B). Ceci est recommandé pour le calcul de la métrique de centralité intermédiaire (BC) pour prendre en compte la fréquence avec laquelle chaque tache se trouve sur les plus courts chemins liant les paires de nœuds sur le graphe. A noter : cette option fournit une approximation de la distance intra-taches entre A et C. Si la case est décochée, un lien entre A et C passant par B sera créé représentant la distance complète réelle entre les deux taches. 
 
 \begin{figure}[H]
-	\includegraphics[scale=0.1]{img/manual-fr_img5.png} 
+	\includegraphics[scale=0.5]{img/manual-fr_img5.png} 
+	\caption{Illustration de l’option «~Supprimer les liens traversant les taches~»}
 \end{figure}
  
-
-Illustration de l’option «~Supprimer les liens traversant les taches~»
 
 Enregistrer les chemins : 
 \begin{itemize}
@@ -215,11 +229,18 @@ L’usage des distances de moindre coût donne accès à deux types d’impédan
 	\item longueur du chemin de moindre coût : l’impédance est égale à la longueur métrique du chemin parcouru.
 \end{itemize}
 
-Pour chaque lien créé, sa distance métrique et sa distance en unité de coût sont enregistrées et consultables dans les propriétés (cf. partie 6).
+Pour chaque lien créé, sa distance métrique et sa distance en unité de coût sont enregistrées et consultables dans les propriétés (cf. \nameref{properties}).
+
+Les valeurs de résistances définies précédemment peuvent être pondérées par la pente \cite{2015_monkey}. Pour que la pente puisse être calculée, il faut tout d'abord charger un MNT à partir du menu Données | Charger un MNT. 
+
+Le paramètre coef ($c$) permet d'ajuster l'importance de la pondération par la pente ($p$). Pour un pixel donné, la résistance résultante ($r_{final}$) est calculée comme suit :
+
+$$r_{final} = r * (1 + c.p)$$
 
 
-\section{Création d’un graphe}
+\section{Graphes}
 
+\subsection{Création d'un graphe}
 Un projet Graphab peut donner lieu à la création de plusieurs graphes. Chaque graphe étant construit à partir d’un jeu de lien, soit on utilise le jeu de lien défini lors de la mise en place initiale du projet, soit on définit un nouveau jeu de lien par le menu : Graphes / Créer un jeu de liens.
 
 La création d’un graphe s’effectue par le menu : Graphe / Créer un graphe. 
@@ -230,7 +251,7 @@ La création d’un graphe s’effectue par le menu : Graphe / Créer un graphe.
 
 Le graphe à créer doit tout d’abord être nommé.
 
-L’utilisateur doit ensuite sélectionner un des jeux de liens créés à l’étape 2.2, puis choisir un type de graphe :
+L’utilisateur doit ensuite sélectionner un des jeux de liens créés précédemment (cf. \nameref{linkset}), puis choisir un type de graphe :
 \begin{itemize}
 	\item graphe seuillé : les liens retenus sont inférieurs ou égaux au seuil de distance choisi.
 	\item graphe non seuillé : tous les liens sont créés~entre les taches quelle que soit leur distance.
@@ -243,11 +264,45 @@ Pour un graphe seuillé, l’unité de la distance de seuillage dépend du type 
 	\includegraphics[scale=0.5]{img/manual-fr_img7.png} 
 \end{figure}
 
-Il est possible d’obtenir une approximation de la distance métrique (appelée DistM) exprimée en coûts cumulés (appelée Dist) en affichant le nuage de points correspondant au jeu de lien utilisé (cf. 6), et en utilisant la droite de la régression [Dist = intercept + slope × DistM] pour effectuer cette conversion. 
+Il est possible d’obtenir une approximation de la distance métrique (appelée DistM) exprimée en coûts cumulés (appelée Dist) en affichant le nuage de points en double logarithmique correspondant au jeu de lien utilisé, et en utilisant l'équation ci-dessous pour effectuer cette conversion :
+
+$$Dist = e^{intercept + slope . log(DistM)}$$
+
+L'estimation peut être réalisée directement dans le logiciel à partir du menu Conversion dist. présent dans le menu contextuel d'un jeu de lien (clic droit sur le jeu de lien).
 
 Option «~Inclure les distances intra-taches~» : si la case est cochée, le calcul des métriques à l’étape 3 tient compte des distances intra-taches (recommandé) ; dans le cas contraire, seules les distances inter-taches sont prises en compte.
 
-Pour réaliser une analyse multiscalaire, il est souvent nécessaire de créer une série de graphes seuillés dont le seuil est défini de façon croissante. L’utilisateur peut créer manuellement cette série de graphes, mais si l’objectif est d’analyser le comportement d’une métrique de connectivité en fonction du seuil, il est préférable d’utiliser le menu : Métriques / Graphes par lot (cf. 5.3).
+Pour réaliser une analyse multiscalaire, il est souvent nécessaire de créer une série de graphes seuillés dont le seuil est défini de façon croissante. L’utilisateur peut créer manuellement cette série de graphes, mais si l’objectif est d’analyser le comportement d’une métrique de connectivité en fonction du seuil, il est préférable d’utiliser le menu : Métriques / Graphes par lot (cf. \ref{batch_graph}).
+
+\subsection{Partitionnement de graphe}
+
+Graphab implémente un algorithme de partitionnement de graphe qui maximise l'indice de modularité \cite{Newman2006}. La modularité est une mesure de la qualité d'un partitionnement des noeuds d'un graphe. Le principe sous-jacent est qu'un bon partitionnement d'un graphe implique un nombre de liens à l'intérieur des groupes important et un nombre de liens inter-groupes faible. L'algorithme utilisé est basé sur l'algorithme glouton, suivi d'une optimisation locale \cite{Brandes2008}.
+
+La modularité est calculée à partir d'un poids ($w_{ij}$) défini pour chaque lien du graphe :
+$$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
+Les 2 paramètres $\beta$ et $\alpha$ permettent de définir respectivement l'importance de la capacité des taches ($a_i a_j$) et l'importance de la distance ($d_{ij}$) pour le poids du lien $w_{ij}$. Si $\alpha = \beta = 0$ alors les poids sont tous identiques : $w_{ij} = 1$.
+
+Le partitionnement est accessible depuis le menu contextuel d'un graphe (clic droit sur le nom d'un graphe). La première fenêtre demande de renseigner les paramètres $\alpha$ et $\beta$. Le paramètre $\alpha$ est déterminé à partir d'une distance $d$ et d'une probabilité $p$ (cf. \nameref{param_weight}). Pour définir $\alpha$ à 0, il faut mettre $p$ à 1. 
+
+Après validation de cette fenêtre, le calcul se lance jusqu'à obtenir un partitionnement maximisant la modularité. Le résultat s'affiche sur une nouvelle couche du graphe. Deux autres fenêtres viennent compléter ce résultat. 
+
+\begin{figure}[H]
+	\includegraphics[scale=0.36]{img/manual-fr_cluster.png} 
+\end{figure}
+
+La nouvelle couche montre les groupes de la partition sous forme de polygones agrégeant les polygones de voronoï des taches inclues dans chaque groupe. La couleur de chaque polygone correspond à sa valeur de modularité, la modularité totale étant la somme des modularités de chaque groupe.
+
+Une première fenêtre contient un graphique montrant l'évolution de la modularité en fonction du nombre de groupes (clusters). Dans la figure précédente, on voit que la modularité maximale est atteinte pour un nombre groupes relativement faible.
+
+La deuxième fenêtre affiche le nombre de groupes (Nb agrégats) maximisant la modularité ainsi que la valeur de modularité. Plusieurs fonctionnalités sont disponibles sur cette fenêtre :
+
+{}- le nombre de groupes peut être modifié pour visualiser des partitionnements sous optimaux. Le résultat peut être visualisé en cliquant sur le bouton "Afficher". Une nouvelle couche de partitionnement est ajouté au graphe.
+
+{}- le bouton "Graphe" permet de créer un nouveau graphe ne contenant que les liens intra-groupes.
+
+{}- la case à cocher "Optimisé" réalise une optimisation locale du partitionnement après l'algorithme glouton permettant d'améliorer sensiblement la valeur de modularité. Cette option est active par défaut.
+
+
 
 \section{Capacité des taches}
 
@@ -255,15 +310,17 @@ La capacité d’une tache traduit sa «~qualité intrinsèque~», considérée 
 
 Par défaut (lors de la création initiale du projet), la capacité d’une tache est égale à sa superficie en m2. Cependant, il est possible de remplacer la superficie par n’importe quel autre indicateur de qualité. En effet, dans certains cas, la présence d’une espèce n’est pas liée à la superficie de la tache mais à la superficie d’autres types d’occupation du sol autour de la tache. Par exemple la présence d’amphibiens dans un étang de reproduction ne dépend souvent pas de la taille du plan d’eau mais de la superficie de l’habitat terrestre autour de ce plan d’eau.
 
+Avec le menu Données / Définir la capacité des taches, il est possible de modifier la capacité de l'ensemble des taches du projet par deux méthodes.
+
 \subsection{Capacité calculée comme une fonction du voisinage}
 
-Avec le menu Données / Calculer la capacité des taches, il est possible de définir la capacité des taches comme une fonction de la composition de leur voisinage et de procéder à ce calcul directement dans Graphab.
+La première méthode est de définir la capacité des taches comme une fonction de la composition de leur voisinage et de procéder à ce calcul directement dans Graphab.
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img8.png} 
 \end{figure}
 
-L’utilisateur doit sélectionner~plusieurs critères : type de distance, distance maximale, catégories paysagères.
+L’utilisateur doit sélectionner plusieurs critères : type de distance, distance maximale, catégories paysagères.
 
 Coûts : il s’agit de la métrique spatiale (euclidienne ou ensemble de coûts) correspondant à un des jeux de liens disponibles dans le projet. Il est à noter que l’usage des coûts dans cette procédure revient à définir un voisinage anisotropique autour des taches, ce qui peut différer fortement d’une fonction de type buffer. Pour des raisons de cohérence, il est conseillé d’utiliser le même type de distance que celui qui a permis de définir les liens du graphe. Dans le cas d’un jeu de lien créé avec une distance euclidienne, il faut choisir «~all cost = 1~».
 
@@ -273,23 +330,29 @@ Codes inclus : l’utilisateur peut choisir une ou plusieurs catégories paysag�
 
 L’option «~pondération par la distance~» permet d’introduire une pondération en fonction de l’éloignement à la tache, par le biais d’une fonction exponentielle négative. De cette façon, les surfaces sélectionnées compteront plus si elles sont proches de la tache et inversement.
 
-Les valeurs de capacité ainsi calculées remplacent les surfaces des taches pour tous les calculs qui suivront, mais il est possible de revenir à l’état initial par le menu : Données / Calculer la capacité des taches et en choisissant la surface de la tache.
+Les valeurs de capacité ainsi calculées remplacent les surfaces des taches pour tous les calculs qui suivront, mais il est possible de revenir à l’état initial par le menu : Données / Définir la capacité des taches et en cochant l'option Surface de la tache.
 
 \subsection{Capacité définie à partir de données externes}
 
-En activant le menu Données / Importer la capacité des taches, on peut ouvrir un tableau de données au format *.csv, décrivant toutes les taches du projet et contenant comme attribut les valeurs de capacité définies au préalable par l’utilisateur. Les identifiants du tableau importé doivent être ceux qui ont été définis lors de la création initiale du projet.
+L'autre possibilité est d'ouvrir un tableau de données au format *.csv, décrivant toutes les taches du projet et contenant comme attribut les valeurs de capacité définies au préalable par l’utilisateur. Les identifiants du tableau importé doivent être ceux qui ont été définis lors de la création initiale du projet.
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img9.png} 
 \end{figure}
 
-Les valeurs de capacité du tableau importé remplacent les surfaces des taches pour tous les calculs qui suivront cette importation, mais il est possible de revenir à l’état initial par le menu : Données / Calculer la capacité des taches et en choisissant la surface des taches.
+Les valeurs de capacité du tableau importé remplacent les surfaces des taches pour tous les calculs qui suivront cette importation, mais il est possible de revenir à l’état initial en cochant l'option Surface de la tache.
+
+
+\subsection{Suppression de taches}
+Après avoir défini une capacité différente de la surface de la tache, il peut être intéressant de supprimer les taches dont la capacité est trop faible. L'entrée "Supprimer des taches" du menu Fichier, permet de créer un nouveau projet identique au projet actuel en supprimant les taches ayant une capacité inférieure à un seuil donné.
+
+Après avoir renseigné la capacité minimale voulue, un nouveau projet est créé dans un sous répertoire du projet actuel et chargé à la fin du traitement.
 
 \section{Calcul des métriques de connectivité}
 
 \subsection{Famille de métriques et niveaux de calcul}
 
-Chaque graphe créé dans un projet peut être utilisé pour calculer différentes métriques de connectivité, dont le détail de calcul et les références bibliographiques sont mentionnés en annexe. Ces calculs s’effectuent à plusieurs niveaux correspondant aux grandes entrées du menu Métriques (tableau 1) :
+Chaque graphe créé dans un projet peut être utilisé pour calculer différentes métriques de connectivité, dont le détail de calcul et les références bibliographiques sont mentionnés en annexe. Ces calculs s’effectuent à plusieurs niveaux correspondant aux grandes entrées du menu Métriques (tableau \ref{metric_level}) :
 \begin{itemize}
 	\item Métriques /Métrique globale~: les métriques caractérisent le graphe entier.
 	\item Métriques / Métrique par composante~: les métriques caractérisent la connectivité interne de chaque composante (ou sous-graphe).
@@ -306,6 +369,7 @@ Dans la fenêtre de dialogue qui s’ouvre suite au choix d’un de ces quatre m
 
 
 \begin{table}[H]
+
 \begin{tabular}{|c|p{7cm}|l|c|c|c|c|}
 \hline
 \multirow{2}{*}{Famille} & \multirow{2}{*}{Métrique de connectivité} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3cm}|}{\centering Niveau de calcul} & \multirow{2}{1.5cm}{Delta métriques}\\
@@ -319,6 +383,7 @@ Dans la fenêtre de dialogue qui s’ouvre suite au choix d’un de ces quatre m
  & Fractions de delta Probabilité de connectivité & dPC &  &  &  & ×\\
  & Indice de centralité intermédiaire & BC &  &  & × & \\
  & Indice intégral de connectivité & IIC & × & × &  & ×\\
+ & Flux circuit & CF &  &  & × & \\ 
 \hline
 \multirow{4}{2cm}{Métriques de surface}
  & Taille moyenne des composantes & MSC & × &  &  & \\
@@ -339,11 +404,13 @@ Dans la fenêtre de dialogue qui s’ouvre suite au choix d’un de ces quatre m
 \hline
 \end{tabular}
 \caption{Liste des métriques de connectivité et de leur niveau de calcul. Les codes sont indiqués suivant le nom anglais des métriques.}
+\label{metric_level}
 \end{table}
 
 Quel que soit le niveau choisi, l’utilisateur doit d’abord indiquer le graphe sur lequel le calcul va s’appliquer, puis choisir la métrique de connectivité.
 
 \subsection{Paramétrage des métriques pondérées}
+\label{param_weight}
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img10.png} 
@@ -352,31 +419,26 @@ Quel que soit le niveau choisi, l’utilisateur doit d’abord indiquer le graph
 \subsubsection{Paramètre alpha}
 
 Plusieurs métriques intègrent dans leur calcul une pondération où les distances entre les taches sont converties en probabilité de déplacement. Ces métriques sont : F, FPC, PC, BC. La pondération est basée sur une fonction exponentielle de la forme :
-
 \begin{equation*}
 p={e}^{-\mathit{\alpha d}}
 \end{equation*}
-où p est la probabilité de déplacement entre deux taches, d la distance entre ces taches et $\alpha $ un paramètre contrôlant la vitesse avec laquelle la probabilité diminue quand la distance augmente. Comme la valeur du paramètre $\alpha $ n’est pas facile à déterminer, le logiciel propose de le calculer à partir des deux autres paramètres. L’utilisateur doit indiquer la distance correspondant à une certaine valeur de probabilité, par exemple :
-
+où p est la probabilité de déplacement entre deux taches, d la distance entre ces taches et $\alpha$ un paramètre contrôlant la vitesse avec laquelle la probabilité diminue quand la distance augmente. Comme la valeur du paramètre $\alpha$ n’est pas facile à déterminer, le logiciel propose de le calculer à partir des deux autres paramètres. L’utilisateur doit indiquer la distance correspondant à une certaine valeur de probabilité, par exemple :
 \begin{itemize}
-	\item la distance de dispersion maximale de l’espèce correspondant à une faible valeur de p (0.05 ou 0.01).
-	\item la distance de dispersion moyenne de l’espèce correspondant à une valeur médiane de p (0. 5).
+	\item la distance de dispersion maximale de l’espèce correspondant à une faible valeur de $p$ (0.05 ou 0.01).
+	\item la distance de dispersion moyenne de l’espèce correspondant à une valeur médiane de $p$ (0. 5).
 \end{itemize}
 La valeur $\alpha $ est automatiquement obtenue à partir de la formule :
-
 \begin{equation*}
 \alpha =-\log \left(p\right)/{d}
 \end{equation*}
-Dans le cas d’un graphe seuillé, il est supposé~que la distance d utilisée dans ce paramétrage soit en cohérence avec celle qui a été utilisée pour le seuillage du graphe.
+Dans le cas d’un graphe seuillé, il est supposé que la distance $d$ utilisée dans ce paramétrage soit en cohérence avec celle qui a été utilisée pour le seuillage du graphe.
 
-\subsubsection{Paramètre béta}
+\subsubsection{Paramètre bêta}
 
-Les mêmes métriques F, PC, FPC, BC sont contrôlées par le paramètre $\beta $. Ce paramètre est l’exposant appliqué à la capacité des taches. Il joue sur l’équilibre relatif entre le poids des distances et le poids des capacités des taches dans la pondération des métriques. En prenant l’exemple de la métrique F en calcul local, dont la forme générique est la suivante :
-
+Les mêmes métriques F, PC, FPC, BC sont contrôlées par le paramètre $\beta$. Ce paramètre est l’exposant appliqué à la capacité des taches. Il joue sur l’équilibre relatif entre le poids des distances et le poids des capacités des taches dans la pondération des métriques. En prenant l’exemple de la métrique F en calcul local, dont la forme générique est la suivante :
 \begin{equation*}
 F=\sum {{a}^{\beta }}{e}^{-\mathit{\alpha d}}
 \end{equation*}
-
 
 {}- une valeur de  $\beta =0$ signifie que la capacité des taches ne joue pas de rôle dans la pondération.
 
@@ -392,10 +454,10 @@ Au-delà de ces quelques exemples, toutes les valeurs de pondération sont possi
 
 \subsection{Calcul des métriques par lot}
 
-Chaque métrique compatible avec le niveau global peut être calculée en chaîne suivant la variation de l’échelle des distances. Cette variation peut concerner soit le seuillage du graphe (5.3.1.), soit le paramétrage des métriques elles-mêmes (5.3.2.). Le type de distance considéré pour le seuillage est celui qui a été défini pour le jeu de lien choisi, à savoir distance euclidienne, distance de moindre coût, chemin de moindre coût. 
+Chaque métrique compatible avec le niveau global peut être calculée en chaîne suivant la variation de l’échelle des distances. Cette variation peut concerner soit le seuillage du graphe (\ref{batch_graph}), soit le paramétrage des métriques elles-mêmes (\ref{batch_metric}). Le type de distance considéré pour le seuillage est celui qui a été défini pour le jeu de lien choisi, à savoir distance euclidienne, distance de moindre coût, chemin de moindre coût. 
 
 \subsubsection{Graphes par lot}
-
+\label{batch_graph}
 Le menu Métriques / Graphes par lot permet de créer une série de graphes seuillés à partir d’un jeu de liens donné, et de calculer pour chacun une métrique de niveau global. Les seuils des graphes successifs sont définis de façon croissante, suivant deux modes :
 \begin{itemize}
 	\item distance : un intervalle de distance fixe est déterminé entre les graphes successifs. Les valeurs de la métrique sont donc calculées à des intervalles réguliers de distance.
@@ -416,10 +478,10 @@ Les graphes sont définis suivant trois critères donnés par l’utilisateur :
 Une fois le calcul terminé, le logiciel ouvre une nouvelle fenêtre dans laquelle la courbe de la métrique choisie est affichée en fonction du seuil de distance. Les valeurs de cette courbe peuvent être enregistrées par le bouton export, en sélectionnant le format texte.
 
 \subsubsection{Paramètres par lot}
-
+\label{batch_metric}
 Le menu Métriques / Paramètres par lot permet de calculer en série des métriques à partir d’un graphe donné. Cette possibilité s’applique exclusivement aux métriques pondérées. Elle se subdivise en deux entrées : métriques locales ou globales.
 
-Paramètres par lot pour métriques locales
+\textbf{Paramètres par lot pour métriques locales}
 
 Une métrique pondérée de niveau local est calculée en série suivant la variation d’un de ses paramètres. L’utilisateur doit choisir le graphe, la métrique et le paramètre à faire varier. La variation du calcul est déterminée par :
 \begin{itemize}
@@ -430,13 +492,13 @@ Une métrique pondérée de niveau local est calculée en série suivant la vari
 
 Une fois le calcul terminé, les taches (et dans certains cas les liens) du graphe sont caractérisées par une série de métriques supplémentaires.
 
-Paramètres par lot pour métriques globales
+\textbf{Paramètres par lot pour métriques globales}
 
 Pour un graphe donné, une métrique pondérée de niveau global est calculée en série suivant la variation d’un de ses paramètres. Comme précédemment, cette variation est définie entre une valeur minimale (min), une valeur maximale (max) et un intervalle (incrément).
 
 La procédure se termine par l’ouverture d’une nouvelle fenêtre dans laquelle la courbe de la métrique choisie est affichée en fonction du paramètre. 
 
-Le tableau 2 récapitule les possibilités de calcul des métriques.
+Le tableau \ref{metric_poss} récapitule les possibilités de calcul des métriques.
 
 \begin{table}[H]
 \begin{tabular}{|c|m{5.162cm}|l|c|c|c|c|c|c|}
@@ -448,10 +510,11 @@ Le tableau 2 récapitule les possibilités de calcul des métriques.
 \multirow{6}{2cm}{Métriques pondérées}
  & Flux & F & × & × & × & × & × & ×\\
  & Probabilité de connectivité & PC & × & × & × & × & × & ×\\
- & Probabilité de connectivité flux & FPC & × & × & × & × &  & \\
+ & Probabilité de connectivité flux & FPC & × & × & × & × & × & \\
  & Fractions de delta Probabilité de connectivité & dPC & × & × & × & × &  & \\
  & Centralité intermédiaire & BC & × & × & × & × &  & ×\\
  & Indice Intégral de Connectivité & IIC & × &  &  &  & × & \\
+ & Flux circuit & CF & × &  &  & × &  & ×\\
 \hline
 \multirow{4}{2cm}{Métriques de surface}
  & Taille moyenne des composantes & MSC & × &  &  &  & × & \\
@@ -471,6 +534,7 @@ Le tableau 2 récapitule les possibilités de calcul des métriques.
 \hline
 \end{tabular}
 \caption{Possibilités de calcul des métriques de connectivité.}
+\label{metric_poss}
 \end{table}
 
 
@@ -484,11 +548,66 @@ Le menu Analyse / Interpolation des métriques permet de générer des couches r
 
 La pondération est une fonction exponentielle négative de la forme  $p={e}^{-\mathit{\alpha d}}$ pour laquelle l’utilisateur doit choisir une distance (d) correspondant à une certaine probabilité (p) et le logiciel en déduit la valeur du paramètre $\alpha $. En principe, ce réglage est à rendre cohérent avec le choix du graphe de référence ou le choix des éventuelles métriques pondérées qui sont à mobiliser, en utilisant la même valeur de d.
 
-L’option Connexion multiple permet de faire intervenir plusieurs taches dans le calcul des métriques au niveau des points. Le calcul est fondé sur une moyenne pondérée des valeurs issues de toutes les taches comprises dans le voisinage des points, jusqu’à la Distance maximale indiquée.
+L’option Connexion multiple permet de faire intervenir plusieurs taches dans le calcul des métriques au niveau des points. Le calcul est fondé sur une somme ou une moyenne pondérée des valeurs issues de toutes les taches comprises dans le voisinage des points, jusqu’à la Distance maximale indiquée.
 
 Il est à noter que la distance considérée dans ces calculs dépend du graphe de référence. Si celui-ci est fondé sur une distance de moindre coût, l’interpolation spatiale utilise cette même distance et non une simple distance euclidienne.
 
-L’interpolation des métriques est aussi utilisée automatiquement dans le calcul des modèles de distribution d’espèce : voir 6.3. Modèles de distribution d’espèce.
+L’interpolation des métriques est aussi utilisée automatiquement dans le calcul des modèles de distribution d’espèce (voir \nameref{sdm}).
+
+
+\section{Ajout de taches}
+La fonction "Ajout de taches" est accessible à partir du menu Analyses. Elle permet de tester un ensemble d’emplacements pour créer de nouvelles taches d’habitat en fonction du gain de connectivité qu’elles procurent. Le logiciel calcule d’abord la métrique globale sélectionnée, puis ajoute virtuellement une tache et les liens entre cette tache et les taches existantes (seulement si leur distance est inférieure au seuillage du graphe dans le cas d’un graphe seuillé) et recalcule la métrique globale. Une fois tous les emplacements testés, le logiciel valide l’emplacement qui procure le gain maximal de connectivité. La procédure est répétée jusqu’à l’ajout du nombre souhaité de nouvelles taches.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-fr_addpatch.png} 
+\end{figure}
+
+Plusieurs paramètres sont à définir :
+\begin{itemize}
+	\item Graphe : le graphe utilisé pour le calcul de la métrique de connectivité et l’ajout de nouvelles taches. Le jeu de lien sous-jacent doit être en topologie complète.
+	\item Métrique : la métrique globale que l’on cherche à maximiser
+	\item NB taches : nombre de taches (qui deviendront de nouveaux nœuds du graphe) que l’on souhaite ajouter.
+\end{itemize}
+
+La définition du jeu de taches à tester peut se faire de deux manières : 
+\begin{itemize}
+	\item En appliquant automatiquement une grille d’une certaine résolution (champs "taille de la cellule" à renseigner). Dans ce cas, le logiciel teste chaque centroïde de cellules en ajoutant virtuellement une nouvelle tache. Par défaut, tous les centroïdes ont une valeur de capacité identique (=1). Il est néanmoins possible d’importer une couche raster où chaque pixel de la matrice paysagère a une valeur de capacité propre.
+	\item En important un shapefile de points ou de polygones. Il faut dans ce cas indiquer à quelle colonne de la table attributaire de ce shapefile correspond la capacité des taches.
+\end{itemize}
+
+Option "multi-taches" : cette option permet de tester l’ajout de plusieurs taches en simultané. Les taches supplémentaires sont recherchées dans une fenêtre de x cellules (paramètre à définir) autour de la première tache. 
+
+A la fin du calcul, un répertoire nommé "addpatch\_nX-GraphX\_..." est créé et enregistré dans le répertoire du projet. Il contient :
+\begin{itemize}
+	\item un shapefile contenant les nœuds ajoutés. La table attributaire indique l’étape à laquelle a été validé chacun des nœuds et la valeur de la métrique globale correspondante.
+	\item deux shapefiles contenant l’ensemble des liens du graphe, y compris ceux reliant les nouveaux noeuds, en version topologique ("topo\_links\_graphXXX") ou en version réaliste "links\_graphXX"
+	\item un raster "landuse.tif" contenant l'occupation du sol modifiée
+	\item un répertoire "détail" contenant pour chaque étape le shapefile des emplacements testés et la valeur de la métrique globale correspondant.
+\end{itemize}
+
+Références : 
+\cite{2015_addpatch_rainette, 2014_LUP}
+
+\section{Méta-taches}
+
+À partir du menu Graphe, l'option "Créer un projet de méta-tache" permet de créer un nouveau projet où les noeuds du graphe correspondent à des ensembles de taches connectées à une certaine distance. Cette fonction permet de mieux prendre en compte l’emboîtement des échelles dans les processus écologiques et notamment le fait que la définition fonctionnelle d’une tache d’habitat varie selon l’échelle considérée (Theobald, 2006 ; Zetterberg et al., 2010).
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-fr_metapatch.png} 
+\end{figure}
+
+Pour utiliser cette fonction, il est nécessaire de créer un projet initial et un graphe seuillé à la distance souhaitée (par exemple à la distance quotidienne). Chaque composante de ce graphe seuillé correspondra à une méta-tache. Celle-ci est donc constituée de l’ensemble des taches d’habitat connectées entre elles.
+
+La capacité des méta-taches est définie par défaut comme la somme de la capacité des taches composant la méta-tache. L'autre option "Distance pondérée" permet de tenir compte de l'éloignement des taches entre elles. Pour cette option, il faut définir le paramètre $\alpha$ en donnant une distance et une probabilité associée. La capacité résultante ($C$) d'une méta tache s'écrit : 
+
+$$C = \frac{1}{n}\sum_{i}^n\sum_{j}^n c_j e^{-\alpha d_{ij}}$$ 
+
+L’option "capacité minimale" permet de ne garder pour le nouveau projet que les méta-taches qui ont une capacité supérieure ou égale au seuil défini.
+
+Le nouveau projet est enregistré dans un sous répertoire du projet initial et est chargé automatiquement à la fin du traitement.
+
+Références : \cite{2015_monkey}
+
 
 \section{Liens entre graphes et données ponctuelles}
 
@@ -508,11 +627,30 @@ Si les données ponctuelles ne contiennent pas d’attribut d’absence, elles n
 
 \subsection{Matrices de distance inter-points}
 
-Les données ponctuelles importées dans Graphab peuvent être à l’origine du calcul de matrices de distance inter-points par un clic droit sur le nom d’un jeu de données. Plusieurs types de distances sont disponibles :
-\begin{itemize}
-	\item distance raster : distance calculée en mode raster en fonction d’un jeu de lien de référence. Selon le jeu de lien choisi, il peut s’agir de la distance euclidienne, de la distance coût cumulée ou de la longueur du chemin de moindre coût. Dans les deux derniers cas, le calcul intègre les coûts associés aux catégories de la carte de paysage, tels qu’ils ont été définis dans le jeu de liens. Le résultat est une matrice de distance indépendante du graphe ; cette matrice correspond au calcul offert par les Systèmes d’Information Géographique.
+Les données ponctuelles importées dans Graphab peuvent être à l’origine du calcul de matrices de distance inter-points par le menu Matrice de distance du menu contextuel d'un jeu de points (clic droit sur le nom d’un jeu de points).
 
-	\item distance de graphe : distance calculée suivant le plus court chemin sur un graphe de référence à indiquer. Le type de distance correspond à celui qui a été utilisé pour la définition du jeu de lien qui a servi à définir le graphe de référence. Aux deux extrémités du chemin considéré, le calcul intègre la distance entre chaque point et la tache la plus proche. Suivant le choix qui a été fait au moment de la création du graphe, le calcul intègre éventuellement les distances intra-taches.	
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-fr_img13b.png} 
+\end{figure}
+
+Les distances peuvent être calculées de 2 manières : directement sur le raster ou bien à travers un graphe.
+
+\subsubsection{Distance raster}
+En mode raster, les distances sont calculées en fonction d'un jeu de lien de référence. Ce jeu de lien ne peut pas être en distance euclidienne.
+
+Selon le jeu de lien choisi, il peut s’agir de la distance coût cumulée ou de la longueur du chemin de moindre coût. Dans les deux cas, le calcul intègre les coûts associés aux catégories de la carte de paysage, tels qu’ils ont été définis dans le jeu de liens. Le résultat est une matrice de distance indépendante du graphe ; cette matrice correspond au calcul offert par les Systèmes d’Information Géographique.
+
+L'option Circuit permet de calculer une distance entre chaque point en calculant la résistance équivalente d'un réseau de résistances électriques au lieu du calcul du chemin le plus court. Cette méthode permet de tenir compte de l'ensemble des chemins possibles et non pas uniquement du plus court (cf. \cite{McRae2008}).
+
+
+\subsubsection{Distance sur le graphe}
+
+En mode graphe, les distances sont calculées en fonction du graphe sélectionné. Ce graphe doit être basé sur le jeu de lien utilisé à l'import du jeu de point.
+
+\begin{itemize}
+	\item Simple : distance calculée suivant le plus court chemin sur le graphe de référence. Le type de distance correspond à celui qui a été utilisé pour la définition du jeu de lien qui a servi à définir le graphe de référence. Aux deux extrémités du chemin considéré, le calcul intègre la distance entre chaque point et la tache la plus proche. Suivant le choix qui a été fait au moment de la création du graphe, le calcul intègre éventuellement les distances intra-taches.	
+	\item Circuit : calcule la résistance équivalente entre les taches les plus proches de chaque point. Le graphe est vu comme un réseau électrique où chaque lien du graphe représente une résistance. Cette option permet de tenir compte de l'ensemble des chemins possibles et non pas uniquement du plus court.
+	\item Flux : ??
 \end{itemize}
 
 \subsection{Générer des points aléatoires}
@@ -536,6 +674,7 @@ Plusieurs paramètres sont à définir pour effectuer un tirage aléatoire des p
 {}- Garder un point par cellule : cette option permet de ne garder qu’un point de présence dans chaque cellule pour atténuer les effets d’autocorrélation spatiale.
 
 \subsection{Modèle de distribution d’espèce}
+\label{sdm}
 
 Si un jeu de points de présence / absence a été défini, le logiciel permet d’utiliser les métriques de connectivité calculées à partir d’un graphe comme variables prédictives dans un modèle de distribution d’espèce, suivant le menu Analyse / Modèle de distribution d’espèce. Cette modélisation est possible même si les points ne sont pas situés dans les taches d’habitat, par le biais d’une extrapolation spatiale des valeurs des métriques. Le modèle est une régression logistique fondé sur la minimisation du critère AIC.
 
@@ -552,17 +691,15 @@ Au préalable, l’utilisateur doit indiquer :
 {}- le graphe de référence pour l’utilisation des métriques de connectivité.
 
 \subsubsection{Pondérations pour l’extrapolation des métriques au niveau des points}
-
 Les valeurs des métriques sont calculées pour chaque point d’analyse par le biais d’une interpolation spatiale. Celle-ci est fondée sur une pondération des valeurs par une fonction décroissante à partir du bord des taches (poids de 1). Le poids décroit selon une fonction exponentielle négative de la même forme que celle qui est utilisée pour les métriques pondérées (voir 5.2.1), c’est pourquoi on retrouve le même réglage.
 
 L’utilisateur choisi une distance (d) correspondant à une certaine probabilité (p) et le logiciel en déduit la valeur du paramètre $\alpha $. En principe, ce réglage est à rendre cohérent avec le choix du graphe de référence ou le choix des éventuelles métriques pondérées qui sont à mobiliser, en utilisant la même valeur de d.
 
 L’option Connexion multiple permet de faire intervenir plusieurs taches dans le calcul des métriques au niveau des points. Le calcul est fondé sur une moyenne pondérée des valeurs issues de toutes les taches comprises dans le voisinage des points, jusqu’à la Distance maximale indiquée.
 
-Les détails de cette forme de pondération sont donnés dans Foltête et al., 2012a.
+Les détails de cette forme de pondération sont donnés dans \cite{2012_SDM}.
 
 \subsubsection{Estimation du modèle}
-
 Le choix d’un graphe pour appliquer le modèle fait apparaître toutes les métriques de connectivité disponibles parmi les variables prédictives.
 
 Des métriques dérivées d’autres graphes peuvent être ajoutées en cliquant sur le bouton Variable tache.
@@ -572,7 +709,6 @@ Des variables provenant d’autres sources peuvent aussi être ajoutées, en cli
 Une fois que les variables prédictives que l’utilisateur veut intégrer sont en place, le bouton Estimer permet de calculer les coefficients de la régression logistique. Les résultats s’affichent sur la partie droite de la fenêtre. L’option Meilleur modèle consiste à tester toutes les combinaisons de variables et de sélectionner celle qui minimise le critère AIC.
 
 \subsubsection{Utilisation du modèle}
-
 Un modèle prédictif considéré comme valide peut être utilisé de plusieurs façons.
 
 Suivant le bouton Exporter, le tableau contenant toutes les variables statistiques impliquées dans la régression peut être exporté au format *.csv.
@@ -602,19 +738,19 @@ Les propriétés des graphes sont accessibles par un clic droit sur le nom du gr
 \end{figure}
 
 
-Le bouton Supprimer~permet de supprimer le graphe sélectionné. 
+L'entrée Supprimer permet de supprimer le graphe sélectionné. Le projet est enregistré automatiquement après.
 
-Les Propriétés~rappellent les paramètres utilisés pour la construction du graphe : le nom du graphe, le jeu de liens sélectionné, le type de graphe avec éventuellement le seuil de distance utilisé et le nombre de liens.
+L'entrée Propriétés rappellent les paramètres utilisés pour la construction du graphe : le nom du graphe, le jeu de liens sélectionné, le type de graphe avec éventuellement le seuil de distance utilisé et le nombre de liens.
 
-Le bouton Matrice OD (matrice Origine-Destination) permet de créer un tableau indiquant la distance entre chaque paire de nœuds pour le graphe sélectionné. L’unité de la distance dépend du type de distance utilisé pour ce graphe. L’absence de connexion entre deux nœuds est notée NaN. Cette  matrice est archivée dans le dossier du projet sous la forme d’un fichier texte nommé «~nom du graphe-odmatrix.txt~». 
+L'entrée Matrice OD (matrice Origine-Destination) permet de créer un tableau indiquant la distance entre chaque paire de nœuds pour le graphe sélectionné. L’unité de la distance dépend du type de distance utilisé pour ce graphe. L’absence de connexion entre deux nœuds est notée NaN (Not a Number). Cette  matrice est archivée dans le dossier du projet sous la forme d’un fichier texte nommé «~nom du graphe-odmatrix.txt~». 
 
 \subsection{Propriétés des objets}
-
+\label{properties}
 Les propriétés de chaque jeu de liens, des éléments d’un graphe (nœuds, liens ou composantes) et des données ponctuelles sont accessibles par un clic droit sur chacun d’entre eux.
 
 Le menu Style donne accès aux paramètres d’affichage des objets : couleur, épaisseur des contours, étiquettes, taille des symboles (pour les nœuds uniquement). Les objets peuvent être représentés de la même manière (symbole unique) ou en fonction d’un attribut. Il est possible d’appliquer une méthode de discrétisation pour classer les objets en fonction des valeurs de l’attribut sélectionné. Par défaut, la légende des objets est affichée dans la table des matières. Il est possible de la cacher en décochant le bouton Légende.
 
-Le menu Export~permet d’exporter les objets dans un fichier vecteur (*.shp) ou un fichier texte (*.txt).
+Le menu Export permet d’exporter les objets dans un fichier vecteur (*.shp) ou un fichier texte (*.txt).
 
 Le menu Statistiques permet d’afficher la distribution des valeurs d’un ou plusieurs attributs : 
 \begin{itemize}
@@ -628,13 +764,12 @@ Il est également possible d’afficher les valeurs d’un objet particulier en 
 	\includegraphics[scale=0.5]{img/manual-fr_img19.png} 
 \end{figure}
 
-\section{Limitations}
 
-\subsection{Capacités de traitement et limitations}
-
+\section{Capacités de traitement et limitations}
+\label{limit}
 Les méthodes basées sur les graphes sont connues pour fournir un cadre de modélisation efficace, mais peuvent poser une question de capacité de calcul. Deux points spécifiques ont reçu une attention particulière dans Graphab : (1) le calcul des jeux de liens, (2) le calcul des métriques de connectivité. Tous ces calculs ont été optimisés par parallélisation. Ce mode de développement améliore l'efficacité de calcul en utilisant une architecture multiprocesseur, un processeur quatre-cœur permettant théoriquement un calcul quatre fois plus rapide. 
 
-Dans la publication suivante~[Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the modelling of landscape networks, Environmental Modelling \& Software, 38: 316-327], plusieurs tests ont été effectués afin de mesurer la capacité de calcul de Graphab dans différentes configurations. Trois configurations ont été comparées : 1) un cœur (3Go RAM) correspondant à un ordinateur standard ; 2) quatre cœurs (6 Go RAM) correspondant à une station de travail ; 3)  20 cœurs (15 Go RAM) correspondant à un serveur. La carte d’occupation du sol était un fichier raster de 14000*18000 pixels (252 millions de pixels) représentant l’occupation du sol de la région Franche-Comté (France) à une résolution spatiale de 10 mètres. La carte contenait 22 634 taches d’habitats. Le tableau 3 donne quelques temps de calcul pour la création de liens.
+Dans \cite{2012_graphab_EMS}, plusieurs tests ont été effectués afin de mesurer la capacité de calcul de Graphab dans différentes configurations. Trois configurations ont été comparées : 1) un cœur (3Go RAM) correspondant à un ordinateur standard ; 2) quatre cœurs (6 Go RAM) correspondant à une station de travail ; 3)  20 cœurs (15 Go RAM) correspondant à un serveur. La carte d’occupation du sol était un fichier raster de 14000*18000 pixels (252 millions de pixels) représentant l’occupation du sol de la région Franche-Comté (France) à une résolution spatiale de 10 mètres. La carte contenait 22 634 taches d’habitats. Le tableau \ref{perf} donne quelques temps de calcul pour la création de liens.
 
 \begin{table}[H]
 \begin{tabular}{|m{3.049cm}|m{3.049cm}|m{3.494cm}|m{3.0509999cm}|m{2.603cm}|}
@@ -653,20 +788,18 @@ Topologie & Distance & Ordinateur standard & Station de travail & Serveur\\
 \hline
 \end{tabular}
 \caption{Temps de calcul (en seconde) pour la création de différents jeux de liens.}
+\label{perf}
 \end{table}
 
 
 La mémoire allouée au programme joue aussi un rôle important. Si il n’y a pas assez de mémoire vive, le calcul sera plus lent voire même ne pourra pas aboutir (message OutOfMemoryError ou GC Overhead). Le menu Fichier / Préférences / Mémoire permet de régler la mémoire allouée pour Graphab. Si vous avez une version 32 bits de Java, Graphab sera limité à environ 2 Go (2000 Mo) de mémoire. Si votre ordinateur a plus que 2 Go de mémoire vive il est fortement conseillé d’installer une version 64 bits de Java pour utiliser la mémoire disponible au-delà des 2 Go.
 
 
-\pagebreak
-
 \section{Annexes}
 
 \subsection{Détail de calcul des métriques}
 
 Tableau récapitulatif des métriques présentes dans Graphab
-
 \begin{table}[H]
 	\begin{tabular}{|c|p{7cm}|l|c|c|c|c|}
 		\hline
@@ -681,6 +814,7 @@ Tableau récapitulatif des métriques présentes dans Graphab
 		& Fractions de delta Probabilité de connectivité & dPC &  &  &  & ×\\
 		& Indice de centralité intermédiaire & BC &  &  & × & \\
 		& Indice intégral de connectivité & IIC & × & × &  & ×\\
+		& Flux circuit & CF &  &  & × & \\
 		\hline
 		\multirow{4}{2cm}{Métriques de surface}
 		& Taille moyenne des composantes & MSC & × &  &  & \\
@@ -775,7 +909,7 @@ Exposant permettant de pondérer plus ou moins la capacité\\\hline
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Flux (F)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Flux ($F$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
@@ -810,12 +944,8 @@ Dans CS22, AWF est calculé seulement à partir des taches reliées directement 
 
 }\\\hline
 Références &
-\multicolumn{2}{m{12.6050005cm}|}{Urban et Keitt, 2001
-
-Saura et Torné, 2009
-
-Foltête et al., 2012a
-
+\multicolumn{2}{m{12.6050005cm}|}{
+	\cite{Urban2001} \cite{Saura2009} \cite{2012_SDM}
 }\\\hline
 \end{tabular}
 \end{table}
@@ -825,7 +955,7 @@ Foltête et al., 2012a
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Probabilité de Connectivité (PC)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Probabilité de Connectivité ($PC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
@@ -858,7 +988,7 @@ Si a ne représente pas la surface des taches, le résultat n’est plus une pro
 
 }\\\hline
 Référence &
-\multicolumn{2}{m{12.6050005cm}|}{Saura et Pascual-Hortal, 2007}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Saura2007}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -867,7 +997,7 @@ Référence &
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Probabilité de Connectivité Flux (FPC)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Probabilité de Connectivité Flux ($FPC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
@@ -888,7 +1018,7 @@ Valeur maximale : 1
 Commentaire &
 \multicolumn{2}{m{12.6050005cm}|}{Pour chaque couple de taches, le chemin du graphe utilisé est celui qui maximise  ${e}^{-\mathit{\alpha d}}$, c’est-à-dire celui qui minimise la distance d (ou le coût) entre les taches i et j.
 
-Cette métrique est simplement la contribution locale d’une tache à l’indice PC, puisque~ $\mathit{PC}=\sum _{i}{{\mathit{FPC}}_{i}}$. Elle équivaut à l’indice  ${\mathit{dPC}}_{\mathit{flux}}$ non divisé par la valeur globale du PC. Cependant la métrique FPC est obtenue plus rapidement que  ${\mathit{dPC}}_{\mathit{flux}}$ car son calcul n’est pas fondé sur la suppression itérative des taches (mode delta).
+Cette métrique est simplement la contribution locale d’une tache à l’indice $PC$, puisque~ $\mathit{PC}=\sum _{i}{{\mathit{FPC}}_{i}}$. Elle équivaut à  ${dPC}_{flux}+{dPC}_{area}$ non divisé par la valeur globale du $PC$. Cependant la métrique $FPC$ est obtenue plus rapidement car son calcul n’est pas fondé sur la suppression itérative des taches (mode delta).
 
 }\\\hline
 \end{tabular}
@@ -896,10 +1026,10 @@ Cette métrique est simplement la contribution locale d’une tache à l’indic
 
 
 \begin{table}[H]
-\begin{tabular}{|m{2.4919999cm}|m{5.229cm}m{7.924cm}|}
+\begin{tabular}{|m{2.2cm}|m{5.5cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Fractions de delta Probabilité de Connectivité (dPC, dPCarea, dPCflux, dPCconnector)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Fractions de delta Probabilité de Connectivité ($dPC$, $dPC_{area}$, $dPC_{flux}$, $dPC_{connector}$)}\\\hline
  &
 \multicolumn{1}{m{5.229cm}|}{Formules} &
 Signification\\\hline
@@ -914,18 +1044,18 @@ Delta &
 {\mathit{dPC}}_{\mathit{area}}=\frac{{a}_{i}^{2\beta }}{{A}^{2}\mathit{PC}}
 \end{equation*}
 \begin{equation*}
-{\mathit{dPC}}_{\mathit{flux}}=\frac{{\mathit{FPC}}_{i}}{\mathit{PC}}
+{dPC}_{flux}=\frac{{FPC}_{i}}{PC}-{dPC}_{area}
 \end{equation*}
 } &
 Taux de variation entre la valeur de l’indice PC et la valeur PC’ représentant la suppression de la tache i.
 
-La valeur de dPC se décompose en trois parties :
+La valeur de $dPC$ se décompose en trois parties :
 
-{}- dPCarea correspond à la variation due à la perte de la surface suite à la suppression de la tache i ;
+{}- $dPC_{area}$ correspond à la variation due à la perte de la surface suite à la suppression de la tache i ;
 
-{}- dPCflux correspond à la variation due à la perte des interactions entre la tache i et les autres taches ;
+{}- $dPC_{flux}$ correspond à la variation due à la perte des interactions entre la tache i et les autres taches ;
 
-{}- dPCconnector correspond à la variation due à la modification des chemins reliant les autres taches et passant initialement par i.~\\\hline
+{}- $dPC_{connector}$ correspond à la variation due à la modification des chemins reliant les autres taches et passant initialement par i.~\\\hline
 Valeurs &
 \multicolumn{2}{m{13.353cm}|}{Valeur minimale : 0
 
@@ -935,20 +1065,19 @@ Valeur maximale : 1
 Commentaire &
 \multicolumn{2}{m{13.353cm}|}{Dans CS22, la pondération des capacités est fixée à 1 ; dans Graphab elle peut être modifiée.
 
-Si a ne représente pas la surface des taches, le résultat n’est plus une probabilité et dPCarea n’exprime pas une perte de surface mais de capacité.
+Si a ne représente pas la surface des taches, le résultat n’est plus une probabilité et $dPC_{area}$ n’exprime pas une perte de surface mais de capacité.
 
 }\\\hline
 Référence &
-\multicolumn{2}{m{13.353cm}|}{Saura et Rubio, 2010}\\\hline
+\multicolumn{2}{m{13.353cm}|}{\cite{Saura2010}}\\\hline
 \end{tabular}
 \end{table}
 
 
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
-
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Indice de centralité intermédiaire (BC)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Indice de centralité intermédiaire ($BC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
@@ -974,19 +1103,19 @@ Valeur maximale : surface totale de l’habitat au carré.
 
 }\\\hline
 Commentaire &
-\multicolumn{2}{m{12.6050005cm}|}{Avec un paramétrage de $\alpha $ à 0 et $\beta $ à 0 (pondération uniforme des chemins), on retrouve l’indice BC tel qu’il est utilisé dans d’autres types de graphes.
+\multicolumn{2}{m{12.6050005cm}|}{Avec un paramétrage de $\alpha=0$ et $\beta =0$ (pondération uniforme des chemins), on retrouve l’indice $BC$ tel qu’il est utilisé dans d’autres types de graphes.
 
-Un paramétrage de $\alpha $=1 et $\beta $=0 donne aux chemins un poids proportionnel au produit des capacités des taches qu’ils relient, quelle que soit leur distance.
+Un paramétrage de $\alpha=0$ et $\beta=1$ donne aux chemins un poids égal au produit des capacités des taches qu’ils relient, quelle que soit leur distance.
 
-Dans Foltête et al. (2012a ; 2012b), l’indice BCl a été proposé pour pondérer plus fortement les chemins supérieurs au critère choisi (distance de dispersion par exemple). Mais des tests ont ensuite montré que cet indice était très fortement corrélé au BC pondéré avec $\beta $=0.
+Dans \cite{2012_graphab_EMS, 2012_SDM}, l’indice $BC_l$ a été proposé pour pondérer plus fortement les chemins supérieurs au critère choisi (distance de dispersion par exemple). Mais des tests ont ensuite montré que cet indice était très fortement corrélé au $BC$ pondéré avec $\alpha=0$.
 
-Dans Bodin et Saura (2010), le  ${\mathit{BC}}_{\mathit{pc}}$ correspond au BC pondéré avec d égal à la distance de dispersion,   $\alpha $ tel que  ${e}^{-\mathit{\alpha d}}=0.05$ et  $\beta =1.$
+Dans \cite{Bodin2010}, le  ${\mathit{BC}}_{\mathit{pc}}$ correspond au BC pondéré avec d égal à la distance de dispersion,   $\alpha $ tel que  ${e}^{-\mathit{\alpha d}}=0.05$ et  $\beta=1$.
 
 }\\\hline
 Références &
-\multicolumn{2}{m{12.6050005cm}|}{Bodin et Saura, 2010
-
-Foltête et al., 2012b
+\multicolumn{2}{m{12.6050005cm}|}{
+\cite{Bodin2010}
+\cite{2012_graphab_EMS}
 
 }\\\hline
 \end{tabular}
@@ -997,7 +1126,7 @@ Foltête et al., 2012b
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Indice Intégral de Connectivité (IIC)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Indice Intégral de Connectivité ($IIC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
@@ -1007,7 +1136,7 @@ Niveau composante
 
 Delta &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-\mathit{IIC}=\frac{1}{{A}^{2}}\sum _{i=1}^{n}{\sum _{j=1}^{n}{{\frac{{a}_{i}{a}_{j}}{{1+\mathit{nl}}_{\mathit{ij}}}}_{\Box }^{\Box }}}
+\mathit{IIC}=\frac{1}{{A}^{2}}\sum _{i=1}^{n}{\sum _{j=1}^{n}{{\frac{{a}_{i}{a}_{j}}{{1+\mathit{nl}}_{\mathit{ij}}}}}}
 \end{equation*}
 } &
 Pour le graphe entier : produit des capacités des taches divisé par le nombre de liens qui les sépare, la somme étant divisée par le carré de la surface de la zone d’étude. IIC est construit comme l’indice PC, mais en utilisant l’inverse d’une distance topologique plutôt qu’une fonction exponentielle négative de la distance basée sur l’impédance des liens.
@@ -1020,8 +1149,51 @@ Valeur maximale : 1
 
 }\\\hline
 Référence &
-\multicolumn{2}{m{12.6050005cm}|}{Pascual-Hortal et Saura, 2006}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Pascual2006}}\\\hline
 \end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
+		\hline
+		\multicolumn{3}{|m{16.044998cm}|}{Flux circuit ($CF$)}\\\hline
+		&
+		\multicolumn{1}{m{4.4810004cm}|}{Formule} &
+		Signification\\\hline
+		Niveau~local &
+		\multicolumn{1}{m{4.4810004cm}|}{
+			\begin{equation*}
+			CF_{i}=\sum_{j}^n{c_i^j}
+			\end{equation*}
+		} &
+		Somme des courants traversant la tache focale $i$.
+		
+		$c_i^j$ représente le courant à travers la tache $i$ lorsque un courant est émis depuis toutes les taches vers la tache $j$ (la tache $j$ est reliée à la terre)
+		
+		\\\hline
+		Valeurs &
+		\multicolumn{2}{m{12.6050005cm}|}{			
+			Valeur minimale : 0
+			
+			Valeur maximale : $(n-1)(n-2)$ si $\beta=0$
+			
+			$(n-2)\sum_i^{n-1} a_i$ si $\beta=1$
+			
+		}\\\hline
+		Commentaire &
+		\multicolumn{2}{m{12.6050005cm}|}{
+			La métrique $CF$ utilise la théorie des circuits électriques. Chaque lien du graphe correspond à une résistance électrique, les sources de courants et la terre sont quant à elles attachées aux taches.
+			
+			Si $\beta=0$ chaque tache émet un courant unitaire, si $\beta=1$ chaque tache émet un courant égal à sa capacité.
+			
+			Cette métrique peut être vue comme un équivalent de la métrique BC (avec $\alpha=0$ et $\beta=0$) qui tient compte de l'ensemble des chemins possibles et non pas uniquement du chemin le plus court.
+			
+		}\\\hline
+		Références &
+		\multicolumn{2}{m{12.6050005cm}|}{		
+			\cite{2015_collisions}
+		}\\\hline
+	\end{tabular}
 \end{table}
 
 
@@ -1063,7 +1235,7 @@ Valeur maximale :  $\mathit{SLC}$
 Signification\\\hline
 Niveau~global &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-\mathit{SLC}=\mathit{max}\text{[2061?]}\{{\mathit{ac}}_{k}\}
+\mathit{SLC}=\mathit{max}\{{\mathit{ac}}_{k}\}
 \end{equation*}
 } &
 Pour le graphe entier : plus grande capacité des composantes.
@@ -1102,7 +1274,7 @@ Valeur maximale : somme des capacités (1 seule composante)
 
 }\\\hline
 Référence &
-\multicolumn{2}{m{12.6050005cm}|}{Pascual-Hortal et Saura, 2006}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Pascual2006}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1117,7 +1289,7 @@ Référence &
 Signification\\\hline
 Niveau~global &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-\mathit{ECS}=\frac{1}{\sum _{k}^{\Box }{{\mathit{ac}}_{k}}}\sum _{k=1}^{\mathit{nc}}{{{\mathit{ac}}_{k}^{2}}_{\Box }}
+\mathit{ECS}=\frac{1}{\sum _{k}{{\mathit{ac}}_{k}}}\sum _{k=1}^{\mathit{nc}}{{{\mathit{ac}}_{k}^{2}}}
 \end{equation*}
 } &
 Pour le graphe entier : ?
@@ -1130,7 +1302,7 @@ Valeur maximale : somme des capacités (1 seule composante)
 
 }\\\hline
 Référence &
-\multicolumn{2}{m{12.6050005cm}|}{O’Brien et al., 2006}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{OBrien2006}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1162,7 +1334,7 @@ Valeur maximale : somme des capacités (1 seule composante)
 Commentaire &
 \multicolumn{2}{m{12.6050005cm}|}{Pour les couples de taches non connectées par un chemin on a :   ${\mathit{nl}}_{\mathit{ij}}=+{\infty}$}\\\hline
 Référence &
-\multicolumn{2}{m{12.6050005cm}|}{Ricotta et al., 2000}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Ricotta2010}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1267,7 +1439,7 @@ Niveau~local
 
  &
 \multicolumn{1}{m{5.303cm}|}{\begin{equation*}
-{\mathit{CC}}_{i}=\frac{1}{\left|{N}_{i}\right|\left(\left|{N}_{i}\right|-1\right)}\sum _{j{\in}{N}_{i}}^{\Box }{\left|{N}_{i}{\cap}{N}_{j}\right|}
+{\mathit{CC}}_{i}=\frac{1}{\left|{N}_{i}\right|\left(\left|{N}_{i}\right|-1\right)}\sum _{j{\in}{N}_{i}}{\left|{N}_{i}{\cap}{N}_{j}\right|}
 \end{equation*}
 } &
 Rapport du nombre de nœuds voisins de i voisins entre eux sur le total possible.\\\hline
@@ -1344,7 +1516,7 @@ Niveau~local
 
  &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-{\mathit{CCor}}_{i}=\frac{{\left|{N}_{i}\right|}_{\Box }^{2}}{\sum _{j{\in}{N}_{i}}{\left|{N}_{j}\right|}}
+{\mathit{CCor}}_{i}=\frac{{\left|{N}_{i}\right|}^{2}}{\sum _{j{\in}{N}_{i}}{\left|{N}_{j}\right|}}
 \end{equation*}
 } &
 Rapport entre le degré du nœud i et le degré de ses nœuds voisins j\\\hline
@@ -1357,32 +1529,10 @@ Commentaire &
 \end{tabular}
 \end{table}
 
-
 \pagebreak
 
-\subsection{Références bibliographiques}
+\bibliographystyle{graphab}
+\bibliography{graphab}
 
-Bodin O., Saura S., 2010. Ranking individual habitat patches as connectivity providers: Integrating network analysis and patch removal experiments. Ecological Modelling 221, 2393–2405.
 
-Foltête J.C., Clauzel C., Tournant P., Vuidel G., 2012a, Integrating graph-based connectivity metrics into species distribution models, Landscape Ecology 27, 557-569.
-
-Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the modelling of landscape networks. Environmental Modelling and Software 38, 316-327.
-
-Minor E.S., Urban D.L., 2008. A graph-theory framework for evaluating landscape connectivity and conservation planning. Conservation Biology 22, 297–307.
-
-O’Brien D., Manseau M., Fall A., Fortin M.J., 2006. Testing the importance of spatial configuration of winter habitat for woodland caribou: An application of graph theory. Biological Conservation 130, 70–83.
-
-Pascual-Hortal L., Saura S., 2006. Comparison and development of new graph-based landscape connectivity indices: towards the priorization of habitat patches and corridors for conservation. Landscape Ecology 21, 959–967
-
-Rayfield B., Fortin M.J., Fall A., 2011. Connectivity for conservation: a framework to classify network measures. Ecology 92, 847–858.
-
-Ricotta C., Stanisci A., Avena G.C., Blasi C., 2000, Quantifying the network connectivity of landscape mosaics: a graph-theoretical approach, Community Ecology 1(1), 89–94.
-
-Saura S., Pascual-Hortal L., 2007. A new habitat availability index to integrate connectivity in landscape conservation planning: Comparison with existing indices and application to a case study. Landscape and Urban Planning 83, 91–103.
-
-Saura S., Torné J., 2009. ConeforSensinode 2.2: A software package for quantifying the importance of habitat patches for landscape connectivity. Environmental Modelling and Software 24, 135–139.
-
-Saura S., Rubio L., 2010. A common currency for the different ways in which patches and links can contribute to habitat availability and connectivity in the landscape. Ecography 33, 523–537.
-
-Urban D.L., Keitt T.H., 2001. Landscape connectivity: a graph theoretic approach. Ecology 82, 1205–1218.
 \end{document}

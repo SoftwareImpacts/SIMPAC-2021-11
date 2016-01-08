@@ -120,6 +120,7 @@ public class CLITools {
                     "--rempatch npatch global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--remlink nlink global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
+                    "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--metapatch [mincapa=value]\n" +
                     "--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]\n" +
                     "\nmin:inc:max -> val1,val2,val3...");
@@ -129,7 +130,6 @@ public class CLITools {
             System.out.println("Advanced commands :\n" +
                     "--linkset distance=circuit [name=linkname] [complete[=dmax]] [slope=coef] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]\n" +
                     "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n" +
-                    "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--landmod zone=filezones.shp id=fieldname code=fieldname [novoronoi]\n");
             return;

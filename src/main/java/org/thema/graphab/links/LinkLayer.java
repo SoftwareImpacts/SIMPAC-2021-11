@@ -46,7 +46,6 @@ import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.style.LineStyle;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.pointset.Pointset;
 
 /**
  * Layer for a linkset.
@@ -94,7 +93,7 @@ public class LinkLayer extends FeatureLayer {
                 }
             }
         });
-        menu.add(new AbstractAction("Dist to cost") {
+        menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Dist2Cost")) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String res = JOptionPane.showInputDialog("Distance : ");
@@ -113,7 +112,7 @@ public class LinkLayer extends FeatureLayer {
                 
                 JTextArea text = new JTextArea(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
                         coef[0], coef[1], dist, cost));
-                JButton but = new JButton(new AbstractAction("Plot") {
+                JButton but = new JButton(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Plot")) {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         showScatterPlot(Path.DIST_ATTR, Path.COST_ATTR, true);

@@ -1741,8 +1741,8 @@ public final class Project {
         rootLayer.addLayerFirst(graphLayers);      
         for(GraphGenerator g : graphs.values()) {
             try {
-                Layer l = g.getLayers();
-                l.setVisible(false);
+                GraphGroupLayer l = g.getLayers();
+                l.setLayersVisible(false);
                 graphLayers.addLayerLast(l);
             } catch(Exception e) {
                 Logger.getLogger(Project.class.getName()).log(Level.WARNING, null, e);
@@ -2433,9 +2433,9 @@ public final class Project {
                 new PCMetric(), new IICMetric(), new CCPMetric(),
                 new MSCMetric(), new SLCMetric(), new ECSMetric(), new GDMetric(), new HMetric(), new NCMetric(),
                 new DeltaPCMetric()));
-        LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new FPCLocalMetric(),
+        LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new FPCLocalMetric(), new CFLocalMetric(),
                 new DgLocalMetric(), new CCLocalMetric(), new ClosenessLocalMetric(), new ConCorrLocalMetric(),
-                new EccentricityLocalMetric(), new BCCircuitLocalMetric(), new CFLocalMetric()));
+                new EccentricityLocalMetric()));
     }
     
     /**
