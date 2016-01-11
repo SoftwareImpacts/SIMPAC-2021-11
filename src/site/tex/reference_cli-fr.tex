@@ -43,9 +43,9 @@ Vous êtes prêt à utiliser Graphab en ligne de commande !
 
 \section{Syntaxe}
 \subsection{Définition}
-Les commandes commencent par un double tiret.\\
-Les options globales commencent par un tiret simple.\\
-Les paramètres n'ont pas de tiret.
+Les commandes commencent par un double tiret : \verb|--project, --linkset, ...|\\
+Les options globales commencent par un tiret simple : \verb|-proc, -nosave, ...|\\
+Les paramètres n'ont pas de tiret : \verb|name, complete, maxcost, ...|
 \subsection{Séparateur}
 Les espaces sont utilisés pour séparer les différents éléments d'une ligne de commande, par conséquent, vous ne pouvez pas avoir un nom qui contient des espaces.\\
 \textbf{Evitez de mettre des espaces dans les noms des éléments d'un projet.}
@@ -88,7 +88,7 @@ Après une de ces deux commandes, toutes les autres commandes seront exécutées
 \begin{cmd}
 java -jar graphab-2.0.jar --project prj.xml --graph --gmetric NC  
 \end{cmd}
-Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la commande \textit{--graph}, puis exécute la commande \textit{--gmetric}.
+Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la commande \textit{--graph}, puis la commande \textit{--gmetric}.
 
 
 \chapter{Références des commandes}
@@ -166,8 +166,6 @@ CC : Coefficient d'agrégation (CC)
 CCe : Centralité de proximité (CCe)
 CCor : Corrélation de Connectivité (CCor)
 Ec : Excentricité (Ec)
-BCCirc : Centralité intermédiaire (version circuit) (BCCirc)
-	params : [d, p, beta]
 CF : Flux circuit (CF)
 	params : [beta]
 
@@ -743,7 +741,7 @@ comp_Planar_Euclid  F_d1000_p0.05_beta1 1000.00    0.108353  64.6026  2.38405e-0
 Si votre ordinateur a plus qu'un coeur (la plupart), vous pouvez tirer partie de la parallélisation pour accélérer vos calculs avec Graphab.
 Il faut définir le nombre de coeurs (ou processeurs) que Graphab peut utiliser avec l'option \textit{-proc} après la commande \textit{--project} :
 \begin{cmd}
-java -jar graphab-1.2.jar --project path2myproject/myproject.xml -proc 8 ...
+java -jar graphab-2.0.jar -proc 8 --project path2myproject/myproject.xml ...
 \end{cmd}
 Par défaut, en ligne de commande, le nombre de coeurs utilisés correspond au nombre défini dans la fenêtre Préférences de l'interface graphique.
 
@@ -752,7 +750,7 @@ En augmentant le nombre de coeurs utilisés par Graphab, vous augmentez, par la 
 \subsection{Cluster : MPI}
 Graphab peut aussi être utilisé sur des clusters de calcul supportant Java avec OpenMPI.
 \begin{cmd}
-mpirun java -jar graphab-1.2.jar --mpi --project path2myproject/myproject.xml ...
+mpirun java -jar graphab-2.0.jar -mpi --project path2myproject/myproject.xml ...
 \end{cmd}
 Seulement certaines commandes peuvent être utilisées dans l'environnement MPI : --gmetric, --cmetric, --lmetric, --delta, --addpatch
 
@@ -763,8 +761,8 @@ Si l'exécution se termine par une erreur OutOfMemoryError ou GC overhead, vous 
 
 Pour définir manuellement la mémoire maximale utilisable par Graphab, il faut utiliser l'option Java -Xmx :
 \begin{cmd}
-java -Xmx2g -jar graphab-1.2.jar ... # 2Gb allocated
-java -Xmx1500m -jar graphab-1.2.jar ... # 1500 Mb -> 1.5Gb allocated
+java -Xmx4g -jar graphab-2.0.jar ... # 4Gb allocated
+java -Xmx1500m -jar graphab-2.0.jar ... # 1500 Mb -> 1.5Gb allocated
 \end{cmd}
 Si vous ne pouvez pas allouer plus de 1 GB ou 1.5 GB alors que votre ordinateur a plus de mémoire vive, vous utilisez sûrement une version 32-bit de Java qui est limitée à moins de 2 GB.
 Pour tester votre version de Java :

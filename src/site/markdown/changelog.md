@@ -1,7 +1,6 @@
 ## Changelog
 
-##### version 1.3.32 (15/12/2015)
-
+##### version 1.3.33 (08/01/2015)
 - Metric : move BCCirc metric in plugin
 - CLI : move to normal mode the command --gtest
 
