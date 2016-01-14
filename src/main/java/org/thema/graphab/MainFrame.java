@@ -136,7 +136,6 @@ public class MainFrame extends javax.swing.JFrame {
         openMenuItem = new javax.swing.JMenuItem();
         prefMenuItem = new javax.swing.JMenuItem();
         logMenuItem = new javax.swing.JMenuItem();
-        projectRemPatchMenuItem = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         quitMenuItem = new javax.swing.JMenuItem();
         graphMenu = new javax.swing.JMenu();
@@ -145,6 +144,7 @@ public class MainFrame extends javax.swing.JFrame {
         metaPatchMenuItem = new javax.swing.JMenuItem();
         dataMenu = new javax.swing.JMenu();
         calcCapaMenuItem = new javax.swing.JMenuItem();
+        projectRemPatchMenuItem = new javax.swing.JMenuItem();
         addPointDataMenuItem = new javax.swing.JMenuItem();
         addPointMenuItem = new javax.swing.JMenuItem();
         setDEMMenuItem = new javax.swing.JMenuItem();
@@ -213,14 +213,6 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         fileMenu.add(logMenuItem);
-
-        projectRemPatchMenuItem.setText(bundle.getString("MainFrame.projectRemPatchMenuItem.text")); // NOI18N
-        projectRemPatchMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                projectRemPatchMenuItemActionPerformed(evt);
-            }
-        });
-        fileMenu.add(projectRemPatchMenuItem);
         fileMenu.add(jSeparator1);
 
         quitMenuItem.setText(bundle.getString("MainFrame.quitMenuItem.text")); // NOI18N
@@ -270,6 +262,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         dataMenu.add(calcCapaMenuItem);
+
+        projectRemPatchMenuItem.setText(bundle.getString("MainFrame.projectRemPatchMenuItem.text")); // NOI18N
+        projectRemPatchMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                projectRemPatchMenuItemActionPerformed(evt);
+            }
+        });
+        dataMenu.add(projectRemPatchMenuItem);
 
         addPointDataMenuItem.setText(bundle.getString("MainFrame.addPointDataMenuItem.text")); // NOI18N
         addPointDataMenuItem.addActionListener(new java.awt.event.ActionListener() {

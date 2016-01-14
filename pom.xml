@@ -4,7 +4,7 @@
 
     <groupId>org.thema</groupId>
     <artifactId>graphab</artifactId>
-    <version>1.3.33</version>
+    <version>1.3.34</version>
     <packaging>jar</packaging>
 
     <name>Graphab</name>
@@ -60,9 +60,9 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>de.akquinet.maven</groupId>
+                <groupId>de.akquinet.jbosscc.latex</groupId>
                 <artifactId>maven-latex-plugin</artifactId>
-                <version>1.1</version>
+                <version>1.2</version>
                 <inherited>false</inherited>
                 <executions>
                     <execution>
@@ -164,15 +164,6 @@
             <url>http://themalibs.sourceforge.net/repository/</url>
         </repository>
     </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>maven-latex-plugin-repo</id>
-            <url>http://akquinet.github.com/maven-latex-plugin/maven2/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </pluginRepository>
-    </pluginRepositories>
     <organization>
         <name>Laboratoire ThéMA - UMR 6049 - CNRS / Université de Franche-Comté</name>
         <url>http://thema.univ-fcomte.fr</url>

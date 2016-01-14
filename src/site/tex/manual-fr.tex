@@ -31,7 +31,7 @@
 
 % saut après itemize
 \let\EndItemize\enditemize
-\def\enditemize{\EndItemize\bigskip}
+\def\enditemize{\EndItemize\medskip}
 
 \begin{document}
  \begin{titlepage}
@@ -57,7 +57,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2016-01-08\\
+		2016-01-14\\
 	}
 	
 \end{titlepage}
@@ -229,7 +229,7 @@ L’usage des distances de moindre coût donne accès à deux types d’impédan
 
 Pour chaque lien créé, sa distance métrique et sa distance en unité de coût sont enregistrées et consultables dans les propriétés (cf. \nameref{properties}).
 
-Les valeurs de résistances définies précédemment peuvent être pondérées par la pente \cite{2015_monkey}. Pour que la pente puisse être calculée, il faut tout d'abord charger un MNT à partir du menu Données | Charger un MNT. 
+Les valeurs de résistance définies précédemment peuvent être pondérées par la pente \cite{2015_monkey}. Pour que la pente puisse être calculée, il faut tout d'abord charger un MNT à partir du menu Données | Importer un MNT. 
 
 Le paramètre coef ($c$) permet d'ajuster l'importance de la pondération par la pente ($p$). Pour un pixel donné, la résistance résultante ($r_{final}$) est calculée comme suit :
 
@@ -256,6 +256,8 @@ L’utilisateur doit ensuite sélectionner un des jeux de liens créés précéd
 	\item arbre couvrant minimal : graphe reliant toutes les taches dont le poids total des liens est minimal.
 \end{itemize}
 
+Option «~Inclure les distances intra-taches~» : si la case est cochée, le calcul des métriques à l’étape 3 tient compte des distances intra-taches (recommandé) ; dans le cas contraire, seules les distances inter-taches sont prises en compte.
+
 Pour un graphe seuillé, l’unité de la distance de seuillage dépend du type de distance utilisé dans la création du jeu de liens. Si le jeu de lien a été créé en distance euclidienne, la distance de seuillage du graphe est exprimée en mètres. Si la création du jeu de lien a été réalisée en distance-coût, la distance de seuillage du graphe est exprimée en coûts cumulés. 
 
 \begin{figure}[H]
@@ -268,8 +270,6 @@ $$Dist = e^{intercept + slope . log(DistM)}$$
 
 L'estimation peut être réalisée directement dans le logiciel à partir du menu Conversion dist. présent dans le menu contextuel d'un jeu de lien (clic droit sur le jeu de lien).
 
-Option «~Inclure les distances intra-taches~» : si la case est cochée, le calcul des métriques à l’étape 3 tient compte des distances intra-taches (recommandé) ; dans le cas contraire, seules les distances inter-taches sont prises en compte.
-
 Pour réaliser une analyse multiscalaire, il est souvent nécessaire de créer une série de graphes seuillés dont le seuil est défini de façon croissante. L’utilisateur peut créer manuellement cette série de graphes, mais si l’objectif est d’analyser le comportement d’une métrique de connectivité en fonction du seuil, il est préférable d’utiliser le menu : Métriques / Graphes par lot (cf. \ref{batch_graph}).
 
 \subsection{Partitionnement de graphe}
@@ -280,7 +280,7 @@ La modularité est calculée à partir d'un poids ($w_{ij}$) défini pour chaque
 $$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
 Les 2 paramètres $\beta$ et $\alpha$ permettent de définir respectivement l'importance de la capacité des taches ($a_i a_j$) et l'importance de la distance ($d_{ij}$) pour le poids du lien $w_{ij}$. Si $\alpha = \beta = 0$ alors les poids sont tous identiques : $w_{ij} = 1$.
 
-Le partitionnement est accessible depuis le menu contextuel d'un graphe (clic droit sur le nom d'un graphe). La première fenêtre demande de renseigner les paramètres $\alpha$ et $\beta$. Le paramètre $\alpha$ est déterminé à partir d'une distance $d$ et d'une probabilité $p$ (cf. \nameref{param_weight}). Pour définir $\alpha$ à 0, il faut mettre $p$ à 1. 
+Le partitionnement est accessible depuis le menu contextuel d'un graphe (clic droit sur le nom d'un graphe). La première fenêtre demande de renseigner les paramètres $\alpha$ et $\beta$. Le paramètre $\alpha$ n'est pas renseigné directement, il est déterminé à partir de deux autres paramètres : une distance $d$ et une probabilité $p$ (cf. \nameref{param_weight}). Pour définir $\alpha$ à 0, il faut mettre $p$ à 1. 
 
 Après validation de cette fenêtre, le calcul se lance jusqu'à obtenir un partitionnement maximisant la modularité. Le résultat s'affiche sur une nouvelle couche du graphe. Deux autres fenêtres viennent compléter ce résultat. 
 
@@ -342,7 +342,7 @@ Les valeurs de capacité du tableau importé remplacent les surfaces des taches 
 
 
 \subsection{Suppression de taches}
-Après avoir défini une capacité différente de la surface de la tache, il peut être intéressant de supprimer les taches dont la capacité est trop faible. L'entrée "Supprimer des taches" du menu Fichier, permet de créer un nouveau projet identique au projet actuel en supprimant les taches ayant une capacité inférieure à un seuil donné.
+Après avoir défini une capacité différente de la surface de la tache, il peut être intéressant de supprimer les taches dont la capacité est trop faible. L'entrée "Supprimer des taches" du menu Données, permet de créer un nouveau projet identique au projet actuel en supprimant les taches ayant une capacité inférieure à un seuil donné.
 
 Après avoir renseigné la capacité minimale voulue, un nouveau projet est créé dans un sous répertoire du projet actuel et chargé à la fin du traitement.
 
@@ -538,7 +538,7 @@ Le tableau \ref{metric_poss} récapitule les possibilités de calcul des métriq
 
 \subsection{Interpolation des métriques}
 
-Le menu Analyse / Interpolation des métriques permet de générer des couches raster à partir des métriques locales calculées au niveau des taches. Cette transformation est fondée sur une interpolation spatiale spécifique, qui permet d’attribuer les valeurs de connectivité des taches à chaque cellule d’une grille, en utilisant une fonction de pondération décroissante à partir de la bordure des taches (poids de 1). Globalement, plus les cellules sont situées à l’écart du graphe, plus elles obtiennent des valeurs faibles de connectivité.
+Le menu "Analyses / Interpoler une métrique" permet de générer des couches raster à partir des métriques locales calculées au niveau des taches. Cette transformation est fondée sur une interpolation spatiale spécifique, qui permet d’attribuer les valeurs de connectivité des taches à chaque cellule d’une grille, en utilisant une fonction de pondération décroissante à partir de la bordure des taches (poids de 1). Globalement, plus les cellules sont situées à l’écart du graphe, plus elles obtiennent des valeurs faibles de connectivité.
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img12.png} 
@@ -648,7 +648,6 @@ En mode graphe, les distances sont calculées en fonction du graphe sélectionn�
 \begin{itemize}
 	\item Simple : distance calculée suivant le plus court chemin sur le graphe de référence. Le type de distance correspond à celui qui a été utilisé pour la définition du jeu de lien qui a servi à définir le graphe de référence. Aux deux extrémités du chemin considéré, le calcul intègre la distance entre chaque point et la tache la plus proche. Suivant le choix qui a été fait au moment de la création du graphe, le calcul intègre éventuellement les distances intra-taches.	
 	\item Circuit : calcule la résistance équivalente entre les taches les plus proches de chaque point. Le graphe est vu comme un réseau électrique où chaque lien du graphe représente une résistance. Cette option permet de tenir compte de l'ensemble des chemins possibles et non pas uniquement du plus court.
-	\item Flux : ??
 \end{itemize}
 
 \subsection{Générer des points aléatoires}
@@ -718,6 +717,10 @@ Le bouton Extrapoler permet d’estimer la probabilité de présence de l’esp�
 \end{figure}
 
 Dans la nouvelle fenêtre qui s’affiche, l’utilisateur retrouve les paramètres du modèle tels qu’ils ont été décrits précédemment. La résolution de la grille (en mètres) indique le niveau de précision spatiale selon lequel cette extrapolation est effectuée. Ce critère a une forte incidence sur le temps de calcul nécessaire pour obtenir le résultat. Le résultat est archivé sous forme de couche raster au format *.tif et affiché dans la fenêtre principale.
+
+\bigskip
+Références : \cite{2012_SDM, 2012_graphab_EMS, 2013_SDM, 2013_SDM_rainette}
+
 
 \section{Affichage}
 

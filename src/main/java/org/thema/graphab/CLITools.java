@@ -114,15 +114,15 @@ public class CLITools {
                     "--gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
+                    "--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]\n" +                    
                     "--model variable distW=min:inc:max\n" +
                     "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +                    
                     "--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[patchfile=file.shp [capa=capa_field]]\n" +
-                    "--rempatch npatch global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]\n" +
-                    "--remlink nlink global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]\n" +
-                    "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
+                    "--remelem nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
+                    "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "--metapatch [mincapa=value]\n" +
-                    "--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]\n" +
+
                     "\nmin:inc:max -> val1,val2,val3...");
             return;
         }
@@ -130,7 +130,6 @@ public class CLITools {
             System.out.println("Advanced commands :\n" +
                     "--linkset distance=circuit [name=linkname] [complete[=dmax]] [slope=coef] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]\n" +
                     "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n" +
-                    "--ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--landmod zone=filezones.shp id=fieldname code=fieldname [novoronoi]\n");
             return;
         }
@@ -199,14 +198,10 @@ public class CLITools {
                 calcDeltaMetric(args);
             } else if(p.equals("--gtest")) {
                 addGlobal(args);
-            } else if(p.equals("--ltest")) {
-                addLocal(args);
             } else if(p.equals("--addpatch")) {
                 addPatch(args);
-            } else if(p.equals("--rempatch")) {
-                remElem(args, true);
-            } else if(p.equals("--remlink")) {
-                remElem(args, false);
+            } else if(p.equals("--remelem")) {
+                remElem(args);
             } else if(p.equals("--gremove")) {
                 remGlobal(args);
             } else if(p.equals("--circuit")) {
@@ -901,7 +896,7 @@ public class CLITools {
                 if(r.isSingle()) {
                     params.put(tok[0], r.getMin());
                 } else {
-                    throw new IllegalArgumentException("No range for indice params in --gtest");
+                    throw new IllegalArgumentException("No range for indice params in --gremove");
                 }
             }
 
@@ -932,7 +927,7 @@ public class CLITools {
         }
         
         GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice, maxCost);
-        System.out.println("Global indice " + indice.getDetailName());
+        System.out.println("Global metric " + indice.getDetailName());
         for(GraphGenerator graph : getGraphs()) {
             System.out.println("Graph " + graph.getName());
             GraphGenerator deltaGraph = new GraphGenerator(graph, patchIds, linkIds);
@@ -944,85 +939,7 @@ public class CLITools {
         }
     }
     
-    private void addLocal(List<String> args) throws IOException {
-        int nbStep = Integer.parseInt(args.remove(0));
-        String indName = args.remove(0);
-        double maxCost = readMaxCost(args);
-        HashMap<String, Object> params = new HashMap<>();
-        while(!args.get(0).startsWith("obj=")) {
-            String [] tok = args.remove(0).split("=");
-            Range r = Range.parse(tok[1]);
-            if(r.isSingle()) {
-                params.put(tok[0], r.getMin());
-            } else {
-                throw new IllegalArgumentException("No range for indice params in --ltest");
-            }
-        }
-        // obj=patch|link
-        boolean patch = args.remove(0).split("=")[1].equals("patch");
-
-        List lstIds = new ArrayList();
-        if(args.get(0).startsWith("sel=")) {
-            String [] toks = args.remove(0).split("=")[1].split(",");
-            for(String tok : toks) {
-                lstIds.add(patch ? Integer.parseInt(tok) : tok);
-            }
-        } else if(args.get(0).startsWith("fsel=")) {
-            File f = new File(args.remove(0).split("=")[1]);
-            List<String> lst = readFile(f);
-            for(String id : lst) {
-                lstIds.add(patch ? Integer.parseInt(id) : id);
-            }
-        } else {
-            throw new IllegalArgumentException("sel or fsel parameter is missing");
-        }
-
-        LocalMetric indice = Project.getLocalMetric(indName);
-        if(patch && !indice.calcNodes() || !patch && !indice.calcEdges()) {
-            throw new IllegalArgumentException("Indice " + indice.getName() + " is not calculated on selected object type");
-        }
-        if(indice.hasParams()) {
-            if(params.isEmpty()) {
-                throw new IllegalArgumentException("Params for " + indice.getName() + " not found in --ltest");
-            }
-            indice.setParams(params);
-        }
-        
-        for(GraphGenerator graph : getGraphs()) {
-            HashSet ids = new HashSet(lstIds);
-            try (FileWriter w = new FileWriter(new File(project.getDirectory(), "ltest-" + graph.getName() + "-" + indice.getDetailName() + ".txt")); 
-                 FileWriter wd = new FileWriter(new File(project.getDirectory(), "ltest-" + graph.getName() + "-" + indice.getDetailName() + "-detail.txt"))) {
-                wd.write("Step\tId\t"+indice.getShortName()+"\n");
-                w.write("Step\tId\t"+indice.getShortName()+"\n");
-                
-                System.out.println("Local indice " + indice.getName());
-                
-                for(int i = 1; i <= nbStep; i++) {
-                    System.out.println("Step : " + i);
-                    
-                    Map<Object, Double> mapVal = addLocal(graph, patch, ids, indice, maxCost);
-                    Object bestId = null;
-                    double maxVal = -Double.MAX_VALUE;
-                    for(Object id : mapVal.keySet()) {
-                        double val = mapVal.get(id);
-                        if(val > maxVal) {
-                            bestId = id;
-                            maxVal = val;
-                        }
-                        wd.write(i + "\t" + id + "\t" + val + "\n");
-                    }
-                    w.write(i + "\t" + bestId + "\t" + maxVal + "\n");
-                    w.flush();
-                    wd.flush();
-                    
-                    ids.remove(bestId);
-                }   
-            }
-        }
-        
-    }
-    
-    private void remElem(List<String> args, boolean patch) throws IOException {
+    private void remElem(List<String> args) throws IOException {
         int nElem = Integer.parseInt(args.remove(0));
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
@@ -1037,12 +954,15 @@ public class CLITools {
                 if(r.isSingle()) {
                     params.put(tok[0], r.getMin());
                 } else {
-                    throw new IllegalArgumentException("No range for metric params in --rempatch");
+                    throw new IllegalArgumentException("No range for metric params in --remelem");
                 }
             }
 
             indice.setParams(params);
         }
+        
+        // obj=patch|link
+        boolean patch = args.remove(0).split("=")[1].equals("patch");
         
         List ids = new ArrayList();
         if(!args.isEmpty() && args.get(0).startsWith("sel=")) {
@@ -1085,7 +1005,7 @@ public class CLITools {
                     double metric = init - (max * init);
                     remIds.add(bestId);
                     if(step == 1) {
-                        wd.write("0\tnull\t" + init + "\n");
+                        wd.write("0\tinit\t" + init + "\n");
                     }
                     wd.write(step + "\t" + bestId + "\t" + metric + "\n");
                     wd.flush();
@@ -1171,37 +1091,6 @@ public class CLITools {
             }
         }
         
-    }
-
-    private Map<Object, Double> addLocal(GraphGenerator graph, boolean patch, Set ids, LocalMetric indice, double maxCost) {
-
-        HashMap<Object, Path> links = new HashMap<>();
-        if(!patch) {
-            for(Path link : graph.getLinkset().getPaths()) {
-                links.put(link.getId(), link);
-            }
-        }
-        DeltaAddGraphGenerator deltaGraph = new DeltaAddGraphGenerator(graph,
-                patch ? ids : Collections.EMPTY_LIST, !patch ? ids : Collections.EMPTY_LIST);
-
-        HashMap<Object, Double> values = new HashMap<>();
-        for(Object id : ids) {
-            System.out.println("Object : " + id);
-            deltaGraph.addElem(id);
-            MainFrame.calcLocalMetric(new TaskMonitor.EmptyMonitor(), deltaGraph,
-                        indice, maxCost);
-            double val;
-            if(patch) {
-                val = ((Number)project.getPatch((Integer)id).getAttribute(indice.getDetailName() + "_" + deltaGraph.getName())).doubleValue();
-            } else {
-                val = ((Number)links.get(id).getAttribute(indice.getDetailName() + "_" + deltaGraph.getName())).doubleValue();
-            }
-            values.put(id, val);
-
-            deltaGraph.reset();
-        }
-
-        return values;
     }
     
     private void calcCapa(List<String> args) throws IOException, SchemaException {

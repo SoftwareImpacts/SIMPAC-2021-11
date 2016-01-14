@@ -1,5 +1,10 @@
 ## Changelog
 
+##### version 1.3.34 (14/01/2014)
+- UI : move "Remove patches" menu entry to "Data" menu
+- CLI : remove the command --ltest
+- CLI : merge the commands --rempatch and --remlink in --remelem
+
 ##### version 1.3.33 (08/01/2015)
 - Metric : move BCCirc metric in plugin
 - CLI : move to normal mode the command --gtest

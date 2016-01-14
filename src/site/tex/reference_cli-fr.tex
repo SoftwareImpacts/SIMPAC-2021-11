@@ -2,44 +2,112 @@
 \usepackage[utf8]{inputenc}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[french]{babel}
+\usepackage{graphicx}
 \usepackage{fancyvrb}
-\newenvironment{cmd}
-{\quote\Verbatim}
-{\endVerbatim\endquote}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, filecolor=blue, urlcolor=blue, pdftitle=, pdfauthor=Gilles Vuidel, pdfsubject=, pdfkeywords=}
+\usepackage{parskip}
+
+
+% saut après itemize
+\let\EndItemize\enditemize
+\def\enditemize{\EndItemize\medskip}
 
 % Title Page
 \title{Manuel de référence\\
-Graphab 1.3\\
+Graphab 2.0\\
 Ligne de commande}
 
 
 \begin{document}
-\maketitle
+ \begin{titlepage}
+ 	
+ 	\centering
+ 	\includegraphics[scale=0.5]{img/logo.png}\\
+ 	
+ 	\bigskip
+ 	\bigskip
+ 	\bigskip	
+ 	{\Huge
+ 		\bfseries
+ 		Graphab 2.0\\
+ 		\bigskip
+ 		Manuel de référence\\
+ 		Ligne de commande\\
+ 	}
+ 	\bigskip
+ 	\bigskip
+ 	\bigskip
+ 	\bigskip
+ 	\bigskip
+ 	
+ 	{\Large		
+ 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
+ 		\bigskip
+ 		2016-01-14\\
+ 	}
+ 	
+ \end{titlepage}
 
 
-\parindent 0pt
+
 
 \tableofcontents
 
 \chapter{Prérequis}
 
-Graphab peut être utilisé en ligne de commande (CLI : Command Line Interface) à partir de la version 1.2.
-Ce mode est utile pour exécuter Graphab sur un ordinateur distant sans interface graphique, ou bien lancer automatiquement plusieurs traitements à la suite.
+Le programme Graphab est un outil de modélisation des réseaux écologiques fondé sur les graphes paysagers.
+
+Il peut être utilisé en ligne de commande (CLI : Command Line Interface) à partir de la version 1.2. Ce mode est utile pour exécuter Graphab sur un ordinateur distant sans interface graphique, ou bien lancer automatiquement plusieurs traitements à la suite.
+
+La version 2.0 apporte plusieurs nouvelles fonctionnalités en ligne de commande :
+\begin{itemize}
+	\item la création de projet,
+	\item la création de méta taches,
+	\item l'interpolation de métrique,
+	\item le calcul de corridors.
+\end{itemize}
+
+\section{A propos de Graphab}
+
+
+\subsection{Auteurs}
+Le programme Graphab a été développé par Gilles Vuidel et Jean-Christophe Foltête au laboratoire \href{http://thema.univ-fcomte.fr}{ThéMA} (\href{http://www.univ-fcomte.fr}{Université de Franche-Comté} – \href{http://www.cnrs.fr}{CNRS}). Le développement du logiciel a été financé par le ministère de l'écologie, du développement durable, des transports et du logement dans le cadre du programme \href{http://www.ittecop.fr/}{ITTECOP}. Le logo de Graphab a été conçu par \href{http://www.gachwell.com/}{Gachwell}. 
+
+\subsection{Conditions d’utilisation}
+Le programme Graphab est disponible librement sous licence GPL. Les utilisateurs de Graphab sont invités à citer la référence \cite{2012_graphab_EMS} dans leurs travaux :
+
+Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the modelling of landscape networks. Environmental Modelling \& Software, 38: 316-327.
+
+
+\section{Configuration requise}
+
+Graphab fonctionne sur n'importe quel ordinateur supportant Java 1.7 ou supérieur (PC sous Linux, Windows, Mac...). Toutefois, lorsqu'il s'agit de données très volumineuses, la quantité de mémoire vive (RAM) de l’ordinateur peut limiter le nombre maximum de nœuds et de liens qui peuvent être traités en une seule fois avec Graphab. De plus, pour certaines métriques complexes, la puissance de votre processeur va déterminer la vitesse de leur calcul. Vous trouverez plus de détails à ce sujet dans la section \ref{perf} et dans \cite{2012_graphab_EMS}.
+
+\section{Installation et lancement du programme}
+
+Graphab est téléchargeable à cette adresse : \url{http://thema.univ-fcomte.fr/productions/graphab}.
+
+\begin{itemize}
+	\item Télécharger et installer Java 1.7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
+	\item Télécharger graphab-2.0.jar
+	\item Lancer graphab-2.0.jar
+\end{itemize}
 
 \section{Lancer Graphab en ligne de commande}
 Il faut tout d'abord ouvrir une fenêtre de terminal, puis aller dans le répertoire contenant Graphab avec la commande \textit{cd}.
 Enfin, vous pouvez saisir la commande suivante pour afficher l'écran d'aide de Graphab :
-\begin{cmd}
-java -jar graphab-2.0.jar --help
-\end{cmd}
+\begin{Verbatim}
+	java -jar graphab-2.0.jar --help
+\end{Verbatim}
 Résultat
-\begin{verbatim}
+\begin{Verbatim}
 Usage :
 java -jar graphab-2.0.jar --project prjfile.xml
 ...
 ...
-\end{verbatim}
-Vous êtes prêt à utiliser Graphab en ligne de commande !
+\end{Verbatim}
+Vous êtes prêt à utiliser Graphab en ligne de commande.
 
 \section{Syntaxe}
 \subsection{Définition}
@@ -54,27 +122,27 @@ Les paramètres entourés de crochets sont optionnels, et donc les paramètres q
 \subsection{Intervalle et liste de valeurs}
 Définir un intervalle pour un paramètre (au lieu d'une valeur simple) exécutera la commande plusieurs fois pour chaque valeur définie dans l'intervalle.
 Un intervalle est défini par un minimum, un incrément et un maximum :
-\begin{cmd}
-min:inc:max
-\end{cmd}
+\begin{Verbatim}
+	min:inc:max
+\end{Verbatim}
 Un intervalle de 0 à 10 avec un incrément de 2 créera 6 valeurs : 0, 2, 4, 6, 8, 10 :
-\begin{cmd}
-0:2:10
-\end{cmd}
+\begin{Verbatim}
+	0:2:10
+\end{Verbatim}
 La valeur minimale est toujours inclue, mais la valeur maximale est inclue seulement si la valeur incrémentée tombe exactement sur le maximum, 
 sinon la dernière valeur sera la valeur incrémentée maximale inférieure au maximum.
 Un intervalle de 0 à 9 incrémenté de 2 donnera 5 valeurs : 0, 2, 4, 6, 8 :
-\begin{cmd}
-0:2:9
-\end{cmd}
+\begin{Verbatim}
+	0:2:9
+\end{Verbatim}
 Des valeurs décimales peuvent être utilisées, avec le point comme séparateur décimal :
-\begin{cmd}
-1.5:0.5:4
-\end{cmd}
+\begin{Verbatim}
+	1.5:0.5:4
+\end{Verbatim}
 Pour utiliser un ensemble de valeurs qui ne suit pas une progression arithmétique, vous pouvez utiliser une liste de valeurs séparées par des virgules :
-\begin{cmd}
-0,1,4,8,10
-\end{cmd}
+\begin{Verbatim}
+	0,1,4,8,10
+\end{Verbatim}
 \textbf{La liste de valeurs ne doit pas contenir d'espace.}
 
 Une liste de valeurs ou une valeur simple peuvent toujours être utilisées à la place d'un intervalle.
@@ -85,9 +153,9 @@ Graphab peut être lancé avec plusieurs commandes sur la même ligne, sauf pour
 Les commandes \textit{--create} et \textit{--project} peuvent être utilisées une seule fois et doivent être la première commande.
 Après une de ces deux commandes, toutes les autres commandes seront exécutées séquentiellement dans le même ordre que sur la ligne.
 
-\begin{cmd}
-java -jar graphab-2.0.jar --project prj.xml --graph --gmetric NC  
-\end{cmd}
+\begin{Verbatim}
+	java -jar graphab-2.0.jar --project prj.xml --graph --gmetric NC  
+\end{Verbatim}
 Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la commande \textit{--graph}, puis la commande \textit{--gmetric}.
 
 
@@ -95,18 +163,18 @@ Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la comm
 \section{Commandes générales}
 \subsection{--help : affichage de l'aide}
 Commande :
-\begin{cmd}
-java -jar graphab-2.0.jar --help
-\end{cmd}
+\begin{Verbatim}
+	java -jar graphab-2.0.jar --help
+\end{Verbatim}
 Résultat :
-\begin{verbatim}
+\begin{Verbatim}
 Usage :
 java -jar graphab.jar --metrics
-java -jar graphab.jar [-proc n] --create prjname land.tif habitat=code1,...,coden [nodata=val] [minarea=val] [con8] [simp] [dir=path]
+java -jar graphab.jar [-proc n] --create prjname land.tif habitat=code1,...,coden [nodata=val] ...
 java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]
 Commands list :
 --show
---linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]
+--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
 --corridor maxcost=valcost
 --graph [nointra] [threshold=[{]min:inc:max[}]]
@@ -117,78 +185,99 @@ Commands list :
 --gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
---model variable distW=min:inc:max
---delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]
---addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[patchfile=file.shp [capa=capa_field]]
---rempatch npatch global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]
---remlink nlink global_metric_name [maxcost=valcost] [param1=val ...] [sel=id1,id2,...,idn|fsel=file.txt]
---gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]
---metapatch [mincapa=value]
 --interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]
+--model variable distW=min:inc:max
+--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
+--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] ...
+--remelem nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
+--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
+--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch= ...
+--metapatch [mincapa=value]
 
 min:inc:max -> val1,val2,val3...
-\end{verbatim}
+\end{Verbatim}
 
 \subsection{--metrics : affichage des métriques}
 Cette commande affiche l'ensemble des métriques disponibles avec leur abréviation, leur description et leurs paramètres.
 
 Commande :
-\begin{cmd}
-java -jar graphab-2.0.jar --metrics
-\end{cmd}
+\begin{Verbatim}
+	java -jar graphab-2.0.jar --metrics
+\end{Verbatim}
 Résultat :
-\begin{cmd}
-===== Global metrics =====
-S#F - Sum Flux (F)
-	params : [d, p, beta]
-PC - Probabilité de connectivité (PC)
-	params : [d, p, beta]
-IIC - Indice intégral de connectivité (IIC)
-CCP - Probabilité de coïncidence (CCP)
-MSC - Taille moyenne des composantes (MSC)
-SLC - Taille de la plus grande composante (SLC)
-ECS - Taille de cluster attendue (ECS)
-GD - Diamètre (GD)
-H - Harary indice (H)
-NC - Nombre de composantes (NC)
-dPC - Delta PC décomposé (dPC)
-	params : [d, p, beta]
+\begin{Verbatim}
+	===== Global metrics =====
+	S#F - Sum Flux (F)
+		params : [d, p, beta]
+	PC - Probabilité de connectivité (PC)
+		params : [d, p, beta]
+	IIC - Indice intégral de connectivité (IIC)
+	CCP - Probabilité de coïncidence (CCP)
+	MSC - Taille moyenne des composantes (MSC)
+	SLC - Taille de la plus grande composante (SLC)
+	ECS - Taille de cluster attendue (ECS)
+	GD - Diamètre (GD)
+	H - Harary indice (H)
+	NC - Nombre de composantes (NC)
+	dPC - Delta PC décomposé (dPC)
+		params : [d, p, beta]
+	
+	===== Local metrics =====
+	F : Flux (F)
+		params : [d, p, beta]
+	BC : Centralité intermédiaire (BC)
+		params : [d, p, beta]
+	FPC : PC Flux (FPC)
+		params : [d, p, beta]
+	Dg : Degré du noeud (Dg)
+	CC : Coefficient d'agrégation (CC)
+	CCe : Centralité de proximité (CCe)
+	CCor : Corrélation de Connectivité (CCor)
+	Ec : Excentricité (Ec)
+	CF : Flux circuit (CF)
+		params : [beta]
 
-===== Local metrics =====
-F : Flux (F)
-	params : [d, p, beta]
-BC : Centralité intermédiaire (BC)
-	params : [d, p, beta]
-FPC : PC Flux (FPC)
-	params : [d, p, beta]
-Dg : Degré du noeud (Dg)
-CC : Coefficient d'agrégation (CC)
-CCe : Centralité de proximité (CCe)
-CCor : Corrélation de Connectivité (CCor)
-Ec : Excentricité (Ec)
-CF : Flux circuit (CF)
-	params : [beta]
+\end{Verbatim}
 
-\end{cmd}
+\section{Gestion du projet}
 
 \subsection{--create : création d'un projet}
-Cette commande permet de créer un nouveau projet et de le charger.
-\begin{cmd}
-java -jar graphab-2.0.jar --create prjname land.tif habitat=code1,...,coden [nodata=val]
-	[minarea=val] [con8] [simp] [dir=path]
-\end{cmd}
 
-La commande \textit{--create} ne peut être utilisée qu'une seule fois et doit être la première commande de la ligne.
+\begin{Verbatim}[commandchars=\\\{\}]
+java -jar graphab-2.0.jar --create \textit{prjname} \textit{land.tif} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
+	[minarea=\textit{val}] [con8] [simp] [dir=\textit{path}]
+\end{Verbatim}
+
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|prjname| : nom du nouveau projet
+	\item \verb|land.tif| : nom du fichier image contenant l'occupation du sol au format tiff
+	\item \verb|habitat=code1,...,coden| : le ou les codes d'occupation du sol représentant les taches d'habitat.
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|nodata=val| : valeur représentant l'absence de données dans l'image raster
+	\item \verb|minarea=val| : taille minimale d'une tache d'habitat en hectare
+	\item \verb|con8| : connexité aux 8 pixels voisins pour la définition des taches, par défaut la connexité est seulement de 4
+	\item \verb|simp| : simplifie la géométrie des taches pour accélérer le calcul de la topologie planaire (voronoï)
+	\item \verb|dir=path| : chemin où enregistrer le projet, par défaut le projet est enregistré dans le répertoire courant.
+\end{itemize}
+
+\subsubsection{Description}
+Cette commande permet de créer un nouveau projet et de le charger.
+
+La commande \verb|--create| ne peut être utilisée qu'une seule fois et doit être la première commande de la ligne.
 Les commandes suivantes seront exécutées sur le projet nouvellement créé.
 
 \subsection{--project : chargement d'un projet}
 Cette commande définit le chemin vers le fichier xml du projet à charger.
-\begin{cmd}
-java -jar graphab-2.0.jar --project path2myproject/myproject.xml
-\end{cmd}
+\begin{Verbatim}[commandchars=\\\{\}]
+	java -jar graphab-2.0.jar --project \textit{path2myproject/myproject.xml}
+\end{Verbatim}
 Charge le projet \textit{myproject} contenu dans le répertoire \textit{path2myproject}.
 
-La commande \textit{--project} ne peut être utilisée qu'une seule fois et doit être la première commande de la ligne.
+La commande \verb|--project| ne peut être utilisée qu'une seule fois et doit être la première commande de la ligne.
 Toutes les commandes qui suivent dans ce manuel ont besoin d'un projet chargé.
 
 \subsection{--show : affichage des éléments d'un projet}
@@ -196,149 +285,272 @@ Affiche l'ensemble des jeux de liens, graphes et jeux de points contenu dans le 
 Cette commande est utile pour récupérer les noms exacts des éléments pour les utiliser par la suite dans une ligne de commande.
 
 Commande :
-\begin{cmd}
-java -jar graphab-2.0.jar --project path2myproject/myproject.xml --show
-\end{cmd}
+\begin{Verbatim}[commandchars=\\\{\}]
+	java -jar graphab-2.0.jar --project \textit{path2myproject/myproject.xml} --show
+\end{Verbatim}
 Résultat :
-\begin{cmd}
-===== Link sets =====
-Complete_Euclid
-Complete_cost
-Planar_Euclid
-Planar_cost
-
-===== Graphs =====
-2000m-3500cost
-2000m-3500cost_comp
-2000m_euclid
-2000m_euclid_comp
-
-===== Point sets =====
-Presence_absence
-\end{cmd}
+\begin{Verbatim}
+	===== Link sets =====
+	Complete_Euclid
+	Complete_cost
+	Planar_Euclid
+	Planar_cost
+	
+	===== Graphs =====
+	2000m-3500cost
+	2000m-3500cost_comp
+	2000m_euclid
+	2000m_euclid_comp
+	
+	===== Point sets =====
+	Presence_absence
+\end{Verbatim}
 Attention aux noms des éléments : la ligne de commande est sensible à la casse (différentiation minuscule/majuscule) et ne gère pas les espaces dans les noms.
+
+\subsection{--capa : capacité des taches}
+\begin{Verbatim}[commandchars=\\\{\}]
+--capa [maxcost=\textit{valcost} codes=\textit{code1,code2,...,coden} [weight]]
+\end{Verbatim}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|maxcost=[{]valcost[}]| : coût cumulé maximum pour le voisinage
+	\item \verb|codes=code1,code2,...,coden| : codes d'occupation du sol à prendre en compte dans la surface de voisinage
+	\item \verb|weight| : introduit une pondération en fonction de l’éloignement à la tache, par le biais d’une fonction exponentielle négative. De cette façon, les surfaces sélectionnées compteront plus si elles sont proches de la tache et inversement.
+\end{itemize}
+
+\subsubsection{Description}
+La commande \verb|--capa| calcule la capacité des taches et enregistre le projet sauf si l'option \verb|-nosave| a été spécifiée. Sans paramètre, la capacité est définie comme la surface des taches en $m^2$. Avec paramètre, la capacité est calculée comme une surface d'éléments autour de la tache, jusqu'à la distance \textit{valcost}.
+Les distances sont calculées à partir des coûts définis dans le jeu de lien sélectionné. Si c'est un jeu de lien en euclidien, les coûts sont mis à 1 pour l'ensemble des classes d'occupation du sol.
+
+Cette commande supporte la sélection d'un seul jeu de lien (cf. \nameref{uselinkset}).
+
+\subsubsection{Exemple}
+\begin{Verbatim}
+	--capa maxcost=100 codes=1,3
+\end{Verbatim}
+Définit la capacité de chaque tache comme la surface (en $m^2$) d'éléments de code d'occupation du sol 1 et 3 présent autour de la tache jusqu'à une distance de 100 (en coût). 
+
+
+\subsection{--metapatch : création d'un projet méta-tache}
+\begin{Verbatim}[commandchars=\\\{\}]
+--metapatch [mincapa=\textit{value}]
+\end{Verbatim}
+
+\subsubsection{Paramètre optionnel}
+\begin{itemize}
+	\item \verb|mincapa=value| : capacité minimale d'une méta-tache pour être conservée dans le nouveau projet
+\end{itemize}
+
+\subsubsection{Description}
+La commande \verb|--metapatch| crée un nouveau projet de méta taches basé sur le graphe sélectionné. 
+Chaque composante du graphe sélectionné correspondra à une méta-tache. Celle-ci est donc constituée de l’ensemble des taches d’habitat connectées entre elles.
+La capacité des méta-taches est définie comme la somme de la capacité des taches composant la méta-tache. Le nouveau projet est enregistré dans un sous répertoire du projet actuel.
+
+Ce nouveau projet devient le projet courant pour les commandes suivantes.
+
+Cette commande supporte la sélection d'un seul graphe (cf. \nameref{usegraph}).
+
+\subsubsection{Exemple}
+\begin{Verbatim}
+	--usegraph 2000m_euclid --metapatch mincapa=1000
+\end{Verbatim}
+Cette commande créera un projet méta-tache basé sur le graphe \textit{2000m\_euclid} et supprimera toutes les méta-taches dont la capacité est inférieure à 1000.
+
+\subsubsection{Références}
+\cite{2015_monkey}
 
 \section{Jeu de liens et graphes}
 
 \subsection{--linkset : création d'un jeu de liens}
-\begin{verbatim}
---linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]
-\end{verbatim}
-Créé un nouveau jeu de liens dans le projet chargé et enregistre le projet sauf si l'option globale \textit{-nosave} est utilisée.
+\begin{Verbatim}[commandchars=\\\{\}]
+--linkset distance=euclid|cost [name=\textit{linkname}] [complete[=\textit{dmax}]] [slope=\textit{coef}] [remcrosspath] 
+	[[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} | extcost=\textit{raster.tif}]
+\end{Verbatim}
 
-Si le paramètre \textit{name} n'est pas défini, le nom du jeu de lien sera déterminé par la définition des coûts.
+\subsubsection{Paramètre obligatoire}
+\begin{itemize}
+	\item \verb+distance=euclid|cost+ : type distance pour les liens, euclidien (\verb|distance=euclid|) ou coût cumulé (\verb|distance=cost|). Si \verb|distance=cost|, il faut définir les coûts par classe d'occupation du sol ou un raster contenant les coûts.
+\end{itemize}
 
+\subsubsection{Paramètres optionnels généraux}
+\begin{itemize}
+	\item \verb|name=linkname| : nom du jeu de lien qui sera créé
+	\item \verb|complete[=dmax]| : passe en topologie complète au lieu de planaire. On peut ajouter le paramètre \textit{dmax} pour limiter les liens à une distance maximale.
+\end{itemize}
+
+\subsubsection{Paramètres spécifiques au cas distance=cost}
+\begin{itemize}
+	\item \verb|slope=coef| : pondère les couts par la pente. Pour utiliser cette option, il faut que le projet contienne un MNT.
+	\item \verb|remcrosspath| : supprime les liens traversant une tache
+	\item \verb|[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max| : définition des coûts à partir des codes de l'occupation du sol
+	\item \verb|extcost=raster.tif| : définition des coûts à partir d'un raster externe
+\end{itemize}
+
+\subsubsection{Description}
+Créé un nouveau jeu de liens dans le projet chargé et enregistre le projet sauf si l'option globale \verb|-nosave| est utilisée.
+
+Si le paramètre \verb|name| n'est pas défini, le nom du jeu de lien sera déterminé par la définition des coûts.
+
+La commande \verb|--linkset| ne supporte pas plusieurs intervalles ou liste de valeurs.
+
+Après la commande \verb|--linkset|, les jeux de liens sélectionnés correspondent aux jeux de liens créés.
+
+\subsubsection{Exemples}
 Cette commande créera un jeu de lien en topologie planaire nommé \textit{cost\_1\_2\_3\_4\_5\_6\_7-1.0} avec tous les coûts à 1 :
-\begin{cmd}
---linkset distance=cost 1,2,3,4,5,6,7=1
-\end{cmd}
+\begin{Verbatim}
+	--linkset distance=cost 1,2,3,4,5,6,7=1
+\end{Verbatim}
 
 Cette commande créera un jeu de lien \textit{cost\_1\_2\_3-1.0} avec un coût égal à 1 pour les valeurs d'occupation du sol 1, 2 et 3 et un coût égal à 2 pour les valeurs d'occupation du sol 4, 5, 6 et 7 :
-\begin{cmd}
---linkset distance=cost 1,2,3=1 4,5,6,7=2
-\end{cmd}
+\begin{Verbatim}
+	--linkset distance=cost 1,2,3=1 4,5,6,7=2
+\end{Verbatim}
 
-Par défaut la topologie est planaire ; pour créer une topologie complète, utilisez l'option \textit{complete} :
-\begin{cmd}
---linkset distance=cost complete 1,2,3,4,5,6,7=1
-\end{cmd}
+Par défaut la topologie est planaire ; pour créer une topologie complète, utilisez l'option \verb|complete| :
+\begin{Verbatim}
+	--linkset distance=cost complete 1,2,3,4,5,6,7=1
+\end{Verbatim}
 
 Avec une topologie complète, on peut préciser un seuil de distance pour éviter de créer trop de liens. Exemple avec un seuil max à 100 :
-\begin{cmd}
---linkset distance=cost complete=100 1,2,3,4,5,6,7=1
-\end{cmd}
+\begin{Verbatim}
+	--linkset distance=cost complete=100 1,2,3,4,5,6,7=1
+\end{Verbatim}
 
 On peut créer plusieurs jeux de liens avec des coûts différents en utilisant un intervalle ou une liste de valeurs :
-\begin{cmd}
---linkset distance=cost 4,5,6,7=10 1,2,3=100:50:200
+\begin{Verbatim}
+	--linkset distance=cost 4,5,6,7=10 1,2,3=100:50:200
 ou
---linkset distance=cost 4,5,6,7=10 1,2,3=100,150,200
-\end{cmd}
+	--linkset distance=cost 4,5,6,7=10 1,2,3=100,150,200
+\end{Verbatim}
 Résultat : la commande ci-dessus créera 3 jeux de liens \textit{cost\_1\_2\_3-100.0 cost\_1\_2\_3-150.0 cost\_1\_2\_3-200.0}
 avec les valeurs d'occupation du sol 1, 2 et 3 égales à 100, 150 ou 200.
 
-La commande \textit{--linkset} ne supporte pas plusieurs intervalles ou liste de valeurs.
-
-Après la commande \textit{--linkset}, les jeux de liens sélectionnés correspondent aux jeux de liens créés.
-
 \subsection{--uselinkset : sélection des jeux de liens}
-\begin{verbatim}
---uselinkset linkset1,..,linksetn
-\end{verbatim}
-Sélectionne les jeux de liens qui seront utilisés dans les commandes suivantes.\\
-Les noms de jeu de liens sont sensibles à la casse et ne peuvent pas contenir d'espace.\\
+\label{uselinkset}
+\begin{Verbatim}[commandchars=\\\{\}]
+--uselinkset \textit{linkset1,..,linksetn}
+\end{Verbatim}
+Sélectionne les jeux de liens qui seront utilisés dans les commandes suivantes.
+Les noms de jeu de liens sont sensibles à la casse et ne peuvent pas contenir d'espace.
+
 Par défaut, tous les jeux de liens sont sélectionnés.
 
 \subsection{--graph : création d'un graphe}
-\begin{verbatim}
---graph [nointra] [threshold=min:inc:max]
-\end{verbatim}
-Crée un graphe pour chaque jeu de lien sélectionné et enregistre le projet sauf si l'option globale \textit{-nosave} est utilisée.
+\begin{Verbatim}
+--graph [nointra] [threshold=[{]min:inc:max[}]]
+\end{Verbatim}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|nointra| : désactive les distances intra-tache pour le calcul des métriques
+	\item \verb|threshold=[{]min:inc:max[}]| : défini la distance maximale des liens inclus dans chaque graphe. Sans ce paramètre, le graphe contient tous les liens du jeu de lien. Entouré d'accolades, les valeurs de distance sont converties en valeur de coût automatiquement.
+\end{itemize}
+
+\subsubsection{Description}
+Crée un graphe pour chaque jeu de lien sélectionné et enregistre le projet sauf si l'option globale \verb|-nosave| est utilisée.
 Pour l'instant, la commande ne supporte pas la création de graphe MST (Minimum Spanning Tree).
 
 Sans paramètre, la commande créera un graphe sans seuil pour chaque jeu de lien sélectionné :
-\begin{cmd}
---graph
-\end{cmd}
+\begin{Verbatim}
+	--graph
+\end{Verbatim}
 Le nom du graphe sera la concaténation de \textit{comp\_} et du nom du jeu de lien.
 
 Le paramètre \textit{threshold} permet de spécifier un seuil (100 dans l'exemple) pour le graphe à créer :
-\begin{cmd}
---graph threshold=100
-\end{cmd}
+\begin{Verbatim}
+	--graph threshold=100
+\end{Verbatim}
 Le nom du graphe sera la concaténation de  \textit{thresh\_100.0\_} et du nom du jeu de lien.
 
-Si le paramètre \textit{threshold} est défini avec un intervalle ou une liste de valeurs, un graphe seuillé pour chaque valeur de seuil et chaque jeu de liens sera créé :
-\begin{cmd}
---graph threshold=1000:100:1500
+Si le paramètre \verb|threshold| est défini avec un intervalle ou une liste de valeurs, un graphe seuillé pour chaque valeur de seuil et chaque jeu de liens sera créé :
+\begin{Verbatim}
+	--graph threshold=1000:100:1500
 ou
---graph threshold=1000,1100,1200,1300,1400,1500
-\end{cmd}
+	--graph threshold=1000,1100,1200,1300,1400,1500
+\end{Verbatim}
 Résultat : cette commande créera 6 graphes seuillés (1000, 1100, 1200, 1300, 1400, 1500) pour chaque jeu de liens sélectionné.
 
-L'option \textit{nointra} désactive les distances intra-taches pour ce graphe.
-
-Après la commande \textit{--graph}, les graphes sélectionnés correspondent aux graphes créés.
+Après la commande \verb|--graph|, les graphes sélectionnés correspondent aux graphes créés.
 
 \subsection{--usegraph : sélection des graphes}
-\begin{verbatim}
---usegraph graph1,..,graphn
-\end{verbatim}
-Sélectionne les graphes qui seront utilisés dans les commandes suivantes.\\
-Les noms de graphe sont sensibles à la casse et ne peuvent pas contenir d'espace.\\
+\label{usegraph}
+\begin{Verbatim}[commandchars=\\\{\}]
+--usegraph \textit{graph1,..,graphn}
+\end{Verbatim}
+Sélectionne les graphes qui seront utilisés dans les commandes suivantes.
+Les noms de graphe sont sensibles à la casse et ne peuvent pas contenir d'espace.
+
 Par défaut, tous les graphes sont sélectionnés.
 
-\section{Calcul de métriques}
+\subsection{--corridor : calcul de corridors}
+\begin{Verbatim}[commandchars=\\\{\}]
+--corridor maxcost=\textit{valcost}
+\end{Verbatim}
+
+\subsubsection{Paramètre obligatoire}
+\begin{itemize}
+	\item \verb|maxcost=valcost| : coût cumulé maximum des chemins formant un corridor
+\end{itemize}
+
+\subsubsection{Description}
+La commande \verb|--corridor| calcule le corridor associé à chaque lien d'un jeu de lien.
+Le résultat est stocké dans un shapefile différent pour chaque jeu de lien sélectionné. Chaque shapefile contient, pour chaque lien du jeu de lien, un polygone représentant l'ensemble des chemins possibles reliant les deux taches et ayant une distance en coût cumulé inférieure ou égale à \textit{valcost}.
+Cette commande ne fonctionne pas avec les jeux de lien euclidiens, ils sont ignorés.
+
+\subsubsection{Exemple}
+\begin{Verbatim}
+	--corridor maxcost=500
+\end{Verbatim}
+
+
+
+\section{Métriques}
 
 \subsection{--gmetric : calcul d'une métrique globale}
-\begin{verbatim}
---gmetric global_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
-\end{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+--gmetric \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max} [\textit{param2}=\textit{min:inc:max} ...]]
+\end{Verbatim}
+
+\subsubsection{Paramètre obligatoire}
+\begin{itemize}
+	\item \verb|global_metric_name| : acronyme de la métrique globale à calculer (PC, IIC, ...)
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
+	\item \verb|param1=[{]min:inc:max[}]| : paramètre(s) de la métrique, si elle en a. Entouré d'accolades, les valeurs de distance sont converties en valeur de coût automatiquement.
+	\item ...
+\end{itemize}
+
+\subsubsection{Description}
 Calcule la métrique globale données sur chaque graphe sélectionné.
-Le nom de la métrique est son nom court comme affiché par la commande \textit{--metrics}.
+Le nom de la métrique est son nom court comme affiché par la commande \verb|--metrics|.
 Si la métrique a besoin de paramètres, ils peuvent être spécifiés dans n'importe quel ordre.
 Les résultats sont enregistrés dans un fichier texte dans le répertoire du projet. Le nom du fichier correspond au nom court de la métrique.
 
+\subsubsection{Exemples}
 Calcule la métrique NC sur tous les graphes sélectionnés :
-\begin{cmd}
---gmetric NC
-\end{cmd}
+\begin{Verbatim}
+	--gmetric NC
+\end{Verbatim}
 Le résultat est enregistré dans le fichier NC.txt dans le répertoire du projet :
-\begin{cmd}
-Graph                NC
-2000m-3500cost       25.0
-2000m-3500cost_comp  24.0
-2000m_euclid         9.0
-2000m_euclid_comp    9.0
-\end{cmd}
+\begin{Verbatim}
+	Graph                NC
+	2000m-3500cost       25.0
+	2000m-3500cost_comp  24.0
+	2000m_euclid         9.0
+	2000m_euclid_comp    9.0
+\end{Verbatim}
 
-Pour les métriques ayant des paramètres, vous pouvez tester plusieurs valeurs de paramètre en une seule commande.
-La commande suivante calcule 6 PC pour chaque graphe sélectionné avec le paramètre d égal à 1000, 1500 ou 2000 et beta égal à 0 ou 1 :
-\begin{cmd}
---gmetric PC d=1000:500:2000 p=0.05 beta=0,1
-\end{cmd}
+Pour les métriques ayant des paramètres, on peut tester plusieurs valeurs de paramètre en une seule commande.
+La commande suivante calcule la métrique PC avec 6 jeux de paramètres différents pour chaque graphe sélectionné :
+\begin{Verbatim}
+	--gmetric PC d=1000:500:2000 p=0.05 beta=0,1
+\end{Verbatim}
 Le résultat est stocké dans le fichier PC.txt :
-\begin{cmd}
+\begin{Verbatim}
 Graph               d     	p   	beta	PC
 2000m-3500cost      1000.0	0.05	0.0	2.108166945899072E-15
 2000m-3500cost      1500.0	0.05	0.0	2.4839095790785042E-15
@@ -364,22 +576,37 @@ Graph               d     	p   	beta	PC
 2000m_euclid_comp   1000.0	0.05	1.0	1.7172345329380555E-6
 2000m_euclid_comp   1500.0	0.05	1.0	1.8277346595840518E-6
 2000m_euclid_comp   2000.0	0.05	1.0	1.9080569002930505E-6
-\end{cmd}
+\end{Verbatim}
 
-Si le paramètre \textit{maxcost} est défini, les chemins supérieurs à \textit{maxcost} ne seront pas calculés. 
-Cela peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat peut être imprécis.
+
 
 \subsection{--cmetric : calcul d'une métrique par composante}
-\begin{verbatim}
---cmetric comp_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]]
-\end{verbatim}
-Calcule la métrique globale donnée sur chaque composante de chaque graphe sélectionné.
-Le résultat est enregistré dans le projet sauf si l'option globale \textit{-nosave} est utilisée. L'option \textit{-nosave} est utile, utilisée conjointement avec la commande \textit{--model}.
+\begin{Verbatim}[commandchars=\\\{\}]
+--cmetric \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max} [\textit{param2}=\textit{min:inc:max} ...]]
+\end{Verbatim}
 
+\subsubsection{Paramètre obligatoire}
+\begin{itemize}
+	\item \verb|global_metric_name| : acronyme de la métrique globale à calculer (PC, IIC, ...)
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
+	\item \verb|param1=[{]min:inc:max[}]| : paramètre(s) de la métrique, si elle en a. Entouré d'accolades, les valeurs de distance sont converties en valeur de coût automatiquement.
+	\item ...
+\end{itemize}
+
+\subsubsection{Description}
+Calcule la métrique globale donnée sur chaque composante de chaque graphe sélectionné.
+Le nom de la métrique est son nom court comme affiché par la commande \verb|--metrics|.
+Le résultat est enregistré dans un attribut des composantes de chaque graphe. Le projet est enregistré sauf si l'option globale \verb|-nosave| est utilisée.
+
+\subsubsection{Exemple}
 Avec une métrique ayant des paramètres, on peut tester plusieurs jeux de paramètres en une commande :
-\begin{cmd}
---cmetric PC d=1000:500:2000 p=0.05 beta=0,1
-\end{cmd}
+\begin{Verbatim}
+	--cmetric PC d=1000:500:2000 p=0.05 beta=0,1
+\end{Verbatim}
 6 PC seront calculés pour chaque composante de chaque graphe sélectionné :
 \begin{itemize}
  \item PC\_d1000\_p0.05\_beta0
@@ -390,21 +617,35 @@ Avec une métrique ayant des paramètres, on peut tester plusieurs jeux de param
  \item PC\_d2000\_p0.05\_beta1
 \end{itemize}
 
-Si le paramètre \textit{maxcost} est défini, les chemins supérieurs à \textit{maxcost} ne seront pas calculés. 
-Cela peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat peut être imprécis.
 
 \subsection{--lmetric : calcul d'une métrique locale}
-\begin{verbatim}
---lmetric local_metric_name [maxcost=valcost] [param1=min:inc:max [param2=min:inc:max ...]] 
-\end{verbatim}
-Calcule la métrique locale donnée sur chaque élément (noeud et/ou lien) de chaque graphe sélectionné.
-Le résultat est enregistré dans le projet sauf si l'option globale \textit{-nosave} est utilisée. L'option \textit{-nosave} est utile, utilisée conjointement avec la commande \textit{--model}.
+\begin{Verbatim}[commandchars=\\\{\}]
+--lmetric \textit{local_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max} [\textit{param2}=\textit{min:inc:max} ...]] 
+\end{Verbatim}
 
+\subsubsection{Paramètre obligatoire}
+\begin{itemize}
+	\item \verb|local_metric_name| : acronyme de la métrique locale à calculer (F, CF, ...)
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
+	\item \verb|param1=[{]min:inc:max[}]| : paramètre(s) de la métrique, si elle en a. Entouré d'accolades, les valeurs de distance sont converties en valeur de coût automatiquement.
+	\item ...
+\end{itemize}
+
+\subsubsection{Description}
+Calcule la métrique locale donnée sur chaque élément (noeud et/ou lien) de chaque graphe sélectionné.
+Le nom de la métrique est son nom court comme affiché par la commande \verb|--metrics|.
+Le résultat est enregistré dans un attribut des taches et/ou des liens. Le projet est enregistré sauf si l'option globale \verb|-nosave| est utilisée. L'option \verb|-nosave| est utile, utilisée conjointement avec la commande \verb|--model| ou \verb|--interp|.
+
+\subsubsection{Exemple}
 Avec une métrique ayant des paramètres, on peut tester plusieurs jeux de paramètres en une commande :
-\begin{cmd}
---lmetric F d=1000:500:2000 p=0.05 beta=0,1
-\end{cmd}
-6 F seront calculés pour chaque élément de chaque graphe sélectionné :
+\begin{Verbatim}
+	--lmetric F d=1000:500:2000 p=0.05 beta=0,1
+\end{Verbatim}
+La métrique F sera calculée avec 6 jeux de paramètres différents pour chaque élément de chaque graphe sélectionné :
 \begin{itemize}
  \item F\_d1000\_p0.05\_beta0
  \item F\_d1500\_p0.05\_beta0
@@ -414,169 +655,303 @@ Avec une métrique ayant des paramètres, on peut tester plusieurs jeux de param
  \item F\_d2000\_p0.05\_beta1
 \end{itemize}
 
-Si le paramètre \textit{maxcost} est défini, les chemins supérieurs à \textit{maxcost} ne seront pas calculés. 
-Cela peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat peut être imprécis.
+\subsection{--interp : interpolation de métriques}
+\begin{Verbatim}[commandchars=\\\{\}]
+--interp \textit{name} \textit{resolution} var=\textit{patch_var_name} d=\textit{val} p=\textit{val} [multi=\textit{dist_max} [sum]]
+\end{Verbatim}
+
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|name| : nom du fichier raster stockant le résultat de l'interpolation
+	\item \verb|resolution| : résolution de l'interpolation. Dans certains cas, ce paramètre est ignoré et la résolution de la carte d'occupation du sol est utilisée à la place.
+	\item \verb|var=patch_var_name| : nom de la variable à interpoler. Ce nom doit correspondre à un attribut des taches ; habituellement le résultat du calcul d'une métrique locale.
+	\item \verb|d=val| : distance permettant, avec le paramètre p, de définir le coefficient $\alpha$ 
+	\item \verb|p=val| : probabilité permettant, avec le paramètre d, de définir le coefficient $\alpha$ 
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|multi=dist_max| : interpolation à partir de toutes les taches à une distance inférieure ou égale à \textit{dist\_max}, au lieu de la tache la plus proche
+	\item \verb|sum| : agrégation par une somme au lieu d'une moyenne pondérée. Utilisé uniquement avec le paramètre \verb|multi|.
+\end{itemize}
+
+\subsubsection{Description}
+La commande \verb|--interp| permet d'interpoler sur l'ensemble de la zone une donnée disponible au niveau des taches, habituellement une métrique locale.
+L'interpolation est basée sur une fonction décroissante de la distance. La valeur interpolée à un point $p_j$ de l'espace sera :
+$$p_j = var_i * e^{-\alpha d_{ij}} $$
+$var_i$ représente la valeur de la variable pour la tache la plus proche du point $p_j$. Le coefficient $\alpha$ est défini par les 2 paramètres \verb|d| et \verb|p|, tel que $p={e}^{-\alpha d}$.
+Le calcul de la distance entre le point et la tache la plus proche $d_{ij}$ dépend du jeu de liens en cours (euclidien ou coût cumulé).
+
+Si le paramètre \verb|multi| est activé, l'interpolation ne se calcule plus uniquement avec la tache la plus proche, mais aussi avec toutes les taches dont la distance est inférieure ou égale à \textit{dist\_max}. Ces différentes valeurs seront agrégées, par défaut, par une moyenne pondérée. Si le paramètre \verb|sum| est ajouté, l'agrégation utilisée sera une somme. Dans ce cas la formule d'interpolation d'un point $p_j$ devient :
+$$p_j = \sum_i{var_i * e^{-\alpha d_{ij}}} $$
+
+Si plusieurs jeux de liens sont sélectionnés, une interpolation différente sera calculée pour chaque jeu de liens. 
+
+\subsubsection{Exemple}
+\begin{Verbatim}
+	--interp test 10 var=F_d1000_p0.5_beta1_2000m_euclid d=1000 p=0.5 multi=1000 sum
+\end{Verbatim}
 
 \section{SDM}
 \subsection{--pointset : import de jeu de points}
-\begin{verbatim}
---pointset pointset.shp
-\end{verbatim}
-Importe un nouveau jeu de points à partir du shapefile donné pour chaque jeu de liens sélectionné et enregistre le projet sauf si l'option globale \textit{-nosave} est utilisée.
+\begin{Verbatim}[commandchars=\\\{\}]
+--pointset \textit{pointset.shp}
+\end{Verbatim}
+Importe un nouveau jeu de points à partir du shapefile donné pour chaque jeu de liens sélectionné et enregistre le projet sauf si l'option globale \verb|-nosave| est utilisée.
 Le nom du jeu de point est la concaténation du nom du fichier importé et du nom du jeu de lien.
 
-Après la commande \textit{--pointset}, les jeux de points sélectionnés correspondent à ceux nouvellement créés.
+Après la commande \verb|--pointset|, les jeux de points sélectionnés correspondent à ceux nouvellement créés.
 
 \subsection{--usepointset : sélection de jeux de points}
-\begin{verbatim}
---usepointset ps1,..,psn
-\end{verbatim}
-Sélectionne les jeux de points à utiliser dans la commande suivante \textit{--model}.
+\begin{Verbatim}[commandchars=\\\{\}]
+--usepointset \textit{ps1,..,psn}
+\end{Verbatim}
+Sélectionne les jeux de points à utiliser par la commande \verb|--model|.
 Par défaut, tous les jeux de points sont sélectionnés.
 
 \subsection{--model : calcul du SDM}
-\begin{verbatim}
---model variable distW=min:inc:maxcost
-\end{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+--model \textit{variable} distW=\textit{min:inc:maxcost}
+\end{Verbatim}
+
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|variable| : nom de la variable binaire contenu dans le(s) jeux(x) de points
+	\item \verb|distW=min:inc:maxcost| : pondération de la distance entre la tache et le point avec une probabilité de 0.05	
+\end{itemize}
+
+\subsubsection{Description}
 Calcule un SDM avec chaque métrique locale existant dans chaque graphe sélectionné pour la variable binaire donnée sur chaque jeu de points sélectionné.
-La \textit{variable} doit exister dans chaque jeu de points sélectionné.
+La \textit{variable} doit exister dans chaque jeu de point sélectionné.
 Pour chaque graphe, la commande cherche un jeu de points ayant le même jeu de lien que le graphe. Si il n'en existe pas, la commande émet une erreur, si il en existe plusieurs, le choix du jeu de point est indéterminé.
-Le paremètre \textit{distW} défini la pondération par la distance entre la tache et le point avec une probabilité de 0.05.
-\begin{cmd}
---model PRESENCE distW=1000,2000
-\end{cmd}
+Le paramètre \verb|distW| défini la pondération par la distance entre la tache et le point avec une probabilité de 0.05.
+
+\subsubsection{Exemple}
+\begin{Verbatim}
+	--model PRESENCE distW=1000,2000
+\end{Verbatim}
 Le résultat est enregistré dans le fichier model-PRESENCE-dW1000,2000.txt dans le répertoire du projet :
-\begin{cmd}[tabsize=3]
-Graph           Metric                DistWeight R2        AIC       Coef
-2000m-3500cost  BC_d3500_p0.05_beta1  1000.00	0.229898	56.0689	3.63230e-07
-2000m-3500cost  BC_d3500_p0.05_beta1  2000.00	0.134672	62.7547	4.89398e-08
-2000m-3500cost  F_d3500_p0.05_beta1   1000.00	0.522162	35.5490	0.00155784
-2000m-3500cost  F_d3500_p0.05_beta1   2000.00	0.266793	53.4785	0.000145906
-2000m-3500cost  d_PC                  1000.00	0.296785	51.3727	471.384
-2000m-3500cost  d_PC                  2000.00	0.292047	51.7054	460.552
-\end{cmd}
+\begin{Verbatim}[tabsize=3]
+	Graph           Metric                DistWeight R2        AIC       Coef
+	2000m-3500cost  BC_d3500_p0.05_beta1  1000.00	0.229898	56.0689	3.63230e-07
+	2000m-3500cost  BC_d3500_p0.05_beta1  2000.00	0.134672	62.7547	4.89398e-08
+	2000m-3500cost  F_d3500_p0.05_beta1   1000.00	0.522162	35.5490	0.00155784
+	2000m-3500cost  F_d3500_p0.05_beta1   2000.00	0.266793	53.4785	0.000145906
+	2000m-3500cost  d_PC                  1000.00	0.296785	51.3727	471.384
+	2000m-3500cost  d_PC                  2000.00	0.292047	51.7054	460.552
+\end{Verbatim}
+
+\subsubsection{Références}
+\cite{2012_SDM, 2012_graphab_EMS, 2013_SDM, 2013_SDM_rainette}
 
 \section{Ajout/Suppression d'élements}
 \subsection{--delta}
-\begin{verbatim}
---delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link 
-  [sel=id1,id2,...,idn]
-\end{verbatim}
-Calcule une métrique globale en mode delta sur les noeuds ou les liens en fonction du paramètre \textit{obj} pour chaque graphe sélectionné.
+\begin{Verbatim}[commandchars=\\\{\}]
+--delta \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...] obj=patch|link
+	[sel=\textit{id1,id2,...,idn} | fsel=\textit{file.txt}]
+\end{Verbatim}
 
-Si le paramètre \textit{sel} est défini, le calcul est effectué seulement sur les éléments listés.
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|global_metric_name| : acronyme de la métrique globale (PC, ...)
+	\item \verb+obj=patch|link+ : teste la suppression des taches (\verb+obj=patch+) ou des liens (\verb+obj=link+)
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
+	\item \verb|param1=val| : paramètre(s) de la métrique, si elle en a.
+	\item \verb|sel=id1,id2,...,idn| : limite le calcul aux éléments (taches ou liens) listés par leur identifiant
+	\item \verb|fsel=file.txt| : limite le calcul aux éléments (taches ou liens) listés dans le fichier \textit{file.txt}. Le fichier doit contenir un identifiant par ligne.
+\end{itemize}
+
+\subsubsection{Description}
+Calcule une métrique globale en mode delta sur les noeuds ou les liens en fonction du paramètre \verb|obj| pour chaque graphe sélectionné.
+
+Si le paramètre \verb|sel| ou \verb|fsel| est défini, le calcul est effectué seulement sur les éléments listés.
 Le résultat est stocké dans un fichier texte distinct pour chaque graphe dans le répertoire du projet.
 Le nom du fichier est la concaténation de 'delta-' + nom court de la métrique + nom du graphe.
 
+\subsubsection{Exemples}
 Calcule la métrique NC en delta pour toutes les taches :
-\begin{cmd}
---delta NC obj=patch
-\end{cmd}
+\begin{Verbatim}
+	--delta NC obj=patch
+\end{Verbatim}
 
 Calcule la métrique PC en delta pour les taches ayant l'identifiant 2 et 3 :
-\begin{cmd}
---delta PC d=1000 p=0.05 beta=1 obj=patch sel=2,3
-\end{cmd}
+\begin{Verbatim}
+	--delta PC d=1000 p=0.05 beta=1 obj=patch sel=2,3
+\end{Verbatim}
 Le résultat est stocké dans un fichier pour chaque graphe. Exemple :
-\begin{cmd}
-Id    d_PC
-Init  1.3170910074623971E-5
-2     2.68908916812349E-3
-3     1.738640713802898E-4
-\end{cmd}
+\begin{Verbatim}
+	Id    d_PC
+	Init  1.3170910074623971E-5
+	2     2.68908916812349E-3
+	3     1.738640713802898E-4
+\end{Verbatim}
 Init correspond à la valeur initiale du PC sans enlevé d'élément.
 Les valeurs suivantes correspondent à la perte relative de la métrique après avoir enlevé l'élément correspondant du graphe.
 En enlevant la tache 2, le PC diminue de 0.269\%
 
-Les intervalles ne sont pas permis pour les paramètres de la métrique.
-
-Si le paramètre \textit{maxcost} est défini, les chemins supérieurs à \textit{maxcost} ne seront pas calculés. 
-Cela peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat peut être imprécis.
-
 
 \subsection{--gremove}
-\begin{verbatim}
---gremove global_metric_name [maxcost=valcost] [param1=val ...] 
-  [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]
-\end{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+--gremove \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...]
+	[patch=\textit{id1,id2,...,idn}|fpatch=\textit{file.txt}] [link=\textit{id1,id2,...,idm}|flink=\textit{file.txt}]
+\end{Verbatim}
+
+\subsubsection{Paramètre obligatoire}
+\begin{itemize}
+	\item \verb|global_metric_name| : acronyme de la métrique globale à calculer (PC, ...)
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
+	\item \verb|param1=val| : paramètre(s) de la métrique, si elle en a. Les intervalles ne sont pas permis pour cette commande.
+	\item \verb|patch=id1,id2,...,idn| : enlève les taches listées par leur identifiant
+	\item \verb|fpatch=file.txt| : enlève les taches listées dans le fichier \textit{file.txt}. Le fichier doit contenir un identifiant par ligne.
+	\item \verb|link=id1,id2,...,idn| : enlève les liens listés par leur identifiant
+	\item \verb|flink=file.txt| : enlève les liens listés dans le fichier \textit{file.txt}. Le fichier doit contenir un identifiant par ligne.	
+\end{itemize}
+
+\subsubsection{Description}
 Pour chaque graphe sélectionné, enlève l'ensemble des noeuds et/ou liens listés et calcule la métrique globale donnée.
 La liste des identifiants peut être donnée directement sur la ligne de commande ou bien dans un fichier séparé.
 
-La commande suivante calcule la métrique NC sur chaque graphe sélectionné après avoir enlevé les taches 2 et 3 :
-\begin{cmd}
---gremove NC patch=2,3
-\end{cmd}
-Résultat affiché : 
-\begin{cmd}
-Global indice NC
-Graph 2000m-3500cost
-Remove 2 patches and 5 links
-NC : 25.0
-
-Graph 2000m-3500cost_comp
-Remove 2 patches and 8 links
-NC : 24.0
-
-Graph 2000m_euclid
-Remove 2 patches and 7 links
-NC : 9.0
-
-Graph 2000m_euclid_comp
-Remove 2 patches and 9 links
-NC : 9.0
-\end{cmd}
 Le résultat est seulement affiché à l'écran.
 Pour chaque graphe, la commande affiche le nombre de taches et de liens réellement enlevés du graphe.
 Le nombre de taches ne varient pas, mais le nombre de liens peut varier car les liens connectés à une tache enlevée sont aussi enlevés.
 Si un identifiant n'existe pas, il sera ignoré.
 
+\subsubsection{Exemple}
+
+\begin{Verbatim}
+	--gremove NC patch=2,3
+\end{Verbatim}
+
+Cette commande calcule la métrique NC sur chaque graphe sélectionné après avoir enlevé les taches 2 et 3.
+
+Résultat affiché : 
+\begin{Verbatim}
+	Global indice NC
+	Graph 2000m-3500cost
+	Remove 2 patches and 5 links
+	NC : 25.0
+	
+	Graph 2000m-3500cost_comp
+	Remove 2 patches and 8 links
+	NC : 24.0
+	
+	Graph 2000m_euclid
+	Remove 2 patches and 7 links
+	NC : 9.0
+	
+	Graph 2000m_euclid_comp
+	Remove 2 patches and 9 links
+	NC : 9.0
+\end{Verbatim}
+
+
 La même commande peut être écrite comme suit :
-\begin{cmd}
---gremove NC fpatch=patch.txt
-\end{cmd}
+\begin{Verbatim}
+	--gremove NC fpatch=patch.txt
+\end{Verbatim}
 avec un fichier patch.txt dans le répertoire courant, contenant un identifiant par ligne :
-\begin{cmd}
-2
-3
-\end{cmd}
+\begin{Verbatim}
+	2
+	3
+\end{Verbatim}
 
-Les intervalles ne sont pas permis pour les paramètres de la métrique.
-
-Si le paramètre \textit{maxcost} est défini, les chemins supérieurs à \textit{maxcost} ne seront pas calculés. 
-Cela peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat peut être imprécis.
 
 \subsection{--gtest}
-\begin{verbatim}
---gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link 
-  sel=id1,id2,...,idn
-\end{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+--gtest \textit{nstep} \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...] obj=patch|link
+	sel=\textit{id1,id2,...,idn} | fsel=\textit{file.txt}
+\end{Verbatim}
 
-Non documenté.
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|nstep| : nombre d’éléments successifs à ajouter
+	\item \verb|global_metric_name| : acronyme de la métrique globale (PC, ...)
+	\item \verb+obj=patch|link+ : type d'éléments à tester, taches (\verb+obj=patch+) ou liens (\verb+obj=link+)
+	\item \verb|sel=id1,id2,...,idn| : liste des identifiants des éléments (taches ou liens) à tester
+	\item \verb|fsel=file.txt| : fichier contenant les identifiants des éléments (taches ou liens) à tester. Le fichier \textit{file.txt} doit contenir un identifiant par ligne.
+\end{itemize}
 
-Les intervalles ne sont pas permis pour les paramètres de la métrique.
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
+	\item \verb|param1=val| : paramètre(s) de la métrique, si elle en a. Les intervalles ne sont pas permis pour cette commande.
+\end{itemize}
 
-Si le paramètre \textit{maxcost} est défini, les chemins supérieurs à \textit{maxcost} ne seront pas calculés. 
-Cela peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat peut être imprécis.
+\subsubsection{Description}
+Cette commande commence par supprimer les éléments (taches ou liens) sélectionnés par le paramètre \verb|sel| ou \verb|fsel|. Puis elle remet l'élément supprimé qui maximise la métrique \textit{global\_metric\_name}. La remise d'un élément est répétée autant de fois que le paramètre \textit{nstep}.
+L'ensemble du traitement est effectué pour chaque graphe sélectionné. Pour chacun de ces graphes, les résultats sont enregistrés dans 2 fichiers textes. Le premier liste les éléments ajoutés avec la valeur de la métrique correspondante. Le second, plus détaillé, liste à chaque étape l'ajout de chaque élément.
 
-\subsection{--ltest}
-\begin{verbatim}
---ltest nstep local_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link 
-  sel=id1,id2,...,idn
-\end{verbatim}
+\subsubsection{Exemple}
 
-Non documenté.
+\begin{Verbatim}
+	--gtest 3 IIC obj=patch sel=1,2,3,5,6,10,15,16
+\end{Verbatim}
 
-Les intervalles ne sont pas permis pour les paramètres de la métrique.
+Cette commande enlève les 8 taches sélectionnées par leur identifiant et remet successivement les 3 taches qui maximisent la métrique globale IIC.
 
-Si le paramètre \textit{maxcost} est défini, les chemins supérieurs à \textit{maxcost} ne seront pas calculés. 
-Cela peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat peut être imprécis.
+Pour le graphe \textit{2000m\_euclid}, le premier fichier se nomme gtest-2000m\_euclid-IIC.txt et contient :
+\begin{Verbatim}[tabsize=4]
+	Step	Id		IIC
+	0		init	1.7825075712618167E-6
+	1		1		1.753327449219068E-6
+	2		15		1.7793775301389374E-6
+	3		16		1.780788239231567E-6
+\end{Verbatim}
+La première ligne (Step 0), correspond à la valeur de la métrique avant suppression des éléments. Les lignes suivantes donnent, à chaque étape, quel élément a été sélectionné ainsi que la nouvelle valeur de la métrique après l'ajout de l'élément.
+
+Pour le même graphe, le fichier détaillé se nomme gtest-2000m\_euclid-IIC-detail.txt et contient :
+\begin{Verbatim}
+	Step	Id	IIC
+	1	init	1.6852479916976776E-6
+	1	16	1.6866587007903073E-6
+	1	1	1.753327449219068E-6
+	1	2	1.685330641324248E-6
+	1	3	1.6852916014495828E-6
+	1	5	1.6858693558888445E-6
+	1	6	1.6852486177082585E-6
+	1	10	1.6854627861279089E-6
+	1	15	1.6994856702980223E-6
+	2	init	1.7533274492190677E-6
+	2	16	1.7547381583116972E-6
+	2	2	1.753410098845639E-6
+	2	3	1.7538298458957464E-6
+	2	5	1.753948813410235E-6
+	2	6	1.7533280752296487E-6
+	2	10	1.753542243649299E-6
+	2	15	1.7793775301389374E-6
+	3	init	1.7793775301389372E-6
+	3	16	1.780788239231567E-6
+	3	2	1.7794601797655085E-6
+	3	3	1.7799512085537507E-6
+	3	5	1.7799988943301041E-6
+	3	6	1.7795590940743919E-6
+	3	10	1.7795923245691686E-6
+\end{Verbatim}
+
 
 \subsection{--addpatch : ajout de taches}
-\begin{verbatim}
---addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] 
-  [multi=npatch,size]]|[pointfile=file.shp [capa=capa_field]]
-\end{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+--addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...]
+	[gridres=\textit{min:inc:max} [capa=\textit{capa_file}] [multi=\textit{npatch},\textit{size}]]
+	| [pointfile=\textit{file.shp} [capa=\textit{capa_field}]]
+\end{Verbatim}
 
+\subsubsection{Paramètres généraux}
+\begin{itemize}
+	\item \verb|npatch| : nombre d’éléments successifs à supprimer
+	\item \verb|global_metric_name| : acronyme de la métrique globale (PC, ...)
+	\item \verb|param1=val| : paramètre(s) de la métrique, si elle en a. Les intervalles ne sont pas permis pour cette commande.
+\end{itemize}
+
+\subsubsection{Description}
 Cette commande teste successivement l'ajout d'une nouvelle tache parmi un ensemble prédéfini et conserve la tache qui maximise la métrique globale donnée. 
 Ce processus est répété autant de fois que le paramètre \textit{npatch} et ce, pour chaque graphe sélectionné. 
 En sortie, un sous répertoire du projet est créé pour chaque graphe, contenant le détail des résultats.
@@ -584,36 +959,36 @@ En sortie, un sous répertoire du projet est créé pour chaque graphe, contenan
 Pour chaque test d'une nouvelle tache, le graphe est recalculé incluant cette nouvelle tache ainsi que les liens reliant cette tache aux autres déjà existantes, ensuite la métrique globale est calculée sur ce nouveau graphe. Quand l'ensemble des taches possibles a été testé, celle maximisant la métrique donnée est ajoutée au projet. Ce processus est itéré jusqu'à obtenir \textit{npatch} nouvelles taches dans le projet.
 
 Les taches créées ont une emprise au sol d'un pixel, si le pixel d'occupation du sol correspondant à la tache à tester est déjà dans la catégorie habitat ou bien est en dehors de la zone d'étude, la tache est ignorée. 
-Les taches à tester peuvent être donnée par l'intermédiaire d'une grille régulière ou bien d'un ensemble de points provenant d'un shapefile.
+Les taches à tester peuvent être donnée par l'intermédiaire d'une grille régulière ou bien d'un ensemble de points ou polygones provenant d'un shapefile.
 
 \subsubsection{Test sur un jeu de points}
-\begin{verbatim}
---addpatch npatch global_metric_name [param1=val ...] pointfile=file.shp [capa=capa_field]
-\end{verbatim}
+\begin{Verbatim}[commandchars=\\\{\}]
+--addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...] pointfile=\textit{file.shp} [capa=\textit{capa_field}]
+\end{Verbatim}
 Pour chaque point du shapefile, le programme teste l'ajout d'une tache sur le pixel couvrant le point, si le pixel n'est pas en NoData ou bien déjà dans la classe habitat.
 
-Le paramètre \textit{capa} permet de définir un attribut du shapefile contenant une valeur de capacité pour chaque tache testée.
-Si le paramètre \textit{capa} n'est pas renseigné, la capacité des nouvelles taches sera de 1.
+Le paramètre \verb|capa| permet de définir un attribut du shapefile contenant une valeur de capacité pour chaque tache testée.
+Si le paramètre \verb|capa| n'est pas renseigné, la capacité des nouvelles taches sera de 1.
 
 
 \subsubsection{Test sur une grille régulière}
-\begin{verbatim}
---addpatch npatch global_metric_name [param1=val ...] gridres=min:inc:max [capa=capa_file] 
-  [multi=nbpatch,size]
-\end{verbatim}
-Teste l'ajout d'une tache sur une grille régulière dont la résolution est définie par \textit{gridres}.
+\begin{Verbatim}[commandchars=\\\{\}]
+--addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...] gridres=\textit{min:inc:max} [capa=\textit{capa_file}]
+	[multi=\textit{npatch},\textit{size}]
+\end{Verbatim}
+Teste l'ajout d'une tache sur une grille régulière dont la résolution est définie par \verb|gridres|.
 
-Le paramètre \textit{capa} permet de spécifier un fichier raster (au format TIFF ou AsciiGrid) donnant une valeur de capacité potentielle en tout point de l'espace. 
+Le paramètre \verb|capa| permet de spécifier un fichier raster (au format TIFF ou AsciiGrid) donnant une valeur de capacité potentielle en tout point de l'espace. 
 Si la capacité est nulle, aucune tache ne sera testée à cette position. Le fichier raster peut avoir une autre résolution que la grille ou que la carte de paysage.
-Si le paramètre \textit{capa} n'est pas renseigné, la capacité des nouvelles taches sera de 1.
+Si le paramètre \verb|capa| n'est pas renseigné, la capacité des nouvelles taches sera de 1.
 
-Le paramètre \textit{multi} permet de tester l'ajout de \textit{nbpatch} taches simultané, dans un voisinage de rayon \textit{size}*\textit{gridres}.
+Le paramètre \verb|multi| permet de tester l'ajout de \textit{nbpatch} taches simultané, dans un voisinage de rayon \textit{size}*\textit{gridres}.
 
 \subsubsection{Exemples}
 
-\begin{cmd}
---addpatch 5 IIC gridres=100
-\end{cmd}
+\begin{Verbatim}
+	--addpatch 5 IIC gridres=100
+\end{Verbatim}
 
 Ajoute 5 taches maximisant la métrique IIC en testant l'ajout d'une tache tous les 100 mètres.
 Le sous répertoire \textit{addpatch\_n5\_graph\_IIC\_res100\_multi1\_1} contient les résultats :
@@ -628,23 +1003,71 @@ Le sous répertoire \textit{addpatch\_n5\_graph\_IIC\_res100\_multi1\_1} contien
 
 
 La ligne de commande ci-dessous est équivalente à la précédente mais s'exécutera à 3 résolutions différentes (100,200,500). Les résultats seront stockés dans 3 répertoires, un pour chaque résolution.
-\begin{cmd}
---addpatch 5 IIC gridres=100,200,500
-\end{cmd}
+\begin{Verbatim}
+	--addpatch 5 IIC gridres=100,200,500
+\end{Verbatim}
 
 Un autre exemple avec un jeu de points :
-\begin{cmd}
---addpatch 5 IIC pointfile=testpoint.shp
-\end{cmd}
+\begin{Verbatim}
+	--addpatch 5 IIC pointfile=testpoint.shp
+\end{Verbatim}
 Les résultats seront stockés dans le répertoire \textit{addpatch\_n5\_graph\_IIC\_shptestpoint.shp}.
 
 \subsubsection{Limitations}
-La commande \textit{--addpatch} ne fonctionne qu'avec des graphes issus de jeu de liens complet. 
+La commande \verb|--addpatch| ne fonctionne qu'avec des graphes issus de jeu de liens complet. 
 
 Attention, cette commande modifie le nombre de tache du projet, l'exécution de commandes après celle-ci peuvent générer des incohérences.
-Il est fortement déconseillé d'ajouter des commandes à la suite de la commande \textit{--addpatch}.
+Il est fortement déconseillé d'ajouter des commandes à la suite de la commande \verb|--addpatch|.
 
 Les intervalles ne sont pas permis pour les paramètres de la métrique.
+
+\subsubsection{Références}
+\cite{2015_addpatch_rainette, 2014_LUP}
+
+
+\subsection{--remelem}
+\begin{Verbatim}[commandchars=\\\{\}]
+--remelem \textit{nstep} \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...] obj=patch|link
+[sel=\textit{id1,id2,...,idn} | fsel=\textit{file.txt}]
+\end{Verbatim}
+
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|nstep| : nombre d’éléments successifs à supprimer
+	\item \verb|global_metric_name| : acronyme de la métrique globale (PC, ...)
+	\item \verb+obj=patch|link+ : type d'éléments à supprimer, taches (\verb+obj=patch+) ou liens (\verb+obj=link+)
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|sel=id1,id2,...,idn| : sélection des identifiants des éléments (taches ou liens) à tester
+	\item \verb|fsel=file.txt| : fichier contenant les identifiants des éléments (taches ou liens) à tester. Le fichier \textit{file.txt} doit contenir un identifiant par ligne.
+	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
+	\item \verb|param1=val| : paramètre(s) de la métrique, si elle en a. Les intervalles ne sont pas permis pour cette commande.
+\end{itemize}
+
+\subsubsection{Description}
+La commande \verb|--remelem| teste la suppression des éléments du graphe sélectionné (taches ou liens selon le paramètre \verb|obj|) comme la commande \verb|--delta|. Puis elle supprime l'élément qui minimise la métrique \textit{global\_metric\_name}. La procédure est répétée autant de fois que le paramètre \textit{nstep}.
+Si le paramètre \verb|sel| ou \verb|fsel| est utilisé, le test de suppression ne se fait que sur les éléments sélectionnés.
+L'ensemble du traitement est effectué pour chaque graphe sélectionné. Pour chacun de ces graphes, le résultat est enregistré dans un fichier texte qui  liste les éléments supprimés avec la valeur de la métrique correspondante.
+
+\subsubsection{Exemple}
+
+\begin{Verbatim}
+	--remelem 3 IIC obj=patch
+\end{Verbatim}
+
+Cette commande supprimera successivement les 3 taches qui minimisent la métrique globale IIC, pour chaque graphe.
+
+Pour le graphe \textit{2000m\_euclid}, le fichier se nomme rempatch-IIC-2000m\_euclid.txt et contient :
+\begin{Verbatim}[tabsize=4]
+	Step	Id  	IIC
+	0   	init	1.7825075712618167E-6
+	1   	120 	1.070922766241333E-6
+	2   	145 	8.001250544646545E-7
+	3   	118 	6.05326129866607E-7
+\end{Verbatim}
+La première ligne (Step 0), correspond à la valeur initiale de la métrique. Les lignes suivantes donnent, à chaque étape, quel élément a été supprimé ainsi que la nouvelle valeur de la métrique après la suppression de celui-ci.
 
 
 \section{Options}
@@ -663,112 +1086,117 @@ Tous les exemples qui suivent peuvent être testés avec le projet exemple fourn
 
 \section{Afficher le projet}
 Affiche les éléments du projet :
-\begin{cmd}
-java -jar graphab-1.2.jar --project sample_project/Project.xml --show
-\end{cmd}
+\begin{Verbatim}
+	java -jar graphab-2.0.jar --project sample_project/Project.xml --show
+\end{Verbatim}
 Résultat :
-\begin{cmd}
-===== Link sets =====
-Complete_Euclid
-Complete_cost
-Planar_Euclid
-Planar_cost
-
-===== Graphs =====
-2000m-3500cost
-2000m-3500cost_comp
-2000m_euclid
-2000m_euclid_comp
-
-===== Point sets =====
-Presence_absence
-\end{cmd}
+\begin{Verbatim}
+	===== Link sets =====
+	Complete_Euclid
+	Complete_cost
+	Planar_Euclid
+	Planar_cost
+	
+	===== Graphs =====
+	2000m-3500cost
+	2000m-3500cost_comp
+	2000m_euclid
+	2000m_euclid_comp
+	
+	===== Point sets =====
+	Presence_absence
+\end{Verbatim}
 
 \section{Métrique globale à plusieurs distances}
 Calcule la métrique PC sur le graphe \textit{2000m-3500cost} en faisant varier le paramètre \textit{d} de 1000 à 5000 par pas de 1000 :
-\begin{cmd}
-java -jar graphab-1.2.jar --project sample_project/Project.xml 
-  --usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
-\end{cmd}
+\begin{Verbatim}[tabsize=4]
+	java -jar graphab-1.2.jar --project sample_project/Project.xml
+		--usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
+\end{Verbatim}
 Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
-\begin{cmd}
-Graph	d	p	beta	PC
-2000m-3500cost	1000.0	0.05	1.0	1.3170910074623973E-6
-2000m-3500cost	2000.0	0.05	1.0	1.5884005111333572E-6
-2000m-3500cost	3000.0	0.05	1.0	1.7406772135728036E-6
-2000m-3500cost	4000.0	0.05	1.0	1.8425812214129719E-6
-2000m-3500cost	5000.0	0.05	1.0	1.918332024845314E-6
-\end{cmd}
+\begin{Verbatim}[tabsize=4]
+	Graph         	d     	p   	beta	PC
+	2000m-3500cost	1000.0	0.05	1.0	1.3170910074623973E-6
+	2000m-3500cost	2000.0	0.05	1.0	1.5884005111333572E-6
+	2000m-3500cost	3000.0	0.05	1.0	1.7406772135728036E-6
+	2000m-3500cost	4000.0	0.05	1.0	1.8425812214129719E-6
+	2000m-3500cost	5000.0	0.05	1.0	1.918332024845314E-6
+\end{Verbatim}
 
 \section{Métrique globale sur un graphe seuillé à plusieurs distances}
 Crée 6 graphes seuillés de 2000 à 2500, à partir du jeu de lien \textit{Complete\_cost} et calcule la métrique IIC pour chaque :
-\begin{cmd}
-java -jar graphab-1.2.jar --project sample_project/Project.xml --uselinkset Complete_cost
-  --graph 2000:100:2500 --gmetric IIC
-\end{cmd}
+\begin{Verbatim}[tabsize=4]
+	java -jar graphab-1.2.jar --project sample_project/Project.xml
+		--uselinkset Complete_cost --graph 2000:100:2500 --gmetric IIC
+\end{Verbatim}
 Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
-\begin{cmd}
-Graph	IIC
-thresh_2000.0_Complete_cost	1.3740319506984741E-6
-thresh_2100.0_Complete_cost	1.3742497768764619E-6
-thresh_2200.0_Complete_cost	1.3749834046381206E-6
-thresh_2300.0_Complete_cost	1.3754601882078134E-6
-thresh_2400.0_Complete_cost	1.3857662689627643E-6
-thresh_2500.0_Complete_cost	1.4197576370824857E-6
-\end{cmd}
+\begin{Verbatim}
+	Graph                      	IIC
+	thresh_2000.0_Complete_cost	1.3740319506984741E-6
+	thresh_2100.0_Complete_cost	1.3742497768764619E-6
+	thresh_2200.0_Complete_cost	1.3749834046381206E-6
+	thresh_2300.0_Complete_cost	1.3754601882078134E-6
+	thresh_2400.0_Complete_cost	1.3857662689627643E-6
+	thresh_2500.0_Complete_cost	1.4197576370824857E-6
+\end{Verbatim}
 
 \section{Séquence SDM complète}
 Calcule un graphe non seuillé à partir du jeu de lien \textit{Planar\_Euclid}, calcule 2 métriques locales (Dg et F) sur le graphe créé, ajoute le jeu de point 
 sur le jeu de lien \textit{Planar\_Euclid} et calcule le SDM pour les 2 métriques avec la variable PRESENCE, sans modifier le projet.
-\begin{cmd}
-java -jar graphab-1.2.jar --project sample_project/Project.xml -nosave 
-  --uselinkset Planar_Euclid 
-  --graph 
-  --lmetric Dg --lmetric F d=1000 p=0.05 beta=1 
-  --pointset sample_project/Exo-Presence_absence.shp 
-  --model PRESENCE distW=1000
-\end{cmd}
+\begin{Verbatim}[tabsize=4]
+	java -jar graphab-1.2.jar --project sample_project/Project.xml -nosave
+		--uselinkset Planar_Euclid 
+		--graph 
+		--lmetric Dg --lmetric F d=1000 p=0.05 beta=1 
+		--pointset sample_project/Exo-Presence_absence.shp 
+		--model PRESENCE distW=1000
+\end{Verbatim}
 Le résultat est stocké dans le fichier model-PRESENCE-dW1000.txt dans le répertoire du projet :
-\begin{cmd}
-Graph               Metric              DistWeight R2        AIC      Coef
-comp_Planar_Euclid  Dg                  1000.00    0.999744  2.01795  24.8994
-comp_Planar_Euclid  F_d1000_p0.05_beta1 1000.00    0.108353  64.6026  2.38405e-05
-\end{cmd}
+\begin{Verbatim}
+	Graph               Metric              DistWeight R2        AIC      Coef
+	comp_Planar_Euclid  Dg                  1000.00    0.999744  2.01795  24.8994
+	comp_Planar_Euclid  F_d1000_p0.05_beta1 1000.00    0.108353  64.6026  2.38405e-05
+\end{Verbatim}
 
 \chapter{Performances}
+\label{perf}
 \section{Parallélisme}
 \subsection{Un ordinateur : threads}
 Si votre ordinateur a plus qu'un coeur (la plupart), vous pouvez tirer partie de la parallélisation pour accélérer vos calculs avec Graphab.
-Il faut définir le nombre de coeurs (ou processeurs) que Graphab peut utiliser avec l'option \textit{-proc} après la commande \textit{--project} :
-\begin{cmd}
-java -jar graphab-2.0.jar -proc 8 --project path2myproject/myproject.xml ...
-\end{cmd}
+Il faut définir le nombre de coeurs (ou processeurs) que Graphab peut utiliser avec l'option \verb|-proc| après la commande \verb|--project| :
+\begin{Verbatim}
+	java -jar graphab-2.0.jar -proc 8 --project path2myproject/myproject.xml ...
+\end{Verbatim}
 Par défaut, en ligne de commande, le nombre de coeurs utilisés correspond au nombre défini dans la fenêtre Préférences de l'interface graphique.
 
 En augmentant le nombre de coeurs utilisés par Graphab, vous augmentez, par la même occasion, la taille de la mémoire utilisée par Graphab.
 
 \subsection{Cluster : MPI}
 Graphab peut aussi être utilisé sur des clusters de calcul supportant Java avec OpenMPI.
-\begin{cmd}
-mpirun java -jar graphab-2.0.jar -mpi --project path2myproject/myproject.xml ...
-\end{cmd}
-Seulement certaines commandes peuvent être utilisées dans l'environnement MPI : --gmetric, --cmetric, --lmetric, --delta, --addpatch
+\begin{Verbatim}
+	mpirun java -jar graphab-2.0.jar -mpi --project path2myproject/myproject.xml ...
+\end{Verbatim}
+Seulement certaines commandes peuvent être utilisées dans l'environnement MPI : \verb|--gmetric|, \verb|--cmetric|, \verb|--lmetric|, \verb|--delta|, \verb|--addpatch|,\verb|--remelem|
 
 \section{Gestion mémoire}
 Par défaut, la taille de la mémoire utilisable par Graphab est dépendante du système et peut varier de 128 MB à plusieurs GB
 Si vous avez un gros projets, certaines commandes seront lentes voir même stopperont le programme à cause d'un manque de mémoire.
 Si l'exécution se termine par une erreur OutOfMemoryError ou GC overhead, vous devez augmenter la mémoire disponible pour Graphab.
 
-Pour définir manuellement la mémoire maximale utilisable par Graphab, il faut utiliser l'option Java -Xmx :
-\begin{cmd}
-java -Xmx4g -jar graphab-2.0.jar ... # 4Gb allocated
-java -Xmx1500m -jar graphab-2.0.jar ... # 1500 Mb -> 1.5Gb allocated
-\end{cmd}
+Pour définir manuellement la mémoire maximale utilisable par Graphab, il faut utiliser l'option Java \verb|-Xmx| :
+\begin{Verbatim}
+	java -Xmx4g -jar graphab-2.0.jar ... # 4Gb allocated
+	java -Xmx1500m -jar graphab-2.0.jar ... # 1500 Mb -> 1.5Gb allocated
+\end{Verbatim}
 Si vous ne pouvez pas allouer plus de 1 GB ou 1.5 GB alors que votre ordinateur a plus de mémoire vive, vous utilisez sûrement une version 32-bit de Java qui est limitée à moins de 2 GB.
 Pour tester votre version de Java :
-\begin{cmd}
-java -version
-\end{cmd}
+\begin{Verbatim}
+	java -version
+\end{Verbatim}
 Si vous avez une version 32-bit, installez une version 64-bit de Java pour allouer plus de mémoire à Graphab.
+
+
+\bibliographystyle{graphab}
+\bibliography{graphab}
 
 \end{document}          
