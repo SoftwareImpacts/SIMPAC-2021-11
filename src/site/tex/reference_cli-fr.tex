@@ -13,11 +13,6 @@
 \let\EndItemize\enditemize
 \def\enditemize{\EndItemize\medskip}
 
-% Title Page
-\title{Manuel de référence\\
-Graphab 2.0\\
-Ligne de commande}
-
 
 \begin{document}
  \begin{titlepage}
@@ -44,7 +39,7 @@ Ligne de commande}
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		2016-01-14\\
+ 		21/01/2016\\
  	}
  	
  \end{titlepage}
@@ -82,14 +77,14 @@ Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the mod
 
 \section{Configuration requise}
 
-Graphab fonctionne sur n'importe quel ordinateur supportant Java 1.7 ou supérieur (PC sous Linux, Windows, Mac...). Toutefois, lorsqu'il s'agit de données très volumineuses, la quantité de mémoire vive (RAM) de l’ordinateur peut limiter le nombre maximum de nœuds et de liens qui peuvent être traités en une seule fois avec Graphab. De plus, pour certaines métriques complexes, la puissance de votre processeur va déterminer la vitesse de leur calcul. Vous trouverez plus de détails à ce sujet dans la section \ref{perf} et dans \cite{2012_graphab_EMS}.
+Graphab fonctionne sur n'importe quel ordinateur supportant Java 7 ou supérieur (PC sous Linux, Windows, Mac...). Toutefois, lorsqu'il s'agit de données très volumineuses, la quantité de mémoire vive (RAM) de l’ordinateur peut limiter le nombre maximum de nœuds et de liens qui peuvent être traités en une seule fois avec Graphab. De plus, pour certaines métriques complexes, la puissance de votre processeur va déterminer la vitesse de leur calcul. Vous trouverez plus de détails à ce sujet dans la section \ref{perf} et dans \cite{2012_graphab_EMS}.
 
 \section{Installation et lancement du programme}
 
 Graphab est téléchargeable à cette adresse : \url{http://thema.univ-fcomte.fr/productions/graphab}.
 
 \begin{itemize}
-	\item Télécharger et installer Java 1.7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
+	\item Télécharger et installer Java 7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
 	\item Télécharger graphab-2.0.jar
 	\item Lancer graphab-2.0.jar
 \end{itemize}
@@ -451,6 +446,9 @@ Par défaut, tous les jeux de liens sont sélectionnés.
 Crée un graphe pour chaque jeu de lien sélectionné et enregistre le projet sauf si l'option globale \verb|-nosave| est utilisée.
 Pour l'instant, la commande ne supporte pas la création de graphe MST (Minimum Spanning Tree).
 
+Après la commande \verb|--graph|, les graphes sélectionnés correspondent aux graphes créés.
+
+\subsubsection{Exemples}
 Sans paramètre, la commande créera un graphe sans seuil pour chaque jeu de lien sélectionné :
 \begin{Verbatim}
 	--graph
@@ -471,7 +469,6 @@ ou
 \end{Verbatim}
 Résultat : cette commande créera 6 graphes seuillés (1000, 1100, 1200, 1300, 1400, 1500) pour chaque jeu de liens sélectionné.
 
-Après la commande \verb|--graph|, les graphes sélectionnés correspondent aux graphes créés.
 
 \subsection{--usegraph : sélection des graphes}
 \label{usegraph}
@@ -665,8 +662,8 @@ La métrique F sera calculée avec 6 jeux de paramètres différents pour chaque
 	\item \verb|name| : nom du fichier raster stockant le résultat de l'interpolation
 	\item \verb|resolution| : résolution de l'interpolation. Dans certains cas, ce paramètre est ignoré et la résolution de la carte d'occupation du sol est utilisée à la place.
 	\item \verb|var=patch_var_name| : nom de la variable à interpoler. Ce nom doit correspondre à un attribut des taches ; habituellement le résultat du calcul d'une métrique locale.
-	\item \verb|d=val| : distance permettant, avec le paramètre p, de définir le coefficient $\alpha$ 
-	\item \verb|p=val| : probabilité permettant, avec le paramètre d, de définir le coefficient $\alpha$ 
+	\item \verb|d=val| : distance permettant, avec le paramètre \verb|p|, de définir le coefficient $\alpha$ 
+	\item \verb|p=val| : probabilité permettant, avec le paramètre \verb|d|, de définir le coefficient $\alpha$ 
 \end{itemize}
 
 \subsubsection{Paramètres optionnels}
@@ -745,7 +742,7 @@ Le résultat est enregistré dans le fichier model-PRESENCE-dW1000,2000.txt dans
 \cite{2012_SDM, 2012_graphab_EMS, 2013_SDM, 2013_SDM_rainette}
 
 \section{Ajout/Suppression d'élements}
-\subsection{--delta}
+\subsection{--delta : suppression d'un élément}
 \begin{Verbatim}[commandchars=\\\{\}]
 --delta \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...] obj=patch|link
 	[sel=\textit{id1,id2,...,idn} | fsel=\textit{file.txt}]
@@ -794,7 +791,7 @@ Les valeurs suivantes correspondent à la perte relative de la métrique après 
 En enlevant la tache 2, le PC diminue de 0.269\%
 
 
-\subsection{--gremove}
+\subsection{--gremove : suppression de plusieurs éléments}
 \begin{Verbatim}[commandchars=\\\{\}]
 --gremove \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...]
 	[patch=\textit{id1,id2,...,idn}|fpatch=\textit{file.txt}] [link=\textit{id1,id2,...,idm}|flink=\textit{file.txt}]
@@ -864,7 +861,7 @@ avec un fichier patch.txt dans le répertoire courant, contenant un identifiant 
 \end{Verbatim}
 
 
-\subsection{--gtest}
+\subsection{--gtest : suppression et ajout itératif d'éléments}
 \begin{Verbatim}[commandchars=\\\{\}]
 --gtest \textit{nstep} \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...] obj=patch|link
 	sel=\textit{id1,id2,...,idn} | fsel=\textit{file.txt}
@@ -937,7 +934,7 @@ Pour le même graphe, le fichier détaillé se nomme gtest-2000m\_euclid-IIC-det
 \end{Verbatim}
 
 
-\subsection{--addpatch : ajout de taches}
+\subsection{--addpatch : ajout itératif de taches}
 \begin{Verbatim}[commandchars=\\\{\}]
 --addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...]
 	[gridres=\textit{min:inc:max} [capa=\textit{capa_file}] [multi=\textit{npatch},\textit{size}]]
@@ -946,7 +943,7 @@ Pour le même graphe, le fichier détaillé se nomme gtest-2000m\_euclid-IIC-det
 
 \subsubsection{Paramètres généraux}
 \begin{itemize}
-	\item \verb|npatch| : nombre d’éléments successifs à supprimer
+	\item \verb|npatch| : nombre de taches à ajouter
 	\item \verb|global_metric_name| : acronyme de la métrique globale (PC, ...)
 	\item \verb|param1=val| : paramètre(s) de la métrique, si elle en a. Les intervalles ne sont pas permis pour cette commande.
 \end{itemize}
@@ -982,7 +979,7 @@ Le paramètre \verb|capa| permet de spécifier un fichier raster (au format TIFF
 Si la capacité est nulle, aucune tache ne sera testée à cette position. Le fichier raster peut avoir une autre résolution que la grille ou que la carte de paysage.
 Si le paramètre \verb|capa| n'est pas renseigné, la capacité des nouvelles taches sera de 1.
 
-Le paramètre \verb|multi| permet de tester l'ajout de \textit{nbpatch} taches simultané, dans un voisinage de rayon \textit{size}*\textit{gridres}.
+Le paramètre \verb|multi| permet de tester l'ajout de \textit{npatch} taches simultané, dans un voisinage de rayon \textit{size}*\textit{gridres}.
 
 \subsubsection{Exemples}
 
@@ -1019,13 +1016,11 @@ La commande \verb|--addpatch| ne fonctionne qu'avec des graphes issus de jeu de 
 Attention, cette commande modifie le nombre de tache du projet, l'exécution de commandes après celle-ci peuvent générer des incohérences.
 Il est fortement déconseillé d'ajouter des commandes à la suite de la commande \verb|--addpatch|.
 
-Les intervalles ne sont pas permis pour les paramètres de la métrique.
-
 \subsubsection{Références}
 \cite{2015_addpatch_rainette, 2014_LUP}
 
 
-\subsection{--remelem}
+\subsection{--remelem : suppression itérative d'éléments}
 \begin{Verbatim}[commandchars=\\\{\}]
 --remelem \textit{nstep} \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...] obj=patch|link
 [sel=\textit{id1,id2,...,idn} | fsel=\textit{file.txt}]
@@ -1110,7 +1105,7 @@ Résultat :
 \section{Métrique globale à plusieurs distances}
 Calcule la métrique PC sur le graphe \textit{2000m-3500cost} en faisant varier le paramètre \textit{d} de 1000 à 5000 par pas de 1000 :
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-1.2.jar --project sample_project/Project.xml
+	java -jar graphab-2.0.jar --project sample_project/Project.xml
 		--usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
 \end{Verbatim}
 Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
@@ -1126,7 +1121,7 @@ Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
 \section{Métrique globale sur un graphe seuillé à plusieurs distances}
 Crée 6 graphes seuillés de 2000 à 2500, à partir du jeu de lien \textit{Complete\_cost} et calcule la métrique IIC pour chaque :
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-1.2.jar --project sample_project/Project.xml
+	java -jar graphab-2.0.jar --project sample_project/Project.xml
 		--uselinkset Complete_cost --graph 2000:100:2500 --gmetric IIC
 \end{Verbatim}
 Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
@@ -1144,7 +1139,7 @@ Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
 Calcule un graphe non seuillé à partir du jeu de lien \textit{Planar\_Euclid}, calcule 2 métriques locales (Dg et F) sur le graphe créé, ajoute le jeu de point 
 sur le jeu de lien \textit{Planar\_Euclid} et calcule le SDM pour les 2 métriques avec la variable PRESENCE, sans modifier le projet.
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-1.2.jar --project sample_project/Project.xml -nosave
+	java -jar graphab-2.0.jar -nosave --project sample_project/Project.xml 
 		--uselinkset Planar_Euclid 
 		--graph 
 		--lmetric Dg --lmetric F d=1000 p=0.05 beta=1 

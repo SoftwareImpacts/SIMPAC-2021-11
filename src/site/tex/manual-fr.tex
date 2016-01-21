@@ -57,7 +57,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2016-01-14\\
+		21/01/2016\\
 	}
 	
 \end{titlepage}
@@ -100,14 +100,14 @@ Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the mod
 
 \subsection{Configuration requise}
 
-Graphab fonctionne sur n'importe quel ordinateur supportant Java 1.7 ou supérieur (PC sous Linux, Windows, Mac...). Toutefois, lorsqu'il s'agit de données très volumineuses, la quantité de mémoire vive (RAM) de l’ordinateur peut limiter le nombre maximum de nœuds et de liens qui peuvent être traités en une seule fois avec Graphab. De plus, pour certaines métriques complexes, la puissance de votre processeur va déterminer la vitesse de leur calcul. Vous trouverez plus de détails à ce sujet dans la section \ref{limit} et dans \cite{2012_graphab_EMS}.
+Graphab fonctionne sur n'importe quel ordinateur supportant Java 7 ou supérieur (PC sous Linux, Windows, Mac...). Toutefois, lorsqu'il s'agit de données très volumineuses, la quantité de mémoire vive (RAM) de l’ordinateur peut limiter le nombre maximum de nœuds et de liens qui peuvent être traités en une seule fois avec Graphab. De plus, pour certaines métriques complexes, la puissance de votre processeur va déterminer la vitesse de leur calcul. Vous trouverez plus de détails à ce sujet dans la section \ref{limit} et dans \cite{2012_graphab_EMS}.
 
 \subsection{Installation et lancement du programme}
 
 Graphab est téléchargeable à cette adresse : \url{http://thema.univ-fcomte.fr/productions/graphab}.
 
 \begin{itemize}
-	\item Télécharger et installer Java 1.7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
+	\item Télécharger et installer Java 7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
 	\item Télécharger graphab-2.0.jar
 	\item Lancer graphab-2.0.jar
 \end{itemize}
@@ -115,7 +115,7 @@ Graphab est téléchargeable à cette adresse : \url{http://thema.univ-fcomte.fr
 Une fois graphab-2.0.jar lancé, le menu fichier donne accès à 4 rubriques : 
 \begin{itemize}
 	\item Fichier / Nouveau projet~: pour commencer la création d’un projet dans lequel toutes les données et résultats sont automatiquement enregistrés.
-	\item Fichier / Ouvrir un projet: ouvre un projet déjà créé auparavant.
+	\item Fichier / Ouvrir un projet : ouvre un projet déjà créé auparavant.
 	\item Fichier / Préférences~: pour changer certains paramètres du programme : langue anglais/français ; quantité maximale de mémoire utilisable ; nombre de processeurs à utiliser. Il est recommandé d’adapter la quantité de mémoire et le nombre de processeurs aux capacités de l’ordinateur utilisé et aux traitements prévus (voir à ce sujet la section \nameref{limit}).  
 	\item Fichier / Journal~: affiche le journal des évènements.
 \end{itemize}
@@ -288,7 +288,8 @@ Après validation de cette fenêtre, le calcul se lance jusqu'à obtenir un part
 	\includegraphics[scale=0.36]{img/manual-fr_cluster.png} 
 \end{figure}
 
-La nouvelle couche montre les groupes de la partition sous forme de polygones agrégeant les polygones de voronoï des taches inclues dans chaque groupe. La couleur de chaque polygone correspond à sa valeur de modularité, la modularité totale étant la somme des modularités de chaque groupe.
+La nouvelle couche montre les groupes de la partition sous forme de polygones. Comme un groupe correspond à un ensemble de taches, il est représenté par un polygone agrégeant les polygones de voronoï des taches affectées à celui-ci. 
+La couleur d'un groupe correspond à sa valeur de modularité ; la modularité totale étant la somme des modularités de tous les groupes.
 
 Une première fenêtre contient un graphique montrant l'évolution de la modularité en fonction du nombre de groupes (clusters). Dans la figure précédente, on voit que la modularité maximale est atteinte pour un nombre groupes relativement faible.
 
@@ -596,7 +597,7 @@ Références :
 
 Pour utiliser cette fonction, il est nécessaire de créer un projet initial et un graphe seuillé à la distance souhaitée (par exemple à la distance quotidienne). Chaque composante de ce graphe seuillé correspondra à une méta-tache. Celle-ci est donc constituée de l’ensemble des taches d’habitat connectées entre elles.
 
-La capacité des méta-taches est définie par défaut comme la somme de la capacité des taches composant la méta-tache. L'autre option "Distance pondérée" permet de tenir compte de l'éloignement des taches entre elles. Pour cette option, il faut définir le paramètre $\alpha$ en donnant une distance et une probabilité associée. La capacité résultante ($C$) d'une méta tache s'écrit : 
+La capacité des méta-taches est définie par défaut comme la somme de la capacité des taches composant la méta-tache. L'autre option "Distance pondérée" permet de tenir compte de l'éloignement des taches entre elles. Pour cette option, il faut définir le paramètre $\alpha$ en donnant une distance $d$ et une probabilité $p$ associée (cf. \nameref{param_weight}). La capacité résultante ($C$) d'une méta tache s'écrit : 
 
 $$C = \frac{1}{n}\sum_{i}^n\sum_{j}^n c_j e^{-\alpha d_{ij}}$$ 
 
@@ -934,7 +935,6 @@ Valeurs &
 Valeur minimale : 0
 
 Valeur maximale : surface totale de l’habitat
-
 }\\\hline
 Commentaire &
 \multicolumn{2}{m{12.6050005cm}|}{Le chemin du graphe utilisé est celui qui maximise  ${e}^{-\mathit{\alpha d}}$, c’est-à-dire celui qui minimise la distance d (ou le coût) entre les taches i et j.
@@ -978,7 +978,6 @@ Valeurs &
 Valeur minimale : 0
 
 Valeur maximale : 1
-
 }\\\hline
 Commentaire &
 \multicolumn{2}{m{12.6050005cm}|}{Pour chaque couple de taches, le chemin du graphe utilisé est celui qui maximise  ${e}^{-\mathit{\alpha d}}$, c’est-à-dire celui qui minimise la distance d (ou le coût) entre les taches i et j.
@@ -1014,7 +1013,6 @@ Valeurs &
 \multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0
 
 Valeur maximale : 1
-
 }\\\hline
 Commentaire &
 \multicolumn{2}{m{12.6050005cm}|}{Pour chaque couple de taches, le chemin du graphe utilisé est celui qui maximise  ${e}^{-\mathit{\alpha d}}$, c’est-à-dire celui qui minimise la distance d (ou le coût) entre les taches i et j.
@@ -1335,7 +1333,7 @@ Valeur maximale : somme des capacités (1 seule composante)
 Commentaire &
 \multicolumn{2}{m{12.6050005cm}|}{Pour les couples de taches non connectées par un chemin on a :   ${\mathit{nl}}_{\mathit{ij}}=+{\infty}$}\\\hline
 Référence &
-\multicolumn{2}{m{12.6050005cm}|}{\cite{Ricotta2010}}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Ricotta2000}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1527,6 +1525,8 @@ Valeurs &
 Valeur maximale :  $\left|{N}_{i}\right|$}\\\hline
 Commentaire &
 \multicolumn{2}{m{12.6050005cm}|}{Si  $\left|{N}_{i}\right|=0\rightarrow {\mathit{CCor}}_{i}=0$}\\\hline
+Référence &
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Minor2008}}\\\hline
 \end{tabular}
 \end{table}
 

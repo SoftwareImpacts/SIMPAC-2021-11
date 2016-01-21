@@ -1,3 +1,4 @@
+% This file was converted to LaTeX by Writer2LaTeX ver. 1.0.2
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -5,11 +6,10 @@
 \usepackage{amssymb,amsfonts,textcomp}
 \usepackage{array}
 \usepackage{hhline}
-\usepackage{graphicx}
-
-\usepackage[top=2.501cm,bottom=2.501cm,left=2.501cm,right=2.501cm,nohead]{geometry}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, filecolor=blue, urlcolor=blue, pdftitle=, pdfauthor=Gilles Vuidel, pdfsubject=, pdfkeywords=}
+\usepackage{graphicx}
+\usepackage[top=2.501cm,bottom=2.501cm,left=2.501cm,right=2.501cm,nohead]{geometry}
 \usepackage{float}
 \usepackage{parskip}
 \usepackage{multirow}
@@ -23,6 +23,14 @@
 \makeatother
 \setlength\tabcolsep{1mm}
 \renewcommand\arraystretch{1.3}
+
+% saut de page après une section
+%\let\oldsection\section
+%\renewcommand\section{\clearpage\oldsection}
+
+% saut après itemize
+\let\EndItemize\enditemize
+\def\enditemize{\EndItemize\medskip}
 
 \begin{document}
 
@@ -49,7 +57,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2015-12-15\\
+	2016-01-21\\
 	}
 	
 \end{titlepage}
@@ -71,26 +79,35 @@ Graphab is a software application for modeling ecological networks using landsca
 	\item visual and cartographic interfacing 
 \end{itemize}
 
+The version 2.0 has several new features, including:
+\begin{itemize}
+	\item patch addition,
+	\item meta-patches creation,
+	\item graph clustering,
+	\item integration of slope in the creation of links,
+	\item circuit theory.
+\end{itemize}
+
 \subsubsection{Authors}
 
 Graphab has been developed by Gilles Vuidel and Jean-Christophe Foltête at \href{http://thema.univ-fcomte.fr/}{ThéMA} laboratory (\href{http://www.univ-fcomte.fr}{University of Franche-Comté} – \href{http://www.cnrs.fr}{CNRS}). Funding has been provided by the French Ministry of Ecology, Energy, Sustainable Development and the Sea (\href{http://www.ittecop.fr/}{ITTECOP} Program). The Graphab logo was designed by \href{http://www.gachwell.com/}{Gachwell}.
 
 \subsubsection{Terms of use}
 
-Graphab is distributed in open source, under the GPL license. Users must cite the following reference in their publications:\\
+Graphab is distributed in open source, under the GPL license. Users must cite the following reference \cite{2012_graphab_EMS} in their publications:\\
 Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the modelling of landscape networks, Environmental Modelling \& Software, 38: 316-327.
 
 
 \subsection{System requirements}
 
-Graphab runs on any computer supporting Java 1.7 or later (PC under Linux, Windows, Mac, etc.). However, when dealing with very large datasets, the amount of RAM memory in the computer will limit the maximum number of nodes and links that can be processed in a single run with Graphab. In addition, for some complex metrics, processing power (CPU) will determine the speed of computing. For details, see section 8 below and the journal article cited above.
+Graphab runs on any computer supporting Java 7 or later (PC under Linux, Windows, Mac, etc.). However, when dealing with very large datasets, the amount of RAM memory in the computer will limit the maximum number of nodes and links that can be processed in a single run with Graphab. In addition, for some complex metrics, processing power (CPU) will determine the speed of computing. For details, see section \nameref{limit} below and the journal article  \cite{2012_graphab_EMS}.
 
 \subsection{Installing the software and launching a project}
 
 Graphab can be downloaded from \url{http://thema.univ-fcomte.fr/productions/graphab}.
 
 \begin{itemize}
-	\item Download and install Java 1.7+ - \href{http://www.java.com}{java.com}. If you have a 64-bit operating system, it is best to install the 64-bit version of Java.
+	\item Download and install Java 7 or later - \href{http://www.java.com}{java.com}. If you have a 64-bit operating system, it is best to install the 64-bit version of Java.
 	\item Download graphab-2.0.jar
 	\item Launch graphab-2.0.jar
 \end{itemize}
@@ -98,7 +115,7 @@ After launching graphab-2.0.jar, the File menu provides access to four sections:
 \begin{itemize}
 	\item File / New project: to create a new project in which all data and results are saved automatically.  
 	\item File / Open project: to open an existing project.
-	\item File / Preferences: to change certain software parameters: English/French; maximum amount of memory to use; number of processors to use. It is recommended to adjust the amount of memory and number of processors to suit your computer (see section 8).
+	\item File / Preferences: to change certain software parameters: English/French; maximum amount of memory to use; number of processors to use. It is recommended to adjust the amount of memory and number of processors to suit your computer (see section \nameref{limit}).
 	\item File / Log window: to display the event log.
 \end{itemize}
 
@@ -146,7 +163,9 @@ If the raster format is *.rst, the file must be associated with a georeferencing
 No data: pixel value representing the absence of data in the raster
 file.
 
-Habitat patch code: pixel value assigned to the habitat category used to define habitat patches.  
+Habitat patch codes: pixel values assigned to the habitat category used to define habitat patches.  
+Several values can be selected by using the \verb|Ctrl| key.
+
 
 Minimum patch area: minimum area in hectares for a habitat patch to become a graph node.  
 
@@ -159,7 +178,7 @@ Patch connexity:
 Simplify patch for planar graph: checking the box accelerates the creation of a planar graph, simplifying the polygonal boundaries of patches. This simplification process is not deterministic and so creating two planar graphs for one and the same landscape map may result in slightly different polygon edges. Consequently, this box should not to be checked when planar graphs are to be compared. 
 
 \subsection{Creating link sets}
-
+\label{linkset}
 The third window is for creating a link set for which several parameters must be selected: topology and link weighting. Creating a link set is the final step in starting a Graphab project. However, users may create new link sets within the same project via the Graphs / Create link set menu.
 
 \begin{figure}[H]
@@ -210,9 +229,18 @@ The use of least-cost distance provides two types of impedance using the same pa
 	\item cumulative cost: impedance is equal to the sum of the costs of all the pixels along the path,
 	\item path length: impedance is equal to the metric length of the path.
 \end{itemize}
-For each link created, its metric distance and its cost-unit distance are saved and available in “link properties” (see section 6.2). 
+For each link created, its metric distance and its cost-unit distance are saved and available in “link properties” (see \nameref{properties}). 
 
-\section{Creating graphs}
+Resistance values previously defined can be weighted by slope \cite{2015_monkey}. To compute slope, the DEM should be imported from the menu Data | Set DEM raster. 
+
+The parameter coef ($c$) can adjust the importance of the slope ($p$) weighting. For a given pixel, the resulting resistance value ($r_{final}$) is computed given the formula:  
+
+$$r_{final} = r * (1 + c.p)$$
+
+
+\section{Graphs}
+
+\subsection{Creating graphs}
 
 A Graphab project may entail the creation of several graphs. Each graph is created from a given link set: either the link set defined in the initial project, or a new link set defined from the Graph / Create link set menu.
 
@@ -224,36 +252,68 @@ Graphs are created from the Graph / Create graph menu.
 	
 First, the new graph must be named.
 
-The user must select one of the link sets created in step 2.2. and then select the type of graph:
+The user must select one of the link sets created previously (cf. \nameref{linkset}) and then select the type of graph:
 \begin{itemize}
 	\item Thresholded graph: the selected links are less than or equal to the selected threshold distance.
 	\item Non-thresholded graph: all links between patches are validated, regardless of length.
 	\item Minimum spanning tree: graph connecting all the patches in which the total weight of links is minimal.
 \end{itemize}
 
-For a thresholded graph, the unit of the threshold distance depends on the type of distance used in creating the link set. If the link set is created using Euclidean distances, the threshold distance of the graph is in meters. If the link set is created using cost distances, the threshold distance of the graph is given as a cumulative cost.
-
-An approximation of the distance metric (DistM) expressed as a cumulative cost (Dist) can be obtained by displaying the scatter plot of the link set (see section 6.2) and using the regression line [Dist = intercept + slope × DistM] to perform the conversion.
-
-\begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-en_img7.png}
-\end{figure}
-
-
 “Include intra-patch distances for metrics” option: if the box is checked, the computation of metrics includes the distances between and across patches (recommended). If the box is unchecked, only the distances between (but not across) patches are taken into account.
 
-To perform a multiscale analysis, it is often necessary to create a series of graphs in which increasing thresholds are defined. Users can create this series manually. But if the objective is to analyze the behavior of a metric according to the threshold, the Metrics / Batch graphs menu can be used (see section 5.3).
+For a thresholded graph, the unit of the threshold distance depends on the type of distance used in creating the link set. If the link set is created using Euclidean distances, the threshold distance of the graph is in meters. If the link set is created using cost distances, the threshold distance of the graph is given as a cumulative cost.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-fr_img7.png}
+\end{figure}
+
+An approximation of the distance metric (DistM) expressed as a cumulative cost (Dist) can be obtained by displaying the double log plot of the link set and using the equation below to perform the conversion:
+
+$$Dist = e^{intercept + slope . log(DistM)}$$
+
+The estimation can be performed directly in Graphab from the menu "Dist. conversion" available by right-clicking on a link set name.
+
+To perform a multiscale analysis, it is often necessary to create a series of graphs in which increasing thresholds are defined. Users can create this series manually. But if the objective is to analyze the behavior of a metric according to the threshold, the Metrics / Batch graphs menu can be used (see \nameref{batch_graph}).
+
+
+\subsection{Graph clustering}
+
+Graphab implements a clustering algorithm that maximises the modularity index \cite{Newman2006}. Modularity is a measure of the quality of the clustering of the graph nodes. The underlying principle is that a good clustering involves a large number of links within groups and a small number of inter-group links. The algorithm used is based on the greedy algorithm, followed by a local optimization \cite{Brandes2008}.
+
+Modularity is calculated with a weight($w_{ij}$) defined for each link of the graph:
+$$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
+The two parameters $\beta$ et $\alpha$ are used to define respectively the importance of the patch capacity ($a_i a_j$) and the importance of the distance ($d_{ij}$) for the weight of the link $w_{ij}$. If $\alpha = \beta = 0$, then the weights are identical: $w_{ij} = 1$.  
+
+The graph clustering is available by right-clicking on the name of the graph. In the first window, the user defines the paramters $\alpha$ et $\beta$. The parameter $\alpha$ is not defined directly, it is determined from two other parameters: a distance $d$ and a probability $p$ (cf. \nameref{param_weight}). To define $\alpha$ to 0, $p$ must be equal to 1.
+
+After validating this window, the calculation starts until a clustering maximizing modularity is obtained. The result is displayed as a new layer of the graph. Two other windows complete this result.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.36]{img/manual-en_cluster.png} 
+\end{figure}
+
+The new layer shows the elements of the spatial partition as polygons. Since a given element corresponds to a set of patches, it is represented by a polygon resulting from the aggregation of the Voronoï’s polygons of all patches of the cluster. The modularity value is used to assign a color to the polygon. The overall modularity is the sum of the modularity values of all clusters. 
+
+In a first window, a graph shows how modularity varies according to the number of clusters. In the previous figure, the maximal modularity is reached with a small number of clusters.
+
+The second window displays the number of clusters that maximizes modularity and the value of modularity.
+Several functions are available from this window:\\
+{}- the number of clusters can be changed to show sub-optimal partitions. The result may be visualized by clicking on the button "Show". The new layer of partition is added to the graph.\\
+{}- the button "Graph" allows you to create a new graph including only the intra-cluster links.\\
+{}- the checkbox "Optimize" achieves a local optimization of the clustering after the use of the greedy algorithm, that significantly improves the modularity value. This option is enabled by default.
 
 \section{Patch capacity}
 
-The capacity of a patch reflects its intrinsic quality as an indicator of its demographic potential. A patch with a high capacity can accommodate a large population and vice versa. Capacity is included directly in the calculation of some area connectivity metrics and weighted connectivity metrics (see section 5).
+The capacity of a patch reflects its intrinsic quality as an indicator of its demographic potential. A patch with a high capacity can accommodate a large population and vice versa. Capacity is included directly in the calculation of some area connectivity metrics and weighted connectivity metrics (see \nameref{metric_fam}).
 
 When the project is first created the patch capacity is equal by default to the patch area in m². However, users may replace area by any other quality indicator. In some cases, species presence is related not to patch size but to the area of other types of land cover around the patch. For example, the presence of amphibians in a breeding pond does not depend on the pond size but on the amount of terrestrial habitat
 surrounding the pond.
 
+The Data / Set patch capacity menu can be used to modify the capacity of all patches by two methods.
+
 \subsection{Capacity as a function of the neighborhood}
 
-The Data / Calculate patch capacity menu can be used to define patch capacity as a function of the neighborhood composition and to calculate it directly from Graphab. 
+The first method can be used to define patch capacity as a function of the neighborhood composition and to calculate it directly from Graphab. 
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-en_img8.png}
@@ -270,24 +330,30 @@ Codes included: the user may select one or more landscape categories, other than
 
 The “cost weight” option introduces a weighting with distance to the patch through a negative exponential function. In this way, the areas selected have greater weight if they are close to the patch and vice versa.
 
-The capacity values calculated replace the patch area for all subsequent computations. But users can return to the initial parameter via the Data / Calculate patch capacity menu and by selecting “patch area”.
+The capacity values calculated replace the patch area for all subsequent computations. But users can return to the initial parameter via the Data / Set patch capacity menu and by selecting "Patch area".
 
 \subsection{Capacity defined from external data}
 
-The Data / Import patch capacity menu allows a data table (*.csv) to be imported describing all the patches of the project and containing capacity values defined in advance by the user. The patch identifiers in the table must be the same as the patch identifiers in the Graphab project.
+The second method is for importing a data table (*.csv) describing all the patches of the project and containing capacity values defined in advance by the user. The patch identifiers in the table must be the same as the patch identifiers in the Graphab project.
 
-The capacity values in the imported table replace patch area values for all subsequent computations after importing. But users can restore the initial parameter via the Data / Calculate patch capacity menu and by selecting “patch area”.
+The capacity values in the imported table replace patch area values for all subsequent computations after importing. But users can restore the initial parameter via the Data / Set patch capacity menu and by selecting “Patch area”.
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-en_img9.png}
 \end{figure}
 
+\subsection{Patch removing}
+
+After setting patches capacity, it can be useful to remove patches whose capacity is too low. The entry "Remove patches" from the Data menu, lets you create a new project identical to the current project and remove patches with a capacity below a given threshold.
+
+After entering the required minimum capacity, the new project is created in a subdirectory of the current project and directly loaded.
+
 
 \section{Calculating connectivity metrics}
 
 \subsection{Metrics family and computing level}
-
-Each graph in a project can be used to compute different connectivity metrics. The details of how they are computed and references are listed in the Annex. Computations are made at several levels corresponding to major sections in the Metrics menu (table 1):
+\label{metric_fam}
+Each graph in a project can be used to compute different connectivity metrics. The details of how they are computed and references are listed in the Annex. Computations are made at several levels corresponding to major sections in the Metrics menu (table \ref{metric_level}):
 \begin{itemize}
 	\item Metrics /Global metrics: describe the entire graph.
 	\item Metrics /Component metrics: describe connectivity within each component (or sub-graph).
@@ -306,7 +372,6 @@ metrics are available in the new window:
 Whichever the selected level, the user must first specify the graph on which the calculation will be made and then select the connectivity metric.
 
 \begin{table}[H]
-
 \begin{tabular}{|c|l|l|c|c|c|c|}
 \hline
 \multirow{2}{*}{Family} & \multirow{2}{*}{\centering Connectivity metrics} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3.6cm}|}{\centering Computing level} & \multirow{2}{*}{\centering\arraybslash Delta metrics}\\
@@ -324,6 +389,8 @@ Whichever the selected level, the user must first specify the graph on which the
  & Betweenness centrality index & BC &  &  & × & \\
 \hhline{~------}
  & Integral index of connectivity & IIC & × & × &  & × \\
+ \hhline{~------}
+ & Current flow & CF &  &  & × & \\ 
 \hline
 \multirow{4}{*}{Area} & Mean size of the components & MSC & × &  &  & \\
 \hhline{~------}
@@ -353,10 +420,12 @@ Whichever the selected level, the user must first specify the graph on which the
 \hline
 \end{tabular}
 \caption{Connectivity metrics and computing level}
+\label{metric_level}
 \end{table}
 
 
 \subsection{Parameters of weighted metrics}
+\label{param_weight}
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-en_img10.png}
@@ -366,47 +435,46 @@ Whichever the selected level, the user must first specify the graph on which the
 \subsubsection{Alpha parameter}
 
 Several metrics include a weighting in their calculation which converts the distance between patches into the probability of movement. These metrics are F, PC, FPC, and BC. The weighting is based on an exponential function:
-
 \begin{equation*}
 p={e}^{-\mathit{\alpha d}}
 \end{equation*}
-where p is the probability of movement between two patches, d the distance between these patches, and $\alpha $ a parameter defining the rate of decline in probability as distance increases. As it is not easy to determine the value of the $\alpha $ parameter, Graphab calculates it from the other two parameters. Users must specify the distance corresponding to a certain value of probability, e.g.:
+where $p$ is the probability of movement between two patches, $d$ the distance between these patches, and $\alpha$ a parameter defining the rate of decline in probability as distance increases. As it is not easy to determine the value of the $\alpha$ parameter, Graphab calculates it from the other two parameters. Users must specify the distance corresponding to a certain value of probability, e.g.:
 \begin{itemize}
-	\item the maximum dispersal distance of species corresponding to a small value of p (0.05 or 0.01).
-	\item the average dispersal distance of species corresponding to a median value of p (0.5).
+	\item the maximum dispersal distance of species corresponding to a small value of $p$ (0.05 or 0.01).
+	\item the average dispersal distance of species corresponding to a median value of $p$ (0.5).
 \end{itemize}
 
-The value of $\alpha $ is automatically obtained from the formula:
+The value of $\alpha$ is automatically obtained from the formula:
 \begin{equation*}
 \alpha =-\log \left(p\right)/{d}
 \end{equation*}
 
-In the case of a thresholded graph, it is assumed that the distance d used in the setting is consistent with the distance used for the graph thresholding.  
+In the case of a thresholded graph, it is assumed that the distance $d$ used in the setting is consistent with the distance used for the graph thresholding.  
 
 \subsubsection{Beta parameter}
 
-The metrics F, PC, FPC, and BC are controlled by the $\beta $ parameter. This parameter is the exponent applied to patch capacity. It adjusts the relative balance between the weight of distances and the weight of patch capacity in the weighting of metrics. Taking the example of the metric F in local computation, whose generic form is:
+The metrics F, PC, FPC, and BC are controlled by the $\beta$ parameter. This parameter is the exponent applied to patch capacity. It adjusts the relative balance between the weight of distances and the weight of patch capacity in the weighting of metrics. Taking the example of the metric F in local computation, whose generic form is:
 \begin{equation*}
 F=\sum {{a}^{\beta }}{e}^{-\mathit{\alpha d}}
 \end{equation*}
 
 \begin{itemize}
-	\item a value of  $\beta =0$ means that the patch capacity plays no part in the weighting.
-	\item a value of  $\beta =1$ means that the patch capacity acts linearly in the weighting.
-	\item a value of  $\beta =2$ means that the patch capacity is squared in the weighting.
-	\item a value of  $\beta =0.5$ means that the square root of the patch capacity features in the weighting.
-	\item a value of  $\beta =-1$ means that the patch capacity acts in an inversely proportional way in the weighting.	
+	\item a value of $\beta =0$ means that the patch capacity plays no part in the weighting.
+	\item a value of $\beta =1$ means that the patch capacity acts linearly in the weighting.
+	\item a value of $\beta =2$ means that the patch capacity is squared in the weighting.
+	\item a value of $\beta =0.5$ means that the square root of the patch capacity features in the weighting.
+	\item a value of $\beta =-1$ means that the patch capacity acts in an inversely proportional way in the weighting.	
 \end{itemize}
 
 In addition to these few examples, any weighting values are possible.
 
 \subsection{Calculating batch metrics}
 
-Every metric compatible with the global level can be calculated following the variation of the scale of distances. This variation may concern either graph thresholding (5.3.1.), or metric adjustment (5.3.2.). The type of distance used for thresholding depends on the type of distance used in creating the link set (Euclidean, least-cost
+Every metric compatible with the global level can be calculated following the variation of the scale of distances. This variation may concern either graph thresholding (\ref{batch_graph}), or metric adjustment (\ref{batch_metric}). The type of distance used for thresholding depends on the type of distance used in creating the link set (Euclidean, least-cost
 distance, or least-cost path).
 
 \subsubsection{Batch graph}
-
+\label{batch_graph}
 The Metrics / Batch graph menu allows a series of thresholded graphs to be created from a given link set and a metric to be calculated for each graph at global level. The thresholds of successive graphs are increasingly defined in either of two ways:
 \begin{itemize}
 	\item distance: a fixed increment of distance is defined between successive graphs. The metric values are therefore calculated inregular intervals of threshold distance.
@@ -427,10 +495,10 @@ Graphs are defined following three criteria selected by users:
 Once the calculation is completed, the software opens a new window displaying the curve of the selected metric versus the threshold distance. The values of this curve can be saved with the “Export” button by selecting text format.
 
 \subsubsection{Batch parameter}
-
+\label{batch_metric}
 The Metrics / Batch parameter menu is used to calculate a series of metrics from a given graph. This procedure applies to the weighted metrics only. It is divided into two entries: local metrics or global metrics.
 
-{\bfseries Batch parameter for local metrics}
+\textbf{Batch parameter for local metrics}
 
 A local weighted metric is calculated in series according to the variation of one of its parameters. The user must select the graph, the metric, and the parameter to be varied. The variation of computation is defined by:
 \begin{itemize}
@@ -441,18 +509,18 @@ A local weighted metric is calculated in series according to the variation of on
 
 Once the calculation is completed, the patches (and in some cases the links) of the graph are characterized by a series of additional metrics.
 
-{\bfseries Batch parameter for global metrics}
+\textbf{Batch parameter for global metrics}
 
 For a given graph, a global weighted metric is calculated in series according to the variation of one of its parameters. As previously, this variation is defined between a minimum value (min), a maximum value (max), and with an interval (increment). 
 
 The procedure ends with the opening of a new window displaying the curve of the selected metric versus the parameter. 
 
-Table 2 summarizes possible metrics calculations.
+Table \ref{metric_poss} summarizes possible metrics calculations.
 
 \begin{table}[H]
 \begin{tabular}{|c|p{5cm}|l|l|l|p{0.8cm}|p{0.8cm}|p{1cm}|p{1.3cm}|}
 \hline
-\multirow{2}{*}{Family} & \multirow{2}{*}{Connectivity metrics} & \multirow{2}{*}{Code} & \multirow{2}{*}{\parbox{1.3cm}{Patch capacity}} & \multirow{2}{*}{\parbox{1.3cm}{Intra-patch distance}}  & \multicolumn{2}{m{1.8cm}|}{\centering Parameters} & \multirow{2}{*}{\parbox{1.3cm}{Batch graph}} & \multirow{2}{*}{\parbox{1.3cm}{Batch parameter}}\\
+\multirow{2}{*}{Family} & \multirow{2}{*}{Connectivity metrics} & \multirow{2}{*}{Code} & \multirow{2}{*}{\parbox{1.3cm}{Patch capacity}} & \multirow{2}{*}{\parbox{1.3cm}{Intra-patch distance}}  & \multicolumn{2}{m{1.8cm}|}{\centering Parameters} & \multirow{2}{*}{\parbox{1.3cm}{Batch graph}} & \multirow{2}{*}{\parbox{1.3cm}{Batch param}}\\
 \hhline{~~~~~--~~}
  & & & & & $\alpha$ & $\beta$ & & \\
 \hline
@@ -463,6 +531,7 @@ Table 2 summarizes possible metrics calculations.
  & Fractions of delta Probability of connectivity & dPC & × & × & × & × &  &\\
  & Betweenness centrality index & BC & × & × & × & × &  &×\\
  & Integral index of connectivity & IIC & × &  &  &  & × & \\
+ & Current flow & CF & × &  &  & × &  & ×\\
 \hline
 \multirow{4}{*}{Area} 
  & Mean size of the components & MSC & × &  &  &  & × & \\
@@ -482,19 +551,78 @@ Table 2 summarizes possible metrics calculations.
 \hline
 \end{tabular}
 \caption{Possible connectivity metrics calculations}
+\label{metric_poss}
 \end{table}
 
 \subsection{Interpolating metrics}
 
 The Analysis / Metric interpolation menu is used to create raster layers from local metrics calculated at patch level. This transformation is based on a specific spatial interpolation which assigns connectivity values of patches to each cell of a grid, using a decreasing weighting function from the patch edge (weight of 1). Overall, the farther cells are away from the graph, the lower their connectivity values. 
 
-The weighting is a negative exponential function as $p={e}^{-\mathit{\alpha d}}$ for which the user selects a distance (d) corresponding to a certain probability (p) and the software deduces the value of the $\alpha $ parameter. In theory, this adjustment must be consistent with the choice of reference graph or of any weighted metrics, using the same value of d. 
+The weighting is a negative exponential function as $p={e}^{-\mathit{\alpha d}}$ for which the user selects a distance ($d$) corresponding to a certain probability ($p$) and the software deduces the value of the $\alpha$ parameter. In theory, this adjustment must be consistent with the choice of reference graph or of any weighted metrics, using the same value of $d$. 
 
-The Multi connection option allows several patches to be included in the calculation of metrics at the point level. The calculation is based on a weighted mean of values of all patches in the vicinity of the points, up to the specified Maximum distance. 
+The Multi connection option allows several patches to be included in the calculation of metrics at the point level. The calculation is based on a sum or a weighted mean of values of all patches in the vicinity of the points, up to the specified Maximum distance. 
 
 The distance used in these calculations depends on the reference graph. If it is based on least-cost distance, the spatial interpolation uses the same distance and not Euclidean distance.
 
-The metric interpolation is used automatically in calculating species distribution models; see 6.3. Species distribution model.
+The metric interpolation is used automatically in calculating species distribution models; see \nameref{sdm}.
+
+
+\section{Patch addition}
+
+The function "Add patches" is available in the menu "Analyses". It is used to test a set of locations to create new habitat patches according to the connectivity gain they provide. Graphab calculates first the selected global connectivity metric, then it adds virtually a patch and the links between this patch and existing patches (only if their distance is less than the thresholding of the graph in the case of a thresholded graph) and calculates the global metric again. Once all locations are tested, the software validates the one for which patch addition produces the biggest increase in the metric value. The process is repeated until the desired number of additional patches is reached by including elements already added at each step.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-en_addpatch.png} 
+\end{figure}
+
+Several parameters must be defined:
+\begin{itemize}
+	\item Graph: the graph used for computing the connectivity metric and adding new patches. The underlying link set must be in complete topology.
+	\item Global metric: the global metric to maximize
+	\item Nb Patches: number of patches (which become new nodes of the graph) to be added.
+\end{itemize}
+
+The definition of the patch set to test can be done in two ways:
+\begin{itemize}
+	\item by automatically applying a grid of a given resolution (field "cell size" to define). In this case, Graphab tests each centroid of the cells by adding a virtual new patch. By default, all centroids have the same capacity value (=1). Nevertheless, it is possible to import a raster layer in which each pixel of the lansdcape matrix has its own capacity value,
+	\item by importing a shapefile of points or polygons. In this case, the user must indicate which column of the attribute table contains the patch capacity.
+\end{itemize}
+
+Multi-patches option : this option can be used to test the addition of several patches simultaneously. The additionnal patches are searched in a neighbourhood window of x cells (parameter to define) around the first patch.
+
+At the end of the calculation, a folder named "addpatch\_nX-GraphX\_..." is created and saved in the project directory. It contains:
+\begin{itemize}
+	\item a shapefile containing the added nodes. The attribute table indicates the step at which each node was validated and the corresponding value of the  global metric,
+	\item two shapefiles containing all the links of the graph, including those connecting the new nodes in topological form ("topo\_links\_graphXXX") or in realistic form ("links\_graphXX"),
+	\item a raster "landuse.tif" containing the modified land use,
+	\item a folder named "detail" containing the shapefile of the tested locations and the corresponding value of the global metric for each step. 
+\end{itemize}
+
+References : 
+\cite{2015_addpatch_rainette, 2014_LUP}
+
+
+
+\section{Meta-patch}
+
+From the Graph menu, the "Create metapatch project" entry creates a new project where the nodes of the graph correspond to sets of interconnected patches. This feature allows to better take into account the nested scales of ecological processes, especially the functional definition of a habitat patch that is dependent on the scale considered.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-en_metapatch.png} 
+\end{figure}
+
+To use this feature, it is necessary to create an initial project and a graph thresholded at the desired distance (eg daily distance). Each component of this thresholded graph correspond to a meta-patch. It is therefore constituted by all interconnected patches.
+
+By default, the metapatch capacity is defined as the sum of the capacity of the patches composing the metapatch. The other option, "Weighted distance", is used to reflect the removal between patches. For this option, you must define the parameter $\alpha$ by giving a distance $d$ and an associated probability $p$ (see \nameref{param_weight}). The resulting capacity ($C$) of a metapatch is:
+
+$$C = \frac{1}{n}\sum_{i}^n\sum_{j}^n c_j e^{-\alpha d_{ij}}$$ 
+
+The "Min. capacity" option keeps only the metapatch that have a capacity greater than or equal to the given capacity.
+
+The new project is saved in a subdirectory of the original project and is automatically loaded at the end of the process.
+
+Reference : \cite{2015_monkey}
+
 
 \section{Connecting graphs and point data}
 
@@ -502,13 +630,11 @@ The main part of the software is for graph construction and computation of conne
 
 \subsection{Importing points sets}
 
-Point data can be imported via the Data / Import point set menu. These data may contain several attributes but only binary attributes (presence/absence) are taken into account in certain procedures (see 6.3. Species distribution model).
+Point data can be imported via the Data / Import point set menu. These data may contain several attributes but only binary attributes (presence/absence) are taken into account in certain procedures (see \nameref{sdm}).
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-en_img12.png}
 \end{figure}
-
-
 
 The imported file may be either in shapefile format (*.shp), or in table format (*.csv). For files in table format, the user must specify the columns corresponding to identifiers and to the XY coordinates of points in the table. The attributes to be considered must be selected from the list of attributes available.
 
@@ -516,10 +642,28 @@ If point data do not contain an absence attribute, they cannot be used in specie
 
 \subsection{Inter-point distance matrix}
 
-Point data imported to Graphab can be used to calculate the inter-point distance matrix by right-clicking on the name of the point data. Several types of distance are available:
+Point data imported to Graphab can be used to calculate the inter-point distance matrix by right-clicking on the name of the point data and selecting "Distance matrix".
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-en_img13b.png} 
+\end{figure}
+
+Two types of distance are available: raster-based distance and graph-based distance.
+
+\subsubsection{Raster-based distance}
+
+In raster mode, the distances are calculated based on the selected link set. This link set can not be euclidean.
+
+According to the selected link set, the resulting distances may be the cumulative cost  distance or the length of the least cost path. In both cases, the calculation includes  costs assigned to the landscape map categories, as defined when creating the link set. The result is a distance matrix which is independent of the graph; this matrix corresponds to the calculation provided by the Geographicinformation Systems. 
+
+The Circuit option allows to calculate another distance between each point by calculating the total resistance of an electrical circuit of resistors instead of calculating the shortest path. This method considers all possible paths and not only the shortest one (cf. \cite{McRae2008}).
+
+
+\subsubsection{Graph-based distance}
+In graph mode, the distances are calculated based on the selected graph. This graph must be based on the link set used for point set import.
 \begin{itemize}
-	\item Raster-based distance: distance calculated in raster mode for a given link set. Depending on the selected link set, it may be Euclidean distance, cumulative cost distance, or length of a least-cost path. In the latter two cases, calculation includes costs assigned to the landscape map categories, as defined when creating the link set. The result is a distance matrix which is independent of the graph; this matrix corresponds to the calculation provided by the Geographicinformation Systems. 
-	\item Graph-based distance: distance calculated according the shortest path in a reference graph. The type of distance is the same as that used in creating the link set of the reference graph. At both ends of a given path, the calculation includes the distance between each point and the nearest patch. Depending on the choice made when creating the graph, the calculation may or may not include intra-patch distances.
+	\item Simple : calculates distances according to the shortest path in the selected graph. The type of distance is the same as that used in creating the link set of the selected graph. At both ends of a given path, the calculation includes the distance between each point and the nearest patch. Depending on the choice made when creating the graph, the calculation may or may not include intra-patch distances.
+	\item Circuit : calculates the total resistance between the closest patch of each point. The graph is seen as an electrical circuit where each link of the graph represents a resistor. This option considers all possible paths, not just the shortest one.
 \end{itemize}
 
 \subsection{Generating random points}
@@ -542,7 +686,7 @@ Several parameters must be defined to randomly sample absence points:
 \end{itemize}
 
 \subsection{Species distribution model}
-
+\label{sdm}
 If a set of presence/absence points has been defined, the software can use the connectivity metrics calculated from a graph as predictors in a species distribution model from the Analysis / Species distribution model menu. Such modeling is possible even if points are not located in habitat patches, by means of a spatial extrapolation of the values of metrics. The logistic regression model is a based on minimizing the AIC
 criterion.
 
@@ -560,14 +704,14 @@ First, the user must specify:
 
 \subsubsection{Weighting for extrapolating metrics to points}
 
-The values of metrics are calculated for any point by a spatial interpolation. This interpolation is based on values being weighted by a decreasing function from patch edges (weight of 1). The weight decreases as the same negative exponential function as the one used for weighted metrics (see section 5.2.1), the adjustment is therefore
+The values of metrics are calculated for any point by a spatial interpolation. This interpolation is based on values being weighted by a decreasing function from patch edges (weight of 1). The weight decreases as the same negative exponential function as the one used for weighted metrics (see \nameref{param_weight}), the adjustment is therefore
 identical. 
 
 The user selects a distance (d) corresponding to a certain probability (p) and the software deduces the value of the $\alpha $ parameter. In principle, this adjustment must be consistent with the choice of reference graph or of any weighted metrics included in the model, using the same value of d.
 
 The Multi connection option allows several patches to be included in calculating metrics at points. Calculation is based on the weighted mean of values of all patches surrounding points, up to the specified Maximum distance.
 
-Details of this weighting are given in Foltete et al., 2012a.
+Details of this weighting are given in \cite{2012_SDM}.
 
 \subsubsection{Estimating the model}
 
@@ -595,6 +739,9 @@ The Extrapolate button provides an estimation of the probability of the species 
 
 In the new window which opens, the user finds the model parameters as described previously. The cell size of the grid (in meters) indicates the level of spatial accuracy of the extrapolation. This parameter has a significant consequence on the computing time required to obtain the result. The result is saved as a raster layer in *.tif format and is displayed in the main window.
 
+\bigskip
+References : \cite{2012_SDM, 2012_graphab_EMS, 2013_SDM, 2013_SDM_rainette}
+
 \section{Display}
 
 \subsection{Graph properties}
@@ -612,15 +759,15 @@ Properties of a graph are available by right-clicking on the name of the graph. 
 \end{figure}
 
 
-The Remove~button can be used to remove the graph selected. 
+The Remove entry can be used to remove the selected graph. The project is saved automatically.
 
-Properties~displays the parameters used in constructing the graph: graph name, graph type with the possible threshold used, and the number of links.
+Properties displays the parameters used in constructing the graph: graph name, graph type with the possible threshold used, and the number of links.
 
-The OD Matrix (Origin–Destination Matrix) button creates a table with the distance between each pair of nodes for the given graph. The unit of distance depends on the type of distance used in the graph. The absence of any connection between two nodes is noted NaN. This matrix is saved in the project file in text format named: “graph name-
+The OD Matrix (Origin–Destination Matrix) entry creates a table with the distance between each pair of nodes for the given graph. The unit of distance depends on the type of distance used in the graph. The absence of any connection between two nodes is noted NaN (Not a Number). This matrix is saved in the project file in text format named: “graph name-
 odmatrix.txt~”.
 
 \subsection{Object properties}
-
+\label{properties}
 The properties of link sets, graph elements (nodes, links, and components), and point data are available by right-clicking on each of them.
 
 The Style menu includes the display parameters for objects: color, line width, label, symbol size (for nodes only). Objects can be represented in the same way (single symbol) or according to some attribute. A discretization method can be applied to classify objects according to the values of the selected attribute. By default, the legend of objects is displayed in the table of contents. It can be masked by unchecking
@@ -642,13 +789,12 @@ It is also possible to display the values of a given object by selecting it with
 
 
 \section{Processing capabilities and limitations}
-
+\label{limit}
 Graph-based methods provide an efficient modeling framework, but they can raise a question of computing capacity. Two specific points have received particular attention in Graphab: (1) calculation of link sets, (2) calculation of connectivity metrics. All these computations have been optimized by parallelization. This development mode improves computational efficiency by using a multi-processor architecture, a
 quad-core processor being theoretically four times faster than a single-core processor.
 
-In the journal publication [Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the modelling of landscape networks, Environmental Modelling \& Software, 38: 316-327], several tests were conducted to measure the computational capacity of Graphab 1.0 in different configurations. Three configurations were compared for these
-tests: (1) one core (3 Go RAM) corresponding to a current desktop computer, (2) four cores (6 Go RAM) corresponding to a workstation, and (3) 20 cores (15 Go RAM) corresponding to a server. The landscape map used was a grid of 14000*18000 pixels (252 millions of pixels) representing the landscape elements of the region of Franche-Comté
-(France) at a spatial resolution of 10 m. The landscape map contained 22,634 habitat patches. 
+In \cite{2012_graphab_EMS}, several tests were conducted to measure the computational capacity of Graphab in different configurations. Three configurations were compared for these
+tests: (1) one core (3 Go RAM) corresponding to a current desktop computer, (2) four cores (6 Go RAM) corresponding to a workstation, and (3) 20 cores (15 Go RAM) corresponding to a server. The landscape map used was a grid of 14000*18000 pixels (252 millions of pixels) representing the landscape elements of the region of Franche-Comté (France) at a spatial resolution of 10 m. The landscape map contained 22,634 habitat patches. 
 
 \begin{table}[H]
 \begin{tabular}{|l|l|l|l|l|}
@@ -667,13 +813,12 @@ Topology & Distance & Current desktop & Workstation  & Server\\
 \hline
 \end{tabular}
 \caption{Computation times (seconds) required for calculating several link sets}
+\label{perf}
 \end{table}
-
 
 The memory used by the software plays an important role. If there is not enough RAM, computation will be slower or may fail (OutOfMemoryError or GC Overhead message). The File/ Preferences / Memory menu can be used to adjust the memory allocated to Graphab. If you have a 32-bit version of Java, Graphab will be limited to about 2 Go (2000 Mo) of memory. If your computer has more than 2 Go of RAM memory, it is highly
 recommended you install the 64-bit version of Java to use the available memory beyond 2 Go.
 
-\pagebreak
 
 \section{Annexes}
 
@@ -699,6 +844,8 @@ Summary table of metrics in Graphab
 	& Betweenness centrality index & BC &  &  & × & \\
 	\hhline{~------}
 	& Integral index of connectivity & IIC & × & × &  & × \\
+	\hhline{~------}	
+	& Current flow & CF &  &  & × & \\
 	\hline
 	\multirow{4}{*}{Area} & Mean size of the components & MSC & × &  &  & \\
 	\hhline{~------}
@@ -756,7 +903,7 @@ Mathematical terms used
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Flux (F)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Flux ($F$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
@@ -781,13 +928,13 @@ weighted according to their minimum distance to the focal patch through
 the graph. This sum is an indicator of the potential dispersion from
 the patch i or, conversely to the patch i.\\\hline
 Values &
-\multicolumn{2}{m{12.6050005cm}|}{Values depend on the definition of a.
+\multicolumn{2}{m{12.6050005cm}|}{
+Values depend on the definition of a.
 If a represents an area, F expresses an area.
 
 Minimum value: 0
 
 Maximum value: Total area of habitat 
-
 }\\\hline
 Comment &
 \multicolumn{2}{m{12.6050005cm}|}{The path used in the graph is the one
@@ -804,12 +951,8 @@ indirectly connected patches.
 
 }\\\hline
 References &
-\multicolumn{2}{m{12.6050005cm}|}{Urban and Keitt, 2001
-
-Saura and Torné, 2009
-
-Foltête et al., 2012a
-
+\multicolumn{2}{m{12.6050005cm}|}{
+\cite{Urban2001} \cite{Saura2009} \cite{2012_SDM}
 }\\\hline
 \end{tabular}
 \end{table}
@@ -817,8 +960,7 @@ Foltête et al., 2012a
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Probability of Connectivity
-(PC)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Probability of Connectivity ($PC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
@@ -836,11 +978,10 @@ _{j=1}^{n}{{a}_{i}^{\beta }}}{{a}_{j}^{\beta }e}^{-\alpha
 For the entire graph: sum of products of capacity of all pairs of patches weighted by their interaction probability, divided by the square of the area of the study zone. This ratio is the equivalent to the probability that two points randomly placed in the study area are connected.\\\hline
 Values &
 \multicolumn{2}{m{12.6050005cm}|}{Values correspond to a probability.
-
+	
 Minimum value: 0
 
 Maximum value: 1
-
 }\\\hline
 Comment &
 \multicolumn{2}{m{12.6050005cm}|}{For each pair of patches, the path of
@@ -853,11 +994,11 @@ modified.
 
 If a does not represent patch area, the result is no longer a
 probability.
-
 }\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Saura and Pascual-Hortal,
-2007}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{
+\cite{Saura2007}
+}\\\hline
 \end{tabular}
 \end{table}
 
@@ -866,7 +1007,7 @@ Reference &
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
 \multicolumn{3}{|m{16.044998cm}|}{Flow Probability of Connectivity
-(FPC)}\\\hline
+($FPC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
@@ -880,10 +1021,10 @@ Sum of products of the focal patch capacity with all the other patches,
 weighted by their interaction probability and divided by the square of
 the area of the study zone.\\\hline
 Values &
-\multicolumn{2}{m{12.6050005cm}|}{Minimum value: 0
+\multicolumn{2}{m{12.6050005cm}|}{
+Minimum value: 0
 
 Maximum value: 1
-
 }\\\hline
 Comment &
 \multicolumn{2}{m{12.6050005cm}|}{For each pair of patches, the path of
@@ -891,13 +1032,10 @@ the graph used is one that maximizes ${e}^{-\mathit{\alpha d}}$, i.e.
 one that minimizes the distance d (or the cost) between the patches i
 and j.
 
-This metric is just the local contribution of a patch in the PC index,
+This metric is just the local contribution of a patch in the $PC$ index,
 since  $\mathit{PC}=\sum _{i}{{\mathit{FPC}}_{i}}$. It is the
-equivalent of the  ${\mathit{dPC}}_{\mathit{flux}}$ index not divided
-by the global value of PC. However, the FPC metric is obtained more
-quickly than  ${\mathit{dPC}}_{\mathit{flux}}$ because it is not
-calculated on the basis of patch removal (delta mode).
-
+equivalent of ${dPC}_{flux}+{dPC}_{area}$ not divided
+by the global value of $PC$. However, the $FPC$ metric is obtained faster because it is not calculated on the basis of patch removal (delta mode).
 }\\\hline
 \end{tabular}
 \end{table}
@@ -907,7 +1045,7 @@ calculated on the basis of patch removal (delta mode).
 \begin{tabular}{|m{2.4919999cm}|m{5.229cm}m{7.924cm}|}
 \hline
 \multicolumn{3}{|m{16.044998cm}|}{Fractions of delta Probability of
-Connectivity (dPC, dPCarea, dPCflux, dPCconnector)}\\\hline
+Connectivity ($dPC$, $dPC_{area}$, $dPC_{flux}$, $dPC_{connector}$)}\\\hline
  &
 \multicolumn{1}{m{5.229cm}|}{Formula} &
 Meaning\\\hline
@@ -923,38 +1061,38 @@ Delta &
 }}{{A}^{2}\mathit{PC}}
 \end{equation*}
 \begin{equation*}
-{\mathit{dPC}}_{\mathit{flux}}=\frac{{\mathit{FPC}}_{i}}{\mathit{PC}}
+{dPC}_{flux}=\frac{{FPC}_{i}}{PC}-{dPC}_{area}
 \end{equation*}
 } &
 Rate of variation between the value of PC index and the value of PC’
 corresponding to the removal of the patch i.
 
-The value of dPC is decomposed into three parts:
+The value of $dPC$ is decomposed into three parts:
 
-{}- dPCarea is the variation induced by the area lost after removal;
+{}- $dPC_{area}$ is the variation induced by the area lost after removal;
 
-{}- dPCflux is the variation induced by the loss of interaction between
+{}- $dPC_{flux}$ is the variation induced by the loss of interaction between
 the patch i and other patches;
 
-{}- dPCconnector is the variation induced by the modification of paths
+{}- $dPC_{connector}$ is the variation induced by the modification of paths
 connecting other patches and initially routed through i.~\\\hline
 Values &
-\multicolumn{2}{m{13.353cm}|}{Minimum value: 0
+\multicolumn{2}{m{13.353cm}|}{
+Minimum value: 0
 
 Maximum value: 1
-
 }\\\hline
 Comment &
 \multicolumn{2}{m{13.353cm}|}{In CS22, the weighting of capacities is
 set to 1; in Graphab it can be modified. 
 
 If a does not represent patch area, the result is no longer a
-probability and dPCarea does not express a loss of area but a loss of
+probability and $dPC_{area}$ does not express a loss of area but a loss of
 capacity.
 
 }\\\hline
 Reference &
-\multicolumn{2}{m{13.353cm}|}{Saura and Rubio, 2010}\\\hline
+\multicolumn{2}{m{13.353cm}|}{\cite{Saura2010}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -963,7 +1101,7 @@ Reference &
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
 \multicolumn{3}{|m{16.044998cm}|}{Betweenness Centrality index
-(BC)}\\\hline
+($BC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
@@ -991,32 +1129,30 @@ They correspond to a weight of potential transit.
 Minimum value: 0
 
 Maximum value: square of the total area of habitat.
-
 }\\\hline
 Comment &
-\multicolumn{2}{m{12.6050005cm}|}{With an adjustment of $\alpha $ = 0
-and $\beta $ = 0 (uniform weighting of paths), the BC index is the same
+\multicolumn{2}{m{12.6050005cm}|}{With an adjustment of $\alpha = 0$
+and $\beta = 0$ (uniform weighting of paths), the $BC$ index is the same
 as that used in other types of graphs. 
 
-An adjustment of $\alpha $ = 1 and $\beta $ = 0 gives paths a weight
+An adjustment of $\alpha = 0$ and $\beta = 1$ gives paths a weight
 proportional to the product of the capacities of the patches that they
 connect, whatever their distance. 
 
-In Foltête et al. (2012a ; 2012b), the BCl index was proposed so as to
+In \cite{2012_graphab_EMS, 2012_SDM}, the $BC_l$ index was proposed so as to
 give greater weight to paths exceeding a given criterion (e.g.
 dispersal distance). But tests showed that this index was strongly
-correlated with the weighted BC adjusted with $\beta $=0. 
+correlated with the weighted $BC$ adjusted with $\alpha=0$. 
 
-In Bodin and Saura (2010), the  ${\mathit{BC}}_{\mathit{pc}}$ is the
+In \cite{Bodin2010}, the  ${\mathit{BC}}_{\mathit{pc}}$ is the
 weighted BC with d equal to the dispersal distance,  $\alpha $ as 
-${e}^{-\mathit{\alpha d}}=0.05$ and  $\beta =1.$
+${e}^{-\mathit{\alpha d}}=0.05$ and  $\beta =1$.
 
 }\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Bodin and Saura, 2010
-
-Foltête et al., 2012b
-
+\multicolumn{2}{m{12.6050005cm}|}{
+\cite{Bodin2010}
+\cite{2012_graphab_EMS}	
 }\\\hline
 \end{tabular}
 \end{table}
@@ -1026,7 +1162,7 @@ Foltête et al., 2012b
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
 \multicolumn{3}{|m{16.044998cm}|}{Integral Index of Connectivity
-(IIC)}\\\hline
+($IIC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
@@ -1053,14 +1189,55 @@ Values &
 \multicolumn{2}{m{12.6050005cm}|}{Minimum value: 0
 
 Maximum value: 1
-
 }\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Pascual-Hortal and Saura,
-2006}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Pascual2006}}\\\hline
 \end{tabular}
 \end{table}
 
+
+\begin{table}[H]
+	\begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
+		\hline
+		\multicolumn{3}{|m{16.044998cm}|}{Current flow ($CF$)}\\\hline
+		&
+		\multicolumn{1}{m{4.4810004cm}|}{Formula} &
+		Meaning\\\hline
+		Local level &
+		\multicolumn{1}{m{4.4810004cm}|}{
+			\begin{equation*}
+			CF_{i}=\sum_{j}^n{c_i^j}
+			\end{equation*}
+		} &
+		Sum of currents passing through the patch $i$.
+		
+		$c_i^j$ represents the current through the patch $i$ when currents are sent from all patches (except $j$) to the patch $j$. The patch $j$ is connected to the ground.
+		
+		\\\hline
+		Values &
+		\multicolumn{2}{m{12.6050005cm}|}{			
+			Minimum value : 0
+			
+			Maximum value : $(n-1)(n-2)$ if $\beta=0$
+			
+			$(n-2)\sum_i^{n-1} a_i$ if $\beta=1$
+			
+		}\\\hline
+		Comment &
+		\multicolumn{2}{m{12.6050005cm}|}{
+			The $CF$ metric uses the electrical circuit theory. Each link of the graph corresponds to a resistor, the current sources and the ground are attached to the patches.
+			
+			If $\beta=0$, each patch emits a current of 1, if $\beta=1$, each patch emits a current equals to its capacity.
+			
+			This metric can be seen as an equivalent of $BC$ metric (with $\alpha=0$ and $\beta=0$) that considers all possible paths, not just the shortest one.
+			
+		}\\\hline
+		Reference &
+		\multicolumn{2}{m{12.6050005cm}|}{		
+			\cite{2015_collisions}
+		}\\\hline
+	\end{tabular}
+\end{table}
 
 \subsubsection{Area metrics}
 
@@ -1085,7 +1262,6 @@ Values &
 \multicolumn{2}{m{12.6050005cm}|}{Minimum value: minimum capacity
 
 Maximum value:  $\mathit{SLC}$
-
 }\\\hline
 \end{tabular}
 \end{table}
@@ -1111,7 +1287,6 @@ Values &
 \multicolumn{2}{m{12.6050005cm}|}{Minimum value: minimum capacity
 
 Maximum value: maximum capacity
-
 }\\\hline
 \end{tabular}
 \end{table}
@@ -1142,8 +1317,7 @@ Maximum value: sum of capacities (only one component)
 
 }\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Pascual-Hortal and Saura,
-2006}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Pascual2006}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1172,7 +1346,7 @@ Maximum value: sum of capacities (only one component)
 
 }\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{O’Brien et al., 2006}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{OBrien2006}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1208,7 +1382,7 @@ Comment &
 \multicolumn{2}{m{12.6050005cm}|}{For pairs of patches not connected by
 a path, we have :   ${\mathit{nl}}_{\mathit{ij}}=+{\infty}$}\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Ricotta et al., 2000}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Ricotta2000}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1245,8 +1419,7 @@ This metric is the global version of the metric  ${\mathit{Ec}}_{i}$
 
 }\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Urban and Keitt, 2001
-
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Urban2001}
 }\\\hline
 \end{tabular}
 \end{table}
@@ -1274,8 +1447,7 @@ Maximum value :  $n$
 
 }\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Urban and Keitt, 2001
-
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Urban2001}
 }\\\hline
 \end{tabular}
 \end{table}
@@ -1341,7 +1513,7 @@ Comment &
 \multicolumn{2}{m{12.606cm}|}{Si 
 $\left|{N}_{i}\right|{\leq}1\rightarrow {\mathit{CC}}_{i}=0$ }\\\hline
 Reference &
-\multicolumn{2}{m{12.606cm}|}{Ricotta et al., 2000}\\\hline
+\multicolumn{2}{m{12.606cm}|}{\cite{Ricotta2000}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1401,8 +1573,7 @@ Maximum value:  $+{\infty}$
 
 }\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Urban and Keitt, 2001
-
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Urban2001}
 }\\\hline
 \end{tabular}
 \end{table}
@@ -1436,61 +1607,13 @@ Comment &
 \multicolumn{2}{m{12.6050005cm}|}{If $\left|{N}_{i}\right|=0\rightarrow
 {\mathit{CCor}}_{i}=0$}\\\hline
 Reference &
-\multicolumn{2}{m{12.6050005cm}|}{Minor and Urban, 2008}\\\hline
+\multicolumn{2}{m{12.6050005cm}|}{\cite{Minor2008}}\\\hline
 \end{tabular}
 \end{table}
 
 \pagebreak
 
-\subsection{References}
-
-Bodin O., Saura S., 2010. Ranking individual habitat patches as
-connectivity providers: Integrating network analysis and patch removal
-experiments. Ecological Modelling 221, 2393–2405.
-
-Foltête J.C., Clauzel C., Tournant P., Vuidel G., 2012a, Integrating
-graph-based connectivity metrics into species distribution models,
-Landscape Ecology 27, 557-569.
-
-Foltête J.C., Clauzel C., Vuidel G., 2012b. A software tool dedicated to
-the modelling of landscape networks. Environmental Modelling and
-Software 38, 316-327.
-
-O’Brien D., Manseau M., Fall A., Fortin M.J., 2006. Testing the
-importance of spatial configuration of winter habitat for woodland
-caribou: An application of graph theory. Biological Conservation 130,
-70–83.
-
-Minor E.S., Urban D.L., 2008. A graph-theory framework for evaluating
-landscape connectivity and conservation planning. Conservation Biology
-22, 297–307.
-
-Pascual-Hortal L., Saura S., 2006. Comparison and development of new
-graph-based landscape connectivity indices: towards the priorization of
-habitat patches and corridors for conservation. Landscape Ecology 21,
-959–967
-
-Rayfield B., Fortin M.J., Fall A., 2011. Connectivity for conservation:
-a framework to classify network measures. Ecology 92, 847–858.
-
-Ricotta C., Stanisci A., Avena G.C., Blasi C., 2000, Quantifying the
-network connectivity of landscape mosaics: a graph-theoretical
-approach, Community Ecology 1(1), 89–94.
-
-Saura S., Pascual-Hortal L., 2007. A new habitat availability index to
-integrate connectivity in landscape conservation planning: Comparison
-with existing indices and application to a case study. Landscape and
-Urban Planning 83, 91–103.
-
-Saura S., Torné J., 2009. ConeforSensinode 2.2: A software package for
-quantifying the importance of habitat patches for landscape
-connectivity. Environmental Modelling and Software 24, 135–139.
-
-Saura S., Rubio L., 2010. A common currency for the different ways in
-which patches and links can contribute to habitat availability and
-connectivity in the landscape. Ecography 33, 523–537.
-
-Urban D.L., Keitt T.H., 2001. Landscape connectivity: a graph theoretic
-approach. Ecology 82, 1205–1218.
+\bibliographystyle{graphab}
+\bibliography{graphab}
 
 \end{document}
