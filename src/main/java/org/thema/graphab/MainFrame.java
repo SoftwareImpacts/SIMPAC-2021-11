@@ -37,6 +37,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -148,6 +149,7 @@ public class MainFrame extends javax.swing.JFrame {
         addPointDataMenuItem = new javax.swing.JMenuItem();
         addPointMenuItem = new javax.swing.JMenuItem();
         setDEMMenuItem = new javax.swing.JMenuItem();
+        remPatchAttrMenuItem = new javax.swing.JMenuItem();
         indiceMenu = new javax.swing.JMenu();
         calcIndiceMenuItem = new javax.swing.JMenuItem();
         compIndiceMenuItem = new javax.swing.JMenuItem();
@@ -294,6 +296,14 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         dataMenu.add(setDEMMenuItem);
+
+        remPatchAttrMenuItem.setText(bundle.getString("MainFrame.remPatchAttrMenuItem.text")); // NOI18N
+        remPatchAttrMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                remPatchAttrMenuItemActionPerformed(evt);
+            }
+        });
+        dataMenu.add(remPatchAttrMenuItem);
 
         jMenuBar.add(dataMenu);
 
@@ -848,15 +858,14 @@ public class MainFrame extends javax.swing.JFrame {
             try {
                 int n = (int)((dlg.max - dlg.min) / dlg.inc) + 1;
                 LocalMetric indice = (LocalMetric)dlg.metric.dupplicate();
-                TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_local_metric_") + dlg.metric.getName(), "", 0,
-                        n*100);
+                ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_local_metric_") + dlg.metric.getName(), n*100);
                         
                Map<String, Object> params = indice.getParams();
                for(double p = dlg.min; p <= dlg.max; p += dlg.inc) {
                    params.put(dlg.param, p);
                    indice.setParams(params);
                    monitor.setNote(dlg.param + " : " + String.format("%g", p));
-                   calcLocalMetric(monitor.getSubMonitor(0, 100, 100), dlg.graph,
+                   calcLocalMetric(monitor.getSubProgress(100), dlg.graph,
                             indice, Double.NaN);
 
                }
@@ -1071,6 +1080,27 @@ public class MainFrame extends javax.swing.JFrame {
         new AddPatchDialog(this, project).setVisible(true);
     }//GEN-LAST:event_addPatchMenuItemActionPerformed
 
+    private void remPatchAttrMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remPatchAttrMenuItemActionPerformed
+        List attrList = new ArrayList(project.getPatches().get(0).getAttributeNames());
+        attrList = attrList.subList(4, attrList.size());
+        JList list = new JList(attrList.toArray());
+        int res = JOptionPane.showConfirmDialog(this, new JScrollPane(list), 
+                java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("MainFrame.remPatchAttrMenuItem.text"), 
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if(res == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
+         
+        for(Object attr : list.getSelectedValuesList()) {
+            DefaultFeature.removeAttribute((String)attr, project.getPatches());
+        }
+        try {
+            project.savePatch();
+        } catch (IOException | SchemaException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_remPatchAttrMenuItemActionPerformed
+
     /**
      * Changes the current view, to show the result of a local or delta metric.
      * 
@@ -1176,8 +1206,9 @@ public class MainFrame extends javax.swing.JFrame {
         final LocalMetric metric = (LocalMetric)refMetric.dupplicate();           
         
         if(metric instanceof PreCalcMetric) {
-            PreCalcMetricTask pathTask = new PreCalcMetricTask(graph, (PreCalcMetric)metric, maxCost, monitor);
+            PreCalcMetricTask pathTask = new PreCalcMetricTask(graph, (PreCalcMetric)metric, maxCost, monitor.getSubProgress(99));
             ExecutorService.execute(pathTask);
+            monitor = monitor.getSubProgress(1);
         }
 
         monitor.setMaximum((metric.calcNodes() ? graph.getGraph().getNodes().size() : 0) +
@@ -1346,6 +1377,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem prefMenuItem;
     private javax.swing.JMenuItem projectRemPatchMenuItem;
     private javax.swing.JMenuItem quitMenuItem;
+    private javax.swing.JMenuItem remPatchAttrMenuItem;
     private javax.swing.JMenuItem setDEMMenuItem;
     private javax.swing.JPanel statusPanel;
     // End of variables declaration//GEN-END:variables

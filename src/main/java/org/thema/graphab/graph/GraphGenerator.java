@@ -759,7 +759,8 @@ public class GraphGenerator {
             info += "\n\n" + bundle.getString("NewGraphDialog.intraPatchCheckBox.text");
         }
         
-        info += "\n\n# edges : " + getGraph().getEdges().size();
+        info += "\n\n# nodes : " + getGraph().getNodes().size();
+        info += "\n# edges : " + getGraph().getEdges().size();
         
         return info;
     }

@@ -361,10 +361,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                                 try {
                                     SpacePathFinder pathFinder = project.getPathFinder(linkset);
                                     List<double[]> dist = pathFinder.calcPaths(exos.get(ind).getGeometry().getCoordinate(), dests);
-                                    for(int j = 0; j < exos.size(); j++) {
-                                        if(j <= ind) {
-                                            continue;
-                                        }
+                                    for(int j = ind+1; j < exos.size(); j++) {
                                         distances[ind][j][0] = dist.get(j)[0];
                                         distances[ind][j][1] = dist.get(j)[1];
                                         distances[j][ind][0] = distances[ind][j][0];
@@ -385,10 +382,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                         task = new IterParallelTask(exos.size(), mon) {
                             @Override
                             protected void executeOne(Integer ind) {
-                                for(int j = 0; j < exos.size(); j++) {
-                                    if(j <= ind) {
-                                        continue;
-                                    }
+                                for(int j = ind+1; j < exos.size(); j++) {
                                     distances[ind][j][0] = circuit.getODCircuit(dests.get(ind), dests.get(j)).getR();
                                     distances[ind][j][1] = Double.NaN;
                                     distances[j][ind][0] = distances[ind][j][0];

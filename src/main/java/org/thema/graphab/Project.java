@@ -2304,7 +2304,7 @@ public final class Project {
     }
     
     private void calcNeighborAreaCapacity(final Linkset linkset, final double maxCost, final HashSet<Integer> codes, final boolean weight) {
-        ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("CALC PATCH CAPACITY..."), getPatches().size());
+        ProgressBar progressBar = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("CALC PATCH CAPACITY..."));
         AbstractParallelFTask task = new AbstractParallelFTask(progressBar) {
             @Override
             protected Object execute(int start, int end) {

@@ -83,11 +83,13 @@ Le programme Graphab est un outil de modélisation des réseaux écologiques fon
 La version 2.0 apporte plusieurs nouvelles fonctionnalités, dont :
 \begin{itemize}
 	\item l'ajout de taches,
-	\item la création de méta taches,
+	\item la création de méta-taches,
 	\item le partitionnement de graphe,
-	\item le calcul de pente dans la création des liens,
+	\item l'intégration du calcul de pente dans la création des liens,
 	\item la théorie des circuits électriques.
 \end{itemize}
+
+\textbf{Attention, les projets ne sont pas compatibles entre les version 1.x et 2.x de Graphab !}
 
 \subsubsection{Auteurs}
 Le programme Graphab a été développé par Gilles Vuidel et Jean-Christophe Foltête au laboratoire \href{http://thema.univ-fcomte.fr}{ThéMA} (\href{http://www.univ-fcomte.fr}{Université de Franche-Comté} – \href{http://www.cnrs.fr}{CNRS}). Le développement du logiciel a été financé par le ministère de l'écologie, du développement durable, des transports et du logement dans le cadre du programme \href{http://www.ittecop.fr/}{ITTECOP}. Le logo de Graphab a été conçu par \href{http://www.gachwell.com/}{Gachwell}. 
@@ -174,7 +176,7 @@ Connexité des taches :
 	\item 8-connexité : une tache est constituée du pixel central et de ses 8 voisins~s’ils ont la même valeur.
 \end{itemize}
 
-Simplifier les taches pour graphe planaire : cette option, lorsqu’elle est cochée, permet d’accélérer la création d’un graphe planaire, en simplifiant les limites des polygones des taches. Ce processus de simplification n’étant pas déterministe, la création de deux graphes planaires pour une même carte du paysage peut engendrer des limites de polygones légèrement différentes. Par conséquent, cette option ne doit pas être cochée dans le cas d’une comparaison de graphes planaires.
+Simplifier les taches pour graphe planaire : cette option, lorsqu’elle est cochée, permet d’accélérer la création d’un graphe planaire, en simplifiant les limites des polygones des taches. Ce processus de simplification n’étant pas déterministe, la création de deux graphes planaires pour une même carte du paysage peut engendrer des limites de polygones légèrement différentes. Par conséquent, cette option ne doit pas être cochée dans le cas d’une comparaison de graphes planaires, par exemple quand on analyse les conséquences de changements d'occupation du sol sur la connectivité.
 
 \subsection{Création d’un jeu de liens}
 \label{linkset}
@@ -274,7 +276,7 @@ Pour réaliser une analyse multiscalaire, il est souvent nécessaire de créer u
 
 \subsection{Partitionnement de graphe}
 
-Graphab implémente un algorithme de partitionnement de graphe qui maximise l'indice de modularité \cite{Newman2006}. La modularité est une mesure de la qualité d'un partitionnement des noeuds d'un graphe. Le principe sous-jacent est qu'un bon partitionnement d'un graphe implique un nombre de liens à l'intérieur des groupes important et un nombre de liens inter-groupes faible. L'algorithme utilisé est basé sur l'algorithme glouton, suivi d'une optimisation locale \cite{Brandes2008}.
+Graphab implémente un algorithme de partitionnement de graphe qui maximise l'indice de modularité \cite{Newman2006}. La modularité est une mesure de la qualité d'un partitionnement des noeuds d'un graphe. Le principe sous-jacent est qu'un bon partitionnement d'un graphe implique un nombre de liens à l'intérieur des groupes important et un nombre de liens inter-groupes faible. Le calcul utilisé est basé sur l'algorithme glouton, suivi d'une optimisation locale \cite{Brandes2008}.
 
 La modularité est calculée à partir d'un poids ($w_{ij}$) défini pour chaque lien du graphe :
 $$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
@@ -288,7 +290,7 @@ Après validation de cette fenêtre, le calcul se lance jusqu'à obtenir un part
 	\includegraphics[scale=0.36]{img/manual-fr_cluster.png} 
 \end{figure}
 
-La nouvelle couche montre les groupes de la partition sous forme de polygones. Comme un groupe correspond à un ensemble de taches, il est représenté par un polygone agrégeant les polygones de voronoï des taches affectées à celui-ci. 
+La nouvelle couche montre les groupes de la partition sous forme de polygones. Comme un groupe correspond à un ensemble de taches, il est représenté par un polygone agrégeant les polygones de Voronoï des taches affectées à celui-ci. 
 La couleur d'un groupe correspond à sa valeur de modularité ; la modularité totale étant la somme des modularités de tous les groupes.
 
 Une première fenêtre contient un graphique montrant l'évolution de la modularité en fonction du nombre de groupes (clusters). Dans la figure précédente, on voit que la modularité maximale est atteinte pour un nombre groupes relativement faible.
@@ -299,7 +301,7 @@ La deuxième fenêtre affiche le nombre de groupes (Nb agrégats) maximisant la 
 
 {}- le bouton "Graphe" permet de créer un nouveau graphe ne contenant que les liens intra-groupes.
 
-{}- la case à cocher "Optimisé" réalise une optimisation locale du partitionnement après l'algorithme glouton permettant d'améliorer sensiblement la valeur de modularité. Cette option est active par défaut.
+{}- la case à cocher "Optimisation" réalise une optimisation locale du partitionnement après l'algorithme glouton permettant d'améliorer sensiblement la valeur de modularité. Cette option est active par défaut.
 
 
 
@@ -570,7 +572,7 @@ Plusieurs paramètres sont à définir :
 
 La définition du jeu de taches à tester peut se faire de deux manières : 
 \begin{itemize}
-	\item En appliquant automatiquement une grille d’une certaine résolution (champs "taille de la cellule" à renseigner). Dans ce cas, le logiciel teste chaque centroïde de cellules en ajoutant virtuellement une nouvelle tache. Par défaut, tous les centroïdes ont une valeur de capacité identique (=1). Il est néanmoins possible d’importer une couche raster où chaque pixel de la matrice paysagère a une valeur de capacité propre.
+	\item En appliquant automatiquement une grille d’une certaine résolution (champs "taille de la cellule" à renseigner). Dans ce cas, le logiciel teste chaque centroïde de cellule en ajoutant virtuellement une nouvelle tache. Par défaut, tous les centroïdes ont une valeur de capacité identique (=1). Il est néanmoins possible d’importer une couche raster où chaque pixel de la matrice paysagère a une valeur de capacité propre.
 	\item En important un shapefile de points ou de polygones. Il faut dans ce cas indiquer à quelle colonne de la table attributaire de ce shapefile correspond la capacité des taches.
 \end{itemize}
 
@@ -597,7 +599,7 @@ Références :
 
 Pour utiliser cette fonction, il est nécessaire de créer un projet initial et un graphe seuillé à la distance souhaitée (par exemple à la distance quotidienne). Chaque composante de ce graphe seuillé correspondra à une méta-tache. Celle-ci est donc constituée de l’ensemble des taches d’habitat connectées entre elles.
 
-La capacité des méta-taches est définie par défaut comme la somme de la capacité des taches composant la méta-tache. L'autre option "Distance pondérée" permet de tenir compte de l'éloignement des taches entre elles. Pour cette option, il faut définir le paramètre $\alpha$ en donnant une distance $d$ et une probabilité $p$ associée (cf. \nameref{param_weight}). La capacité résultante ($C$) d'une méta tache s'écrit : 
+La capacité des méta-taches est définie par défaut comme la somme de la capacité des taches composant la méta-tache. L'autre option "Distance pondérée" permet de tenir compte de l'éloignement des taches entre elles. Pour cette option, il faut définir le paramètre $\alpha$ en donnant une distance $d$ et une probabilité $p$ associée (cf. \nameref{param_weight}). La capacité résultante ($C$) d'une méta-tache s'écrit : 
 
 $$C = \frac{1}{n}\sum_{i}^n\sum_{j}^n c_j e^{-\alpha d_{ij}}$$ 
 
