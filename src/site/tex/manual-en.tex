@@ -57,7 +57,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2016-01-21\\
+	2016-01-29\\
 	}
 	
 \end{titlepage}
@@ -658,14 +658,14 @@ In raster mode, the distances are calculated based on the selected link set. Thi
 
 According to the selected link set, the resulting distances may be the cumulative cost  distance or the length of the least cost path. In both cases, the calculation includes  costs assigned to the landscape map categories, as defined when creating the link set. The result is a distance matrix which is independent of the graph; this matrix corresponds to the calculation provided by the Geographicinformation Systems. 
 
-The Circuit option allows to calculate another distance between each point by calculating the total resistance of an electrical circuit of resistors instead of calculating the shortest path. This method considers all possible paths and not only the shortest one (cf. \cite{McRae2008}).
+The Circuit option allows to calculate another distance between each point by calculating the resistance distance, i.e. the total resistance of an electrical circuit of resistors instead of calculating the shortest path. This method considers all possible paths and not only the shortest one (cf. \cite{McRae2008}).
 
 
 \subsubsection{Graph-based distance}
 In graph mode, the distances are calculated based on the selected graph. This graph must be based on the link set used for point set import.
 \begin{itemize}
 	\item Simple : calculates distances according to the shortest path in the selected graph. The type of distance is the same as that used in creating the link set of the selected graph. At both ends of a given path, the calculation includes the distance between each point and the nearest patch. Depending on the choice made when creating the graph, the calculation may or may not include intra-patch distances.
-	\item Circuit : calculates the total resistance between the closest patch of each point. The graph is seen as an electrical circuit where each link of the graph represents a resistor. This option considers all possible paths, not just the shortest one.
+	\item Circuit : calculates the resistance distance between the closest patch of each point. The graph is seen as an electrical circuit where each link of the graph represents a resistor. This option considers all possible paths, not just the shortest one.
 \end{itemize}
 
 \subsection{Generating random points}

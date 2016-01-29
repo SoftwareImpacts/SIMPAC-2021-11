@@ -57,7 +57,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		21/01/2016\\
+		29/01/2016\\
 	}
 	
 \end{titlepage}
@@ -641,7 +641,7 @@ En mode raster, les distances sont calculées en fonction d'un jeu de lien de r�
 
 Selon le jeu de lien choisi, il peut s’agir de la distance coût cumulée ou de la longueur du chemin de moindre coût. Dans les deux cas, le calcul intègre les coûts associés aux catégories de la carte de paysage, tels qu’ils ont été définis dans le jeu de liens. Le résultat est une matrice de distance indépendante du graphe ; cette matrice correspond au calcul offert par les Systèmes d’Information Géographique.
 
-L'option Circuit permet de calculer une distance entre chaque point en calculant la résistance équivalente d'un réseau de résistances électriques au lieu du calcul du chemin le plus court. Cette méthode permet de tenir compte de l'ensemble des chemins possibles et non pas uniquement du plus court (cf. \cite{McRae2008}).
+L'option Circuit permet de calculer la "distance de résistance" entre chaque point, c'est-à-dire la résistance équivalente d'un réseau de résistances électriques au lieu du calcul du chemin le plus court. Cette méthode permet de tenir compte de l'ensemble des chemins possibles et non pas uniquement du plus court (cf. \cite{McRae2008}).
 
 
 \subsubsection{Distance sur le graphe}
@@ -650,7 +650,7 @@ En mode graphe, les distances sont calculées en fonction du graphe sélectionn�
 
 \begin{itemize}
 	\item Simple : distance calculée suivant le plus court chemin sur le graphe de référence. Le type de distance correspond à celui qui a été utilisé pour la définition du jeu de lien qui a servi à définir le graphe de référence. Aux deux extrémités du chemin considéré, le calcul intègre la distance entre chaque point et la tache la plus proche. Suivant le choix qui a été fait au moment de la création du graphe, le calcul intègre éventuellement les distances intra-taches.	
-	\item Circuit : calcule la résistance équivalente entre les taches les plus proches de chaque point. Le graphe est vu comme un réseau électrique où chaque lien du graphe représente une résistance. Cette option permet de tenir compte de l'ensemble des chemins possibles et non pas uniquement du plus court.
+	\item Circuit : calcule la "distance de résistance" entre les taches les plus proches de chaque point. Le graphe est vu comme un réseau électrique où chaque lien du graphe représente une résistance. Cette option permet de tenir compte de l'ensemble des chemins possibles et non pas uniquement du plus court.
 \end{itemize}
 
 \subsection{Générer des points aléatoires}
