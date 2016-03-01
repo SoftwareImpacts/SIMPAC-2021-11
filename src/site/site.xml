@@ -17,9 +17,10 @@
     <custom>
         <reflowSkin>
             <theme>bootswatch-spacelab</theme>
+            <protocolRelativeURLs>true</protocolRelativeURLs>
             <brand>
-                <name>Graphab</name>
-                <href>http://dev.umrthema.univ-fcomte.fr/projects/graphab/</href>
+                <name>${project.name}</name>
+                <href>${project.url}</href>
             </brand>
             <titleTemplate>%2$s | %1$s</titleTemplate>
         </reflowSkin>

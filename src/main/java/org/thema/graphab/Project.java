@@ -75,12 +75,11 @@ import org.geotools.coverage.grid.GridCoverageBuilder;
 import org.geotools.coverage.grid.GridCoverageFactory;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.feature.SchemaException;
-import org.geotools.gce.geotiff.GeoTiffWriter;
 import org.geotools.geometry.Envelope2D;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
 import org.geotools.referencing.CRS;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.geotools.referencing.crs.DefaultEngineeringCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.thema.common.Config;
@@ -127,7 +126,6 @@ import org.thema.graphab.metric.global.NCMetric;
 import org.thema.graphab.metric.global.PCMetric;
 import org.thema.graphab.metric.global.SLCMetric;
 import org.thema.graphab.metric.global.SumLocal2GlobalMetric;
-import org.thema.graphab.metric.local.BCCircuitLocalMetric;
 import org.thema.graphab.metric.local.BCLocalMetric;
 import org.thema.graphab.metric.local.CCLocalMetric;
 import org.thema.graphab.metric.local.CFLocalMetric;
@@ -166,14 +164,22 @@ public final class Project {
         GLOBAL, COMP, LOCAL, DELTA
     }
 
+    // Patch attributes
     public static final String CAPA_ATTR = "Capacity";
     public static final String AREA_ATTR = "Area";
     public static final String PERIM_ATTR = "Perim";
-
+    private static final List<String> PATCH_ATTRS = Arrays.asList("Id", AREA_ATTR, PERIM_ATTR, CAPA_ATTR);
+    
+    // Pointset attributes
     public static final String EXO_IDPATCH = "IdPatch";
     public static final String EXO_COST = "Cost";
     
-    private static final List<String> PATCH_ATTRS = Arrays.asList("Id", AREA_ATTR, PERIM_ATTR, CAPA_ATTR);
+    // project files
+    public static final String LAND_RASTER = "source.tif";
+    public static final String PATCH_RASTER = "patches.tif";
+    public static final String PATCH_SHAPE = "patches.shp";
+    public static final String VORONOI_SHAPE = "voronoi.shp";
+    public static final String LINKS_SHAPE = "links.shp";
     
     private transient File dir;
 
@@ -273,9 +279,13 @@ public final class Project {
         Envelope2D gZone = cov.getEnvelope2D();
         zone = gZone.getBounds2D();
         CoordinateReferenceSystem crs = cov.getCoordinateReferenceSystem2D();
+        if(crs instanceof DefaultEngineeringCRS) {
+            crs = null;
+        }
         if(crs != null)   {  
             wktCRS = crs.toWKT();
         }
+
         TreeMap<Integer, Envelope> envMap = new TreeMap<>();
 
         WritableRaster rasterPatchs = SpatialOp.extractPatch(cov.getRenderedImage(), patchCodes, noData, con8, envMap);      
@@ -345,9 +355,11 @@ public final class Project {
         covBuilder.newVariable("Cluster", null);
         covBuilder.setSampleRange(1, patches.size());
         GridCoverage2D clustCov = covBuilder.getGridCoverage2D();
-        new GeoTiffWriter(new File(dir, "source.tif")).write(cov, null);
-        new GeoTiffWriter(new File(dir, "patches.tif")).write(clustCov, null);
-        DefaultFeature.saveFeatures(patches, new File(dir, "patches.shp"), crs);
+        
+        IOImage.saveTiffCoverage(new File(dir, LAND_RASTER), cov);
+        IOImage.saveTiffCoverage(new File(dir, PATCH_RASTER), clustCov);
+        
+        DefaultFeature.saveFeatures(patches, new File(dir, PATCH_SHAPE), crs);
         
         clustCov = null;
         covBuilder = null;
@@ -358,10 +370,10 @@ public final class Project {
             WritableRaster voronoiR = rasterPatchs;
             planarLinks = neighborhoodEuclid(patches, simplify, voronoiR, grid2space, resolution);
             monitor.setNote("Saving...");
-            DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, "links.shp"), getCRS());
+            DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, LINKS_SHAPE), getCRS());
 
             voronoi = (List<Feature>) SpatialOp.vectorizeVoronoi(voronoiR, grid2space);
-            DefaultFeature.saveFeatures(voronoi, new File(prjPath, "voronoi.shp"), crs);
+            DefaultFeature.saveFeatures(voronoi, new File(prjPath, VORONOI_SHAPE), crs);
         }
         
         exoDatas = new TreeMap<>();
@@ -1257,7 +1269,7 @@ public final class Project {
      * @return true if the project has voronoi ie. planar topology
      */
     public boolean hasVoronoi() {
-        return new File(dir, "voronoi.shp").exists();
+        return new File(dir, VORONOI_SHAPE).exists();
     }
     
     /**
@@ -1266,7 +1278,7 @@ public final class Project {
      */
     public synchronized List<Feature> getVoronoi() {
         if(voronoi == null) {
-            File file = new File(dir, "voronoi.shp");
+            File file = new File(dir, VORONOI_SHAPE);
             if(!file.exists()) {
                 throw new IllegalStateException("The project does not contain voronoi.");
             }
@@ -1338,7 +1350,7 @@ public final class Project {
         WritableRaster raster = patchRaster != null ? patchRaster.get() : null;
         if(raster == null) {
             try {
-                RenderedImage img = IOImage.loadTiffWithoutCRS(new File(dir, "patches.tif")).getRenderedImage();
+                RenderedImage img = IOImage.loadTiffWithoutCRS(new File(dir, PATCH_RASTER)).getRenderedImage();
                 if(img.getNumXTiles() == 1 && img.getNumYTiles() == 1) {
                     raster = (WritableRaster) img.getTile(0, 0);
                 } else {
@@ -1361,7 +1373,7 @@ public final class Project {
         WritableRaster raster = srcRaster != null ? srcRaster.get() : null;
         if(raster == null) {
             try {
-                WritableRaster r = IOImage.loadTiffWithoutCRS(new File(dir, "source.tif")).getRenderedImage().copyData(null);
+                WritableRaster r = IOImage.loadTiffWithoutCRS(new File(dir, LAND_RASTER)).getRenderedImage().copyData(null);
                 raster = r.createWritableTranslatedChild(1, 1);
                 srcRaster = new SoftRef<>(raster);
             } catch (IOException ex) {
@@ -1482,14 +1494,14 @@ public final class Project {
         }
 
         GridCoverage2D gridCov = new GridCoverageFactory().create("rasterpatch",
-                newRaster, new Envelope2D(getCRS() != null ? getCRS() : DefaultGeographicCRS.WGS84, zone));
-        new GeoTiffWriter(new File(dir, "patches.tif")).write(gridCov, null);
+                newRaster, new Envelope2D(getCRS(), zone));
+        IOImage.saveTiffCoverage(new File(dir, PATCH_RASTER), gridCov);
         
         TreeSet<Integer> newCodes = new TreeSet<>(codes);
         // recode les anciens patchs
         if(remPatch) {
             WritableRaster rasterPatch = getRasterPatch();
-            GridCoverage2D landCov = IOImage.loadTiffWithoutCRS(new File(getDirectory(), "source.tif"));
+            GridCoverage2D landCov = IOImage.loadTiff(new File(getDirectory(), LAND_RASTER));
             WritableRaster land = (WritableRaster) landCov.getRenderedImage().getData();
             int newCode = codes.last()+1;
             for(int y = 0; y < rasterPatch.getHeight(); y++) {
@@ -1505,10 +1517,14 @@ public final class Project {
 
             }
             gridCov = new GridCoverageFactory().create("land", land, landCov.getEnvelope2D());
-            new GeoTiffWriter(new File(dir, "source.tif")).write(gridCov, null);
+            IOImage.saveTiffCoverage(new File(dir, LAND_RASTER), gridCov);
             newCodes.add(newCode);
         } else {
-            IOFile.copyFile(new File(getDirectory(), "source.tif"), new File(dir, "source.tif"));
+            IOFile.copyFile(new File(getDirectory(), LAND_RASTER), new File(dir, LAND_RASTER));
+            File f = new File(getDirectory(), "source.tfw");
+            if(f.exists()) {
+                IOFile.copyFile(f, new File(dir, "source.tfw"));
+            }
         }
         
         List<DefaultFeature> metaPatches = new ArrayList<>();
@@ -1543,9 +1559,9 @@ public final class Project {
             }
         }
         
-        DefaultFeature.saveFeatures(metaPatches, new File(dir, "patches.shp"), getCRS());
+        DefaultFeature.saveFeatures(metaPatches, new File(dir, PATCH_SHAPE), getCRS());
         if(!remPatch && hasVoronoi()) {
-            DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
+            DefaultFeature.saveFeatures(metaVoronois, new File(dir, VORONOI_SHAPE), getCRS());
         }
         
         if(hasVoronoi()) {
@@ -1553,7 +1569,7 @@ public final class Project {
             if(remPatch) {
                 links = neighborhoodEuclid(metaPatches, simplify, newRaster, grid2space, resolution);
                 metaVoronois = (List<DefaultFeature>) SpatialOp.vectorizeVoronoi(newRaster, grid2space);
-                DefaultFeature.saveFeatures(metaVoronois, new File(dir, "voronoi.shp"), getCRS());
+                DefaultFeature.saveFeatures(metaVoronois, new File(dir, VORONOI_SHAPE), getCRS());
             } else {
                 links = new PlanarLinks(metaPatches.size());
                 for(Path p : planarLinks.getFeatures()) {
@@ -1568,7 +1584,7 @@ public final class Project {
                 }
             }
             if(!links.getFeatures().isEmpty()) {
-                DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, "links.shp"), getCRS());
+                DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, LINKS_SHAPE), getCRS());
             }
         }
         
@@ -1610,7 +1626,7 @@ public final class Project {
             ind++;
         }
         
-        DefaultFeature.saveFeatures(patchList, new File(dir, "patches.shp"), getCRS());
+        DefaultFeature.saveFeatures(patchList, new File(dir, PATCH_SHAPE), getCRS());
         
         // create new raster patch
         WritableRaster newRaster = getRasterPatch().createCompatibleWritableRaster();
@@ -1624,13 +1640,13 @@ public final class Project {
         }
 
         GridCoverage2D gridCov = new GridCoverageFactory().create("rasterpatch",
-                newRaster, new Envelope2D(getCRS() != null ? getCRS() : DefaultGeographicCRS.WGS84, zone));
-        new GeoTiffWriter(new File(dir, "patches.tif")).write(gridCov, null);
+                newRaster, new Envelope2D(getCRS(), zone));
+        IOImage.saveTiffCoverage(new File(dir, PATCH_RASTER), gridCov);
         
         TreeSet<Integer> newCodes = new TreeSet<>(codes);
         // recode les anciens patchs
         WritableRaster rasterPatch = getRasterPatch();
-        GridCoverage2D landCov = IOImage.loadTiffWithoutCRS(new File(getDirectory(), "source.tif"));
+        GridCoverage2D landCov = IOImage.loadTiff(new File(getDirectory(), LAND_RASTER));
         WritableRaster land = (WritableRaster) landCov.getRenderedImage().getData();
         int newCode = codes.last()+1;
         for(int y = 0; y < rasterPatch.getHeight(); y++) {
@@ -1642,16 +1658,16 @@ public final class Project {
             }
         }
         gridCov = new GridCoverageFactory().create("land", land, landCov.getEnvelope2D());
-        new GeoTiffWriter(new File(dir, "source.tif")).write(gridCov, null);
+        IOImage.saveTiffCoverage(new File(dir, LAND_RASTER), gridCov);
         newCodes.add(newCode);
         
         if(hasVoronoi()) {
             PlanarLinks links = neighborhoodEuclid(patchList, simplify, newRaster, grid2space, resolution);
             List<? extends Feature> voronois = SpatialOp.vectorizeVoronoi(newRaster, grid2space);
-            DefaultFeature.saveFeatures(voronois, new File(dir, "voronoi.shp"), getCRS());
+            DefaultFeature.saveFeatures(voronois, new File(dir, VORONOI_SHAPE), getCRS());
             
             if(!links.getFeatures().isEmpty()) {
-                DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, "links.shp"), getCRS());
+                DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, LINKS_SHAPE), getCRS());
             }
         }
         
@@ -1788,7 +1804,7 @@ public final class Project {
         
         ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Loading_project..."), 
                 100*(2+prj.costLinks.size()) + 10*prj.exoDatas.size());
-        List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(prj.dir, "patches.shp"), 
+        List<DefaultFeature> features = GlobalDataStore.getFeatures(new File(prj.dir, PATCH_SHAPE), 
                 "Id", monitor.getSubProgress(100));
         prj.patches = new ArrayList<>(features);
         for(DefaultFeature f : features) {
@@ -1817,7 +1833,7 @@ public final class Project {
             }
         }
 
-        File linkFile = new File(prj.dir, "links.shp");
+        File linkFile = new File(prj.dir, LINKS_SHAPE);
         if(linkFile.exists()) {
             features = GlobalDataStore.getFeatures(linkFile, "Id", monitor.getSubProgress(100));
             List<Path> paths = new ArrayList<>(features.size());

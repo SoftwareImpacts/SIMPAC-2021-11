@@ -1,5 +1,12 @@
 ## Changelog
 
+##### version 2.0.1
+- UI : pointset export all menu does not work when some pointset attributes is null
+- Project creation : save raster with .tfw world file when CRS is undefined, to avoid unsupported CRS error
+
+##### version 2.0
+- Final version
+
 ##### version 1.3.34 (14/01/2014)
 - UI : move "Remove patches" menu entry to "Data" menu
 - CLI : remove the command --ltest
