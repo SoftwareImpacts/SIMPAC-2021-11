@@ -143,7 +143,7 @@ public class GraphLayers extends GraphGroupLayer {
                                 return 0;
                             }
                         });
-                        mod.setnSave(100);
+
                         mod.partitions();
                         TreeMap<Integer, Double> modularities = mod.getModularities();
                         XYSeriesCollection series = new XYSeriesCollection();

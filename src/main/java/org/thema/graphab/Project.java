@@ -126,6 +126,7 @@ import org.thema.graphab.metric.global.NCMetric;
 import org.thema.graphab.metric.global.PCMetric;
 import org.thema.graphab.metric.global.SLCMetric;
 import org.thema.graphab.metric.global.SumLocal2GlobalMetric;
+import org.thema.graphab.metric.global.WilksMetric;
 import org.thema.graphab.metric.local.BCLocalMetric;
 import org.thema.graphab.metric.local.CCLocalMetric;
 import org.thema.graphab.metric.local.CFLocalMetric;
@@ -2448,7 +2449,7 @@ public final class Project {
         GLOBAL_METRICS = new ArrayList(Arrays.asList(new SumLocal2GlobalMetric(new FLocalMetric(), TypeElem.NODE), 
                 new PCMetric(), new IICMetric(), new CCPMetric(),
                 new MSCMetric(), new SLCMetric(), new ECSMetric(), new GDMetric(), new HMetric(), new NCMetric(),
-                new DeltaPCMetric()));
+                new DeltaPCMetric(), new WilksMetric()));
         LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new FPCLocalMetric(), new CFLocalMetric(),
                 new DgLocalMetric(), new CCLocalMetric(), new ClosenessLocalMetric(), new ConCorrLocalMetric(),
                 new EccentricityLocalMetric()));

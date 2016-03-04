@@ -1,18 +1,22 @@
 ## Changelog
 
-##### version 2.0.1
+##### version 2.1.0 (04/03/2016)
+- Metric : add Wilks metric
+- Modularity : keep all clustering
+
+##### version 2.0.1 (01/03/2016)
 - UI : pointset export all menu does not work when some pointset attributes is null
 - Project creation : save raster with .tfw world file when CRS is undefined, to avoid unsupported CRS error
 
 ##### version 2.0
 - Final version
 
-##### version 1.3.34 (14/01/2014)
+##### version 1.3.34 (14/01/2016)
 - UI : move "Remove patches" menu entry to "Data" menu
 - CLI : remove the command --ltest
 - CLI : merge the commands --rempatch and --remlink in --remelem
 
-##### version 1.3.33 (08/01/2015)
+##### version 1.3.33 (08/01/2016)
 - Metric : move BCCirc metric in plugin
 - CLI : move to normal mode the command --gtest
 
