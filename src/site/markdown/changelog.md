@@ -1,6 +1,10 @@
 ## Changelog
 
-##### version 2.0.1
+##### version 2.0.2 (15/03/2016)
+- UI patch addition : remove dPC from metric combobox
+- Patch addition : stop the process when no more patches can be added to avoid null pointer exception
+
+##### version 2.0.1 (01/03/2016)
 - UI : pointset export all menu does not work when some pointset attributes is null
 - Project creation : save raster with .tfw world file when CRS is undefined, to avoid unsupported CRS error
 
