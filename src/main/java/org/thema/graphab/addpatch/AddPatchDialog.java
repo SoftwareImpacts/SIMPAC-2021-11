@@ -59,7 +59,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
         setLocationRelativeTo(parent);
         mainFrame = parent;
         graphComboBox.setModel(new DefaultComboBoxModel(prj.getGraphs().toArray()));
-        indiceComboBox.setModel(new DefaultComboBoxModel(Project.GLOBAL_METRICS.toArray()));
+        indiceComboBox.setModel(new DefaultComboBoxModel(Project.getGlobalMetricsFor(Project.Method.GLOBAL).toArray()));
         
         // Close the dialog when Esc is pressed
         String cancelName = "cancel";

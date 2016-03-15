@@ -195,7 +195,10 @@ public class AddPatchCommand {
             AddPatchTask task = new AddPatchTask(bestGeom, capa, gen, metric, testGeoms, mon.getSubProgress(100));
             ExecutorService.execute(task);
             TreeMapList<Double, Geometry> patchIndices = task.getResult();
-            
+            if(patchIndices.isEmpty()) {
+                Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, "No more patches can be added !");
+                return addedPatches;
+            }
             List<Geometry> bestGeoms = patchIndices.lastEntry().getValue();
             bestGeom = bestGeoms.get((int)(Math.random()*bestGeoms.size()));
 

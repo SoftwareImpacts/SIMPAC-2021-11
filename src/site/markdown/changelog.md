@@ -1,5 +1,13 @@
 ## Changelog
 
+##### version 2.1.1 (15/03/2016)
+- UI patch addition : remove dPC from metric combobox
+- Patch addition : stop the process when no more patches can be added to avoid null pointer exception
+
+##### version 2.0.2 (15/03/2016)
+- UI patch addition : remove dPC from metric combobox
+- Patch addition : stop the process when no more patches can be added to avoid null pointer exception
+
 ##### version 2.1.0 (04/03/2016)
 - Metric : add Wilks metric
 - Modularity : keep all clustering
