@@ -219,8 +219,8 @@ public class AddPatchCommand {
             // check if we obtain the same result after adding the patch "truly"
             double test = new GlobalMetricLauncher(metric).calcMetric(new GraphGenerator(gen, ""), true, null)[0];
             double err = Math.abs(test - currentInd) / test;
-            if(err > 1e-3) {
-                throw new RuntimeException("Metric precision under 1e-3 : " + err + " - m1 " + currentInd + " - m2 " + test);
+            if(err > 1e-6) {
+                throw new RuntimeException("Metric precision under 1e-6 : " + err + " - m1 " + currentInd + " - m2 " + test);
             }
             
             if(saveDetail) {

@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.0.3 (05/04/2016)
+- UI patch addition : add metric parameter button
+- Patch addition : cost of the first pixel of added links are slightly different between testing and adding patches -> throw Metric precision exception
+
 ##### version 2.0.2 (15/03/2016)
 - UI patch addition : remove dPC from metric combobox
 - Patch addition : stop the process when no more patches can be added to avoid null pointer exception
