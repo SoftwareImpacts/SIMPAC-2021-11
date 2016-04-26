@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.0.4 (26/04/2016)
+- UI : bug while exporting the map with raster data (null pointer exception)
+
 ##### version 2.0.3 (05/04/2016)
 - UI patch addition : add metric parameter button
 - Patch addition : cost of the first pixel of added links are slightly different between testing and adding patches -> throw Metric precision exception
