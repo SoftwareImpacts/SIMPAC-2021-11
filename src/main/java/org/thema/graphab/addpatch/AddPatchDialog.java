@@ -455,7 +455,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
     private void graphComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphComboBoxActionPerformed
         GraphGenerator graph = (GraphGenerator) graphComboBox.getSelectedItem();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
-        for(Metric ind : Project.GLOBAL_METRICS) {
+        for(Metric ind : Project.getGlobalMetricsFor(Project.Method.GLOBAL)) {
             if(ind.isAcceptGraph(graph)) {
                 model.addElement(ind);
             }

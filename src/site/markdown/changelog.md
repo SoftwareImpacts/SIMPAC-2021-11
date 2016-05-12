@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.0.5 (12/05/2016)
+- UI patch addition : remove dPC from metric combobox after changing the graph
+
 ##### version 2.0.4 (26/04/2016)
 - UI : bug while exporting the map with raster data (null pointer exception)
 
