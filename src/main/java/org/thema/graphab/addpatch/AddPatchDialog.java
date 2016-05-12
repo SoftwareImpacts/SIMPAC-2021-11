@@ -24,6 +24,7 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +36,7 @@ import org.thema.common.Config;
 import org.thema.common.ProgressBar;
 import org.thema.graphab.Project;
 import org.thema.graphab.metric.Metric;
+import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.global.GlobalMetric;
 
 /**
@@ -44,6 +46,8 @@ import org.thema.graphab.metric.global.GlobalMetric;
  */
 public class AddPatchDialog extends javax.swing.JDialog {
 
+    private GlobalMetric metric;
+    
     private JFrame mainFrame;
     private Project project;
     /**
@@ -60,6 +64,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
         mainFrame = parent;
         graphComboBox.setModel(new DefaultComboBoxModel(prj.getGraphs().toArray()));
         indiceComboBox.setModel(new DefaultComboBoxModel(Project.getGlobalMetricsFor(Project.Method.GLOBAL).toArray()));
+        indiceComboBoxActionPerformed(null);
         
         // Close the dialog when Esc is pressed
         String cancelName = "cancel";
@@ -109,6 +114,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
         capaFieldComboBox = new javax.swing.JComboBox();
         jLabel5 = new javax.swing.JLabel();
         resoSpinner = new javax.swing.JSpinner();
+        paramButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle"); // NOI18N
@@ -142,6 +148,12 @@ public class AddPatchDialog extends javax.swing.JDialog {
         nbPatchSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
 
         jLabel4.setText(bundle1.getString("AddPatchDialog.jLabel4.text")); // NOI18N
+
+        indiceComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                indiceComboBoxActionPerformed(evt);
+            }
+        });
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, bundle1.getString("AddPatchDialog.jPanel1.border.title"), javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 0, 12), java.awt.Color.black)); // NOI18N
 
@@ -311,6 +323,13 @@ public class AddPatchDialog extends javax.swing.JDialog {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        paramButton.setText(bundle1.getString("AddPatchDialog.paramButton.text")); // NOI18N
+        paramButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                paramButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -326,7 +345,9 @@ public class AddPatchDialog extends javax.swing.JDialog {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(indiceComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(graphComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(117, 117, 117))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(paramButton)
+                        .addGap(39, 39, 39))
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel3)
@@ -354,23 +375,24 @@ public class AddPatchDialog extends javax.swing.JDialog {
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
-                    .addComponent(indiceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(indiceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(paramButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(12, 12, 12)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(cancelButton)
-                            .addComponent(okButton))
-                        .addContainerGap())
+                            .addComponent(okButton)))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
                             .addComponent(nbPatchSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
 
         getRootPane().setDefaultButton(okButton);
@@ -382,7 +404,6 @@ public class AddPatchDialog extends javax.swing.JDialog {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         final int nbPatch = (Integer)nbPatchSpinner.getValue();
-        final GlobalMetric indice = (GlobalMetric) indiceComboBox.getSelectedItem();
         final String graphName = ((GraphGenerator) graphComboBox.getSelectedItem()).getName();
 
         new Thread(new Runnable() {
@@ -401,16 +422,16 @@ public class AddPatchDialog extends javax.swing.JDialog {
                         File capaFile = capaSelectFilePanel.getSelectedFile();
                         int nbMultiPatch = (Integer)nbMultiPatchSpinner.getValue();
                         int windowMulti = (Integer)windowSpinner.getValue();
-                        addPatchCmd = new AddPatchCommand(nbPatch, indice, gen, capaFile, res, nbMultiPatch, windowMulti);
+                        addPatchCmd = new AddPatchCommand(nbPatch, metric, gen, capaFile, res, nbMultiPatch, windowMulti);
                     } else {
                         File pointFile = shapeRadioButton.isSelected() ? shapeSelectFilePanel.getSelectedFile() : null;
                         String capaField = shapeRadioButton.isSelected() ? (String)capaFieldComboBox.getSelectedItem() : null;
-                        addPatchCmd = new AddPatchCommand(nbPatch, indice, gen, pointFile, capaField);
+                        addPatchCmd = new AddPatchCommand(nbPatch, metric, gen, pointFile, capaField);
                     }
                     
                     addPatchCmd.run(bar);
                     AddPatchResultDialog resDlg = new AddPatchResultDialog(mainFrame, addProject);
-                    resDlg.showResults(indice, gen, addPatchCmd.getAddedPatches(), addPatchCmd.getMetricValues());
+                    resDlg.showResults(metric, gen, addPatchCmd.getAddedPatches(), addPatchCmd.getMetricValues());
                 } catch(CancellationException cancel) {
                     Logger.getLogger(AddPatchDialog.class.getName()).log(Level.INFO, null, cancel);
                 } catch(IOException | SchemaException ex) {
@@ -434,7 +455,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
     private void graphComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphComboBoxActionPerformed
         GraphGenerator graph = (GraphGenerator) graphComboBox.getSelectedItem();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
-        for(Metric ind : Project.GLOBAL_METRICS) {
+        for(Metric ind : Project.getGlobalMetricsFor(Project.Method.GLOBAL)) {
             if(ind.isAcceptGraph(graph)) {
                 model.addElement(ind);
             }
@@ -460,6 +481,21 @@ public class AddPatchDialog extends javax.swing.JDialog {
             JOptionPane.showMessageDialog(this, "Error while loading layer.\n Details : " + ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_shapeSelectFilePanelActionPerformed
+
+    private void paramButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_paramButtonActionPerformed
+        ParamPanel panel = metric.getParamPanel(project);
+        int ret = JOptionPane.showConfirmDialog(this, panel, ResourceBundle.getBundle("org/thema/graphab/addpatch/Bundle").getString("AddPatchDialog.paramButton.text"), JOptionPane.OK_CANCEL_OPTION);
+        if(ret == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
+        metric.setParams(panel.getParams());
+        
+    }//GEN-LAST:event_paramButtonActionPerformed
+
+    private void indiceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indiceComboBoxActionPerformed
+        metric = (GlobalMetric) indiceComboBox.getSelectedItem();
+        paramButton.setEnabled(!metric.getParams().isEmpty());
+    }//GEN-LAST:event_indiceComboBoxActionPerformed
     
    
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -483,6 +519,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
     private javax.swing.JSpinner nbMultiPatchSpinner;
     private javax.swing.JSpinner nbPatchSpinner;
     private javax.swing.JButton okButton;
+    private javax.swing.JButton paramButton;
     private javax.swing.JSpinner resoSpinner;
     private javax.swing.JRadioButton shapeRadioButton;
     private org.thema.common.swing.SelectFilePanel shapeSelectFilePanel;

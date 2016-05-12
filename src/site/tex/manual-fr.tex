@@ -57,7 +57,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		29/01/2016\\
+		12/05/2016\\
 	}
 	
 \end{titlepage}
@@ -196,7 +196,7 @@ Deux topologies sont disponibles :
 
 Distance max : Cette option disponible pour la topologie complète permet de préciser un seuil de distance au-delà duquel les liens ne sont plus créés. Elle permet ainsi de limiter le nombre de liens créés et d’accélérer la création des liens en topologie complète.
 
-Supprimer les liens traversant les taches : cette option cochée par défaut permet de ne pas créer de lien entre deux taches (A et C sur la figure suivante) passant par une tache intermédiaire (B). Ceci est recommandé pour le calcul de la métrique de centralité intermédiaire (BC) pour prendre en compte la fréquence avec laquelle chaque tache se trouve sur les plus courts chemins liant les paires de nœuds sur le graphe. A noter : cette option fournit une approximation de la distance intra-taches entre A et C. Si la case est décochée, un lien entre A et C passant par B sera créé représentant la distance complète réelle entre les deux taches. 
+Supprimer les liens traversant les taches : cette option, décochée par défaut, permet de ne pas créer de lien entre deux taches (A et C sur la figure suivante) passant par une tache intermédiaire (B). Ceci est recommandé pour le calcul de la métrique de centralité intermédiaire (BC) pour prendre en compte la fréquence avec laquelle chaque tache se trouve sur les plus courts chemins liant les paires de nœuds sur le graphe. A noter : cette option fournit une approximation de la distance intra-taches entre A et C. Si la case est décochée, un lien entre A et C passant par B sera créé représentant la distance complète réelle entre les deux taches. 
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img5.png} 
@@ -237,6 +237,10 @@ Le paramètre coef ($c$) permet d'ajuster l'importance de la pondération par la
 
 $$r_{final} = r * (1 + c.p)$$
 
+avec $p=\frac{h}{l}$ la pente exprimée par le rapport hauteur($h$) sur longueur ($l$).\\ $p=0$ pour une pente nulle et $p=1$ pour une pente de 100\% ($h=l$).
+
+Pour $c=1$ la valeur de résistance est doublée avec une pente de 100\%.\\
+Pour $c=10$ la valeur de résistance est doublée avec une pente de 10\%.
 
 \section{Graphes}
 
@@ -566,7 +570,7 @@ La fonction "Ajout de taches" est accessible à partir du menu Analyses. Elle pe
 Plusieurs paramètres sont à définir :
 \begin{itemize}
 	\item Graphe : le graphe utilisé pour le calcul de la métrique de connectivité et l’ajout de nouvelles taches. Le jeu de lien sous-jacent doit être en topologie complète.
-	\item Métrique : la métrique globale que l’on cherche à maximiser
+	\item Métrique : la métrique globale que l’on cherche à maximiser ainsi que son paramétrage (bouton Paramètres)
 	\item NB taches : nombre de taches (qui deviendront de nouveaux nœuds du graphe) que l’on souhaite ajouter.
 \end{itemize}
 

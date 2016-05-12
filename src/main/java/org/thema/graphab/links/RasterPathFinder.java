@@ -233,7 +233,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         }
 
         while(!queue.isEmpty() && !indDests.isEmpty()) {
-            Node n = updateNextNodes(queue);
+            Node n = updateNextNodes(queue, false);
             indDests.remove(n.ind);
         }
 
@@ -263,7 +263,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         DefaultFeature geomPatch = new DefaultFeature(geom.getCentroid().getCoordinate().toString(), geom);
         HashMap<DefaultFeature, Path> paths = new HashMap<>();
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue);
+            Node current = updateNextNodes(queue, true);
             if(maxCost > 0 && current.dist > maxCost) {
                 break;
             }
@@ -293,7 +293,7 @@ public final class RasterPathFinder implements SpacePathFinder {
 
         HashMap<Feature, Path> distances = new HashMap<>();
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue);
+            Node current = updateNextNodes(queue, false);
             if(maxCost > 0 && current.dist > maxCost) {
                 break;
             }
@@ -325,7 +325,7 @@ public final class RasterPathFinder implements SpacePathFinder {
 
         HashMap<Feature, Path> distances = new HashMap<>();
         while(!queue.isEmpty() && !destId.isEmpty()) {
-            Node current = updateNextNodes(queue);
+            Node current = updateNextNodes(queue, false);
 
             int curId = rasterPatch.getSample(getX(current.ind), getY(current.ind), 0);
             if(curId > 0 && destId.keySet().contains(curId)) {
@@ -359,7 +359,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         initCoord(rx, ry);
 
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue);
+            Node current = updateNextNodes(queue, false);
 
             int curId = rasterPatch.getSample(getX(current.ind), getY(current.ind), 0);
             if(curId > 0) {
@@ -391,7 +391,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         HashSet<Integer> counts = new HashSet<>();
 
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue);
+            Node current = updateNextNodes(queue, false);
             if(current.dist > maxCost) {
                 break;
             }
@@ -417,7 +417,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         initPatch(oPatch, true);
 
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue);
+            Node current = updateNextNodes(queue, false);
             if(maxCost > 0 && current.dist > maxCost) {
                 break;
             }
@@ -431,6 +431,11 @@ public final class RasterPathFinder implements SpacePathFinder {
         }
     }
 
+    /**
+     * 
+     * @param ind end index of the path
+     * @return the path geometry in world coordinate
+     */
     private LineString getPath(int ind) {
         int w = rasterPatch.getWidth();
         ArrayList<Coordinate> coords = new ArrayList<>();
@@ -462,7 +467,13 @@ public final class RasterPathFinder implements SpacePathFinder {
         return line;
     }
 
-    private Node updateNextNodes(PriorityQueue<Node> queue) {
+    /**
+     * 
+     * @param queue current queue
+     * @param startFromPatch true for using patch cost defined by cost array for the first pixel (used for patch addition)
+     * @return 
+     */
+    private Node updateNextNodes(PriorityQueue<Node> queue, boolean startFromPatch) {
         Node current = queue.poll();
         while(!queue.isEmpty() && current.dist > getDist(current.ind)) {
             current = queue.poll();
@@ -470,7 +481,10 @@ public final class RasterPathFinder implements SpacePathFinder {
         
         final int x = current.ind % rasterPatch.getWidth();
         final int y = current.ind / rasterPatch.getWidth();
-        final double currentCost = getCost(x, y);
+        double currentCost = getCost(x, y);
+        if(startFromPatch && cost != null && current.dist == 0) {
+            currentCost = cost[project.getPatchCodes().iterator().next()];
+        }
             
         for(int i = 0; i < CON; i++) {
             if(isInside(x + X[i], y + Y[i])) {

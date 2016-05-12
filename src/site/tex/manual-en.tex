@@ -57,7 +57,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2016-01-29\\
+	2016-05-12\\
 	}
 	
 \end{titlepage}
@@ -239,6 +239,11 @@ The parameter coef ($c$) can adjust the importance of the slope ($p$) weighting.
 
 $$r_{final} = r * (1 + c.p)$$
 
+with the slope $p=\frac{h}{l}$ ratio of the height ($h$) and the length ($l$).\\ 
+$p=0$ if the slope is flat, $p=1$ for a slope of 100\% ($h=l$).
+
+When $c=1$ the resistance value is doubled for a slope of 100\%.\\
+When $c=10$ the resistance value is doubled for a slope of 10\%.
 
 \section{Graphs}
 
@@ -580,7 +585,7 @@ The function "Add patches" is available in the menu "Analyses". It is used to te
 Several parameters must be defined:
 \begin{itemize}
 	\item Graph: the graph used for computing the connectivity metric and adding new patches. The underlying link set must be in complete topology.
-	\item Global metric: the global metric to maximize
+	\item Global metric: the global metric to maximize and his settings (Parameters button)
 	\item Nb Patches: number of patches (which become new nodes of the graph) to be added.
 \end{itemize}
 

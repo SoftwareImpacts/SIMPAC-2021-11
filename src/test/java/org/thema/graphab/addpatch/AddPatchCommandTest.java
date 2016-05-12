@@ -61,17 +61,17 @@ public class AddPatchCommandTest {
         AddPatchCommand addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_cout10_500_nopath"), null, 1000, 1, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
         double[] metric = new double[] {
-            3.2880609909219464E-4,
-            3.310670270101464E-4,
-            3.3247253389400165E-4,
-            3.3321668359908647E-4,
-            3.3377521178276566E-4,
-            3.342367536836475E-4,
-            3.34660961733302E-4,
-            3.3507512044854415E-4,
-            3.3522097708321225E-4,
-            3.353572949243866E-4,
-            3.354917552276591E-4};
+            3.288060990921949E-4, 
+            3.310782256080401E-4, 
+            3.324925948524221E-4, 
+            3.3322725793645866E-4, 
+            3.337805170520438E-4, 
+            3.342439766168192E-4, 
+            3.346686013511277E-4, 
+            3.3508099455261824E-4, 
+            3.3522503024244427E-4, 
+            3.3536513772171127E-4, 
+            3.3549792861558696E-4};
         for(int i = 0; i < metric.length; i++) {
             assertEquals("Add grid point patch", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
         }
@@ -82,17 +82,17 @@ public class AddPatchCommandTest {
                 new File("target/test-classes/org/thema/graphab/patch_alea.shp"), null);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
         metric = new double[] {
-            3.288060990921947E-4,
-            3.318280601637511E-4,
-            3.337111357954791E-4,
-            3.3475535460807815E-4,
-            3.35787430334884E-4,
-            3.361066228947054E-4,
-            3.363812858721702E-4,
-            3.3660585153397004E-4,
-            3.367396334795461E-4,
-            3.36848613338119E-4,
-            3.3694048774752193E-4};
+            3.2880609909219485E-4, 
+            3.3185369564855065E-4, 
+            3.337312276321283E-4, 
+            3.3500099731190305E-4, 
+            3.357904466761313E-4, 
+            3.361121734573257E-4, 
+            3.3641175029575543E-4, 
+            3.3662079743374576E-4, 
+            3.367542196720986E-4, 
+            3.3688149569700414E-4, 
+            3.369939798871662E-4};
         for(int i = 0; i < metric.length; i++) {
             assertEquals("Add geometry patch shapefile", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
         }
@@ -103,17 +103,17 @@ public class AddPatchCommandTest {
                 new File("target/test-classes/org/thema/graphab/point_alea.shp"), null);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
         metric = new double[] {
-            3.288060990921945E-4,
-            3.317128734737994E-4,
-            3.335155232091921E-4,
-            3.342935746157495E-4,
-            3.3460310195571757E-4,
-            3.3482556544645883E-4,
-            3.350232848996763E-4,
-            3.3514876007901677E-4,
-            3.352531327668829E-4,
-            3.352938746508512E-4,
-            3.353309445926464E-4 };
+            3.288060990921949E-4, 
+            3.317376569782912E-4, 
+            3.3353912037261855E-4, 
+            3.343047951381572E-4, 
+            3.3460807509385753E-4, 
+            3.3483147072926466E-4, 
+            3.350273602292435E-4, 
+            3.3515221292269176E-4, 
+            3.3525530312214334E-4, 
+            3.3534463642953213E-4, 
+            3.353847648215637E-4 };
         for(int i = 0; i < metric.length; i++) {
             assertEquals("Add point patch shapefile", metric[i], addPatchCmd.getMetricValues().get(i), 1e-12);
         }

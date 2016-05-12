@@ -2116,8 +2116,8 @@ public final class Project {
         List<String> attrNames = new ArrayList<>(PATCH_ATTRS);
         List attrs = new ArrayList(Arrays.asList(new Double[attrNames.size()]));
         attrs.set(attrNames.indexOf(CAPA_ATTR), capa);
-        attrs.set(attrNames.indexOf(AREA_ATTR), resolution*resolution);
-        attrs.set(attrNames.indexOf(PERIM_ATTR), resolution*4);
+        attrs.set(attrNames.indexOf(AREA_ATTR), geom.getDimension() == 0 ? resolution*resolution : geom.getArea());
+        attrs.set(attrNames.indexOf(PERIM_ATTR), geom.getDimension() == 0 ? resolution*4 : geom.getLength());
         return new DefaultFeature(patches.size()+1, geom, attrNames, attrs);
     }
     

@@ -1037,7 +1037,7 @@ public class Linkset {
     /**
      * Calculates links for the new patch.
      * Does not support planar topology.
-     * @param patch must be a point geometry
+     * @param patch patch created by Project.createPatch()
      * @return the new links
      * @throws IOException 
      * @throws IllegalStateException if the topology is PLANAR
