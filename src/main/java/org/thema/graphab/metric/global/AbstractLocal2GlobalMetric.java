@@ -33,6 +33,7 @@ import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.PreCalcMetric;
 import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.metric.local.LocalSingleMetric;
 
 /**
  * Base class for agregating local metric into a global metric.
@@ -47,7 +48,7 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
     /** Calculates on nodes or edges */
     public enum TypeElem { NODE, EDGE }
     
-    private LocalMetric metric;
+    private LocalSingleMetric metric;
     private TypeElem typeElem;
     private transient List<Double> values;
 
@@ -56,7 +57,7 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
      * @param metric the local metric
      * @param type calculates local metric on nodes or edges ?
      */
-    public AbstractLocal2GlobalMetric(LocalMetric metric, TypeElem type) {
+    public AbstractLocal2GlobalMetric(LocalSingleMetric metric, TypeElem type) {
         typeElem = type;
         if(typeElem == TypeElem.NODE && !metric.calcNodes()) {
             throw new IllegalArgumentException("La métrique locale ne se calcule pas sur les noeuds");
@@ -72,7 +73,7 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
         if(metric instanceof PreCalcMetric) {
             return ((PreCalcMetric)metric).calcPartMetric(param, g);
         } else {
-            return metric.calcMetric((Graphable)param, g);
+            return metric.calcSingleMetric((Graphable)param, g);
         }
     }
 
@@ -82,11 +83,11 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
             ((PreCalcMetric)metric).endCalc(g);
             if(typeElem == TypeElem.NODE) {
                 for(Node n : g.getNodes()) {
-                    values.add(metric.calcMetric(n, g));
+                    values.add(metric.calcSingleMetric(n, g));
                 }
             } else {
                 for(Edge e : g.getEdges()) {
-                    values.add(metric.calcMetric(e, g));
+                    values.add(metric.calcSingleMetric(e, g));
                 }
             }
         }
@@ -143,7 +144,7 @@ public abstract class AbstractLocal2GlobalMetric extends GlobalMetric implements
     @Override
     public AbstractLocal2GlobalMetric dupplicate() {
         try {
-            return this.getClass().getConstructor(LocalMetric.class, TypeElem.class).newInstance(metric.dupplicate(), typeElem);
+            return this.getClass().getConstructor(LocalSingleMetric.class, TypeElem.class).newInstance(metric.dupplicate(), typeElem);
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
             throw new RuntimeException(ex);
         }

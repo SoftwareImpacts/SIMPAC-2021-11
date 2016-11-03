@@ -692,11 +692,11 @@ public class MainFrame extends javax.swing.JFrame {
                     }
                     for(int i = 0; i < indice.getResultNames().length; i++) {
                         if((nodeEdge & 2) == 2) {
-                            DefaultFeature.addAttribute("d_" + GlobalMetric.getDetailName(indice, i) + "_" + dlg.graph.getName(),
+                            DefaultFeature.addAttribute("d_" + indice.getDetailName(i) + "_" + dlg.graph.getName(),
                                 dlg.graph.getLinkset().getPaths(), Double.NaN);
                         }
                         if((nodeEdge & 1) == 1) {
-                            DefaultFeature.addAttribute("d_" + GlobalMetric.getDetailName(indice, i) + "_" + dlg.graph.getName(),
+                            DefaultFeature.addAttribute("d_" + indice.getDetailName(i) + "_" + dlg.graph.getName(),
                                 project.getPatches(), Double.NaN);
                         }
                     }
@@ -708,7 +708,7 @@ public class MainFrame extends javax.swing.JFrame {
                             if(result.keySet().contains(f.getId())) {
                                 Double[] res = result.get(f.getId());
                                 for(int j = 0; j < indice.getResultNames().length; j++) {
-                                    f.setAttribute("d_" + GlobalMetric.getDetailName(indice, j) + "_" + dlg.graph.getName(),
+                                    f.setAttribute("d_" + indice.getDetailName(j) + "_" + dlg.graph.getName(),
                                         res[j]);
                                 }
                             }
@@ -720,7 +720,7 @@ public class MainFrame extends javax.swing.JFrame {
                             if(result.keySet().contains(f.getId())) {
                                 Double[] res = result.get(f.getId());
                                 for(int j = 0; j < indice.getResultNames().length; j++) {
-                                    f.setAttribute("d_" + GlobalMetric.getDetailName(indice, j) + "_" + dlg.graph.getName(),
+                                    f.setAttribute("d_" + indice.getDetailName(j) + "_" + dlg.graph.getName(),
                                         res[j]);
                                 }
                             }
@@ -735,7 +735,7 @@ public class MainFrame extends javax.swing.JFrame {
                         project.savePatch();
                     }
                     // show the result
-                    viewMetricResult(dlg.graph, "d_" + GlobalMetric.getDetailName(indice, 0) + "_" + dlg.graph.getName(), 
+                    viewMetricResult(dlg.graph, "d_" + indice.getDetailName(0) + "_" + dlg.graph.getName(), 
                             (nodeEdge & 1) == 1, (nodeEdge & 2) == 2);
                 } catch (IOException | SchemaException ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -757,17 +757,20 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_local_metrics..."));
                 try {
-                    System.out.println("Calc local metric : " + (dlg.metric));
                     long start = System.currentTimeMillis();
                     calcLocalMetric(monitor, dlg.graph, dlg.metric, Double.NaN);
-                    System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
+                    Logger.getLogger(MainFrame.class.getName()).info(dlg.metric + " - Elapsed time : " + (System.currentTimeMillis()-start) + "ms");
 
                     monitor.setNote(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Saving..."));
-                    dlg.graph.getLinkset().saveLinks();
-                    project.savePatch();
+                    if(dlg.metric.calcEdges()) {
+                        dlg.graph.getLinkset().saveLinks();
+                    }
+                    if(dlg.metric.calcNodes()) {
+                        project.savePatch();
+                    }
 
                     // show the result
-                    viewMetricResult(dlg.graph, dlg.metric.getDetailName() + "_" + dlg.graph.getName(), dlg.metric.calcNodes(), dlg.metric.calcEdges());
+                    viewMetricResult(dlg.graph, dlg.metric.getDetailName(0) + "_" + dlg.graph.getName(), dlg.metric.calcNodes(), dlg.metric.calcEdges());
 
                     monitor.close();
                 } catch(IOException | SchemaException ex) {
@@ -1215,39 +1218,48 @@ public class MainFrame extends javax.swing.JFrame {
                 (metric.calcEdges() ? graph.getGraph().getEdges().size() : 0));
 
         if(metric.calcNodes()) {
-            DefaultFeature.addAttribute(metric.getDetailName() + "_" + graph.getName(),
-                graph.getProject().getPatches(), Double.NaN);
+            for(int i = 0; i < metric.getResultNames().length; i++) {
+                DefaultFeature.addAttribute(metric.getDetailName(i) + "_" + graph.getName(),
+                    graph.getProject().getPatches(), Double.NaN);
+            }
             List<Node> nodes = new ArrayList(graph.getGraph().getNodes());
             SimpleParallelTask<Node> task = new SimpleParallelTask<Node>(nodes, monitor.getSubProgress(nodes.size())) {
                 @Override
                 protected void executeOne(Node node) {
                     WritableFeature f = (WritableFeature)node.getObject();
-                    double val = metric.calcMetric(node, graph);
-                    f.setAttribute(metric.getDetailName() + "_" + graph.getName(),
-                            val);                              
+                    Double[] val = metric.calcMetric(node, graph);
+                    for(int i = 0; i < metric.getResultNames().length; i++) {
+                        f.setAttribute(metric.getDetailName(i) + "_" + graph.getName(), val[i]);                              
+                    }
                 }
             };
 
             try {
                 new ParallelFExecutor(task).executeAndWait();
             } catch(Exception ex) {
-                DefaultFeature.removeAttribute(metric.getDetailName() + "_" + graph.getName(),
-                    graph.getProject().getPatches());          
+                for(int i = 0; i < metric.getResultNames().length; i++) {
+                    DefaultFeature.removeAttribute(metric.getDetailName(i) + "_" + graph.getName(),
+                        graph.getProject().getPatches());          
+                }
                 throw new RuntimeException(ex);
             }
         }
 
         if(metric.calcEdges()) {
-            DefaultFeature.addAttribute(metric.getDetailName() + "_" + graph.getName(),
-                graph.getLinkset().getPaths(), Double.NaN);        
+            for(int i = 0; i < metric.getResultNames().length; i++) {
+                DefaultFeature.addAttribute(metric.getDetailName(i) + "_" + graph.getName(),
+                    graph.getLinkset().getPaths(), Double.NaN);        
+            }
             
             List<Edge> edges = new ArrayList(graph.getGraph().getEdges());
             SimpleParallelTask<Edge> task = new SimpleParallelTask<Edge>(edges, monitor.getSubProgress(edges.size())) {
                 @Override
                 protected void executeOne(Edge edge) {
                     WritableFeature f = (WritableFeature)edge.getObject();
-                    double val = metric.calcMetric(edge, graph);
-                    f.setAttribute(metric.getDetailName() + "_" + graph.getName(), val);
+                    Double[] val = metric.calcMetric(edge, graph);
+                    for(int i = 0; i < metric.getResultNames().length; i++) {
+                        f.setAttribute(metric.getDetailName(i) + "_" + graph.getName(), val[i]);                              
+                    }
                 }
                     
             };
@@ -1255,8 +1267,10 @@ public class MainFrame extends javax.swing.JFrame {
             try {
                 new ParallelFExecutor(task).executeAndWait();
             } catch(Exception ex) {
-                DefaultFeature.removeAttribute(metric.getDetailName() + "_" + graph.getName(),
-                    graph.getLinkset().getPaths());
+                for(int i = 0; i < metric.getResultNames().length; i++) {
+                    DefaultFeature.removeAttribute(metric.getDetailName(i) + "_" + graph.getName(),
+                        graph.getLinkset().getPaths());
+                }
                 throw new RuntimeException(ex);
             }
         }

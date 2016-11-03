@@ -32,12 +32,12 @@ import org.thema.graphab.metric.Metric;
 public abstract class LocalMetric extends Metric {
     
     /**
-     * Calculates the metric for node or edge g of the graph gen
+     * Calculates the metrics for node or edge g of the graph gen
      * @param g the graph element (node or edge)
      * @param gen the graph
-     * @return the calculated metric
+     * @return the calculated metrics
      */
-    public abstract double calcMetric(Graphable g, GraphGenerator gen);
+    public abstract Double[] calcMetric(Graphable g, GraphGenerator gen);
 
     /**
      * Is this metric can be calculated on nodes ?

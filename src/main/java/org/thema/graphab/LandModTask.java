@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import org.apache.commons.math.MathException;
 import org.geotools.coverage.grid.GridCoverage2D;
@@ -53,6 +54,7 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
     private String idField;
     private String codeField;
     private boolean voronoi;
+    private Set<String> ids;
     private List<String> args;
     
     private transient Project project;
@@ -69,12 +71,13 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
      * @param voronoi is voronoi (ie. planar topology) must be calculated for new projects ?
      * @param args the CLI commands to execute after creating each project
      */
-    public LandModTask(Project project, File fileZone, String idField, String codeField, boolean voronoi, List<String> args) {
+    public LandModTask(Project project, File fileZone, String idField, String codeField, boolean voronoi, Set<String> ids, List<String> args) {
         this.project = project;
         this.fileZone = fileZone;
         this.idField = idField;
         this.codeField = codeField;
         this.voronoi = voronoi;
+        this.ids = ids;
         this.args = args;
     }
 
@@ -94,7 +97,10 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
             }
             zones = new HashMapList<>();
             for(DefaultFeature f : features) {
-                zones.putValue(f.getAttribute(idField).toString(), f);
+                String id = f.getAttribute(idField).toString();
+                if(ids == null || ids.contains(id)) {
+                    zones.putValue(id, f);
+                }
             }
             zoneIds = new ArrayList(zones.keySet());
             // sort to ensure the same order for several JVM in MPI mode
@@ -111,12 +117,12 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
     public Void execute(int start, int end) {
         for(String id : zoneIds.subList(start, end)) {
             try {
-                Project prj = createProject(id, zones.get(id));
+                File prjFile = createProject(id, zones.get(id)).getProjectFile();
                 
                 // execute next commands
                 ArrayList<String> newArgs = new ArrayList<>(args);
                 newArgs.add(0, "--project");
-                newArgs.add(1, prj.getProjectFile().getAbsolutePath());
+                newArgs.add(1, prjFile.getAbsolutePath());
                 new CLITools().execute(newArgs.toArray(new String[0]));
             } catch (IOException | SchemaException | MathException  ex) {
                 throw new RuntimeException(ex);

@@ -29,7 +29,7 @@ import org.thema.graphab.graph.GraphGenerator;
  * 
  * @author Gilles Vuidel
  */
-public class ConCorrLocalMetric extends LocalMetric {
+public final class ConCorrLocalMetric extends LocalSingleMetric {
 
     @Override
     public String getShortName() {
@@ -37,7 +37,7 @@ public class ConCorrLocalMetric extends LocalMetric {
     }
 
     @Override
-    public double calcMetric(Graphable g, GraphGenerator gen) {
+    public double calcSingleMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
         if(node.getDegree() == 0) {
             return 0;

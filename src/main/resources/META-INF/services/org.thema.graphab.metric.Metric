@@ -1,3 +1,4 @@
+org.thema.graphab.metric.local.F6LocalMetric
 org.thema.graphab.metric.local.PCFLocalMetric
 org.thema.graphab.metric.local.BCCircuitLocalMetric
 org.thema.graphab.metric.local.IFPCMetric

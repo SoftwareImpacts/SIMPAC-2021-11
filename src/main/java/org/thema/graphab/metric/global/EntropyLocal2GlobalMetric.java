@@ -20,7 +20,7 @@
 package org.thema.graphab.metric.global;
 
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.metric.local.LocalSingleMetric;
 
 /**
  * Agregate a local metric by shannon entropy.
@@ -34,7 +34,7 @@ public class EntropyLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
      * @param metric the local metric to agregate
      * @param type agregate on nodes or on edges ?
      */
-    public EntropyLocal2GlobalMetric(LocalMetric indice, TypeElem type) {
+    public EntropyLocal2GlobalMetric(LocalSingleMetric indice, TypeElem type) {
         super(indice, type);
     }
 

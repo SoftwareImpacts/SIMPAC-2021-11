@@ -33,7 +33,7 @@ import org.thema.graphab.metric.PreCalcMetric;
  * 
  * @author Gilles Vuidel
  */
-public abstract class AbstractBCLocalMetric<T> extends LocalMetric implements PreCalcMetric<T> {
+public abstract class AbstractBCLocalMetric<T> extends LocalSingleMetric implements PreCalcMetric<T> {
   
     private transient HashMap<Object, Double> mapVal;
 
@@ -61,7 +61,7 @@ public abstract class AbstractBCLocalMetric<T> extends LocalMetric implements Pr
     }
     
     @Override
-    public double calcMetric(Graphable g, GraphGenerator gen) {
+    public double calcSingleMetric(Graphable g, GraphGenerator gen) {
         return mapVal.get(((Feature)g.getObject()).getId());
     }
 

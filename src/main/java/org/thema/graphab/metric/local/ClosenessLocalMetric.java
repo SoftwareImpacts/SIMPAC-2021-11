@@ -29,7 +29,7 @@ import org.thema.graphab.graph.GraphPathFinder;
  * 
  * @author Gilles Vuidel
  */
-public class ClosenessLocalMetric extends LocalMetric {
+public final class ClosenessLocalMetric extends LocalSingleMetric {
 
     @Override
     public String getShortName() {
@@ -37,7 +37,7 @@ public class ClosenessLocalMetric extends LocalMetric {
     }
 
     @Override
-    public double calcMetric(Graphable g, GraphGenerator gen) {
+    public double calcSingleMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
         GraphPathFinder pathFinder = gen.getPathFinder(node);
         double sum = 0;

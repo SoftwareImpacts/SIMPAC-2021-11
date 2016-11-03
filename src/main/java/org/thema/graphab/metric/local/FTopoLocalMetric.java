@@ -37,12 +37,12 @@ import org.thema.graphab.metric.ParamPanel;
  * 
  * @author Gilles Vuidel
  */
-public class FTopoLocalMetric extends LocalMetric {
+public final class FTopoLocalMetric extends LocalSingleMetric {
 
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
 
     @Override
-    public double calcMetric(Graphable g, GraphGenerator gen) {
+    public double calcSingleMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
         double sum = 0;
         for(Edge edge : (List<Edge>)node.getEdges()) {

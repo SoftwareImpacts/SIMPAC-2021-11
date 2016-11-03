@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.thema.graphab.Project;
@@ -59,7 +60,11 @@ public abstract class Metric implements Serializable  {
      * @return the full name of the metric
      */
     public String getName() {
-        String desc = java.util.ResourceBundle.getBundle("org/thema/graphab/metric/global/Bundle").getString(getShortName());
+        ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/metric/global/Bundle");
+        String desc = null;
+        if(bundle.containsKey(getShortName())) {
+            desc = bundle.getString(getShortName());
+        }
         if(desc == null) {
             return getShortName();
         } else {
@@ -76,6 +81,15 @@ public abstract class Metric implements Serializable  {
     }
 
     /**
+     * Returns the results name.
+     * Default implementation returns the metric short name
+     * @return the results names
+     */
+    public String[] getResultNames() {
+        return new String[]{ getShortName() };
+    }
+    
+    /**
      * The short name with the parameters (if any) separated by underscore.
      * metric_param1val1_param2val2
      * Ex : PC_d1000_p0.05_beta1
@@ -90,6 +104,18 @@ public abstract class Metric implements Serializable  {
         return str;
     }
 
+    /**
+     * The short name with the parameters (if any) separated by underscore and the result name (if any) separated by a pipe
+     * @param indResult the index of the result
+     * @return the short name with the metric parameters and the result name if any
+     */
+    public String getDetailName(int indResult) {
+        if(getResultNames().length == 1) {
+            return getDetailName();
+        }
+        return getDetailName() + "|" + getResultNames()[indResult];
+    }
+    
     /**
      * Is this metric can be calculated on this graph.
      * Default implementation returns always true.

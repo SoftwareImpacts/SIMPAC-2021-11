@@ -31,7 +31,7 @@ import org.thema.common.param.DefaultParamEditor;
  */
 public class DefaultParamPanel extends ParamPanel {
     
-    private Metric metric;
+    private DefaultParamEditor<Metric> editor;
     
     /**
      * Creates new form DefaultParamPanel
@@ -39,8 +39,7 @@ public class DefaultParamPanel extends ParamPanel {
      */
     public DefaultParamPanel(Metric metric) {
         initComponents();
-        this.metric = metric;
-        DefaultParamEditor editor = new DefaultParamEditor(metric);
+        editor = new DefaultParamEditor<>(metric);
         panel.add(editor, BorderLayout.CENTER);
     }
 
@@ -74,6 +73,7 @@ public class DefaultParamPanel extends ParamPanel {
 
     @Override
     public Map<String, Object> getParams() {
-        return metric.getParams();
+        editor.validateValue();
+        return editor.getValue().getParams();
     }
 }

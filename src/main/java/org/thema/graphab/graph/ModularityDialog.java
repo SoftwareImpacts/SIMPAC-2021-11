@@ -223,7 +223,7 @@ public class ModularityDialog extends javax.swing.JDialog {
                     clusters.add(new DefaultFeature(c.getId(), CascadedPolygonUnion.union(geoms), attrNames, Arrays.asList(c.getPartModularity())));
                 }
                 ColorRamp ramp = new ColorRamp(ColorRamp.reverse(ColorRamp.RAMP_SYM_GREEN_RED), -1, 0, 1);
-                ramp.setBoundsCentered(new FeatureAttributeIterator(clusters, attrNames.get(0)));
+                ramp.setBounds(new FeatureAttributeIterator(clusters, attrNames.get(0)));
                 Layer l = new FeatureLayer("Clustering - " + clusters.size(), clusters, new FeatureStyle(attrNames.get(0), 
                         ramp, null, new ColorRamp(new Color[]{Color.black})));
                 l.setVisible(true);

@@ -34,7 +34,7 @@ import org.thema.graphab.metric.SingleValuePanel;
  * 
  * @author Gilles Vuidel
  */
-public class PCFLocalMetric extends AbstractBCLocalMetric<Node> {
+public final class PCFLocalMetric extends AbstractBCLocalMetric<Node> {
 
 
     public static final String BETA = "beta";

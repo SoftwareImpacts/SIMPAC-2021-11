@@ -20,7 +20,7 @@
 package org.thema.graphab.metric.global;
 
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.metric.local.LocalSingleMetric;
 
 /**
  * Agregate a local metric by division index.
@@ -34,7 +34,7 @@ public class DivisionLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
      * @param metric the local metric to agregate
      * @param type agregate on nodes or on edges ?
      */
-    public DivisionLocal2GlobalMetric(LocalMetric metric, TypeElem type) {
+    public DivisionLocal2GlobalMetric(LocalSingleMetric metric, TypeElem type) {
         super(metric, type);
     }
 

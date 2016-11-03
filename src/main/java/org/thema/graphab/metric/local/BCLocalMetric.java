@@ -38,7 +38,7 @@ import org.thema.graphab.metric.ParamPanel;
  * 
  * @author Gilles Vuidel
  */
-public class BCLocalMetric extends AbstractBCLocalMetric<GraphPathFinder> {
+public final class BCLocalMetric extends AbstractBCLocalMetric<GraphPathFinder> {
 
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
     

@@ -38,9 +38,9 @@ import org.thema.graphab.metric.SingleValuePanel;
  * 
  * @author Gilles Vuidel
  */
-public class IFPCMetric extends LocalMetric {
+public final class IFPCMetric extends LocalSingleMetric {
 
-    double dMax = 100;
+    private double dMax = 100;
     private RasterPathFinder pathfinder;
 
     @Override
@@ -54,7 +54,7 @@ public class IFPCMetric extends LocalMetric {
     }
 
     @Override
-    public synchronized double calcMetric(Graphable g, GraphGenerator gen) {
+    public synchronized double calcSingleMetric(Graphable g, GraphGenerator gen) {
         Feature patch = (Feature) g.getObject();
         if(pathfinder == null) {
             try {

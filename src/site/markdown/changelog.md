@@ -1,5 +1,10 @@
 ## Changelog
 
+##### version 2.1.3 (03/11/2016)
+- CLI : add sel option to --landmod command
+- Add F6 metric in plugin
+- UI : few enhancements on styling layer dialog
+
 ##### version 2.1.2 (12/05/2016)
 - UI patch addition : remove dPC from metric combobox after changing the graph
 - UI : bug while exporting the map with raster data (null pointer exception)

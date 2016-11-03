@@ -20,7 +20,7 @@
 package org.thema.graphab.metric.global;
 
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.metric.local.LocalSingleMetric;
 
 /**
  * Global metric summing the results of a local metric on nodes or edges.
@@ -34,7 +34,7 @@ public class SumLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
      * @param metric the local metric to sum
      * @param typeElem apply the local metric on nodes or edges ?
      */
-    public SumLocal2GlobalMetric(LocalMetric metric, TypeElem typeElem) {
+    public SumLocal2GlobalMetric(LocalSingleMetric metric, TypeElem typeElem) {
         super(metric, typeElem);
     }
 

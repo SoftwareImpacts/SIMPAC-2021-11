@@ -20,7 +20,7 @@
 package org.thema.graphab.metric.global;
 
 import org.thema.graphab.metric.local.BCLocalMetric;
-import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.metric.local.LocalSingleMetric;
 
 /**
  * These classes are useful only for plugin metric management.
@@ -47,7 +47,7 @@ public class BCDivisionMetric {
          * @param metric may be BCLocalMetric
          * @param type may be TypeElem.NODE
          */
-        public Node(LocalMetric metric, TypeElem type) {
+        public Node(LocalSingleMetric metric, TypeElem type) {
             super(metric, type);
         }
     }
@@ -68,7 +68,7 @@ public class BCDivisionMetric {
          * @param metric may be BCLocalMetric
          * @param type may be TypeElem.EDGE
          */
-        public Edge(LocalMetric metric, TypeElem type) {
+        public Edge(LocalSingleMetric metric, TypeElem type) {
             super(metric, type);
         }
     }

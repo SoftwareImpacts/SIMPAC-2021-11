@@ -35,9 +35,9 @@ import org.thema.graphab.metric.PreCalcMetric;
  * Betweeness Centrality Circuit version.
  * The shortest path is replaced by the current of the circuit.
  * 
- * @author gvuidel
+ * @author Gilles Vuidel
  */
-public class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphPathFinder> {
+public final class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphPathFinder> {
       
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
     

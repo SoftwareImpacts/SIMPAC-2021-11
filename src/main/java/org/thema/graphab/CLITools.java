@@ -130,7 +130,7 @@ public class CLITools {
             System.out.println("Advanced commands :\n" +
                     "--linkset distance=circuit [name=linkname] [complete[=dmax]] [slope=coef] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]\n" +
                     "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n" +
-                    "--landmod zone=filezones.shp id=fieldname code=fieldname [novoronoi]\n");
+                    "--landmod zone=filezones.shp id=fieldname code=fieldname [sel=id1,id2,...,idn ] [novoronoi]\n");
             return;
         }
         
@@ -1142,6 +1142,11 @@ public class CLITools {
         File fileZone = new File(args.remove(0).split("=")[1]);
         String idField = args.remove(0).split("=")[1];
         String codeField = args.remove(0).split("=")[1];
+        Set<String> ids = null;
+        if(!args.isEmpty() && args.get(0).startsWith("sel=")) {
+            ids = new HashSet<>(Arrays.asList(args.remove(0).split("=")[1].split(",")));
+            
+        }
         boolean voronoi = true;
         if(!args.isEmpty() && args.get(0).equals("novoronoi")) {
             args.remove(0);
@@ -1149,7 +1154,7 @@ public class CLITools {
         }
         // in threaded mode, does not manage reentrant call with old executor, solution : set nb proc to one
         ParallelFExecutor.setNbProc(1);
-        LandModTask task = new LandModTask(project, fileZone, idField, codeField, voronoi, args);
+        LandModTask task = new LandModTask(project, fileZone, idField, codeField, voronoi, ids, args);
         ExecutorService.execute(task);
 
         args.clear();

@@ -30,7 +30,7 @@ import org.thema.graphab.graph.GraphGenerator;
  * 
  * @author Gilles Vuidel
  */
-public class CCLocalMetric extends LocalMetric {
+public final class CCLocalMetric extends LocalSingleMetric {
 
     @Override
     public String getShortName() {
@@ -38,7 +38,7 @@ public class CCLocalMetric extends LocalMetric {
     }
 
     @Override
-    public double calcMetric(Graphable g, GraphGenerator gen) {
+    public double calcSingleMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
 
         HashSet<Node> related = new HashSet<>();

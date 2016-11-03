@@ -17,34 +17,31 @@
  */
 
 
-package org.thema.graphab.metric.global;
+package org.thema.graphab.metric.local;
 
-import org.thema.graphab.Project.Method;
+import org.geotools.graph.structure.Graphable;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.metric.Metric;
 
 /**
- * Base class for global metric ie. the metric is calculated for the whole graph.
+ * Base class for local metric returning only one result.
+ * Subclass must override {@link #calcNodes()} and/or {@link #calcEdges() }
  * 
  * @author Gilles Vuidel
  */
-public abstract class GlobalMetric extends Metric  {
-
+public abstract class LocalSingleMetric extends LocalMetric {
+    
     /**
-     * Calculates the metric for the graph g
-     * @param g the graph
-     * @return the results of the metric
+     * Calculates the metric for node or edge g of the graph gen
+     * @param g the graph element (node or edge)
+     * @param gen the graph
+     * @return the calculated metric
      */
-    public abstract Double[] calcMetric(GraphGenerator g);
+    public abstract double calcSingleMetric(Graphable g, GraphGenerator gen);
 
-    /**
-     * Returns true if method != Method.LOCAL
-     * @param method
-     * @return 
-     */
     @Override
-    public boolean isAcceptMethod(Method method) {
-        return method != Method.LOCAL;
+    public  Double[] calcMetric(Graphable g, GraphGenerator gen) {
+        return new Double[] {calcSingleMetric(g, gen)};
     }
 
 }
