@@ -99,9 +99,6 @@ public class MainFrameTest {
             }
             testIndices.add(indName);
         }
-
-        // check if all metrics have been tested
-        assertEquals("Check all local metrics", Project.LOCAL_METRICS.size(), testIndices.size());
     }
 
     private static boolean isCircuit(String s) {

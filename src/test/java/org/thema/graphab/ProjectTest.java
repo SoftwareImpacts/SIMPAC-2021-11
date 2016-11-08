@@ -282,4 +282,8 @@ public class ProjectTest {
     public static Project loadTestProject() throws IOException {
         return Project.loadProject(new File("target/test-classes/org/thema/graphab/project/test.xml"), false);
     }
+    
+    public static Project loadCrossProject() throws IOException {
+        return Project.loadProject(new File("target/test-classes/org/thema/graphab/cross_project/cross.xml"), true);
+    }
 }
