@@ -1170,7 +1170,6 @@ public class MainFrame extends javax.swing.JFrame {
      * @param metric the global metric
      * @param maxCost max distance for path metric
      * @return list of created attributes
-     * @throws Throwable 
      */
     public static List<String> calcCompMetric(ProgressBar monitor, GraphGenerator graph,
                 GlobalMetric metric, double maxCost) {
@@ -1289,6 +1288,7 @@ public class MainFrame extends javax.swing.JFrame {
      * Main entry point for MPI, CLI or GUI.
      * 
      * @param args the command line arguments
+     * @throws Exception
      */
     public static void main(String[] args) throws Exception {
         

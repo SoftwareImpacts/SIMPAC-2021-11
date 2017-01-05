@@ -26,8 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import no.uib.cipr.matrix.DenseLU;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
@@ -273,7 +271,7 @@ public class Circuit {
     /**
      * NE PAS UTILISER RESULTAT TROP APPROXIMATIF
      * Calcule les résistances entre 1 noeud du graphe et tous les autres.
-     * Calcul beaucoup plus rapide que {@link #computeR()} mais très approximatif...
+     * Calcul beaucoup plus rapide que {@link #computeR } mais très approximatif...
      * @param n1 noeud recevant tout le courant
      * @return la résistance entre chaque noeud et n1
      */

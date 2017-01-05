@@ -60,7 +60,7 @@ public abstract class AbstractPathMetric extends GlobalMetric implements PreCalc
 
     /**
      * {@inheritDoc }
-     * @return {@link TypeParam.PATHFINDER}
+     * @return TypeParam.PATHFINDER
      */
     @Override
     public TypeParam getTypeParam() {

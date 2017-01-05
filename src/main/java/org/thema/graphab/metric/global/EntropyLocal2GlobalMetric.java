@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package org.thema.graphab.metric.global;
 
 import org.thema.graphab.graph.GraphGenerator;
@@ -34,8 +33,8 @@ public class EntropyLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
      * @param metric the local metric to agregate
      * @param type agregate on nodes or on edges ?
      */
-    public EntropyLocal2GlobalMetric(LocalSingleMetric indice, TypeElem type) {
-        super(indice, type);
+    public EntropyLocal2GlobalMetric(LocalSingleMetric metric, TypeElem type) {
+        super(metric, type);
     }
 
     @Override

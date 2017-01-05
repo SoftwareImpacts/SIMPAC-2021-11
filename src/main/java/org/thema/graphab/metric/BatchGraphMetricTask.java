@@ -53,8 +53,8 @@ public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, 
 
     /**
      * Creates a new BatchGraphMetricTask.
-     * @param monitor the progress monitor
-     * @param linkName the linkset name for graph creation
+     * @param monitor the progression monitor
+     * @param linkset the linkset for graph creation
      * @param distAbs is range values are in distance or in number of links ?
      * @param min the minimum threshold in distance or nb links
      * @param inc the increment between 2 threshold in distance or nb links

@@ -67,8 +67,8 @@ public class PlanarLinks {
 
     /**
      * 
-     * @param f the patch
-     * @return the patch ids connected to the given patch
+     * @param patch the patch
+     * @return the patch ids which are connected to the given patch
      */
     public Set<Integer> getNeighbors(Feature patch) {
         return conMap.get(getInd(patch)).keySet();

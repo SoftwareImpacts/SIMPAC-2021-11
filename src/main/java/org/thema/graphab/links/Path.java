@@ -49,7 +49,7 @@ public class Path extends DefaultFeature {
     private double cost;
 
     /**
-     * Constructor for {@link Links} 
+     * Constructor used by {@link PlanarLinks} 
      * Create a link between the two patches. Cost and distance are 0. The geometry is a line between the centroid of the two patches.
      * @param patch1 first patch
      * @param patch2 second patch

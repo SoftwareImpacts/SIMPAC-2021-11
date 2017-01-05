@@ -229,8 +229,7 @@ public abstract class Metric implements Serializable  {
     }
 
     /**
-     * Use {@link String.valueOf }.
-     * Avoid the trailing .0 for floating point number.
+     * Use String.valueOf method, but avoid the trailing .0 for floating point number storing integral value.
      * If the value is a floating point number containing an integral number, cast the value to int.
      * @param val the value to convert in String
      * @return a string representing val

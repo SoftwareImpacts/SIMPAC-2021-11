@@ -63,7 +63,7 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
      * 
      * @param addedGeom geometry of the previous added patch, can be null if no patch already added
      * @param capaGeom capacity of the previous added patch, can be Double.NaN if no patch already added
-     * @param graphName the name of the graph
+     * @param gen the graph
      * @param metric the metric to maximize
      * @param testGeoms the set of patch geometries to test, with their capacity
      * @param monitor th progress bar
@@ -151,7 +151,7 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
      * @param metric the metric
      * @param gen the graph
      * @param capaCov the grid containing the capacity
-     * @return the value of the metric after adding the patch to the graph or NaN if the patch cannot be added or if capacity <= 0
+     * @return the value of the metric after adding the patch to the graph or NaN if the patch cannot be added or if capacity &lt;= 0
      * @throws IOException 
      */
     public static double addPatchSoft(Point point, GlobalMetric metric, GraphGenerator gen, GridCoverage2D capaCov) throws IOException {
@@ -167,7 +167,7 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
      * @param metric the metric
      * @param gen the graph
      * @param capa the capacity of the patch
-     * @return the value of the metric after adding the patch to the graph or NaN if the patch cannot be added or if capacity <= 0
+     * @return the value of the metric after adding the patch to the graph or NaN if the patch cannot be added or if capacity &lt;= 0
      * @throws IOException 
      */
     public static double addPatchSoft(Geometry geom, GlobalMetric metric, GraphGenerator gen, double capa) throws IOException {

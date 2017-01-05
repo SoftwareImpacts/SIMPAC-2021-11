@@ -458,7 +458,8 @@ public class Linkset {
     }
 
     /**
-     * Returns detailed informations of the linkset.<br/>
+     * Returns detailed informations of the linkset.
+     * 
      * The language is local dependent
      * @return 
      */
@@ -561,9 +562,10 @@ public class Linkset {
     }
     
     /**
-     * Compute all links defined in this linkset.<br/>
+     * Compute all links defined in this linkset.
+     * 
      * This method is called only once by the project
-     * @param progressBar
+     * @param progressBar the progression bar, cannot be null
      * @throws IOException 
      */
     public void compute(ProgressBar progressBar) throws IOException {
@@ -1065,7 +1067,7 @@ public class Linkset {
     
     /**
      * Extract for each path the number of pixels for each cost
-     * @return a 2D mapping (Path, cost) -> #pixels
+     * @return a 2D mapping (Path, cost) : #pixels
      * @throws IOException 
      */
     public HashMap2D<Path, Double, Integer> extractCostFromPath() throws IOException {

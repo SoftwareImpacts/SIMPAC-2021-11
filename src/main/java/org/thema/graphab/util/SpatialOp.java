@@ -45,6 +45,7 @@ import org.thema.common.ProgressBar;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
+import org.thema.graphab.Project;
 
 /**
  * Spatial operations mainly for project creation.
@@ -168,10 +169,11 @@ public final class SpatialOp {
     /**
      * Change the code of a patch in the patch raster.
      * Used during project creation
-     * @param rasterPatchs the patch raster
+     * @param raster the patch raster
      * @param patch the polygon of the patch
      * @param oldCode the current code for the patch
      * @param newCode the new code for the patch
+     * @param space2grid world to grid transformation
      */
     public static void recode(WritableRaster raster, Geometry patch, int oldCode, int newCode, AffineTransformation space2grid) {
         Envelope env = patch.getEnvelopeInternal();
@@ -191,8 +193,8 @@ public final class SpatialOp {
 
     /**
      * Vectorize the voronoi raster
-     * @param voronoi the voronoi raster created by {@link #neighborhoodEuclid}
-     * @param grid2space
+     * @param voronoi the voronoi raster created by {@link Project#neighborhoodEuclid }
+     * @param grid2space grid to world coordinate transformation
      * @return the vectorized voronoi features
      */
     public static List<? extends Feature> vectorizeVoronoi(Raster voronoi, AffineTransformation grid2space) {

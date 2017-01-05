@@ -46,7 +46,8 @@ import org.thema.graphab.mpi.MpiLauncher;
 
 /**
  * Calculates leastcost path between patches or between points.
- * This class is not thread safe.<br/>
+ * 
+ * This class is not thread safe.
  * Create one instance for each thread.
  * Uses dijkstra algorithm.
  * 
@@ -406,8 +407,9 @@ public final class RasterPathFinder implements SpacePathFinder {
     }
     
     /**
-     * Return a raster of cost distances from oPatch.<br/>
-     * The raster may be smaller than landscape raster if maxCost > 0
+     * Return a raster of cost distances from oPatch.
+     * 
+     * The raster may be smaller than landscape raster if maxCost &gt; 0
      * @param oPatch patch origin
      * @param maxCost max cost distance, if 0 : no max
      * @return 

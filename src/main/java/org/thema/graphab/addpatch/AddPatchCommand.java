@@ -95,7 +95,7 @@ public class AddPatchCommand {
      * @param capaFile raster file containing capacity of the new patches
      * @param res the resolution of the grid (cell size)
      * @param nbMultiPatch number of patches tested simultaneously
-     * @param windowSize the window size in cell when nbMultiPatch > 1
+     * @param windowSize the window size in cell when nbMultiPatch &gt; 1
      */
     public AddPatchCommand(int nbPatch, GlobalMetric metric, GraphGenerator gen, File capaFile, double res, int nbMultiPatch, int windowSize) {
         this.nbPatch = nbPatch;

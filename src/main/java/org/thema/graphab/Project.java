@@ -979,8 +979,8 @@ public final class Project {
 
     /**
      * The patches are ordered by their id.
-     * list(0) -> patch id 1
-     * list(n-1) -> patch id n
+     * list(0) : patch id 1
+     * list(n-1) : patch id n
      * @return all the patches
      */
     public List<DefaultFeature> getPatches() {
@@ -2097,6 +2097,7 @@ public final class Project {
      * @param x in world coordinate
      * @param y in world coordinate
      * @return true if this coordinate is in the study area
+     * @throws IOException if the land use cannot be loaded
      */
     public boolean isInZone(double x, double y) throws IOException {
         if(!zone.contains(x, y)) {
@@ -2154,7 +2155,7 @@ public final class Project {
     /**
      * Creates and adds a new patch into the project.
      * The rasters patch and landscape are modified
-     * @param point the geometry of the patch 
+     * @param geom the geometry of the patch 
      * @param capa the capacity of the patch
      * @return the new patch
      * @throws IOException 
@@ -2221,7 +2222,7 @@ public final class Project {
     
     /**
      * Checks if the point is contained in the landscape map and if the pixel does not belong to a patch 
-     * @param geom the point to test
+     * @param p the point to test
      * @return true if the patch can be created
      * @throws IOException 
      */

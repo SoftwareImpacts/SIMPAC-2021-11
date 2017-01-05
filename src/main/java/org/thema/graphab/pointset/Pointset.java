@@ -94,7 +94,8 @@ public class Pointset {
     }
 
     /**
-     * Return true if agregType != AG_NONE and maxCost > 0
+     * Return true if agregType != AG_NONE and maxCost &gt; 0
+     * 
      * @return true if point set fields are summarized in patches
      */
     public boolean isAgreg() {
