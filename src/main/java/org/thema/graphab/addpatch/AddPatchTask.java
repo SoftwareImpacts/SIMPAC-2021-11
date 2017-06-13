@@ -155,7 +155,15 @@ public class AddPatchTask extends AbstractParallelTask<TreeMapList<Double, Geome
      * @throws IOException 
      */
     public static double addPatchSoft(Point point, GlobalMetric metric, GraphGenerator gen, GridCoverage2D capaCov) throws IOException {
-        double capa = capaCov == null ? 1 : capaCov.evaluate(new Point2D.Double(point.getX(), point.getY()), new double[1])[0];
+        double capa = 1;
+        if(capaCov != null) {
+            Point2D.Double p2 = new Point2D.Double(point.getX(), point.getY());
+            if(capaCov.getEnvelope2D().contains(p2)) {
+                capa = capaCov.evaluate(p2, new double[1])[0];
+            } else {
+                return Double.NaN;
+            }
+        }
         return addPatchSoft(point, metric, gen, capa);
     }
     

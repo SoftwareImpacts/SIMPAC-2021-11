@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.0.6 (12/06/2017)
+- Patch addition : error when capacity coverage is used in multi patch
+
 ##### version 2.0.5 (12/05/2016)
 - UI patch addition : remove dPC from metric combobox after changing the graph
 
