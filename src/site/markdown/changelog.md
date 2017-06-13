@@ -1,5 +1,11 @@
 ## Changelog
 
+##### version 2.1.4 (13/06/2017) - from 2.0.6
+- Patch addition : error when capacity coverage is used in multi patch
+
+##### version 2.0.6 (12/06/2017)
+- Patch addition : error when capacity coverage is used in multi patch
+
 ##### version 2.1.3 (03/11/2016)
 - CLI : add sel option to --landmod command
 - Add F6 metric in plugin
