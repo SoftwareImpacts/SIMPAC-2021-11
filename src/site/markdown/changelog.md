@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.1.5 (19/06/2017)
+- Add circuit flow matrix distance for pointset
+
 ##### version 2.1.4 (13/06/2017) - from 2.0.6
 - Patch addition : error when capacity coverage is used in multi patch
 

@@ -287,6 +287,15 @@ public class GraphGenerator {
     }
     
     /**
+     * @param edge
+     * @return the flow of this edge
+     */
+    public final double getFlow(Edge edge, double alpha) {
+        return Project.getPatchCapacity(edge.getNodeA()) * Project.getPatchCapacity(edge.getNodeB()) / Math.pow(getProject().getTotalPatchCapacity(), 2) 
+        * Math.exp(-alpha * getCost((Path)edge.getObject()));
+    }
+    
+    /**
      * @param link
      * @return he cost (or distance) of this link
      */

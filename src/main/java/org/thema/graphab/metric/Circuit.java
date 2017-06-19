@@ -49,6 +49,7 @@ import org.thema.graphab.graph.GraphGenerator;
  */
 public class Circuit {
     private GraphGenerator graph;
+    private double alpha;
     
     /**
      * for testing native LU decomposition on dense matrix
@@ -68,11 +69,19 @@ public class Circuit {
      * @param graph the graph representing the electric circuit
      */
     public Circuit(GraphGenerator graph) {
+        this(graph, Double.NaN);
+    }
+    
+    /**
+     * Creates a new Circuit with graph and flow impedance
+     * @param graph the graph representing the electric circuit
+     */
+    public Circuit(GraphGenerator graph, double alpha) {
         if(graph.getType() == GraphGenerator.MST) {
             throw new IllegalArgumentException("No circuit in MST graph");
         }
         this.graph = graph;
-        
+        this.alpha = alpha;
         init();
     }
     
@@ -128,18 +137,18 @@ public class Circuit {
             for(Node node : (Collection<Node>)comp.getNodes()) {
                 double sum = 0;
                 for(Edge edge : (List<Edge>)node.getEdges()) {
-                    if(graph.getCost(edge) == 0) {
+                    if(getImpedance(edge) == 0) {
                         throw new RuntimeException("Circuit impossible avec un cout nul !");
                     }
-                    sum += 1 / graph.getCost(edge);
+                    sum += 1 / getImpedance(edge);
                 }
                 
                 A.set(i, i, sum);
                 i++;
             }
             for(Edge edge : (Collection<Edge>)comp.getEdges()) {
-                A.set(indNodes.get(edge.getNodeA()), indNodes.get(edge.getNodeB()), -1 / graph.getCost(edge));
-                A.set(indNodes.get(edge.getNodeB()), indNodes.get(edge.getNodeA()), -1 / graph.getCost(edge));
+                A.set(indNodes.get(edge.getNodeA()), indNodes.get(edge.getNodeB()), -1 / getImpedance(edge));
+                A.set(indNodes.get(edge.getNodeB()), indNodes.get(edge.getNodeA()), -1 / getImpedance(edge));
             }          
             
             compMatrix.put(comp, A);
@@ -158,6 +167,14 @@ public class Circuit {
                 compPrecond.put(comp, M);
             }
             
+        }
+    }
+    
+    private double getImpedance(Edge edge) {
+        if(Double.isNaN(alpha)) {
+            return graph.getCost(edge);
+        } else {
+            return -Math.log(graph.getFlow(edge, alpha));
         }
     }
     
@@ -312,7 +329,7 @@ public class Circuit {
             Node n2 = edge.getOtherNode(n1);
             int ind2 = indNodes.get(n2);
             if(U.get(ind1) - U.get(ind2) > 0)  {// si le courant part vers cet edge
-                r += 1 / (calcR(n2, U, mapR) + graph.getCost(edge));
+                r += 1 / (calcR(n2, U, mapR) + getImpedance(edge));
             }
             
         }
@@ -427,7 +444,7 @@ public class Circuit {
         for(Edge edge : (Collection<Edge>)comp.getEdges()) {
             int iA = indNodes.get(edge.getNodeA());
             int iB = indNodes.get(edge.getNodeB());
-            courant.put(((Feature)edge.getObject()).getId(), Math.abs(U.get(iA) - U.get(iB)) / graph.getCost(edge));
+            courant.put(((Feature)edge.getObject()).getId(), Math.abs(U.get(iA) - U.get(iB)) / getImpedance(edge));
         }
         for(Node node : (Collection<Node>)comp.getNodes()) {
             double in = 0, out = 0;
@@ -435,7 +452,7 @@ public class Circuit {
             int iA = indNodes.get(node);
             for(Edge edge : edges) {
                 int iB = indNodes.get(edge.getOtherNode(node));
-                double c = (U.get(iA) - U.get(iB)) / graph.getCost(edge);
+                double c = (U.get(iA) - U.get(iB)) / getImpedance(edge);
                 if(c < 0) {
                     in += -c;
                 } else {

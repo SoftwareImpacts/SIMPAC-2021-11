@@ -149,7 +149,7 @@ public final class GraphPathFinder {
         DijkstraPathFinder finder = new DijkstraPathFinder(graph.getGraph(), startNode, new EdgeWeighter() {
             @Override
             public double getWeight(Edge e) {
-                return -Math.log(Project.getPatchCapacity(e.getNodeA()) * Project.getPatchCapacity(e.getNodeB()) / Math.pow(graph.getProject().getTotalPatchCapacity(), 2)) + alpha * ((Path) e.getObject()).getCost();
+                return -Math.log(graph.getFlow(e, alpha));
             }
 
             @Override
