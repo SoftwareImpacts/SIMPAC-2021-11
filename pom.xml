@@ -9,7 +9,7 @@
 
     <name>Graphab</name>
     <description>Graphab is a software application for modeling ecological networks using landscape graphs</description>
-    <url>http://dev.umrthema.univ-fcomte.fr/projects/${project.artifactId}/</url>
+    <url>https://sourcesup.renater/${project.artifactId}/</url>
     <build>
         <plugins>
             <plugin>
@@ -185,6 +185,11 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+    <scm>
+        <connection>scm:git:https://git.renater.fr/${project.artifactId}.git</connection>
+        <developerConnection>scm:git:git+ssh://git@git.renater.fr:2222/${project.artifactId}.git</developerConnection>
+        <url>https://sourcesup.renater.fr/scm/browser.php?group_id=3413</url>
+    </scm>
     <reporting>
         <plugins>
             <plugin>
