@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.1.6 (13/07/2017)
+- Project migration to sourcesup
+
 ##### version 2.1.5 (19/06/2017)
 - Add circuit flow matrix distance for pointset
 
