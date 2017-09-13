@@ -47,6 +47,7 @@ import javax.media.jai.iterator.RandomIterFactory;
 import org.apache.commons.math.MathException;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.feature.SchemaException;
+import org.geotools.graph.structure.Edge;
 import org.thema.common.JTS;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
@@ -57,9 +58,12 @@ import org.thema.data.feature.Feature;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.drawshape.style.RasterStyle;
+import org.thema.graph.Modularity;
+import org.thema.graph.pathfinder.EdgeWeighter;
 import org.thema.graphab.addpatch.AddPatchCommand;
 import org.thema.graphab.graph.DeltaAddGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.graph.ModGraphGenerator;
 import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
@@ -99,15 +103,16 @@ public class CLITools {
     public void execute(String [] argArray) throws IOException, SchemaException, MathException {
         if(argArray[0].equals("--help")) {
             System.out.println("Usage :\njava -jar graphab.jar --metrics\n" +
-                    "java -jar graphab.jar [-proc n] --create prjname land.tif habitat=code1,...,coden [nodata=val] [minarea=val] [con8] [simp] [dir=path]\n" +
+                    "java -jar graphab.jar [-proc n] --create prjname landrasterfile habitat=code1,...,coden [nodata=val] [minarea=val] [con8] [simp] [dir=path]\n" +
                     "java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]\n" +
                     "Commands list :\n" +
                     "--show\n" + 
-                    "--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]\n" +
+                    "--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
-                    "--corridor maxcost=valcost\n" +
-                    "--graph [nointra] [threshold=[{]min:inc:max[}]]\n" +
+                    "--corridor maxcost=[{]valcost[}]\n" +
+                    "--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]\n" +
                     "--usegraph graph1,...,graphn\n" +
+                    "--cluster d=val p=val [beta=val] [nb=val]\n" +                    
                     "--pointset pointset.shp\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
                     "--capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
@@ -122,15 +127,15 @@ public class CLITools {
                     "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "--metapatch [mincapa=value]\n" +
+                    "--landmod zone=filezones.shp id=fieldname code=fieldname [sel=id1,id2,...,idn ] [novoronoi]\n" +
 
                     "\nmin:inc:max -> val1,val2,val3...");
             return;
         }
         if(argArray[0].equals("--advanced")) {
             System.out.println("Advanced commands :\n" +
-                    "--linkset distance=circuit [name=linkname] [complete[=dmax]] [slope=coef] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=raster.tif]\n" +
-                    "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n" +
-                    "--landmod zone=filezones.shp id=fieldname code=fieldname [sel=id1,id2,...,idn ] [novoronoi]\n");
+                    "--linkset distance=circuit [name=linkname] [complete[=dmax]] [slope=coef] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
+                    "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n");
             return;
         }
         
@@ -210,6 +215,8 @@ public class CLITools {
                 corridor(args);
             } else if(p.equals("--metapatch")) {
                 createMetapatch(args);
+            } else if(p.equals("--cluster")) {
+                clustering(args);
             } else if(p.equals("--capa")) {
                 calcCapa(args);
             } else if(p.equals("--landmod")) {
@@ -347,10 +354,10 @@ public class CLITools {
         }
         
         GridCoverage2D coverage;
-        if(land.getName().toLowerCase().endsWith(".tif")) {
-            coverage = IOImage.loadTiff(land);
-        } else {
+        if(land.getName().toLowerCase().endsWith(".rst")) {
             coverage = new RSTGridReader(land).read(null);
+        } else {
+            coverage = IOImage.loadCoverage(land);
         }
         int dataType = coverage.getRenderedImage().getSampleModel().getDataType();
         if(dataType == DataBuffer.TYPE_DOUBLE || dataType == DataBuffer.TYPE_FLOAT) {
@@ -535,6 +542,12 @@ public class CLITools {
         int type = GraphGenerator.COMPLETE;
         boolean intra = true;
         Range range = null;
+        String singleName = null;
+        
+        if(!args.isEmpty() && args.get(0).startsWith("name=")) {
+            singleName = args.remove(0).split("=")[1];
+        }
+        
         if(!args.isEmpty() && args.get(0).equals("nointra")) {
             intra = false;
             args.remove(0);
@@ -545,22 +558,61 @@ public class CLITools {
             String [] tok = arg.split("=");
             range = Range.parse(tok[1]);
         }
+        
+        if(singleName != null && getLinksets().size() > 1 || range.getValues().size() > 1) {
+            throw new IllegalArgumentException("name parameter can be used only when creating only one graph");
+        }
+        
         useGraphs.clear();
         for(Linkset cost : getLinksets()) {
             if(type == GraphGenerator.COMPLETE) {
-                GraphGenerator g = new GraphGenerator("comp_" + cost.getName(), cost, type, 0, intra && cost.isRealPaths());
+                String name = singleName == null ? "comp_" + cost.getName() : singleName;
+                GraphGenerator g = new GraphGenerator(name, cost, type, 0, intra && cost.isRealPaths());
                 System.out.println("Create graph " + g.getName());
                 project.addGraph(g, save);
                 useGraphs.add(g);
             } else {
                 for(Double d : range.getValues(cost)) {
-                    GraphGenerator g = new GraphGenerator("thresh_" + d + "_" + cost.getName(), cost, type, d, intra && cost.isRealPaths());
+                    String name = singleName == null ? "thresh_" + d + "_" + cost.getName() : singleName;
+                    GraphGenerator g = new GraphGenerator(name, cost, type, d, intra && cost.isRealPaths());
                     System.out.println("Create graph " + g.getName());
                     project.addGraph(g, save);
                     useGraphs.add(g);
                 }
             }
         }
+    }
+    
+    private void clustering(List<String> args) throws IOException, SchemaException {
+        
+        Map<String, String> params = extractAndCheckParams(args, Arrays.asList("d", "p"), Arrays.asList("beta", "nb"));
+        final double alpha = AlphaParamMetric.getAlpha(Double.parseDouble(params.get("d")), Double.parseDouble(params.get("p")));
+        final double beta = params.containsKey("beta") ? Double.parseDouble(params.get("beta")) : 1;
+        final int nb = params.containsKey("nb") ? Integer.parseInt(params.get("nb")) : -1;
+
+        List<GraphGenerator> newGraphs = new ArrayList<>();
+        for(final GraphGenerator graph : new ArrayList<>(getGraphs())) {
+            Modularity mod = new Modularity(graph.getGraph(), new EdgeWeighter() {
+                    @Override
+                    public double getWeight(Edge e) {
+                        return Math.pow(Project.getPatchCapacity(e.getNodeA()) * Project.getPatchCapacity(e.getNodeB()), beta) 
+                            * Math.exp(-alpha*graph.getCost(e));
+                    }
+                    @Override
+                    public double getToGraphWeight(double dist) {
+                        return 0;
+                    }
+                });
+
+            mod.partitions();
+            
+            Set<Modularity.Cluster> part = nb == -1 ? mod.getBestPartition() : mod.getPartition(nb);
+            ModGraphGenerator g = new ModGraphGenerator(graph, part);
+            project.addGraph(g, save);
+            newGraphs.add(g);
+        }
+        
+        useGraphs = newGraphs;
     }
 
     private void calcGlobalMetric(List<String> args) throws IOException {
@@ -1274,13 +1326,16 @@ public class CLITools {
         if(args.isEmpty() || !args.get(0).startsWith("maxcost="))  {
             throw new IllegalArgumentException("maxcost option is missing in command --corridor");
         }
-        double maxCost = Double.parseDouble(args.remove(0).split("=")[1]);
+        
+        Range rMax = Range.parse(args.remove(0).split("=")[1]);
         
         for(Linkset link : getLinksets()) {
             if(link.getType_dist() == Linkset.EUCLID) {
                 continue;
             }
+
             System.out.println("Linkset : " + link.getName());
+            double maxCost = rMax.getValue(link);
             List<Feature> corridors = link.computeCorridor(null, maxCost);
             
             DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
@@ -1318,6 +1373,39 @@ public class CLITools {
             ranges.put(tok[0], r);
         }
         return ranges;
+    }
+    
+    private static Map<String, String> extractAndCheckParams(List<String> args, List<String> mandatoryParams, List<String> optionalParams) {
+        Map<String, String> params = new LinkedHashMap<>();
+                
+        while(!args.isEmpty() && !args.get(0).startsWith("--")) {
+            String arg = args.remove(0);
+            if(arg.contains("=")) {
+                String[] tok = arg.split("=");
+                params.put(tok[0], tok[1]);
+            } else {
+                params.put(arg, null);
+            }
+        }
+        
+        // check mandatory parameters
+        if(!params.keySet().containsAll(mandatoryParams)) {
+            HashSet<String> set = new HashSet<>(mandatoryParams);
+            set.removeAll(params.keySet());
+            throw new IllegalArgumentException("Mandatory parameters are missing : " + Arrays.deepToString(set.toArray()));
+        }
+        
+        // check unknown parameters if optionalParams is set
+        if(optionalParams != null) {
+            HashSet<String> set = new HashSet<>(params.keySet());
+            set.removeAll(mandatoryParams);
+            set.removeAll(optionalParams);
+            if(!set.isEmpty()) {
+                throw new IllegalArgumentException("Unknown parameters : " + Arrays.deepToString(set.toArray()));
+            }
+        }
+        
+        return params;
     }
 }
 

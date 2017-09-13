@@ -21,6 +21,7 @@ package org.thema.graphab.metric;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.thema.graphab.links.Linkset;
 
 /**
  * ParamPanel for metric with parameters Distance, Proba and Beta.
@@ -40,11 +41,16 @@ public class DistProbaPanel extends ParamPanel {
      * @param p proba
      * @param a beta
      */
-    public DistProbaPanel(double dist, double p, double a) {
+    public DistProbaPanel(Linkset linkset, double dist, double p, double a) {
         initComponents();
         dSpinner.setValue(dist);
         pSpinner.setValue(p);
         aSpinner.setValue(a);
+        if(linkset.isCostUnit()) {
+            unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitCost"));
+        } else {
+            unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitMeter"));
+        }
     }
 
     @Override
@@ -102,6 +108,7 @@ public class DistProbaPanel extends ParamPanel {
         jLabel6 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
         aSpinner = new javax.swing.JSpinner();
+        unitLabel = new javax.swing.JLabel();
 
         jLabel5.setText("α");
 
@@ -117,7 +124,7 @@ public class DistProbaPanel extends ParamPanel {
             }
         });
 
-        dSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(100.0d), null, null, Double.valueOf(1.0d)));
+        dSpinner.setModel(new javax.swing.SpinnerNumberModel(100.0d, null, null, 1.0d));
         dSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 dSpinnerStateChanged(evt);
@@ -130,7 +137,9 @@ public class DistProbaPanel extends ParamPanel {
 
         jLabel9.setText("β");
 
-        aSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.0d), null, Double.valueOf(0.1d)));
+        aSpinner.setModel(new javax.swing.SpinnerNumberModel(1.0d, 0.0d, null, 0.1d));
+
+        unitLabel.setText("meter");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -140,21 +149,27 @@ public class DistProbaPanel extends ParamPanel {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel7)
-                            .addComponent(jLabel9))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(aSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                            .addComponent(pSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                            .addComponent(dSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)))
-                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel8)
-                            .addComponent(alphaTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE))))
+                            .addComponent(alphaTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 163, Short.MAX_VALUE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel7)
+                                    .addComponent(jLabel9))
+                                .addGap(12, 12, 12)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(aSpinner)
+                                    .addComponent(pSpinner)))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel6)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(dSpinner)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(unitLabel)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -169,7 +184,8 @@ public class DistProbaPanel extends ParamPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
-                    .addComponent(dSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(dSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(unitLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
@@ -200,6 +216,7 @@ public class DistProbaPanel extends ParamPanel {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JSpinner pSpinner;
+    private javax.swing.JLabel unitLabel;
     // End of variables declaration//GEN-END:variables
 
 

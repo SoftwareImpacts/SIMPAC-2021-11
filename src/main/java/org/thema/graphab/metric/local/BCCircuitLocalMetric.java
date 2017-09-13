@@ -26,6 +26,7 @@ import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphPathFinder;
+import org.thema.graphab.links.Linkset;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.Circuit;
 import org.thema.graphab.metric.ParamPanel;
@@ -97,8 +98,8 @@ public final class BCCircuitLocalMetric extends AbstractBCLocalMetric<GraphPathF
     }
 
     @Override
-    public ParamPanel getParamPanel(Project project) {
-        return alphaParam.getParamPanel(project);
+    public ParamPanel getParamPanel(Linkset linkset) {
+        return alphaParam.getParamPanel(linkset);
     }
     
     @Override

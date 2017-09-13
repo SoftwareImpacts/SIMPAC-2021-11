@@ -107,11 +107,13 @@
                                   <Component id="distMaxLabel" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="dMaxSpinner" min="-2" pref="68" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="unitLabel" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
                   </Group>
-                  <EmptySpace min="0" pref="18" max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -128,6 +130,7 @@
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="distMaxLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="dMaxSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="unitLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="realPathCheckBox" min="-2" max="-2" attributes="0"/>
@@ -202,6 +205,16 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="realPathCheckBoxActionPerformed"/>
           </Events>
         </Component>
+        <Component class="javax.swing.JLabel" name="unitLabel">
+          <Properties>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="org/thema/graphab/links/Bundle.properties" key="LinksetPanel.unitLabel.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+            </Property>
+          </Properties>
+          <BindingProperties>
+            <BindingProperty name="enabled" source="completeRadioButton" sourcePath="${selected}" target="unitLabel" targetPath="enabled" updateStrategy="0" immediately="false"/>
+          </BindingProperties>
+        </Component>
       </SubComponents>
     </Container>
     <Container class="javax.swing.JPanel" name="distPanel">
@@ -244,7 +257,7 @@
                               <Component id="euclidRadioButton" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Group type="102" attributes="0">
                                   <EmptySpace min="12" pref="12" max="12" attributes="0"/>
-                                  <Component id="rasterSelectFilePanel" pref="382" max="32767" attributes="0"/>
+                                  <Component id="rasterSelectFilePanel" pref="409" max="32767" attributes="0"/>
                               </Group>
                               <Component id="rasterRadioButton" alignment="0" min="-2" max="-2" attributes="0"/>
                           </Group>

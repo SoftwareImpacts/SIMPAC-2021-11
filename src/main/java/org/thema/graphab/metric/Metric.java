@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import org.thema.graphab.Project;
 import org.thema.graphab.Project.Method;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.Linkset;
 
 /**
  * Base class for metric.
@@ -170,10 +171,10 @@ public abstract class Metric implements Serializable  {
     /**
      * Returns a panel for editing parameters.
      * Default implementation returns {@link DefaultParamPanel}
-     * @param project the project
+     * @param linkset the selected linkset 
      * @return a panel for editing parameters
      */
-    public ParamPanel getParamPanel(Project project) {
+    public ParamPanel getParamPanel(Linkset linkset) {
         return new DefaultParamPanel(this.dupplicate());
     }
     

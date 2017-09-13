@@ -126,8 +126,7 @@ public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, 
 
 
     private double getPathDist(Path p) {
-        return linkset.getType_length() == Linkset.COST_LENGTH ?
-            p.getCost() : p.getDist();
+        return linkset.isCostLength() ? p.getCost() : p.getDist();
     }
 
     @Override

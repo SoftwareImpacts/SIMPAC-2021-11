@@ -39,10 +39,13 @@ import javax.swing.JTextArea;
 import org.jfree.data.statistics.Regression;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.thema.common.Config;
 import org.thema.common.collection.HashMap2D;
+import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureGetter;
 import org.thema.drawshape.layer.FeatureLayer;
+import org.thema.drawshape.style.FeatureStyle;
 import org.thema.drawshape.style.LineStyle;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
@@ -93,6 +96,42 @@ public class LinkLayer extends FeatureLayer {
                 }
             }
         });
+        
+        menu.add(new AbstractAction("Corridor...") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
+//                if(linkset.getType_dist() != Linkset.COST) {
+//                    JOptionPane.showMessageDialog(null, "Corridor can be calculated on cost linkset only.", "Corridor", JOptionPane.ERROR_MESSAGE);
+//                    return;
+//                }
+                
+                final String maxCost = JOptionPane.showInputDialog("Max cost : ");
+                if(maxCost == null) {
+                    return;
+                }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<Feature> corridors = linkset.computeCorridor(Config.getProgressBar("Corridor..."), Double.parseDouble(maxCost));
+                        FeatureLayer l = new FeatureLayer(linkset.getName() +
+                                "-corridor-" + maxCost, corridors, new FeatureStyle(new Color(32, 192, 0, 50), null));
+                        l.setRemovable(true);
+                        linkset.getProject().getAnalysisLayer().addLayerFirst(l);
+
+                        try {
+                            DefaultFeature.saveFeatures(corridors, new File(linkset.getProject().getDirectory(), linkset.getName() +
+                                    "-corridor-" + maxCost + ".shp"), linkset.getProject().getCRS());
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                }).start();
+                
+                
+            }
+        });
+        
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Dist2Cost")) {
             @Override
             public void actionPerformed(ActionEvent e) {

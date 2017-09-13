@@ -124,7 +124,7 @@ public class GraphLayers extends GraphGroupLayer {
                     @Override
                     public void run() {
                         String modName = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Modularity");
-                        final DistProbaPanel distProbaPanel = new DistProbaPanel(1000, 0.05, 1);
+                        final DistProbaPanel distProbaPanel = new DistProbaPanel(graph.getLinkset(), 1000, 0.05, 1);
                         int res = JOptionPane.showConfirmDialog(null, distProbaPanel, modName, JOptionPane.OK_CANCEL_OPTION);
                         if(res != JOptionPane.OK_OPTION) {
                             return;

@@ -25,7 +25,7 @@
  	\bigskip	
  	{\Huge
  		\bfseries
- 		Graphab 2.0\\
+ 		Graphab 2.2\\
  		\bigskip
  		Manuel de référence\\
  		Ligne de commande\\
@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		21/01/2016\\
+ 		11/09/2017\\
  	}
  	
  \end{titlepage}
@@ -54,14 +54,6 @@
 Le programme Graphab est un outil de modélisation des réseaux écologiques fondé sur les graphes paysagers.
 
 Il peut être utilisé en ligne de commande (CLI : Command Line Interface) à partir de la version 1.2. Ce mode est utile pour exécuter Graphab sur un ordinateur distant sans interface graphique, ou bien lancer automatiquement plusieurs traitements à la suite.
-
-La version 2.0 apporte plusieurs nouvelles fonctionnalités en ligne de commande :
-\begin{itemize}
-	\item la création de projet,
-	\item la création de méta taches,
-	\item l'interpolation de métrique,
-	\item le calcul de corridors.
-\end{itemize}
 
 \textbf{Attention, les projets ne sont pas compatibles entre les version 1.x et 2.x de Graphab !}
 
@@ -86,20 +78,20 @@ Graphab est téléchargeable à cette adresse : \url{http://thema.univ-fcomte.fr
 
 \begin{itemize}
 	\item Télécharger et installer Java 7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
-	\item Télécharger graphab-2.0.jar
-	\item Lancer graphab-2.0.jar
+	\item Télécharger graphab-2.2.jar
+	\item Lancer graphab-2.2.jar
 \end{itemize}
 
 \section{Lancer Graphab en ligne de commande}
 Il faut tout d'abord ouvrir une fenêtre de terminal, puis aller dans le répertoire contenant Graphab avec la commande \textit{cd}.
 Enfin, vous pouvez saisir la commande suivante pour afficher l'écran d'aide de Graphab :
 \begin{Verbatim}
-	java -jar graphab-2.0.jar --help
+	java -jar graphab-2.2.jar --help
 \end{Verbatim}
 Résultat
 \begin{Verbatim}
 Usage :
-java -jar graphab-2.0.jar --project prjfile.xml
+java -jar graphab-2.2.jar --project prjfile.xml
 ...
 ...
 \end{Verbatim}
@@ -150,7 +142,7 @@ Les commandes \textit{--create} et \textit{--project} peuvent être utilisées u
 Après une de ces deux commandes, toutes les autres commandes seront exécutées séquentiellement dans le même ordre que sur la ligne.
 
 \begin{Verbatim}
-	java -jar graphab-2.0.jar --project prj.xml --graph --gmetric NC  
+	java -jar graphab-2.2.jar --project prj.xml --graph --gmetric NC  
 \end{Verbatim}
 Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la commande \textit{--graph}, puis la commande \textit{--gmetric}.
 
@@ -160,21 +152,22 @@ Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la comm
 \subsection{--help : affichage de l'aide}
 Commande :
 \begin{Verbatim}
-	java -jar graphab-2.0.jar --help
+	java -jar graphab-2.2.jar --help
 \end{Verbatim}
 Résultat :
-\begin{Verbatim}
+\begin{verbatim}
 Usage :
 java -jar graphab.jar --metrics
-java -jar graphab.jar [-proc n] --create prjname land.tif habitat=code1,...,coden [nodata=val] ...
+java -jar graphab.jar [-proc n] --create prjname landrasterfile habitat=code1,...,coden ...
 java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]
 Commands list :
 --show
 --linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
---corridor maxcost=valcost
---graph [nointra] [threshold=[{]min:inc:max[}]]
+--corridor maxcost=[{]valcost[}]
+--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
 --usegraph graph1,...,graphn
+--cluster d=val p=val [beta=val] [nb=val]
 --pointset pointset.shp
 --usepointset pointset1,...,pointsetn
 --capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]
@@ -189,16 +182,17 @@ Commands list :
 --gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
 --gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch= ...
 --metapatch [mincapa=value]
+--landmod zone=filezones.shp id=fieldname code=fieldname [sel=id1,id2,...,idn ] [novoronoi]
 
 min:inc:max -> val1,val2,val3...
-\end{Verbatim}
+\end{verbatim}
 
 \subsection{--metrics : affichage des métriques}
 Cette commande affiche l'ensemble des métriques disponibles avec leur abréviation, leur description et leurs paramètres.
 
 Commande :
 \begin{Verbatim}
-	java -jar graphab-2.0.jar --metrics
+	java -jar graphab-2.2.jar --metrics
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -217,6 +211,8 @@ Résultat :
 	NC - Nombre de composantes (NC)
 	dPC - Delta PC décomposé (dPC)
 		params : [d, p, beta]
+	W - Indice de Wilks (W)
+		params : [attrs, npatch, warea]
 	
 	===== Local metrics =====
 	F : Flux (F)
@@ -240,14 +236,14 @@ Résultat :
 \subsection{--create : création d'un projet}
 
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.0.jar --create \textit{prjname} \textit{land.tif} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
+java -jar graphab-2.2.jar --create \textit{prjname} \textit{landrasterfile} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
 	[minarea=\textit{val}] [con8] [simp] [dir=\textit{path}]
 \end{Verbatim}
 
 \subsubsection{Paramètres obligatoires}
 \begin{itemize}
 	\item \verb|prjname| : nom du nouveau projet
-	\item \verb|land.tif| : nom du fichier image contenant l'occupation du sol au format tiff
+	\item \verb|landrasterfile| : nom du fichier image contenant l'occupation du sol au format tiff, ascii grid ou rst
 	\item \verb|habitat=code1,...,coden| : le ou les codes d'occupation du sol représentant les taches d'habitat.
 \end{itemize}
 
@@ -269,7 +265,7 @@ Les commandes suivantes seront exécutées sur le projet nouvellement créé.
 \subsection{--project : chargement d'un projet}
 Cette commande définit le chemin vers le fichier xml du projet à charger.
 \begin{Verbatim}[commandchars=\\\{\}]
-	java -jar graphab-2.0.jar --project \textit{path2myproject/myproject.xml}
+	java -jar graphab-2.2.jar --project \textit{path2myproject/myproject.xml}
 \end{Verbatim}
 Charge le projet \textit{myproject} contenu dans le répertoire \textit{path2myproject}.
 
@@ -282,7 +278,7 @@ Cette commande est utile pour récupérer les noms exacts des éléments pour le
 
 Commande :
 \begin{Verbatim}[commandchars=\\\{\}]
-	java -jar graphab-2.0.jar --project \textit{path2myproject/myproject.xml} --show
+	java -jar graphab-2.2.jar --project \textit{path2myproject/myproject.xml} --show
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -354,14 +350,14 @@ Cette commande supporte la sélection d'un seul graphe (cf. \nameref{usegraph}).
 Cette commande créera un projet méta-tache basé sur le graphe \textit{2000m\_euclid} et supprimera toutes les méta-taches dont la capacité est inférieure à 1000.
 
 \subsubsection{Références}
-\cite{2015_monkey}
+\cite{2015_monkey}, \cite{2016_campagnole}
 
 \section{Jeu de liens et graphes}
 
 \subsection{--linkset : création d'un jeu de liens}
 \begin{Verbatim}[commandchars=\\\{\}]
 --linkset distance=euclid|cost [name=\textit{linkname}] [complete[=\textit{dmax}]] [slope=\textit{coef}] [remcrosspath] 
-	[[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} | extcost=\textit{raster.tif}]
+	[[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} | extcost=\textit{rasterfile}]
 \end{Verbatim}
 
 \subsubsection{Paramètre obligatoire}
@@ -380,7 +376,7 @@ Cette commande créera un projet méta-tache basé sur le graphe \textit{2000m\_
 	\item \verb|slope=coef| : pondère les couts par la pente. Pour utiliser cette option, il faut que le projet contienne un MNT.
 	\item \verb|remcrosspath| : supprime les liens traversant une tache
 	\item \verb|[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max| : définition des coûts à partir des codes de l'occupation du sol
-	\item \verb|extcost=raster.tif| : définition des coûts à partir d'un raster externe
+	\item \verb|extcost=rasterfile| : définition des coûts à partir d'un raster externe au format tiff, ascii grid ou rst.
 \end{itemize}
 
 \subsubsection{Description}
@@ -434,11 +430,12 @@ Par défaut, tous les jeux de liens sont sélectionnés.
 
 \subsection{--graph : création d'un graphe}
 \begin{Verbatim}
---graph [nointra] [threshold=[{]min:inc:max[}]]
+--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
 \end{Verbatim}
 
 \subsubsection{Paramètres optionnels}
 \begin{itemize}
+	\item \verb|name=graphname| : nom du graphe qui sera créé. Ce paramètre peut être utilisé uniquement si la commande ne crée qu'un seul graphe.
 	\item \verb|nointra| : désactive les distances intra-tache pour le calcul des métriques
 	\item \verb|threshold=[{]min:inc:max[}]| : défini la distance maximale des liens inclus dans chaque graphe. Sans ce paramètre, le graphe contient tous les liens du jeu de lien. Entouré d'accolades, les valeurs de distance sont converties en valeur de coût automatiquement.
 \end{itemize}
@@ -447,7 +444,7 @@ Par défaut, tous les jeux de liens sont sélectionnés.
 Crée un graphe pour chaque jeu de lien sélectionné et enregistre le projet sauf si l'option globale \verb|-nosave| est utilisée.
 Pour l'instant, la commande ne supporte pas la création de graphe MST (Minimum Spanning Tree).
 
-Après la commande \verb|--graph|, les graphes sélectionnés correspondent aux graphes créés.
+Après la commande \verb|--graph|, les graphes sélectionnés correspondent aux graphes venant d'être créés.
 
 \subsubsection{Exemples}
 Sans paramètre, la commande créera un graphe sans seuil pour chaque jeu de lien sélectionné :
@@ -488,7 +485,7 @@ Par défaut, tous les graphes sont sélectionnés.
 
 \subsubsection{Paramètre obligatoire}
 \begin{itemize}
-	\item \verb|maxcost=valcost| : coût cumulé maximum des chemins formant un corridor
+	\item \verb|maxcost=[{]valcost[}]| : coût cumulé maximum des chemins formant un corridor. Entouré d'accolades, la distance donnée en mètre est convertie en unité de coût automatiquement.
 \end{itemize}
 
 \subsubsection{Description}
@@ -501,6 +498,35 @@ Cette commande ne fonctionne pas avec les jeux de lien euclidiens, ils sont igno
 	--corridor maxcost=500
 \end{Verbatim}
 
+\subsection{--cluster : partitionnement de graphe}
+\begin{Verbatim}[commandchars=\\\{\}]
+--cluster d=\textit{val} p=\textit{val} [beta=\textit{val}] [nb=\textit{val}]
+\end{Verbatim}
+
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|d=val| : distance permettant de définir l'exposant $\alpha$.
+	\item \verb|p=val| : probabilité permettant de définir l'exposant $\alpha$. Pour définir $\alpha$ à 0 et ne pas tenir compte de l'impédance des liens, mettre \verb|p| à 1.
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|beta=val| : exposant des capacités, par défaut à 1. Pour ne pas tenir compte de la capacité des taches, mettre \verb|beta| à 0.
+	\item \verb|nb=val| : nombre de compartiments, par défaut le nombre de compartiments sélectionné correspond à la modularité maximale.
+\end{itemize}
+
+\subsubsection{Description}
+Crée un graphe basé sur son partitionnement qui maximise la modularité \cite{Newman2006} pour chaque graphe sélectionné et enregistre le projet sauf si l'option globale \verb|-nosave| est utilisée.
+Les nouveaux graphes conservent uniquement les liens intra-groupes.
+
+La modularité est calculée à partir d'un poids ($w_{ij}$) défini pour chaque lien du graphe :
+$$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
+Les 2 paramètres $\beta$ et $\alpha$ permettent de définir respectivement l'importance de la capacité des taches ($a_i a_j$) et l'importance de la distance ($d_{ij}$) pour le poids du lien $w_{ij}$. Si $\alpha = \beta = 0$ alors les poids sont tous identiques : $w_{ij} = 1$.
+
+Après la commande \verb|--cluster|, les graphes sélectionnés correspondent aux graphes venant d'être créés.
+
+\subsubsection{Référence}
+\cite{2017_clustering}
 
 
 \section{Métriques}
@@ -1065,6 +1091,46 @@ Pour le graphe \textit{2000m\_euclid}, le fichier se nomme rempatch-IIC-2000m\_e
 \end{Verbatim}
 La première ligne (Step 0), correspond à la valeur initiale de la métrique. Les lignes suivantes donnent, à chaque étape, quel élément a été supprimé ainsi que la nouvelle valeur de la métrique après la suppression de celui-ci.
 
+\subsubsection{Référence}
+\cite{2016_campagnole}
+
+
+\section{Changements d'occupation du sol}
+\subsection{--landmod : changements d'occupation du sol}
+
+\begin{Verbatim}[commandchars=\\\{\}]
+--landmod zone=\textit{filezones.shp} id=\textit{fieldname} code=\textit{fieldname}  [selid=\textit{id1,...,idn}] [novoronoi]
+\end{Verbatim}
+
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|zone=filezones.shp| : shapefile de polygones contenant les changements d'occupation du sol
+	\item \verb|id=fieldname| : nom d'un attribut du shapefile servant à identifier les polygones. Si les valeurs ne sont pas uniques, les polygones ayant le même identifiant seront appliqués en un seul changement.
+	\item \verb|code=fieldname| : nom d'un attribut du shapefile stockant la nouvelle catégorie d'occupation du sol du polygone
+\end{itemize}
+
+\subsubsection{Paramètre optionnel}
+\begin{itemize}
+	\item \verb|selid=id1,...,idn| : liste des identifiants de polygones à traiter. Si ce paramètre n'est pas renseigné tous les polygones du shapefile sont utilisés.
+	\item \verb|novoronoi| : à la création des nouveaux projets, ne calcule pas la topologie planaire. Cette option peut être utilisée pour diminuer les temps de calcul si la topologie planaire n'est pas utilisée dans les commandes suivantes.
+\end{itemize}
+
+\subsubsection{Description}
+Cette commande doit être placée avant les autres commandes de calcul. Elle va dupliquer le projet pour chaque polygone du shapefile et modifier l'occupation du sol couvert par le polygone. Les commandes suivant celle-ci seront exécutées sur chaque projet modifié. Les projets créés ne contiennent pas les jeux de liens ni les graphes du projet initial.
+
+Les projets créés seront nommés par l'identifiant du (ou des) polygones et stockés dans le répertoire du projet.
+
+\subsubsection{Exemple}
+\begin{Verbatim}
+	--landmod zone=zones.shp id=ID code=CODE --linkset distance=euclid --graph 
+		--gmetric IIC
+\end{Verbatim}
+Pour chaque identifiant de polygones contenus dans le shapefile \verb|zones.shp|, un nouveau projet nommés par la valeur de \verb|ID| sera créé dans un sous répertoire du projet actuel. Sur chacun des ces projets, un jeu de liens en distance euclidienne, suivi d'un graphe seront créés et la métrique IIC sera calculée sur ce graphe.
+Au final, chaque sous répertoire du projet actuel contiendra un fichier \verb|IIC.txt| contenant la valeur de la métrique tenant compte de chaque changement d'occupation du sol.
+
+\subsubsection{Référence}
+\cite{2017_landmod}
+
 
 \section{Options}
 \subsection{-nosave}
@@ -1076,6 +1142,9 @@ Défini le nombre de processeurs (ou coeurs) utilisés par Graphab.
 Par défaut, la ligne de commande utilise la valeur définie dans la fenêtre des préférences.
 Pour plus de détails, voir la section Parallélisme.
 
+\subsection{-mpi}
+Cette option indique que Graphab est utilisé dans un environnement MPI. Pour plus de détails, voir la section Parallélisme.
+
 
 \chapter{Exemples}
 Tous les exemples qui suivent peuvent être testés avec le projet exemple fourni sur le site.
@@ -1083,7 +1152,7 @@ Tous les exemples qui suivent peuvent être testés avec le projet exemple fourn
 \section{Afficher le projet}
 Affiche les éléments du projet :
 \begin{Verbatim}
-	java -jar graphab-2.0.jar --project sample_project/Project.xml --show
+	java -jar graphab-2.2.jar --project sample_project/Project.xml --show
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -1106,7 +1175,7 @@ Résultat :
 \section{Métrique globale à plusieurs distances}
 Calcule la métrique PC sur le graphe \textit{2000m-3500cost} en faisant varier le paramètre \textit{d} de 1000 à 5000 par pas de 1000 :
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.0.jar --project sample_project/Project.xml
+	java -jar graphab-2.2.jar --project sample_project/Project.xml
 		--usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
 \end{Verbatim}
 Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
@@ -1122,8 +1191,8 @@ Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
 \section{Métrique globale sur un graphe seuillé à plusieurs distances}
 Crée 6 graphes seuillés de 2000 à 2500, à partir du jeu de lien \textit{Complete\_cost} et calcule la métrique IIC pour chaque :
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.0.jar --project sample_project/Project.xml
-		--uselinkset Complete_cost --graph 2000:100:2500 --gmetric IIC
+	java -jar graphab-2.2.jar --project sample_project/Project.xml
+		--uselinkset Complete_cost --graph threshold=2000:100:2500 --gmetric IIC
 \end{Verbatim}
 Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
 \begin{Verbatim}
@@ -1140,7 +1209,7 @@ Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
 Calcule un graphe non seuillé à partir du jeu de lien \textit{Planar\_Euclid}, calcule 2 métriques locales (Dg et F) sur le graphe créé, ajoute le jeu de point 
 sur le jeu de lien \textit{Planar\_Euclid} et calcule le SDM pour les 2 métriques avec la variable PRESENCE, sans modifier le projet.
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.0.jar -nosave --project sample_project/Project.xml 
+	java -jar graphab-2.2.jar -nosave --project sample_project/Project.xml 
 		--uselinkset Planar_Euclid 
 		--graph 
 		--lmetric Dg --lmetric F d=1000 p=0.05 beta=1 
@@ -1161,7 +1230,7 @@ Le résultat est stocké dans le fichier model-PRESENCE-dW1000.txt dans le répe
 Si votre ordinateur a plus qu'un coeur (la plupart), vous pouvez tirer partie de la parallélisation pour accélérer vos calculs avec Graphab.
 Il faut définir le nombre de coeurs (ou processeurs) que Graphab peut utiliser avec l'option \verb|-proc| après la commande \verb|--project| :
 \begin{Verbatim}
-	java -jar graphab-2.0.jar -proc 8 --project path2myproject/myproject.xml ...
+	java -jar graphab-2.2.jar -proc 8 --project path2myproject/myproject.xml ...
 \end{Verbatim}
 Par défaut, en ligne de commande, le nombre de coeurs utilisés correspond au nombre défini dans la fenêtre Préférences de l'interface graphique.
 
@@ -1170,9 +1239,9 @@ En augmentant le nombre de coeurs utilisés par Graphab, vous augmentez, par la 
 \subsection{Cluster : MPI}
 Graphab peut aussi être utilisé sur des clusters de calcul supportant Java avec OpenMPI.
 \begin{Verbatim}
-	mpirun java -jar graphab-2.0.jar -mpi --project path2myproject/myproject.xml ...
+	mpirun java -jar graphab-2.2.jar -mpi --project path2myproject/myproject.xml ...
 \end{Verbatim}
-Seulement certaines commandes peuvent être utilisées dans l'environnement MPI : \verb|--gmetric|, \verb|--cmetric|, \verb|--lmetric|, \verb|--delta|, \verb|--addpatch|,\verb|--remelem|
+Seulement certaines commandes peuvent être utilisées dans l'environnement MPI : \verb|--gmetric|, \verb|--cmetric|, \verb|--lmetric|, \verb|--delta|, \verb|--addpatch|,\verb|--gtest|,\verb|--remelem|,\verb|--landmod|
 
 \section{Gestion mémoire}
 Par défaut, la taille de la mémoire utilisable par Graphab est dépendante du système et peut varier de 128 MB à plusieurs GB
@@ -1181,8 +1250,8 @@ Si l'exécution se termine par une erreur OutOfMemoryError ou GC overhead, vous 
 
 Pour définir manuellement la mémoire maximale utilisable par Graphab, il faut utiliser l'option Java \verb|-Xmx| :
 \begin{Verbatim}
-	java -Xmx4g -jar graphab-2.0.jar ... # 4Gb allocated
-	java -Xmx1500m -jar graphab-2.0.jar ... # 1500 Mb -> 1.5Gb allocated
+	java -Xmx4g -jar graphab-2.2.jar ... # 4Gb allocated
+	java -Xmx1500m -jar graphab-2.2.jar ... # 1500 Mb -> 1.5Gb allocated
 \end{Verbatim}
 Si vous ne pouvez pas allouer plus de 1 GB ou 1.5 GB alors que votre ordinateur a plus de mémoire vive, vous utilisez sûrement une version 32-bit de Java qui est limitée à moins de 2 GB.
 Pour tester votre version de Java :

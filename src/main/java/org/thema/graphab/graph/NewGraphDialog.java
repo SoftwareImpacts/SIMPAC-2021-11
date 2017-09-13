@@ -81,6 +81,7 @@ public class NewGraphDialog extends javax.swing.JDialog {
         thresholdRadioButton = new javax.swing.JRadioButton();
         mstRadioButton = new javax.swing.JRadioButton();
         thresholdSpinner = new javax.swing.JSpinner();
+        unitLabel = new javax.swing.JLabel();
         intraPatchCheckBox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -118,6 +119,7 @@ public class NewGraphDialog extends javax.swing.JDialog {
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle1.getString("NewGraphDialog.jPanel1.border.title"))); // NOI18N
 
         buttonGroup2.add(completeRadioButton);
+        completeRadioButton.setSelected(true);
         completeRadioButton.setText(bundle1.getString("NewGraphDialog.completeRadioButton.text")); // NOI18N
         completeRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -126,7 +128,6 @@ public class NewGraphDialog extends javax.swing.JDialog {
         });
 
         buttonGroup2.add(thresholdRadioButton);
-        thresholdRadioButton.setSelected(true);
         thresholdRadioButton.setText(bundle1.getString("NewGraphDialog.thresholdRadioButton.text")); // NOI18N
         thresholdRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -142,7 +143,7 @@ public class NewGraphDialog extends javax.swing.JDialog {
             }
         });
 
-        thresholdSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(0.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        thresholdSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, null, 1.0d));
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, thresholdRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), thresholdSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
@@ -153,6 +154,8 @@ public class NewGraphDialog extends javax.swing.JDialog {
             }
         });
 
+        unitLabel.setText(bundle1.getString("NewGraphDialog.unitLabel.text")); // NOI18N
+
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -161,14 +164,16 @@ public class NewGraphDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel1Layout.createSequentialGroup()
-                        .add(thresholdRadioButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(thresholdSpinner))
-                    .add(jPanel1Layout.createSequentialGroup()
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(completeRadioButton)
                             .add(mstRadioButton))
-                        .add(0, 0, Short.MAX_VALUE)))
+                        .add(0, 173, Short.MAX_VALUE))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(thresholdRadioButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(thresholdSpinner)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(unitLabel)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -176,7 +181,8 @@ public class NewGraphDialog extends javax.swing.JDialog {
             .add(jPanel1Layout.createSequentialGroup()
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(thresholdRadioButton)
-                    .add(thresholdSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(thresholdSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(unitLabel))
                 .add(3, 3, 3)
                 .add(completeRadioButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -200,7 +206,7 @@ public class NewGraphDialog extends javax.swing.JDialog {
                             .add(nameLabel))
                         .add(18, 18, 18)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(nameTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 297, Short.MAX_VALUE)
+                            .add(nameTextField)
                             .add(costComboBox, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                         .add(0, 0, Short.MAX_VALUE)
@@ -274,9 +280,14 @@ public class NewGraphDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_thresholdSpinnerStateChanged
 
     private void costComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_costComboBoxActionPerformed
-        Linkset cost = (Linkset) costComboBox.getSelectedItem();
-        intraPatchCheckBox.setSelected(cost.isRealPaths());
-        intraPatchCheckBox.setEnabled(cost.isRealPaths());
+        Linkset linkset = (Linkset) costComboBox.getSelectedItem();
+        intraPatchCheckBox.setSelected(linkset.isRealPaths());
+        intraPatchCheckBox.setEnabled(linkset.isRealPaths());
+        if(linkset.isCostUnit()) {
+            unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitCost"));
+        } else {
+            unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitMeter"));
+        }
     }//GEN-LAST:event_costComboBoxActionPerformed
 
 
@@ -294,6 +305,7 @@ public class NewGraphDialog extends javax.swing.JDialog {
     private javax.swing.JButton okButton;
     private javax.swing.JRadioButton thresholdRadioButton;
     private javax.swing.JSpinner thresholdSpinner;
+    private javax.swing.JLabel unitLabel;
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 

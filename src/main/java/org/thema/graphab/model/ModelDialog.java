@@ -625,16 +625,16 @@ public class ModelDialog extends javax.swing.JDialog {
 }//GEN-LAST:event_remVarButtonActionPerformed
 
     private void addExtButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addExtButtonActionPerformed
-        File f = Util.getFile(".tif|.rst", "Raster image");
+        File f = Util.getFile(".tif|.asc|.rst", "Raster image");
         if(f == null) {
             return;
         }
         try {
             GridCoverage2D coverage;
-            if (f.getName().toLowerCase().endsWith(".tif")) {
-                coverage = IOImage.loadTiff(f);
-            } else {
+            if (f.getName().toLowerCase().endsWith(".rst")) {
                 coverage = new RSTGridReader(f).read(null);
+            } else {
+                coverage = IOImage.loadCoverage(f);
             }
             if(!coverage.getEnvelope2D().intersects(project.getZone())) {
                 JOptionPane.showMessageDialog(this, "Raster does not intersect study area.");

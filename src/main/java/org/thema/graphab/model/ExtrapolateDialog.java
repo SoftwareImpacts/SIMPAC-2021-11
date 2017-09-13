@@ -169,7 +169,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle1.getString("ExtrapolateDialog.jPanel1.border.title"))); // NOI18N
 
-        pSpinner.setModel(new javax.swing.SpinnerNumberModel(0.05d, 0.0d, 1.0d, 0.1d));
+        pSpinner.setModel(new javax.swing.SpinnerNumberModel(0.5d, 0.0d, 1.0d, 0.1d));
         pSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 pSpinnerStateChanged(evt);
@@ -186,7 +186,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
 
         alphaTextField.setText(bundle1.getString("ExtrapolateDialog.alphaTextField.text")); // NOI18N
 
-        dSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1000.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        dSpinner.setModel(new javax.swing.SpinnerNumberModel(1000.0d, 0.0d, null, 1.0d));
         dSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 dSpinnerStateChanged(evt);
@@ -200,7 +200,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, multiAttachCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel3, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        dMaxSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1000.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        dMaxSpinner.setModel(new javax.swing.SpinnerNumberModel(1000.0d, 0.0d, null, 1.0d));
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, multiAttachCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), dMaxSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
@@ -279,7 +279,7 @@ public class ExtrapolateDialog extends javax.swing.JDialog {
 
         jLabel10.setText(bundle1.getString("ExtrapolateDialog.jLabel10.text")); // NOI18N
 
-        resolSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        resolSpinner.setModel(new javax.swing.SpinnerNumberModel(1.0d, 0.0d, null, 1.0d));
 
         table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {

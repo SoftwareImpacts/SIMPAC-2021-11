@@ -288,7 +288,7 @@ public class AddPatchCommand {
         GridCoverage2D capaCov = null;
         try {
             if(capaFile != null) {
-                capaCov = capaFile.getName().toLowerCase().endsWith(".tif") ? IOImage.loadTiff(capaFile) : IOImage.loadArcGrid(capaFile);
+                capaCov = IOImage.loadCoverage(capaFile);
             }
             if(nbMultiPatch <= 1) {
                 GeometryFactory geomFactory = new GeometryFactory();

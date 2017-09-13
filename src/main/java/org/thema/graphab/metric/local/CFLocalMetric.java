@@ -24,6 +24,7 @@ import java.util.Map;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.Linkset;
 import org.thema.graphab.metric.Circuit;
 import org.thema.graphab.metric.ParamPanel;
 import org.thema.graphab.metric.SingleValuePanel;
@@ -81,7 +82,7 @@ public final class CFLocalMetric extends AbstractBCLocalMetric<Node> {
     }
 
     @Override
-    public ParamPanel getParamPanel(Project project) {
+    public ParamPanel getParamPanel(Linkset linkset) {
         return new SingleValuePanel(BETA, beta);
     } 
 

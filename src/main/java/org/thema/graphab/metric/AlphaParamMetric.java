@@ -22,7 +22,7 @@ package org.thema.graphab.metric;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.thema.graphab.Project;
+import org.thema.graphab.links.Linkset;
 
 /**
  * Class for delegating parameter management for metrics having parameters :
@@ -37,9 +37,9 @@ public final class AlphaParamMetric implements Serializable {
     public static final String PROBA = "p";
     public static final String BETA = "beta";
     
-    private double alpha = 0.0029957322735539907;
+    private double alpha = 6.931471805599453E-4;
     private double d = 1000;
-    private double p = 0.05;
+    private double p = 0.5;
     private double beta = 1.0;
 
     /**
@@ -105,11 +105,11 @@ public final class AlphaParamMetric implements Serializable {
     }
     
     /**
-     * @param project not used
+     * @param linkset the selected linkset
      * @return DistProbaPanel for editing parameters
      */
-    public ParamPanel getParamPanel(Project project) {
-        return new DistProbaPanel(d, p, beta);
+    public ParamPanel getParamPanel(Linkset linkset) {
+        return new DistProbaPanel(linkset, d, p, beta);
     }
     
     /**

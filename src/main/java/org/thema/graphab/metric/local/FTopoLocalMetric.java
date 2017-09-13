@@ -73,8 +73,8 @@ public final class FTopoLocalMetric extends LocalSingleMetric {
     }
 
     @Override
-    public ParamPanel getParamPanel(Project project) {
-        return alphaParam.getParamPanel(project);
+    public ParamPanel getParamPanel(Linkset linkset) {
+        return alphaParam.getParamPanel(linkset);
     } 
     
     @Override

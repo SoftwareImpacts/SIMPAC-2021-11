@@ -328,14 +328,6 @@ public class Linkset {
     }
 
     /**
-     * Useful for cost distance only.
-     * @return the type length : COST_LENGTH or DIST_LENGTH
-     */
-    public int getType_length() {
-        return type_length;
-    }
-
-    /**
      * @return is external cost map ?
      */
     public boolean isExtCost() {
@@ -351,6 +343,13 @@ public class Linkset {
     }
 
     /**
+     * @return true if isCostLength() and is not euclidean distance
+     */
+    public boolean isCostUnit() {
+        return type_dist != EUCLID && isCostLength();
+    }
+    
+    /**
      * Used only for COST distance without external cost map
      * @return the cost for each code of the landscape map or null
      */
@@ -365,10 +364,8 @@ public class Linkset {
     public File getExtCostFile() {
         if(extCostFile == null) {
             return null;
-        } else if(extCostFile.isAbsolute()) {
-            return extCostFile;
         } else {
-            return new File(project.getDirectory(), extCostFile.getPath());
+            return project.getAbsoluteFile(extCostFile);
         }
     }
 

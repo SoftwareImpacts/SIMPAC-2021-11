@@ -26,6 +26,7 @@ import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphPathFinder;
+import org.thema.graphab.links.Linkset;
 import org.thema.graphab.metric.DefaultParamPanel;
 import org.thema.graphab.metric.ParamPanel;
 
@@ -110,7 +111,7 @@ public class F6LocalMetric extends LocalMetric {
     }
 
     @Override
-    public ParamPanel getParamPanel(Project project) {
+    public ParamPanel getParamPanel(Linkset linkset) {
         return new DefaultParamPanel(this);
     }
     

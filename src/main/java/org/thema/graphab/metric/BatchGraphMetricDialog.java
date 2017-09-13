@@ -290,17 +290,22 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
         Linkset linkset = (Linkset) distComboBox.getSelectedItem();
         if(distTypeRadioButton.isSelected()) {
             for(Path p : linkset.getPaths())  {
-                double v = linkset.getType_length() == Linkset.COST_LENGTH ? p.getCost() : p.getDist();
+                double v = linkset.isCostLength() ? p.getCost() : p.getDist();
                 if(v > max) {
                     max = v;
                 }
             }
             max++;
-        }
-        else {
+        } else {
             max = linkset.getPaths().size();
         }
 
+        if(linkset.isCostUnit()) {
+            distTypeRadioButton.setText("distance (" + java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitCost") + ")");
+        } else {
+            distTypeRadioButton.setText("distance (" + java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitMeter") + ")");
+        }
+        
         maxSpinner.setValue(max);
     }//GEN-LAST:event_distComboBoxActionPerformed
 
@@ -311,7 +316,7 @@ public class BatchGraphMetricDialog extends javax.swing.JDialog {
     private void indiceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indiceComboBoxActionPerformed
         paramPanel.removeAll();
         Metric ind = (Metric) indiceComboBox.getSelectedItem();
-        paramPanel.add(ind.getParamPanel(project), BorderLayout.CENTER);
+        paramPanel.add(ind.getParamPanel((Linkset) distComboBox.getSelectedItem()), BorderLayout.CENTER);
         paramPanel.revalidate();
         paramPanel.repaint();
     }//GEN-LAST:event_indiceComboBoxActionPerformed

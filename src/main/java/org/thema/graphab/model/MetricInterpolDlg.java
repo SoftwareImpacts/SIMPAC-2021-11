@@ -135,7 +135,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("ModelDialog.jPanel1.border.title"))); // NOI18N
 
-        pSpinner.setModel(new javax.swing.SpinnerNumberModel(0.05d, 0.001d, 1.0d, 0.01d));
+        pSpinner.setModel(new javax.swing.SpinnerNumberModel(0.5d, 0.001d, 1.0d, 0.01d));
         pSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 pSpinnerStateChanged(evt);
@@ -152,7 +152,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
 
         alphaTextField.setText(bundle.getString("ModelDialog.alphaTextField.text")); // NOI18N
 
-        dSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1000.0d), Double.valueOf(0.001d), null, Double.valueOf(1.0d)));
+        dSpinner.setModel(new javax.swing.SpinnerNumberModel(1000.0d, 0.001d, null, 1.0d));
         dSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 dSpinnerStateChanged(evt);
@@ -161,7 +161,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
 
         multiAttachCheckBox.setText(bundle.getString("ModelDialog.multiAttachCheckBox.text")); // NOI18N
 
-        dMaxSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1000.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        dMaxSpinner.setModel(new javax.swing.SpinnerNumberModel(1000.0d, 0.0d, null, 1.0d));
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, multiAttachCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), dMaxSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
@@ -262,7 +262,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
 
         jLabel11.setText(bundle.getString("ExtrapolateDialog.jLabel10.text")); // NOI18N
 
-        resolSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(10.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        resolSpinner.setModel(new javax.swing.SpinnerNumberModel(10.0d, 0.0d, null, 1.0d));
 
         jLabel1.setText(bundle.getString("MetricInterpolDlg.jLabel1.text")); // NOI18N
 

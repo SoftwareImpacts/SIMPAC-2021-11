@@ -28,6 +28,7 @@ import org.geotools.graph.structure.Graphable;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.Linkset;
 import org.thema.graphab.links.Path;
 import org.thema.graphab.links.RasterPathFinder;
 import org.thema.graphab.metric.ParamPanel;
@@ -87,7 +88,7 @@ public final class IFPCMetric extends LocalSingleMetric {
     }
 
     @Override
-    public ParamPanel getParamPanel(Project project) {
+    public ParamPanel getParamPanel(Linkset linkset) {
         return new SingleValuePanel("Dmax", 100);
     }
 

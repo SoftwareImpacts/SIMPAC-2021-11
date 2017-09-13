@@ -18,6 +18,7 @@ package org.thema.graphab.metric;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -68,6 +69,7 @@ public class DeltaMetricTaskTest {
         r.read("Id");
         int nbGraph = 0;
         DeltaPCMetric deltaPC = new DeltaPCMetric();
+        deltaPC.setParams(new HashMap<String, Object>() {{ put(AlphaParamMetric.BETA, 1.0); put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
         GlobalMetricLauncher launcher = new GlobalMetricLauncher(deltaPC);
         String startName = "d_" + deltaPC.getDetailName() + "|";
         for(GraphGenerator gen : project.getGraphs()) {

@@ -163,7 +163,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(panel1Layout.createSequentialGroup()
-                        .addComponent(prjPathTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
+                        .addComponent(prjPathTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 256, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(selectPathButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(prjNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -201,7 +201,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
 
         jLabel2.setText(bundle.getString("NewProjectDialog.jLabel2.text_1")); // NOI18N
 
-        minAreaSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(0.0d), null, null, Double.valueOf(1.0d)));
+        minAreaSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, null, null, 1.0d));
 
         connexPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("NewProjectDialog.connexPanel.border.title_1"))); // NOI18N
 
@@ -263,7 +263,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(panel2Layout.createSequentialGroup()
                         .addGroup(panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(imgSelectFilePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
+                            .addComponent(imgSelectFilePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(panel2Layout.createSequentialGroup()
                                 .addComponent(jLabel2)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -403,10 +403,10 @@ public class NewProjectDialog extends javax.swing.JDialog {
         }
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
-            if(imgFile.getName().toLowerCase().endsWith(".tif")) {
-                coverage = IOImage.loadTiff(imgFile);
-            } else {
+            if(imgFile.getName().toLowerCase().endsWith(".rst")) {
                 coverage = new RSTGridReader(imgFile).read(null);
+            } else {
+                coverage = IOImage.loadCoverage(imgFile);
             }
             
             int dataType = coverage.getRenderedImage().getSampleModel().getDataType();

@@ -483,7 +483,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_shapeSelectFilePanelActionPerformed
 
     private void paramButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_paramButtonActionPerformed
-        ParamPanel panel = metric.getParamPanel(project);
+        ParamPanel panel = metric.getParamPanel(((GraphGenerator) graphComboBox.getSelectedItem()).getLinkset());
         int ret = JOptionPane.showConfirmDialog(this, panel, ResourceBundle.getBundle("org/thema/graphab/addpatch/Bundle").getString("AddPatchDialog.paramButton.text"), JOptionPane.OK_CANCEL_OPTION);
         if(ret == JOptionPane.CANCEL_OPTION) {
             return;

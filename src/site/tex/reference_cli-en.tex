@@ -23,7 +23,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.0\\
+		Graphab 2.2\\
 		\bigskip
 		Reference Manual\\
 		Command Line Interface\\
@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2016-01-21\\
+		2017-09-11\\
 	}
 	
 \end{titlepage}
@@ -49,14 +49,6 @@ Graphab is a software application for modeling ecological networks using landsca
 
 Graphab can be used in command line interface (CLI) from version 1.2.
 It is useful for executing graphab on a distant computer without a graphical interface, or batching some processes that are not available in the graphical user interface (GUI).
-
-The version 2.0 has several new features in CLI mode, including: 
-\begin{itemize}
-	\item project creation,
-	\item meta-patches creation,
-	\item metric interpolation,
-	\item corridor.
-\end{itemize}
 
 \textbf{Warning, projects are not compatible between the versions 1.x and 2.x of Graphab !}
 
@@ -82,8 +74,8 @@ Graphab can be downloaded from \url{http://thema.univ-fcomte.fr/productions/grap
 
 \begin{itemize}
 	\item Download and install Java 7 or later - \href{http://www.java.com}{java.com}. If you have a 64-bit operating system, it is best to install the 64-bit version of Java.
-	\item Download graphab-2.0.jar
-	\item Launch graphab-2.0.jar
+	\item Download graphab-2.2.jar
+	\item Launch graphab-2.2.jar
 \end{itemize}
 
 \section{Launch Graphab in CLI mode}
@@ -91,7 +83,7 @@ First you have to open a terminal window.
 Then, go to the directory of the Graphab program with \textit{cd} command.
 Finally, type the following command to display the Graphab help screen :
 \begin{Verbatim}
-	java -jar graphab-2.0.jar --help
+	java -jar graphab-2.2.jar --help
 \end{Verbatim}
 Result:
 \begin{verbatim}
@@ -148,7 +140,7 @@ The \verb|--create| and \verb|--project| commands can be used only once and must
 After one of these commands, all other commands will be executed sequentially with the same order as the command line.
 
 \begin{Verbatim}
-	java -jar graphab-2.0.jar --project prj.xml --graph --gmetric NC  
+	java -jar graphab-2.2.jar --project prj.xml --graph --gmetric NC  
 \end{Verbatim}
 Load a project, then execute the graph command and after that, execute the gmetric command.
 
@@ -159,21 +151,22 @@ Load a project, then execute the graph command and after that, execute the gmetr
 \subsection{--help : display help}
 Command :
 \begin{Verbatim}
-java -jar graphab-2.0.jar --help
+java -jar graphab-2.2.jar --help
 \end{Verbatim}
 Result :
 \begin{verbatim}
 Usage :
 java -jar graphab.jar --metrics
-java -jar graphab.jar [-proc n] --create prjname land.tif habitat=code1,...,coden [nodata=val] ...
+java -jar graphab.jar [-proc n] --create prjname landrasterfile habitat=code1,...,coden ...
 java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]
 Commands list :
 --show
 --linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
---corridor maxcost=valcost
---graph [nointra] [threshold=[{]min:inc:max[}]]
+--corridor maxcost=[{]valcost[}]
+--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
 --usegraph graph1,...,graphn
+--cluster d=val p=val [beta=val] [nb=val]
 --pointset pointset.shp
 --usepointset pointset1,...,pointsetn
 --capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]
@@ -188,6 +181,7 @@ Commands list :
 --gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
 --gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch= ...
 --metapatch [mincapa=value]
+--landmod zone=filezones.shp id=fieldname code=fieldname [sel=id1,id2,...,idn ] [novoronoi]
 
 min:inc:max -> val1,val2,val3...
 \end{verbatim}
@@ -197,7 +191,7 @@ This command lists all available metrics with their short name, description, and
 
 Command :
 \begin{Verbatim}
-java -jar graphab-2.0.jar --metrics
+java -jar graphab-2.2.jar --metrics
 \end{Verbatim}
 Result :
 \begin{Verbatim}
@@ -216,6 +210,8 @@ Result :
 	NC - Number of components (NC)
 	dPC - Delta PC decomposed (dPC)
 		params : [d, p, beta]
+	W - Wilks index (W)
+	params : [attrs, npatch, warea]
 	
 	===== Local metrics =====
 	F : Flux (F)
@@ -236,14 +232,14 @@ Result :
 \subsection{--create : create project}
 
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.0.jar --create \textit{prjname} \textit{land.tif} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
-[minarea=\textit{val}] [con8] [simp] [dir=\textit{path}]
+java -jar graphab-2.2.jar --create \textit{prjname} \textit{landrasterfile} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
+	[minarea=\textit{val}] [con8] [simp] [dir=\textit{path}]
 \end{Verbatim}
 
 \subsubsection{Required parameters}
 \begin{itemize}
 	\item \verb|prjname|: name of the new project
-	\item \verb|land.tif|: filename containing land cover 
+	\item \verb|landrasterfile|: filename containing land cover in tiff, ascii grid or rst format
 	\item \verb|habitat=code1,...,coden|: land codes for patch habitat.
 \end{itemize}
 
@@ -264,7 +260,7 @@ The following commands will be executed on the new project.
 \subsection{--project : load project}
 This command sets the path to the project xml file.
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.0.jar --project \textit{path2myproject/myproject.xml}
+java -jar graphab-2.2.jar --project \textit{path2myproject/myproject.xml}
 \end{Verbatim}
 This command loads the project myproject contained in the path2myproject folder.
 
@@ -276,7 +272,7 @@ Lists linksets, graphs and pointsets contained in the selected project. This com
 
 Command :
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.0.jar --project \textit{path2myproject/myproject.xml} --show
+java -jar graphab-2.2.jar --project \textit{path2myproject/myproject.xml} --show
 \end{Verbatim}
 Result :
 \begin{Verbatim}
@@ -349,7 +345,7 @@ This command supports only one selected graph (cf. \nameref{usegraph}).
 This command creates a meta-patch project based on the graph \textit{2000m\_euclid} and removes all meta-patches with a capacity lower than 1000.
 
 \subsubsection{References}
-\cite{2015_monkey}
+\cite{2015_monkey}, \cite{2016_campagnole}
 
 
 \section{Graph management}
@@ -357,7 +353,7 @@ This command creates a meta-patch project based on the graph \textit{2000m\_eucl
 \subsection{--linkset : create cost linkset}
 \begin{Verbatim}[commandchars=\\\{\}]
 --linkset distance=euclid|cost [name=\textit{linkname}] [complete[=\textit{dmax}]] [slope=\textit{coef}] [remcrosspath] 
-[[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} | extcost=\textit{raster.tif}]
+[[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} | extcost=\textit{rasterfile}]
 \end{Verbatim}
 
 \subsubsection{Optional parameters}
@@ -371,7 +367,7 @@ This command creates a meta-patch project based on the graph \textit{2000m\_eucl
 	\item \verb|slope=coef|: weight costs with the slope. For using this option, the project must contain a DEM.
 	\item \verb|remcrosspath|: remove links crossing patches
 	\item \verb|[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max|: set the cost for each land cover codes
-	\item \verb|extcost=raster.tif|: set the costs from an external raster.
+	\item \verb|extcost=rasterfile|: set the costs from an external raster in tiff, ascii grid or rst format.
 \end{itemize}
 
 \subsubsection{Description}
@@ -426,11 +422,12 @@ By default, all linksets are selected.
 
 \subsection{--graph : create graph}
 \begin{Verbatim}
---graph [nointra] [threshold=[{]min:inc:max[}]]
+--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
 \end{Verbatim}
 
 \subsubsection{Optional parameters}
 \begin{itemize}
+	\item \verb|name=graphname| : name of the graph created. This parameter can be used only if this command creates only one graph.
 	\item \verb|nointra|: disable intra-patch distances for metric calculation
 	\item \verb|threshold=[{]min:inc:max[}]|: set the maximum distance for links included in the graph. Without this parameter, the graph contains all links of the selected link set. Surrounded by braces, the distance values are converted automatically in cost values.
 \end{itemize}
@@ -479,11 +476,11 @@ By default, all graphs are selected.
 
 \subsubsection{Required parameter}
 \begin{itemize}
-	\item \verb|maxcost=valcost|: maximum cost paths forming a corridor
+	\item \verb|maxcost=[{]valcost[}]|: maximum cost paths forming a corridor. Surrounded by braces, the distance given in meter is converted automatically in cost unit.
 \end{itemize}
 
 \subsubsection{Description}
-La \verb|--corridor| command calculates the corridor associated to each link of a link set.
+The \verb|--corridor| command calculates the corridor associated to each link of a link set.
 The result is stored in a shapefile for each selected link set.
 For each link, the shapefile contains a polygon representing the set of paths having a distance less than or equal to \textit{valcost}.
 This command does not operate on euclidean link sets, they are ignored.
@@ -492,6 +489,36 @@ This command does not operate on euclidean link sets, they are ignored.
 \begin{Verbatim}
 	--corridor maxcost=500
 \end{Verbatim}
+
+\subsection{--cluster : graph clustering}
+\begin{Verbatim}[commandchars=\\\{\}]
+--cluster d=\textit{val} p=\textit{val} [beta=\textit{val}] [nb=\textit{val}]
+\end{Verbatim}
+
+\subsubsection{Required parameters}
+\begin{itemize}
+	\item \verb|d=val| : distance for setting $\alpha$ exponent.
+	\item \verb|p=val| : probability for setting $\alpha$ exponent. For setting $\alpha$ to 0 and ignore links impedance, sets \verb|p| to 1.
+\end{itemize}
+
+\subsubsection{Optional parameters}
+\begin{itemize}
+	\item \verb|beta=val| : capacity exponent, by defaut set to 1. To ignore patch capacity, set \verb|beta| to 0.
+	\item \verb|nb=val| : number of compartments, by default the number of compartments selected corresponds to the maximum modularity.
+\end{itemize}
+
+\subsubsection{Description}
+Creates a graph based on the clustering which maximises the modularity \cite{Newman2006} for each selected graph and saves the project unless the global option \verb|-nosave| is used.
+The new graphs keep only intra-cluster links.
+
+Modularity is calculated with a weight($w_{ij}$) defined for each link of the graph:
+$$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
+The two parameters $\beta$ et $\alpha$ are used to define respectively the importance of the patch capacity ($a_i a_j$) and the importance of the distance ($d_{ij}$) for the weight of the link $w_{ij}$. If $\alpha = \beta = 0$, then the weights are identical: $w_{ij} = 1$.  
+
+After \verb|--cluster| command, the selected graphs correspond to the newly created graphs.
+
+\subsubsection{Reference}
+\cite{2017_clustering}
 
 
 \section{Calculate metric}
@@ -1050,6 +1077,48 @@ For the graph \textit{2000m\_euclid}, the file, named rempatch-IIC-2000m\_euclid
 \end{Verbatim}
 The first line (Step 0) corresponds to the initial value of the metric. The following lines show, for each step, the removed item and the metric value after removing.
 
+\subsubsection{Reference}
+\cite{2016_campagnole}
+
+
+\section{Land use changes}
+\subsection{--landmod : land use changes}
+
+\begin{Verbatim}[commandchars=\\\{\}]
+--landmod zone=\textit{filezones.shp} id=\textit{fieldname} code=\textit{fieldname} [selid=\textit{id1,...,idn}] [novoronoi]
+\end{Verbatim}
+
+\subsubsection{Required parameters}
+\begin{itemize}
+	\item \verb|zone=filezones.shp| : polygon shapefile containing land use changes.
+	\item \verb|id=fieldname| : field name of the shapefile used for identifying polygons. If values are not unique, polygons with the same identifier will be applied in a single change.
+	\item \verb|code=fieldname| : field name of the shapefile storing the new land use category of the polygon.
+\end{itemize}
+
+\subsubsection{Optional parameter}
+\begin{itemize}
+	\item \verb|selid=id1,...,idn| : list of polygon identifiers to process. If this parameter is not set, all polygons of the shapefile are processed.
+	\item \verb|novoronoi| : at project creation, do not calculate the planar topology. Useful to speedup execution when planar topology is not used.
+\end{itemize}
+
+\subsubsection{Description}
+This command must be placed before other calculation commands. It will duplicate the project for each polygon of the shapefile and change the landuse covered by the polygon. The commands following this one, will be executed on each modified project. The newly created projets does not contain the linksets and graphs of the initial project.
+
+The newly created projects will be named by the identifier of the polygon(s) and stored in the project directory.
+
+\subsubsection{Exemple}
+\begin{Verbatim}
+	--landmod zone=zones.shp id=ID code=CODE --linkset distance=euclid --graph 
+		--gmetric IIC
+\end{Verbatim}
+For each polygon identifier contained in the \verb|zones.shp| shapefile, a new project named with the \verb|ID| value will be created in a sub directory of the current project.
+On each project, a linkset in euclidean distance and a graph will be created and the IIC metric will be calculated on the craph.
+Finally, each subdirectory of the current project will contain a file \verb|IIC.txt| containing the metric value taking into account each land use changes.
+
+\subsubsection{Reference}
+\cite{2017_landmod}
+
+
 \section{Options}
 \subsection{-nosave}
 This option prevents saving a project. It is useful when you don't want commands to modify the project, 
@@ -1060,6 +1129,9 @@ Defines the number of processors (or cores) used by Graphab.
 By default, CLI mode uses the value defined in the preferences window.
 See the paralellism section for more details.
 
+\subsection{-mpi}
+This option is used to execute commands on several computers in the MPI environment.
+See the paralellism section for more details.
 
 \chapter{Command examples}
 All the following examples can be tested with the sample project available on Graphab website. 
@@ -1067,7 +1139,7 @@ All the following examples can be tested with the sample project available on Gr
 \section{Display project}
 First, display project elements :
 \begin{Verbatim}
-java -jar graphab-2.0.jar --project sample_project/Project.xml --show
+java -jar graphab-2.2.jar --project sample_project/Project.xml --show
 \end{Verbatim}
 Result :
 \begin{Verbatim}
@@ -1090,7 +1162,7 @@ Presence_absence
 \section{Batch metric parameter}
 Calculates PC metric on the graph \textit{2000m-3500cost} varying \textit{d} parameter from 1000 to 5000 by step of 1000 :
 \begin{Verbatim}
-java -jar graphab-2.0.jar --project sample_project/Project.xml 
+java -jar graphab-2.2.jar --project sample_project/Project.xml 
   --usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
 \end{Verbatim}
 Results are written in the file PC.txt in the project folder :
@@ -1106,8 +1178,8 @@ Graph	d	p	beta	PC
 \section{Batch thresholded graph and global metric}
 Creates 6 thresholded graphs from the linkset \textit{Complete\_cost} and computes the IIC metric :
 \begin{Verbatim}
-java -jar graphab-2.0.jar --project sample_project/Project.xml --uselinkset Complete_cost
-  --graph 2000:100:2500 --gmetric IIC
+java -jar graphab-2.2.jar --project sample_project/Project.xml --uselinkset Complete_cost
+  --graph threshold=2000:100:2500 --gmetric IIC
 \end{Verbatim}
 Results are written in the file IIC.txt in the project folder :
 \begin{Verbatim}
@@ -1124,7 +1196,7 @@ thresh_2500.0_Complete_cost	1.4197576370824857E-6
 Calculates a graph from the linkset Planar\_Euclid, calculates 2 metrics (Dg and F) on the created graph, adds pointset on Planar\_Euclid linkset 
 and calculates SDM for the two metrics versus the PRESENCE variable, without modifying the project.
 \begin{Verbatim}
-java -jar graphab-2.0.jar -nosave --project sample_project/Project.xml  
+java -jar graphab-2.2.jar -nosave --project sample_project/Project.xml  
   --uselinkset Planar_Euclid 
   --graph 
   --lmetric Dg --lmetric F d=1000 p=0.05 beta=1 
@@ -1145,15 +1217,15 @@ If your computer has more than one core (most of them), you can take advantage o
 Most Graphab commands are parallelized. You can speed up command execution by defining the number
 of cores (or processors) used by Graphab with the option \verb|-proc| after the project command :
 \begin{Verbatim}
-	java -jar graphab-2.0.jar -proc 8 --project path2myproject/myproject.xml ...
+	java -jar graphab-2.2.jar -proc 8 --project path2myproject/myproject.xml ...
 \end{Verbatim}
 By default, CLI mode uses the number of processors defined in the preferences window of the GUI.
 \subsection{Computer cluster : mpi}
 Graphab can be run on computer clusters wich support Java for OpenMPI.
 \begin{Verbatim}
-	mpirun java -jar graphab-2.0.jar -mpi --project path2myproject/myproject.xml ...
+	mpirun java -jar graphab-2.2.jar -mpi --project path2myproject/myproject.xml ...
 \end{Verbatim}
-Only some commands can be used in mpi environments : \verb|--gmetric|, \verb|--cmetric|, \verb|--lmetric|, \verb|--delta|, \verb|--addpatch|,\verb|--remelem|
+Only some commands can be used in mpi environments : \verb|--gmetric|, \verb|--cmetric|, \verb|--lmetric|, \verb|--delta|, \verb|--addpatch|,\verb|--gtest|,\verb|--remelem|,\verb|--landmod|
 
 \section{Memory management}
 In CLI mode, the memory configuration defined in the preferences window cannot be used.
@@ -1163,8 +1235,8 @@ If Graphab execution terminates with OutOfMemoryError or GC overhead, you need t
 
 To define manually the maximum amount of memory allocated to Graphab, use Java option \verb|-Xmx|:
 \begin{Verbatim}
-	java -Xmx4g -jar graphab-2.0.jar ... # 4Gb allocated
-	java -Xmx1500m -jar graphab-2.0.jar ... # 1500 Mb -> 1.5Gb allocated
+	java -Xmx4g -jar graphab-2.2.jar ... # 4Gb allocated
+	java -Xmx1500m -jar graphab-2.2.jar ... # 1500 Mb -> 1.5Gb allocated
 \end{Verbatim}
 If you cannot allocate more than 1Gb or 1.5G and your computer has more memory available, you have probably a
  32-bit version of Java, which is limited to less than 2Gb of memory.

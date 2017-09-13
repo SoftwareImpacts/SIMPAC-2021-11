@@ -21,7 +21,6 @@ package org.thema.graphab.metric.local;
 
 import org.geotools.graph.structure.Graphable;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.metric.Metric;
 
 /**
  * Base class for local metric returning only one result.

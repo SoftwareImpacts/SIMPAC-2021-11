@@ -35,6 +35,7 @@ import org.geotools.graph.structure.Node;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
+import org.thema.graphab.links.Linkset;
 import org.thema.graphab.metric.ParamPanel;
 
 /**
@@ -121,14 +122,14 @@ public class WilksMetric extends GlobalMetric {
     }
 
     @Override
-    public ParamPanel getParamPanel(Project project) {
-        return new WilksParamPanel(project.getPatches().iterator().next().getAttributeNames(),
+    public ParamPanel getParamPanel(Linkset linkset) {
+        return new WilksParamPanel(linkset.getProject().getPatches().iterator().next().getAttributeNames(),
                 attributes, nbMinPatch, weightArea);
     }
 
     @Override
     public String[] getResultNames() {
-        return new String[] {"W", "Khi2", "Ncomp"};
+        return new String[] {"Lambda", "Chi2", "Ncomp"};
     }
 
     @Override

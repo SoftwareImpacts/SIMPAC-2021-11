@@ -196,7 +196,7 @@ public class CalcMetricDialog<T extends Metric> extends javax.swing.JDialog {
     private void indiceComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indiceComboBoxActionPerformed
         paramPanel.removeAll();
         T ind = (T) indiceComboBox.getSelectedItem();
-        paramPanel.add(ind.getParamPanel(project), BorderLayout.CENTER);
+        paramPanel.add(ind.getParamPanel(((GraphGenerator) graphComboBox.getSelectedItem()).getLinkset()), BorderLayout.CENTER);
         paramPanel.revalidate();
         paramPanel.repaint();
     }//GEN-LAST:event_indiceComboBoxActionPerformed

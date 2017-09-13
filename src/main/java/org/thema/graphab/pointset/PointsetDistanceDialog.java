@@ -86,7 +86,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
         this.project = project;
         this.pointset = exo;
         
-        probaPanel = new DistProbaPanel(1000, 0.05, 1);
+        probaPanel = new DistProbaPanel(exo.getLinkset(), 1000, 0.05, 1);
         
         List<GraphGenerator> graphs = new ArrayList<>();
         for(GraphGenerator g : project.getGraphs()) {

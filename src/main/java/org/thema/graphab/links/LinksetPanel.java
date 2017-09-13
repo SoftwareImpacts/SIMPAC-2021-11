@@ -187,6 +187,7 @@ public class LinksetPanel extends javax.swing.JPanel {
         dMaxSpinner = new javax.swing.JSpinner();
         removeCrossPatchCheckBox = new javax.swing.JCheckBox();
         realPathCheckBox = new javax.swing.JCheckBox();
+        unitLabel = new javax.swing.JLabel();
         distPanel = new javax.swing.JPanel();
         impedancePanel = new javax.swing.JPanel();
         costDistRadioButton = new javax.swing.JRadioButton();
@@ -221,7 +222,7 @@ public class LinksetPanel extends javax.swing.JPanel {
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, completeRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), distMaxLabel, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        dMaxSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(0.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        dMaxSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, null, 1.0d));
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, completeRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), dMaxSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
@@ -241,6 +242,11 @@ public class LinksetPanel extends javax.swing.JPanel {
                 realPathCheckBoxActionPerformed(evt);
             }
         });
+
+        unitLabel.setText(bundle.getString("LinksetPanel.unitLabel.text")); // NOI18N
+
+        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, completeRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), unitLabel, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
 
         javax.swing.GroupLayout topoPanelLayout = new javax.swing.GroupLayout(topoPanel);
         topoPanel.setLayout(topoPanelLayout);
@@ -264,8 +270,10 @@ public class LinksetPanel extends javax.swing.JPanel {
                             .addGroup(topoPanelLayout.createSequentialGroup()
                                 .addComponent(distMaxLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(dMaxSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addGap(0, 18, Short.MAX_VALUE))
+                                .addComponent(dMaxSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(unitLabel)))))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         topoPanelLayout.setVerticalGroup(
             topoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -278,7 +286,8 @@ public class LinksetPanel extends javax.swing.JPanel {
                     .addGroup(topoPanelLayout.createSequentialGroup()
                         .addGroup(topoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(distMaxLabel)
-                            .addComponent(dMaxSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(dMaxSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(unitLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(realPathCheckBox))
                     .addComponent(removeCrossPatchCheckBox)))
@@ -385,7 +394,7 @@ public class LinksetPanel extends javax.swing.JPanel {
 
         jLabel1.setText(bundle.getString("LinksetPanel.jLabel1.text")); // NOI18N
 
-        coefSlopeSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        coefSlopeSpinner.setModel(new javax.swing.SpinnerNumberModel(1.0d, 0.0d, null, 1.0d));
         coefSlopeSpinner.setEnabled(false);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -441,7 +450,7 @@ public class LinksetPanel extends javax.swing.JPanel {
                             .addComponent(euclidRadioButton)
                             .addGroup(distPanelLayout.createSequentialGroup()
                                 .addGap(12, 12, 12)
-                                .addComponent(rasterSelectFilePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE))
+                                .addComponent(rasterSelectFilePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 409, Short.MAX_VALUE))
                             .addComponent(rasterRadioButton))))
                 .addContainerGap())
         );
@@ -504,6 +513,12 @@ public class LinksetPanel extends javax.swing.JPanel {
         removeCrossPatchCheckBox.setEnabled(!euclidRadioButton.isSelected() && realPathCheckBox.isSelected());
         useDEMCheckBox.setEnabled(!euclidRadioButton.isSelected() && project != null && project.isDemExist());
         coefSlopeSpinner.setEnabled(!euclidRadioButton.isSelected() && project != null && project.isDemExist());
+        
+        if(euclidRadioButton.isSelected()) {
+            unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitMeter"));
+        } else {
+            unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitCost"));
+        }
     }//GEN-LAST:event_distanceRadioButtonActionPerformed
 
     private void realPathCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_realPathCheckBoxActionPerformed
@@ -536,6 +551,7 @@ public class LinksetPanel extends javax.swing.JPanel {
     private javax.swing.JCheckBox removeCrossPatchCheckBox;
     private javax.swing.JTable table;
     private javax.swing.JPanel topoPanel;
+    private javax.swing.JLabel unitLabel;
     private javax.swing.JCheckBox useDEMCheckBox;
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables

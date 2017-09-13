@@ -711,14 +711,6 @@ public class GraphGenerator {
     }
 
     /**
-     * May be COST_LENGTH or DIST_LENGTH
-     * @return the distance type of the linkset
-     */
-    public int getDist_type() {
-        return cost.getType_length();
-    }
-
-    /**
      * May be COMPLETE, THRESHOLD or MST
      * @return the type of the graph
      */

@@ -44,7 +44,7 @@
 	\bigskip	
 	{\Huge
 	\bfseries
-	Graphab 2.0\\
+	Graphab 2.1\\
 	\bigskip
 	User Manual\\
 	}
@@ -57,7 +57,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2016-05-12\\
+	2017-09-13\\
 	}
 	
 \end{titlepage}
@@ -79,14 +79,6 @@ Graphab is a software application for modeling ecological networks using landsca
 	\item visual and cartographic interfacing 
 \end{itemize}
 
-The version 2.0 has several new features, including:
-\begin{itemize}
-	\item patch addition,
-	\item meta-patches creation,
-	\item graph clustering,
-	\item integration of slope in the creation of links,
-	\item circuit theory.
-\end{itemize}
 
 \textbf{Warning, projects are not compatible between the versions 1.x and 2.x of Graphab !}
 
@@ -136,7 +128,7 @@ In the first window, the user must enter a project name and specify the folder i
 
 \subsection{Importing landscape maps and defining nodes }
 
-The second window is for importing the landscape map. It must be a raster file (*.tif, *.rst) in which the value of each pixel corresponds to a category (land cover or other classification).
+The second window is for importing the landscape map. It must be a raster file (*.tif, *.asc, *.rst) in which the value of each pixel corresponds to a category (land cover or other classification).
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-en_img3.png}
@@ -197,7 +189,7 @@ Two topologies are available:
 	\item complete: all the links between patches are potentially taken into account. 
 \end{itemize}
 
-Max distance: this option specifies a threshold distance for the complete topology. Links that exceed this distance are no longer created. This limits the number of links created and so accelerates the creation of the link set.
+Max distance: this option specifies a threshold distance for the complete topology. Links that exceed this distance are no longer created. This limits the number of links created and so accelerates the creation of the link set. The unit of the distance depends on the type of distance: in meters for the euclidean distance and in cost for the least cost distance.
 
 Ignore links crossing patch: this option means that a link between two patches (A and C in the figure below) which crosses an intermediate patch (B) is not created. It is recommended for calculating the betweenness centrality metric (BC) to take into account how often a patch lies on the shortest path between all pairs of patches in the graph. If the option is unchecked, a link is created between two patches (A and C) crossing an intermediate patch, representing the complete true distance between A and C.
 
@@ -221,7 +213,7 @@ Distances are calculated from edge to edge between patches. Two main types of di
 	\item Least-cost distance: links are defined in cost distances. Matrix heterogeneity is taken into account by assigning a resistance value (friction) to each landscape category. The user can activate this option in either of two ways:
 	\begin{enumerate}
 		\item either by specifying different costs for the landscape map categories in the table,
-		\item or from an external raster file (*.tif or *.rst) in which each pixel has a resistance value.
+		\item or from an external raster file (*.tif, *.asc or *.rst) in which each pixel has a resistance value.
 	\end{enumerate}
 \end{itemize}
 
@@ -254,7 +246,7 @@ A Graphab project may entail the creation of several graphs. Each graph is creat
 Graphs are created from the Graph / Create graph menu. 
 
 \begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-en_img6.png}
+	\includegraphics[scale=0.5]{img/manual-en_graph.png}
 \end{figure}
 	
 First, the new graph must be named.
@@ -268,7 +260,7 @@ The user must select one of the link sets created previously (cf. \nameref{links
 
 “Include intra-patch distances for metrics” option: if the box is checked, the computation of metrics includes the distances between and across patches (recommended). If the box is unchecked, only the distances between (but not across) patches are taken into account.
 
-For a thresholded graph, the unit of the threshold distance depends on the type of distance used in creating the link set. If the link set is created using Euclidean distances, the threshold distance of the graph is in meters. If the link set is created using cost distances, the threshold distance of the graph is given as a cumulative cost.
+For a thresholded graph, the unit of the threshold distance depends on the type of distance used in creating the link set. If the link set is created using Euclidean distances, the threshold distance of the graph is in meters. If the link set is created using cost distances and the impedance is cumulative cost, the threshold distance of the graph is given as a cumulative cost. The unit of the distance (cost or meter) is shown just after the "max dist" field.
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img7.png}
@@ -308,6 +300,23 @@ Several functions are available from this window:\\
 {}- the number of clusters can be changed to show sub-optimal partitions. The result may be visualized by clicking on the button "Show". The new layer of partition is added to the graph.\\
 {}- the button "Graph" allows you to create a new graph including only the intra-cluster links.\\
 {}- the checkbox "Optimization" achieves a local optimization of the clustering after the use of the greedy algorithm, that significantly improves the modularity value. This option is enabled by default.
+
+
+\section{Corridors}
+
+Graphab allows to calculate the corridors representing, for a given maximum distance $d_{max}$, the area that can be traversed between 2 patches habitat \textit{ie.} the area representing the set of possible paths connecting 2 patches and having a distance less than the distance $d_{max}$.
+
+Corridors can be calculated only from a linkset that has been defined from costs. To use this feature, just right click on a linkset and click on "Corridor".
+The maximum cost distance $d_{max}$ must be entered before launching the calculation.	
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-en_corridor.png} 
+\end{figure}
+
+The result is displayed in a new vector layer containing for each link of the selected linkset a polygon representing its corridor. Links with a distance greater than $d_{max}$ will have no corridor.
+
+The default view uses transparency to show corridor overlays.
+
 
 \section{Patch capacity}
 
@@ -379,57 +388,59 @@ metrics are available in the new window:
 Whichever the selected level, the user must first specify the graph on which the calculation will be made and then select the connectivity metric.
 
 \begin{table}[H]
-\begin{tabular}{|c|l|l|c|c|c|c|}
-\hline
-\multirow{2}{*}{Family} & \multirow{2}{*}{\centering Connectivity metrics} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3.6cm}|}{\centering Computing level} & \multirow{2}{*}{\centering\arraybslash Delta metrics}\\
-\hhline{~~~---~}
- & & & Global & Comp. & Local &\\
-\hline
-\multirow{6}{*}{Weighted} & Flux & F & × & × & × &\\
-\hhline{~------}
- & Probability of connectivity & PC & × & × &  & ×\\
-\hhline{~------}
- & Flow Probability of connectivity  & FPC &  &  & × &\\
-\hhline{~------}
- & Fractions of delta Probability of connectivity & dPC &  &  &  & ×\\
-\hhline{~------} 
- & Betweenness centrality index & BC &  &  & × & \\
-\hhline{~------}
- & Integral index of connectivity & IIC & × & × &  & × \\
- \hhline{~------}
- & Current flow & CF &  &  & × & \\ 
-\hline
-\multirow{4}{*}{Area} & Mean size of the components & MSC & × &  &  & \\
-\hhline{~------}
- & Size of the largest component & SLC & × &  &  & \\
-\hhline{~------}
- & Class coincidence probability & CCP & × &  &  & \\
-\hhline{~------}
- & Expected cluster size & ECS & × &  &  & \\
-\hline
-\multirow{9}{*}{Topological} & Node Degree & Dg &  &  & × & \\
-\hhline{~------}
- & Clustering coefficient  & CC &  &  & × & \\
-\hhline{~------}
- & Closeness centrality & CCe &  &  & × & \\
-\hhline{~------}
- & Eccentricity & Ec &  &  & × & \\
-\hhline{~------}
- & Connectivity correlation & CCor &  &  & × & \\
-\hhline{~------}
- & Number of components & Cut &  &  & × & \\
-\hhline{~------}
- & Graph diameter & NC & × &  &  & \\
-\hhline{~------}
- & Harary Index & GD & × & × &  & ×\\
-\hhline{~------}
- & Node Degree & H & × & × &  & ×\\
-\hline
-\end{tabular}
-\caption{Connectivity metrics and computing level}
-\label{metric_level}
+	\begin{tabular}{|c|l|l|c|c|c|c|}
+		\hline
+		\multirow{2}{*}{Family} & \multirow{2}{*}{\centering Connectivity metrics} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3.6cm}|}{\centering Computing level} & \multirow{2}{*}{\centering\arraybslash Delta metrics}\\
+		\hhline{~~~---~}
+		& & & Global & Comp. & Local &\\
+		\hline
+		\multirow{6}{*}{Weighted} 
+		& \nameref{metric_F} & F & × & × & × &\\
+		\hhline{~------}
+		& \nameref{metric_PC} & PC & × & × &  & ×\\
+		\hhline{~------}
+		& \nameref{metric_FPC}  & FPC &  &  & × &\\
+		\hhline{~------}
+		& \nameref{metric_dPC} & dPC &  &  &  & ×\\
+		\hhline{~------} 
+		& \nameref{metric_BC} & BC &  &  & × & \\
+		\hhline{~------}
+		& \nameref{metric_IIC} & IIC & × & × &  & × \\
+		\hhline{~------}	
+		& \nameref{metric_CF} & CF &  &  & × & \\
+		\hline
+		\multirow{4}{*}{Area} 
+		& \nameref{metric_MSC} & MSC & × &  &  & \\
+		\hhline{~------}
+		& \nameref{metric_SLC} & SLC & × &  &  & \\
+		\hhline{~------}
+		& \nameref{metric_CCP} & CCP & × &  &  & \\
+		\hhline{~------}
+		& \nameref{metric_ECS} & ECS & × &  &  & \\
+		\hline
+		\multirow{9}{*}{Topological} 
+		& \nameref{metric_Dg} & Dg &  &  & × & \\
+		\hhline{~------}
+		& \nameref{metric_CC}  & CC &  &  & × & \\
+		\hhline{~------}
+		& \nameref{metric_CCe} & CCe &  &  & × & \\
+		\hhline{~------}
+		& \nameref{metric_Ec} & Ec &  &  & × & \\
+		\hhline{~------}
+		& \nameref{metric_CCor} & CCor &  &  & × & \\
+		\hhline{~------}
+		& \nameref{metric_NC} & NC & × &  &  & \\
+		\hhline{~------}
+		& \nameref{metric_GD} & GD & × & × &  & ×\\
+		\hhline{~------}
+		& \nameref{metric_H} & H & × & × &  & ×\\
+		\hhline{~------}
+		& \nameref{metric_W} & W & × &  &  & \\
+		\hline
+	\end{tabular}
+	\caption{Connectivity metrics and computing level}
+	\label{metric_level}
 \end{table}
-
 
 \subsection{Parameters of weighted metrics}
 \label{param_weight}
@@ -456,7 +467,6 @@ The value of $\alpha$ is automatically obtained from the formula:
 \alpha =-\log \left(p\right)/{d}
 \end{equation*}
 
-In the case of a thresholded graph, it is assumed that the distance $d$ used in the setting is consistent with the distance used for the graph thresholding.  
 
 \subsubsection{Beta parameter}
 
@@ -555,6 +565,7 @@ Table \ref{metric_poss} summarizes possible metrics calculations.
  & Number of components & NC &  &  &  &  & × & \\
  & Graph diameter & GD &  & × &  &  & × & \\
  & Harary Index & H &  &  &  &  & × & \\
+ & Wilks' Lambda & W &  &  &  &  & × & \\
 \hline
 \end{tabular}
 \caption{Possible connectivity metrics calculations}
@@ -652,7 +663,7 @@ If point data do not contain an absence attribute, they cannot be used in specie
 Point data imported to Graphab can be used to calculate the inter-point distance matrix by right-clicking on the name of the point data and selecting "Distance matrix".
 
 \begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-en_img13b.png} 
+	\includegraphics[scale=0.5]{img/manual-en_point_matrix.png} 
 \end{figure}
 
 Two types of distance are available: raster-based distance and graph-based distance.
@@ -827,11 +838,8 @@ The memory used by the software plays an important role. If there is not enough 
 recommended you install the 64-bit version of Java to use the available memory beyond 2 Go.
 
 
-\section{Annexes}
+\section{Metrics}
 
-\subsection{Details of metric calculations}
-
-Summary table of metrics in Graphab
 
 \begin{table}[H]
 \begin{tabular}{|c|l|l|c|c|c|c|}
@@ -840,52 +848,55 @@ Summary table of metrics in Graphab
 	\hhline{~~~---~}
 	& & & Global & Comp. & Local &\\
 	\hline
-	\multirow{6}{*}{Weighted} & Flux & F & × & × & × &\\
+	\multirow{6}{*}{Weighted} 
+	& \nameref{metric_F} & F & × & × & × &\\
 	\hhline{~------}
-	& Probability of connectivity & PC & × & × &  & ×\\
+	& \nameref{metric_PC} & PC & × & × &  & ×\\
 	\hhline{~------}
-	& Flow Probability of connectivity  & FPC &  &  & × &\\
+	& \nameref{metric_FPC}  & FPC &  &  & × &\\
 	\hhline{~------}
-	& Fractions of delta Probability of connectivity & dPC &  &  &  & ×\\
+	& \nameref{metric_dPC} & dPC &  &  &  & ×\\
 	\hhline{~------} 
-	& Betweenness centrality index & BC &  &  & × & \\
+	& \nameref{metric_BC} & BC &  &  & × & \\
 	\hhline{~------}
-	& Integral index of connectivity & IIC & × & × &  & × \\
+	& \nameref{metric_IIC} & IIC & × & × &  & × \\
 	\hhline{~------}	
-	& Current flow & CF &  &  & × & \\
+	& \nameref{metric_CF} & CF &  &  & × & \\
 	\hline
-	\multirow{4}{*}{Area} & Mean size of the components & MSC & × &  &  & \\
+	\multirow{4}{*}{Area} 
+	& \nameref{metric_MSC} & MSC & × &  &  & \\
 	\hhline{~------}
-	& Size of the largest component & SLC & × &  &  & \\
+	& \nameref{metric_SLC} & SLC & × &  &  & \\
 	\hhline{~------}
-	& Class coincidence probability & CCP & × &  &  & \\
+	& \nameref{metric_CCP} & CCP & × &  &  & \\
 	\hhline{~------}
-	& Expected cluster size & ECS & × &  &  & \\
+	& \nameref{metric_ECS} & ECS & × &  &  & \\
 	\hline
-	\multirow{9}{*}{Topological} & Node Degree & Dg &  &  & × & \\
+	\multirow{9}{*}{Topological} 
+	& \nameref{metric_Dg} & Dg &  &  & × & \\
 	\hhline{~------}
-	& Clustering coefficient  & CC &  &  & × & \\
+	& \nameref{metric_CC}  & CC &  &  & × & \\
 	\hhline{~------}
-	& Closeness centrality & CCe &  &  & × & \\
+	& \nameref{metric_CCe} & CCe &  &  & × & \\
 	\hhline{~------}
-	& Eccentricity & Ec &  &  & × & \\
+	& \nameref{metric_Ec} & Ec &  &  & × & \\
 	\hhline{~------}
-	& Connectivity correlation & CCor &  &  & × & \\
+	& \nameref{metric_CCor} & CCor &  &  & × & \\
 	\hhline{~------}
-	& Number of components & Cut &  &  & × & \\
+	& \nameref{metric_NC} & NC & × &  &  & \\
 	\hhline{~------}
-	& Graph diameter & NC & × &  &  & \\
+	& \nameref{metric_GD} & GD & × & × &  & ×\\
 	\hhline{~------}
-	& Harary Index & GD & × & × &  & ×\\
+	& \nameref{metric_H} & H & × & × &  & ×\\
 	\hhline{~------}
-	& Node Degree & H & × & × &  & ×\\
+	& \nameref{metric_W} & W & × &  &  & \\
 	\hline
 \end{tabular}
+\caption{Summary table of metrics in Graphab}
 \end{table}
 
 \bigskip
 
-Mathematical terms used
 \begin{table}[H]
 	\begin{tabular}{|m{2cm}|m{13cm}|}
 		\hline
@@ -902,21 +913,22 @@ Mathematical terms used
 		$\alpha$ & Brake on movement distance  \\\hline
 		$\beta$	& Exponent to weight more or less capacity\\\hline
 	\end{tabular}
+	\caption{Mathematical terms used}
 \end{table}
 
 
-\subsubsection{Weighted metrics}
-
+\subsection{Weighted metrics}
+\label{weight_metric}
+\subsubsection{Flux}
+\label{metric_F}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
-\hline
-\multicolumn{3}{|m{16.044998cm}|}{Flux ($F$)}\\\hline
- &
-\multicolumn{1}{m{4.4810004cm}|}{Formula} &
+\hline 
+Flux ($F$) &  \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-F=\sum _{i=1}^{n}{\sum
+S\#F=\sum _{i=1}^{n}{\sum
 _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{{a}_{j}^{\beta
 }}}{e}^{-\alpha {d}_{\mathit{ij}}}
 \end{equation*}
@@ -964,11 +976,12 @@ References &
 \end{tabular}
 \end{table}
 
+\subsubsection{Probability of Connectivity}
+\label{metric_PC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Probability of Connectivity ($PC$)}\\\hline
- &
+Probability of Connectivity ($PC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level 
@@ -982,7 +995,7 @@ _{j=1}^{n}{{a}_{i}^{\beta }}}{{a}_{j}^{\beta }e}^{-\alpha
 {d}_{\mathit{ij}}}
 \end{equation*}
 } &
-For the entire graph: sum of products of capacity of all pairs of patches weighted by their interaction probability, divided by the square of the area of the study zone. This ratio is the equivalent to the probability that two points randomly placed in the study area are connected.\\\hline
+Sum of products of capacity of all pairs of patches weighted by their interaction probability, divided by the square of the area of the study zone. This ratio is the equivalent to the probability that two points randomly placed in the study area are connected.\\\hline
 Values &
 \multicolumn{2}{m{12.6050005cm}|}{Values correspond to a probability.
 	
@@ -1009,13 +1022,13 @@ Reference &
 \end{tabular}
 \end{table}
 
-
+\subsubsection{Flow Probability of Connectivity}
+\label{metric_FPC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Flow Probability of Connectivity
-($FPC$)}\\\hline
- &
+Flow Probability of Connectivity
+($FPC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Local level &
@@ -1047,7 +1060,8 @@ by the global value of $PC$. However, the $FPC$ metric is obtained faster becaus
 \end{tabular}
 \end{table}
 
-
+\subsubsection{Fractions of delta Probability of Connectivity}
+\label{metric_dPC}
 \begin{table}[H]
 \begin{tabular}{|m{2.4919999cm}|m{5.229cm}m{7.924cm}|}
 \hline
@@ -1104,12 +1118,13 @@ Reference &
 \end{table}
 
 
+\subsubsection{Betweenness Centrality index}
+\label{metric_BC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Betweenness Centrality index
-($BC$)}\\\hline
- &
+Betweenness Centrality index
+($BC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Local level &
@@ -1165,12 +1180,13 @@ Reference &
 \end{table}
 
 
+\subsubsection{Integral Index of Connectivity}
+\label{metric_IIC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Integral Index of Connectivity
-($IIC$)}\\\hline
- &
+Integral Index of Connectivity
+($IIC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level
@@ -1202,12 +1218,12 @@ Reference &
 \end{tabular}
 \end{table}
 
-
+\subsubsection{Current Flow}
+\label{metric_CF}
 \begin{table}[H]
 	\begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 		\hline
-		\multicolumn{3}{|m{16.044998cm}|}{Current flow ($CF$)}\\\hline
-		&
+		Current Flow ($CF$) &
 		\multicolumn{1}{m{4.4810004cm}|}{Formula} &
 		Meaning\\\hline
 		Local level &
@@ -1246,14 +1262,14 @@ Reference &
 	\end{tabular}
 \end{table}
 
-\subsubsection{Area metrics}
+\subsection{Area metrics}
 
+\subsubsection{Mean Size of the Components}
+\label{metric_MSC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Mean Size of the Components
-(MSC)}\\\hline
- &
+Mean Size of the Components ($MSC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level &
@@ -1262,7 +1278,7 @@ Global level &
 _{k=1}^{\mathit{nc}}{{\mathit{ac}}_{k}}
 \end{equation*}
 } &
-For the entire graph: mean of the component capacities.
+Mean of the component capacities.
 
 \\\hline
 Values &
@@ -1274,12 +1290,13 @@ Maximum value:  $\mathit{SLC}$
 \end{table}
 
 
+\subsubsection{Size of the Largest Component}
+\label{metric_SLC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Size of the Largest Component
-(SLC)}\\\hline
- &
+Size of the Largest Component
+($SLC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level &
@@ -1287,7 +1304,7 @@ Global level &
 \mathit{SLC}=\mathit{max}\{{\mathit{ac}}_{k}\}
 \end{equation*}
 } &
-For the entire graph: largest capacity of components.
+Largest capacity of components.
 
 \\\hline
 Values &
@@ -1299,12 +1316,13 @@ Maximum value: maximum capacity
 \end{table}
 
 
+\subsubsection{Class Coincidence Probability}
+\label{metric_CCP}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Class Coincidence Probability
-(CCP)}\\\hline
- &
+Class Coincidence Probability
+($CCP$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level &
@@ -1314,13 +1332,12 @@ _{k=1}^{\mathit{nc}}{{\left(\frac{{\mathit{ac}}_{k}}{\sum
 _{l}{{\mathit{ac}}_{l}}}\right)}^{2}}
 \end{equation*}
 } &
-For the entire graph: probability that two points randomly placed on the
+Probability that two points randomly placed on the
 graph belong to the same component.\\\hline
 Values &
-\multicolumn{2}{m{12.6050005cm}|}{Minimum value: minimum capacity (as
-many components as patches and regular capacities)
+\multicolumn{2}{m{12.6050005cm}|}{Minimum value: $\rightarrow 0$ (as many components as patches and regular capacities)
 
-Maximum value: sum of capacities (only one component)
+Maximum value: 1 (only one component)
 
 }\\\hline
 Reference &
@@ -1329,11 +1346,12 @@ Reference &
 \end{table}
 
 
+\subsubsection{Expected Cluster Size}
+\label{metric_ECS}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Expected Cluster Size (ECS)}\\\hline
- &
+Expected Cluster Size ($ECS$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level &
@@ -1342,12 +1360,11 @@ Global level &
 _{k=1}^{\mathit{nc}}{{{\mathit{ac}}_{k}^{2}}}
 \end{equation*}
 } &
-For the entire graph:~size of a component 
+Expected size of a component 
 
 \\\hline
 Values &
-\multicolumn{2}{m{12.6050005cm}|}{Minimum value: minimum capacity (as
-many components as patches and regular capacities)
+\multicolumn{2}{m{12.6050005cm}|}{Minimum value: minimum capacity (as many components as patches and regular capacities)
 
 Maximum value: sum of capacities (only one component)
 
@@ -1358,20 +1375,51 @@ Reference &
 \end{table}
 
 
-\subsubsection{Topological metrics}
+\subsection{Topological metrics}
 
+\subsubsection{Wilks' Lambda}
+\label{metric_W}
+\begin{table}[H]
+	\begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
+		\hline
+		Wilks' Lambda ($W$) &
+		\multicolumn{1}{m{4.4810004cm}|}{Formula} &
+		Meaning\\\hline
+		Global level &
+		\multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
+				W_{Lambda}=\frac{|W|}{|T|}
+			\end{equation*}
+		} &
+		Ratio between within-classes (within-components) (co)variance $|W|$ and total (co)variance $|T|$
+		
+		\\\hline
+		Values &
+		\multicolumn{2}{m{12.6050005cm}|}{Minimum value: 0 the patches belonging to the same component are identical for all the variables (\textit{i.e.} perfect partition)
+			
+			Maximum value: 1 patches belonging to the same component differ as much as with the other patches (\textit{i.e.} meaning an irrelevant partition)
+			
+		}\\\hline
+		Reference &
+		\multicolumn{2}{m{12.6050005cm}|}{\cite{Everitt2001}, \cite{2017_clustering}}\\\hline
+	\end{tabular}
+\end{table}
+
+
+\subsubsection{Harary Index}
+\label{metric_H}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Harary Index (H)}\\\hline
- &
+Harary Index ($H$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level
 
-Component level &
+Component level
+
+Delta  &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-H=\sum _{i=1}^{n}{\sum
+H=\frac{1}{2}\sum _{i=1}^{n}{\sum
 _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{\frac{1}{{\mathit{nl}}_{\mathit{ij}}}}}
 \end{equation*}
 } &
@@ -1379,10 +1427,9 @@ Sum of the inverse of the number of links between all pairs of patches.
 
 \\\hline
 Values &
-\multicolumn{2}{m{12.6050005cm}|}{Minimum value: minimum capacity (as
-many components as patches and regular capacities)
+\multicolumn{2}{m{12.6050005cm}|}{Minimum value: 0 for a graph with no edges
 
-Maximum value: sum of capacities (only one component)
+Maximum value: $\frac{n(n-1)}{2}$ for a complete graph
 
 }\\\hline
 Comment &
@@ -1394,16 +1441,19 @@ Reference &
 \end{table}
 
 
+\subsubsection{Graph Diameter}
+\label{metric_GD}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Graph Diameter (GD)}\\\hline
- &
+Graph Diameter ($GD$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level
 
-Component level Delta &
+Component level 
+
+Delta &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
 \mathit{GD}=\underset{\mathit{ij}}{\mathit{max}}{d}_{\mathit{ij}}
 \end{equation*}
@@ -1432,11 +1482,12 @@ Reference &
 \end{table}
 
 
+\subsubsection{Number of Components}
+\label{metric_NC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Number of Components (NC)}\\\hline
- &
+Number of Components ($NC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global  level
@@ -1460,11 +1511,12 @@ Reference &
 \end{table}
 
 
+\subsubsection{Node Degree}
+\label{metric_Dg}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Node Degree (Dg)}\\\hline
- &
+Node Degree ($Dg$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Local level
@@ -1474,7 +1526,8 @@ Local level
 {\mathit{Dg}}_{i}=\left|{N}_{i}\right|
 \end{equation*}
 } &
-Number of the patches close to the patch i\\\hline
+Number of edges connected to the node $i$ \textit{ie.}
+number of patches connected directly to the patch $i$\\\hline
 Values &
 \multicolumn{2}{m{12.6050005cm}|}{Minimum value: 0
 
@@ -1493,11 +1546,12 @@ Reference &
 \end{table}
 
 
+\subsubsection{Clustering Coefficient}
+\label{metric_CC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{5.303cm}m{7.103cm}|}
 \hline
-\multicolumn{3}{|m{16.046cm}|}{Clustering Coefficient (CC)}\\\hline
- &
+Clustering Coefficient ($CC$) &
 \multicolumn{1}{m{5.303cm}|}{Formula} &
 Meaning\\\hline
 Local level
@@ -1525,11 +1579,12 @@ Reference &
 \end{table}
 
 
+\subsubsection{Closeness Centrality}
+\label{metric_CCe}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Closeness Centrality (CCe)}\\\hline
- &
+Closeness Centrality ($CCe$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Local level
@@ -1557,11 +1612,12 @@ Reference &
 \end{table}
 
 
+\subsubsection{Eccentricity}
+\label{metric_Ec}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Eccentricity (Ec)}\\\hline
- &
+Eccentricity ($Ec$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Local level
@@ -1586,12 +1642,12 @@ Reference &
 \end{table}
 
 
+\subsubsection{Connectivity Correlation}
+\label{metric_CCor}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Connectivity correlation
-(CCor)}\\\hline
- &
+Connectivity correlation ($CCor$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Local level

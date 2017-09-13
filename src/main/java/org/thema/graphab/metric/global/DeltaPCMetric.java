@@ -29,6 +29,7 @@ import org.thema.graphab.Project.Method;
 import org.thema.graphab.graph.DeltaGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphPathFinder;
+import org.thema.graphab.links.Linkset;
 import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
@@ -114,8 +115,8 @@ public class DeltaPCMetric extends AbstractPathMetric {
     }
 
     @Override
-    public ParamPanel getParamPanel(Project project) {
-        return alphaParam.getParamPanel(project);
+    public ParamPanel getParamPanel(Linkset linkset) {
+        return alphaParam.getParamPanel(linkset);
     }
     
     @Override

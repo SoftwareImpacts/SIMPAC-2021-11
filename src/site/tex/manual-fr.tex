@@ -44,7 +44,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.0\\
+		Graphab 2.1\\
 		\bigskip
 		Manuel d’utilisation\\
 	}
@@ -57,7 +57,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		12/05/2016\\
+		13/09/2017\\
 	}
 	
 \end{titlepage}
@@ -78,15 +78,6 @@ Le programme Graphab est un outil de modélisation des réseaux écologiques fon
 	\item calcul d'un grand nombre de métriques de connectivité
 	\item intégration des métriques de connectivité dans un modèle de distribution d’espèce
 	\item interface de géo-visualisation
-\end{itemize}
-
-La version 2.0 apporte plusieurs nouvelles fonctionnalités, dont :
-\begin{itemize}
-	\item l'ajout de taches,
-	\item la création de méta-taches,
-	\item le partitionnement de graphe,
-	\item l'intégration du calcul de pente dans la création des liens,
-	\item la théorie des circuits électriques.
 \end{itemize}
 
 \textbf{Attention, les projets ne sont pas compatibles entre les version 1.x et 2.x de Graphab !}
@@ -136,7 +127,7 @@ Dans la première fenêtre, l’utilisateur doit nommer le projet et indiquer da
 
 \subsection{Importation de la carte du paysage et définition des nœuds}
 
-La deuxième fenêtre concerne l’importation de la carte du paysage. Celle-ci doit être un fichier de type raster (*.tif, *.rst) dans lequel la valeur de chaque pixel correspond à une catégorie (occupation du sol ou autre type de classification).
+La deuxième fenêtre concerne l’importation de la carte du paysage. Celle-ci doit être un fichier de type raster (*.tif, *.asc, *.rst) dans lequel la valeur de chaque pixel correspond à une catégorie (occupation du sol ou autre type de classification).
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img3.png} 
@@ -194,7 +185,7 @@ Deux topologies sont disponibles :
 	\item complet : tous les liens entre les taches sont potentiellement pris en compte.
 \end{itemize}
 
-Distance max : Cette option disponible pour la topologie complète permet de préciser un seuil de distance au-delà duquel les liens ne sont plus créés. Elle permet ainsi de limiter le nombre de liens créés et d’accélérer la création des liens en topologie complète.
+Distance max : Cette option disponible pour la topologie complète permet de préciser un seuil de distance au-delà duquel les liens ne sont plus créés. Elle permet ainsi de limiter le nombre de liens créés et d’accélérer la création des liens en topologie complète. L'unité de la distance dépend du type de distance : en mètre pour la distance euclidienne et en coût pour la distance de moindre coût.
 
 Supprimer les liens traversant les taches : cette option, décochée par défaut, permet de ne pas créer de lien entre deux taches (A et C sur la figure suivante) passant par une tache intermédiaire (B). Ceci est recommandé pour le calcul de la métrique de centralité intermédiaire (BC) pour prendre en compte la fréquence avec laquelle chaque tache se trouve sur les plus courts chemins liant les paires de nœuds sur le graphe. A noter : cette option fournit une approximation de la distance intra-taches entre A et C. Si la case est décochée, un lien entre A et C passant par B sera créé représentant la distance complète réelle entre les deux taches. 
 
@@ -219,7 +210,7 @@ Les distances sont calculées de bord à bord entre les taches. Deux principaux 
 	\item Distance de moindre coût : les liens sont calculés en distance coût. L’hétérogénéité de la matrice est prise en compte en assignant des valeurs de résistance (ou friction) aux classes paysagères. L’utilisateur peut activer cette possibilité de deux façons :
 	\begin{enumerate}
 		\item soit en indiquant les coûts correspondant aux catégories de la carte du paysage dans le tableau ;
-		\item soit à partir d’un fichier raster externe (format *.tif ou *.rst) contenant pour chaque pixel une valeur de résistance.
+		\item soit à partir d’un fichier raster externe (format *.tif, *.asc ou *.rst) contenant pour chaque pixel une valeur de résistance.
 	\end{enumerate}
 \end{itemize}
 
@@ -250,7 +241,7 @@ Un projet Graphab peut donner lieu à la création de plusieurs graphes. Chaque 
 La création d’un graphe s’effectue par le menu : Graphe / Créer un graphe. 
 
 \begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-fr_img6.png} 
+	\includegraphics[scale=0.5]{img/manual-fr_graph.png} 
 \end{figure}
 
 Le graphe à créer doit tout d’abord être nommé.
@@ -264,7 +255,7 @@ L’utilisateur doit ensuite sélectionner un des jeux de liens créés précéd
 
 Option «~Inclure les distances intra-taches~» : si la case est cochée, le calcul des métriques à l’étape 3 tient compte des distances intra-taches (recommandé) ; dans le cas contraire, seules les distances inter-taches sont prises en compte.
 
-Pour un graphe seuillé, l’unité de la distance de seuillage dépend du type de distance utilisé dans la création du jeu de liens. Si le jeu de lien a été créé en distance euclidienne, la distance de seuillage du graphe est exprimée en mètres. Si la création du jeu de lien a été réalisée en distance-coût, la distance de seuillage du graphe est exprimée en coûts cumulés. 
+Pour un graphe seuillé, l’unité de la distance de seuillage dépend du type de distance utilisé dans la création du jeu de liens. Si le jeu de lien a été créé en distance euclidienne, la distance de seuillage du graphe est exprimée en mètres. Si la création du jeu de lien a été réalisée en distance-coût et que l'impédance est en coût cumulé, la distance de seuillage du graphe est exprimée en coûts cumulés. L'unité (mètre ou coût) du jeu de liens sélectionné est rappelé à côté du champ "dist max".
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img7.png} 
@@ -307,6 +298,20 @@ La deuxième fenêtre affiche le nombre de groupes (Nb agrégats) maximisant la 
 
 {}- la case à cocher "Optimisation" réalise une optimisation locale du partitionnement après l'algorithme glouton permettant d'améliorer sensiblement la valeur de modularité. Cette option est active par défaut.
 
+\section{Corridors}
+
+Graphab permet de calculer les corridors représentant, pour une distance maximale donnée $d_{max}$, l'espace qui peut être traversé entre 2 taches d'habitat \textit{ie.} l'espace représentant l'ensemble des chemins possibles reliant 2 taches et ayant une distance inférieure à la distance $d_{max}$.
+
+Les corridors peuvent être calculés uniquement à partir d'un jeu de liens qui a été défini à partir de coûts. Pour utiliser cette fonctionnalité, il suffit de faire un clic droit sur un jeu de liens et cliquer sur "Corridor".
+La distance coût maximale $d_{max}$ doit être renseignée avant de lancer le calcul.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-fr_corridor.png} 
+\end{figure}
+
+Le résultat s'affiche dans une nouvelle couche vectorielle contenant pour chaque lien du jeu de liens sélectionné un polygone représentant son corridor. Les liens ayant une distance supérieure à $d_{max}$ n'auront pas de corridor.
+
+L'affichage par défaut utilise la transparence permettant de faire apparaître les superpositions de corridors.
 
 
 \section{Capacité des taches}
@@ -372,44 +377,42 @@ Dans la fenêtre de dialogue qui s’ouvre suite au choix d’un de ces quatre m
 	\item les métriques topologiques, qui sont issues de la théorie des graphes et qui ne nécessitent pas de paramétrage.
 \end{itemize}
 
-
 \begin{table}[H]
-
-\begin{tabular}{|c|p{7cm}|l|c|c|c|c|}
-\hline
-\multirow{2}{*}{Famille} & \multirow{2}{*}{Métrique de connectivité} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3cm}|}{\centering Niveau de calcul} & \multirow{2}{1.5cm}{Delta métriques}\\
-\hhline{~~~---~}
- &  &  & Global & Comp. & Local & \\
-\hline
-\multirow{6}{2cm}{Métriques pondérées}
- & Flux & F & × & × & × & \\
- & Probabilité de connectivité & PC & × & × &  & ×\\
- & Probabilité de connectivité flux & FPC &  &  & × & \\
- & Fractions de delta Probabilité de connectivité & dPC &  &  &  & ×\\
- & Indice de centralité intermédiaire & BC &  &  & × & \\
- & Indice intégral de connectivité & IIC & × & × &  & ×\\
- & Flux circuit & CF &  &  & × & \\ 
-\hline
-\multirow{4}{2cm}{Métriques de surface}
- & Taille moyenne des composantes & MSC & × &  &  & \\
- & Taille de la plus grande composante & SLC & × &  &  & \\
- & Probabilité de coïncidence de classe & CCP & × &  &  & \\
- & Taille de composante attendue & ECS & × &  &  & \\
-\hline
-\multirow{9}{2cm}{Métriques topologiques}
- & Degré & Dg &  &  & × & \\
- & Coefficient de groupement & CC &  &  & × & \\
- & Centralité de proximité & CCe &  &  & × & \\
- & Excentricité & Ec &  &  & × & \\
- & Corrélation de connectivité & CCor &  &  & × & \\
- & Elément de coupure & Cut &  &  & × & \\
- & Nombre de composantes & NC & × &  &  & \\
- & Diamètre & GD & × & × &  & ×\\
- & Indice d’Harary & H & × & × &  & ×\\
-\hline
-\end{tabular}
-\caption{Liste des métriques de connectivité et de leur niveau de calcul. Les codes sont indiqués suivant le nom anglais des métriques.}
-\label{metric_level}
+	\begin{tabular}{|c|p{7cm}|l|c|c|c|c|}
+		\hline
+		\multirow{2}{*}{Famille} & \multirow{2}{*}{Métrique de connectivité} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3cm}|}{\centering Niveau de calcul} & \multirow{2}{1.5cm}{Delta métriques}\\
+		\hhline{~~~---~}
+		&  &  & Global & Comp. & Local & \\
+		\hline
+		\multirow{6}{2cm}{Métriques pondérées}
+		& \nameref{metric_F} & F & × & × & × & \\
+		& \nameref{metric_PC} & PC & × & × &  & ×\\
+		& \nameref{metric_FPC} & FPC &  &  & × & \\
+		& \nameref{metric_dPC} & dPC &  &  &  & ×\\
+		& \nameref{metric_BC} & BC &  &  & × & \\
+		& \nameref{metric_IIC} & IIC & × & × &  & ×\\
+		& \nameref{metric_CF} & CF &  &  & × & \\
+		\hline
+		\multirow{4}{2cm}{Métriques de surface}
+		& \nameref{metric_MSC} & MSC & × &  &  & \\
+		& \nameref{metric_SLC} & SLC & × &  &  & \\
+		& \nameref{metric_CCP} & CCP & × &  &  & \\
+		& \nameref{metric_ECS} & ECS & × &  &  & \\
+		\hline
+		\multirow{9}{2cm}{Métriques topologiques}
+		& \nameref{metric_Dg} & Dg &  &  & × & \\
+		& \nameref{metric_CC} & CC &  &  & × & \\
+		& \nameref{metric_CCe} & CCe &  &  & × & \\
+		& \nameref{metric_Ec} & Ec &  &  & × & \\
+		& \nameref{metric_CCor} & CCor &  &  & × & \\
+		& \nameref{metric_NC} & NC & × &  &  & \\
+		& \nameref{metric_GD} & GD & × & × &  & ×\\
+		& \nameref{metric_H} & H & × & × &  & ×\\
+		& \nameref{metric_W} & W & × &  &  & \\
+		\hline
+	\end{tabular}
+	\caption{Liste des métriques de connectivité et de leur niveau de calcul. Les codes sont indiqués suivant le nom anglais des métriques.}
+	\label{metric_level}
 \end{table}
 
 Quel que soit le niveau choisi, l’utilisateur doit d’abord indiquer le graphe sur lequel le calcul va s’appliquer, puis choisir la métrique de connectivité.
@@ -418,7 +421,7 @@ Quel que soit le niveau choisi, l’utilisateur doit d’abord indiquer le graph
 \label{param_weight}
 
 \begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-fr_img10.png} 
+	\includegraphics[scale=0.5]{img/manual-fr_metric_param.png} 
 \end{figure}
 
 \subsubsection{Paramètre alpha}
@@ -436,7 +439,7 @@ La valeur $\alpha $ est automatiquement obtenue à partir de la formule :
 \begin{equation*}
 \alpha =-\log \left(p\right)/{d}
 \end{equation*}
-Dans le cas d’un graphe seuillé, il est supposé que la distance $d$ utilisée dans ce paramétrage soit en cohérence avec celle qui a été utilisée pour le seuillage du graphe.
+
 
 \subsubsection{Paramètre bêta}
 
@@ -536,6 +539,7 @@ Le tableau \ref{metric_poss} récapitule les possibilités de calcul des métriq
  & Nombre de composantes & NC &  &  &  &  & × & \\
  & Diamètre & GD &  & × &  &  & × & \\
  & Indice d’Harary & H &  &  &  &  & × & \\
+ & Lambda de Wilks & W &  &  &  &  & × & \\
 \hline
 \end{tabular}
 \caption{Possibilités de calcul des métriques de connectivité.}
@@ -635,7 +639,7 @@ Si les données ponctuelles ne contiennent pas d’attribut d’absence, elles n
 Les données ponctuelles importées dans Graphab peuvent être à l’origine du calcul de matrices de distance inter-points par le menu Matrice de distance du menu contextuel d'un jeu de points (clic droit sur le nom d’un jeu de points).
 
 \begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-fr_img13b.png} 
+	\includegraphics[scale=0.5]{img/manual-fr_point_matrix.png} 
 \end{figure}
 
 Les distances peuvent être calculées de 2 manières : directement sur le raster ou bien à travers un graphe.
@@ -803,11 +807,8 @@ Topologie & Distance & Ordinateur standard & Station de travail & Serveur\\
 La mémoire allouée au programme joue aussi un rôle important. Si il n’y a pas assez de mémoire vive, le calcul sera plus lent voire même ne pourra pas aboutir (message OutOfMemoryError ou GC Overhead). Le menu Fichier / Préférences / Mémoire permet de régler la mémoire allouée pour Graphab. Si vous avez une version 32 bits de Java, Graphab sera limité à environ 2 Go (2000 Mo) de mémoire. Si votre ordinateur a plus que 2 Go de mémoire vive il est fortement conseillé d’installer une version 64 bits de Java pour utiliser la mémoire disponible au-delà des 2 Go.
 
 
-\section{Annexes}
+\section{Métriques}
 
-\subsection{Détail de calcul des métriques}
-
-Tableau récapitulatif des métriques présentes dans Graphab
 \begin{table}[H]
 	\begin{tabular}{|c|p{7cm}|l|c|c|c|c|}
 		\hline
@@ -816,36 +817,36 @@ Tableau récapitulatif des métriques présentes dans Graphab
 		&  &  & Global & Comp. & Local & \\
 		\hline
 		\multirow{6}{2cm}{Métriques pondérées}
-		& Flux & F & × & × & × & \\
-		& Probabilité de connectivité & PC & × & × &  & ×\\
-		& Probabilité de connectivité flux & FPC &  &  & × & \\
-		& Fractions de delta Probabilité de connectivité & dPC &  &  &  & ×\\
-		& Indice de centralité intermédiaire & BC &  &  & × & \\
-		& Indice intégral de connectivité & IIC & × & × &  & ×\\
-		& Flux circuit & CF &  &  & × & \\
+		& \nameref{metric_F} & F & × & × & × & \\
+		& \nameref{metric_PC} & PC & × & × &  & ×\\
+		& \nameref{metric_FPC} & FPC &  &  & × & \\
+		& \nameref{metric_dPC} & dPC &  &  &  & ×\\
+		& \nameref{metric_BC} & BC &  &  & × & \\
+		& \nameref{metric_IIC} & IIC & × & × &  & ×\\
+		& \nameref{metric_CF} & CF &  &  & × & \\
 		\hline
 		\multirow{4}{2cm}{Métriques de surface}
-		& Taille moyenne des composantes & MSC & × &  &  & \\
-		& Taille de la plus grande composante & SLC & × &  &  & \\
-		& Probabilité de coïncidence de classe & CCP & × &  &  & \\
-		& Taille de composante attendue & ECS & × &  &  & \\
+		& \nameref{metric_MSC} & MSC & × &  &  & \\
+		& \nameref{metric_SLC} & SLC & × &  &  & \\
+		& \nameref{metric_CCP} & CCP & × &  &  & \\
+		& \nameref{metric_ECS} & ECS & × &  &  & \\
 		\hline
 		\multirow{9}{2cm}{Métriques topologiques}
-		& Degré & Dg &  &  & × & \\
-		& Coefficient de groupement & CC &  &  & × & \\
-		& Centralité de proximité & CCe &  &  & × & \\
-		& Excentricité & Ec &  &  & × & \\
-		& Corrélation de connectivité & CCor &  &  & × & \\
-		& Elément de coupure & Cut &  &  & × & \\
-		& Nombre de composantes & NC & × &  &  & \\
-		& Diamètre & GD & × & × &  & ×\\
-		& Indice d’Harary & H & × & × &  & ×\\
+		& \nameref{metric_Dg} & Dg &  &  & × & \\
+		& \nameref{metric_CC} & CC &  &  & × & \\
+		& \nameref{metric_CCe} & CCe &  &  & × & \\
+		& \nameref{metric_Ec} & Ec &  &  & × & \\
+		& \nameref{metric_CCor} & CCor &  &  & × & \\
+		& \nameref{metric_NC} & NC & × &  &  & \\
+		& \nameref{metric_GD} & GD & × & × &  & ×\\
+		& \nameref{metric_H} & H & × & × &  & ×\\
+		& \nameref{metric_W} & W & × &  &  & \\
 		\hline
 	\end{tabular}
-
+	\caption{Tableau récapitulatif des métriques présentes dans Graphab}
 \end{table}
 
-Termes mathématiques utilisés
+
 
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{12.604cm}|}
@@ -908,22 +909,24 @@ $
  &
 Exposant permettant de pondérer plus ou moins la capacité\\\hline
 \end{tabular}
+\caption{Termes mathématiques utilisés}
 \end{table}
 
 
-\subsubsection{Métriques pondérées}
+\subsection{Métriques pondérées}
 
+\subsubsection{Flux}
+\label{metric_F}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Flux ($F$)}\\\hline
- &
+Flux ($F$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~global &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-F=\sum _{i=1}^{n}{\sum _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{{a}_{j}^{\beta }}}{e}^{-\alpha {d}_{\mathit{ij}}}
+S\#F=\sum _{i=1}^{n}{\sum _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{{a}_{j}^{\beta }}}{e}^{-\alpha {d}_{\mathit{ij}}}
 \end{equation*}
 } &
 Pour le graphe entier : somme des dispersions potentielles à partir de toutes les taches.\\\hline
@@ -958,12 +961,13 @@ Références &
 \end{table}
 
 
+\subsubsection{Probabilité de Connectivité}
+\label{metric_PC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Probabilité de Connectivité ($PC$)}\\\hline
- &
+Probabilité de Connectivité ($PC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~global
@@ -975,7 +979,7 @@ Delta &
 \mathit{PC}=\frac{1}{{A}^{2}}\sum _{i=1}^{n}{\sum _{j=1}^{n}{{a}_{i}^{\beta }}}{{a}_{j}^{\beta }e}^{-\alpha {d}_{\mathit{ij}}}
 \end{equation*}
 } &
-Pour le graphe entier : somme des produits de la capacité de tous les couples de taches pondérées par leur probabilité d’interaction, divisée par le carré de la zone d’étude. Ce rapport équivaut à la probabilité que deux individus tirés au hasard dans la zone d’étude parviennent à entrer en contact.
+Somme des produits de la capacité de tous les couples de taches pondérées par leur probabilité d’interaction, divisée par le carré de la zone d’étude. Ce rapport équivaut à la probabilité que deux individus tirés au hasard dans la zone d’étude parviennent à entrer en contact.
 
 \\\hline
 Valeurs &
@@ -999,6 +1003,8 @@ Référence &
 \end{table}
 
 
+\subsubsection{Probabilité de Connectivité Flux}
+\label{metric_FPC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
@@ -1030,6 +1036,8 @@ Cette métrique est simplement la contribution locale d’une tache à l’indic
 \end{table}
 
 
+\subsubsection{Fractions de delta Probabilité de Connectivité}
+\label{metric_dPC}
 \begin{table}[H]
 \begin{tabular}{|m{2.2cm}|m{5.5cm}m{7.924cm}|}
 
@@ -1079,11 +1087,12 @@ Référence &
 \end{table}
 
 
+\subsubsection{Indice de centralité intermédiaire}
+\label{metric_BC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Indice de centralité intermédiaire ($BC$)}\\\hline
- &
+Indice de centralité intermédiaire ($BC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~local &
@@ -1127,12 +1136,13 @@ Références &
 \end{table}
 
 
+\subsubsection{Indice Intégral de Connectivité}
+\label{metric_IIC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Indice Intégral de Connectivité ($IIC$)}\\\hline
- &
+Indice Intégral de Connectivité ($IIC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~global
@@ -1144,7 +1154,7 @@ Delta &
 \mathit{IIC}=\frac{1}{{A}^{2}}\sum _{i=1}^{n}{\sum _{j=1}^{n}{{\frac{{a}_{i}{a}_{j}}{{1+\mathit{nl}}_{\mathit{ij}}}}}}
 \end{equation*}
 } &
-Pour le graphe entier : produit des capacités des taches divisé par le nombre de liens qui les sépare, la somme étant divisée par le carré de la surface de la zone d’étude. IIC est construit comme l’indice PC, mais en utilisant l’inverse d’une distance topologique plutôt qu’une fonction exponentielle négative de la distance basée sur l’impédance des liens.
+Produit des capacités des taches divisé par le nombre de liens qui les sépare, la somme étant divisée par le carré de la surface de la zone d’étude. IIC est construit comme l’indice PC, mais en utilisant l’inverse d’une distance topologique plutôt qu’une fonction exponentielle négative de la distance basée sur l’impédance des liens.
 
 \\\hline
 Valeurs &
@@ -1158,11 +1168,13 @@ Référence &
 \end{tabular}
 \end{table}
 
+
+\subsubsection{Flux circuit}
+\label{metric_CF}
 \begin{table}[H]
 	\begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 		\hline
-		\multicolumn{3}{|m{16.044998cm}|}{Flux circuit ($CF$)}\\\hline
-		&
+		Flux circuit ($CF$) &
 		\multicolumn{1}{m{4.4810004cm}|}{Formule} &
 		Signification\\\hline
 		Niveau~local &
@@ -1202,14 +1214,15 @@ Référence &
 \end{table}
 
 
-\subsubsection{Métriques de surface}
+\subsection{Métriques de surface}
 
+\subsubsection{Taille moyenne des composantes}
+\label{metric_MSC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Taille moyenne des composantes (MSC)}\\\hline
- &
+Taille moyenne des composantes ($MSC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~global &
@@ -1217,7 +1230,7 @@ Niveau~global &
 \mathit{MSC}=\frac{1}{\mathit{nc}}\sum _{k=1}^{\mathit{nc}}{{\mathit{ac}}_{k}}
 \end{equation*}
 } &
-Pour le graphe entier : moyenne des capacités des composantes.
+Moyenne des capacités des composantes.
 
 \\\hline
 Valeurs &
@@ -1230,11 +1243,13 @@ Valeur maximale :  $\mathit{SLC}$
 \end{table}
 
 
+\subsubsection{Taille de la plus grande composante}
+\label{metric_SLC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Taille de la plus grande composante (SLC)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Taille de la plus grande composante ($SLC$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
@@ -1243,7 +1258,7 @@ Niveau~global &
 \mathit{SLC}=\mathit{max}\{{\mathit{ac}}_{k}\}
 \end{equation*}
 } &
-Pour le graphe entier : plus grande capacité des composantes.
+Plus grande capacité des composantes.
 
 \\\hline
 Valeurs &
@@ -1256,11 +1271,13 @@ Valeur maximale : capacité maximale
 \end{table}
 
 
+\subsubsection{Probabilité de coïncidence de classe}
+\label{metric_CCP}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Probabilité de coïncidence de classe (CCP)}\\\hline
+\multicolumn{3}{|m{16.044998cm}|}{Probabilité de coïncidence de classe ($CCP$)}\\\hline
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
@@ -1269,13 +1286,13 @@ Niveau~global &
 \mathit{CCP}=\sum _{k=1}^{\mathit{nc}}{{\left(\frac{{\mathit{ac}}_{k}}{\sum _{l}{{\mathit{ac}}_{l}}}\right)}^{2}}
 \end{equation*}
 } &
-Pour le graphe entier : probabilité que deux points choisis au hasard sur le graphe appartiennent à la même composante.
+Probabilité que deux points choisis au hasard sur le graphe appartiennent à la même composante.
 
 \\\hline
 Valeurs &
-\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : capacité minimale (autant de composantes que de taches et capacités uniformes)
+\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : $\rightarrow 0$ (autant de composantes que de taches et capacités uniformes)
 
-Valeur maximale : somme des capacités (1 seule composante)
+Valeur maximale : 1 (une seule composante)
 
 }\\\hline
 Référence &
@@ -1284,12 +1301,13 @@ Référence &
 \end{table}
 
 
+\subsubsection{Taille de composante attendue}
+\label{metric_ECS}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Taille de composante attendue (ECS)}\\\hline
- &
+Taille de composante attendue ($ECS$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~global &
@@ -1297,7 +1315,7 @@ Niveau~global &
 \mathit{ECS}=\frac{1}{\sum _{k}{{\mathit{ac}}_{k}}}\sum _{k=1}^{\mathit{nc}}{{{\mathit{ac}}_{k}^{2}}}
 \end{equation*}
 } &
-Pour le graphe entier : ?
+Taille attendue d'une composante
 
 \\\hline
 Valeurs &
@@ -1312,28 +1330,61 @@ Référence &
 \end{table}
 
 
-\subsubsection{Métriques topologiques}
+\subsection{Métriques topologiques}
 
+\subsubsection{Lambda de Wilks}
+\label{metric_W}
+\begin{table}[H]
+	\begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
+		\hline
+		Lambda de Wilks ($W$) &
+		\multicolumn{1}{m{4.4810004cm}|}{Formule} &
+		Signification\\\hline
+		Niveau global &
+		\multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
+			W_{Lambda}=\frac{|W|}{|T|}
+			\end{equation*}
+		} &
+	Rapport entre la (co)variance intra-classe (intra composante) $|W|$ et la (co)variance totale $|T|$.
+		
+		\\\hline
+		Values &
+		\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0 les taches appartenant à la même composante sont identiques pour toutes les variables sélectionnées.
+			
+		Valeur maximale : 1 les taches appartenant à la même composante ont leurs variables qui diffèrent autant entre elles qu'avec les autres taches.
+			
+		}\\\hline
+		Reference &
+		\multicolumn{2}{m{12.6050005cm}|}{\cite{Everitt2001}, \cite{2017_clustering}}\\\hline
+	\end{tabular}
+\end{table}
+
+
+\subsubsection{Indice d’Harary}
+\label{metric_H}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Indice d’Harary (H)}\\\hline
- &
+Indice d’Harary ($H$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
-Niveau~global  Niveau composante &
+Niveau~global  
+
+Niveau composante 
+
+Delta &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-H=\sum _{i=1}^{n}{\sum _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{\frac{1}{{\mathit{nl}}_{\mathit{ij}}}}}
+H=\frac{1}{2}\sum _{i=1}^{n}{\sum _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{\frac{1}{{\mathit{nl}}_{\mathit{ij}}}}}
 \end{equation*}
 } &
 Somme de l’inverse du nombre de liens séparant tous les couples de taches.
 
 \\\hline
 Valeurs &
-\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : capacité minimale (autant de composantes que de taches et capacités uniformes)
+\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0 pour un graphe sans lien (autant de composantes que de taches)
 
-Valeur maximale : somme des capacités (1 seule composante)
+Valeur maximale : $\frac{n(n-1)}{2}$ pour un graphe complet
 
 }\\\hline
 Commentaire &
@@ -1344,15 +1395,18 @@ Référence &
 \end{table}
 
 
+\subsubsection{Diamètre}
+\label{metric_GD}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Diamètre (GD)}\\\hline
- &
+Diamètre ($GD$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
-Niveau~global  Niveau composante
+Niveau~global  
+
+Niveau composante
 
 Delta &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
@@ -1377,13 +1431,16 @@ Cette métrique est la version globale de la métrique  ${\mathit{Ec}}_{i}$
 }\\\hline
 \end{tabular}
 \end{table}
+
+
+\subsubsection{Nombre de composantes}
+\label{metric_NC}
 \begin{table}[H]
 \raggedright
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Nombre de composantes (NC)}\\\hline
- &
+Nombre de composantes ($NC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~global 
@@ -1402,13 +1459,16 @@ Valeur maximale :  $n$
 }\\\hline
 \end{tabular}
 \end{table}
+
+
+\subsubsection{Degré du noeud}
+\label{metric_Dg}
 \begin{table}[H]
 \raggedright
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Degré du noeud (Dg)}\\\hline
- &
+Degré du noeud (Dg) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~local 
@@ -1417,8 +1477,8 @@ Niveau~local
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
 {\mathit{Dg}}_{i}=\left|{N}_{i}\right|
 \end{equation*}
-} &
-Nombre de taches voisines de la tache i\\\hline
+} & 
+Nombre de liens connectés au noeud $i$ \textit{ie.} nombre de taches voisines de la tache $i$\\\hline
 Valeurs &
 \multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0
 
@@ -1431,13 +1491,16 @@ Commentaire &
 }\\\hline
 \end{tabular}
 \end{table}
+
+
+\subsubsection{Coefficient de groupement}
+\label{metric_CC}
 \begin{table}[H]
 \raggedright
 \begin{tabular}{|m{3.24cm}|m{5.303cm}m{7.103cm}|}
 
 \hline
-\multicolumn{3}{|m{16.046cm}|}{Coefficient de groupement (CC)}\\\hline
- &
+Coefficient de groupement ($CC$) &
 \multicolumn{1}{m{5.303cm}|}{Formule} &
 Signification\\\hline
 Niveau~local 
@@ -1456,13 +1519,16 @@ Commentaire &
 \multicolumn{2}{m{12.606cm}|}{Si  $\left|{N}_{i}\right|{\leq}1\rightarrow {\mathit{CC}}_{i}=0$ }\\\hline
 \end{tabular}
 \end{table}
+
+
+\subsubsection{Centralité de proximité}
+\label{metric_CCe}
 \begin{table}[H]
 \raggedright
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Centralité de proximité (CCe)}\\\hline
- &
+Centralité de proximité ($CCe$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~local 
@@ -1483,13 +1549,16 @@ Commentaire &
 \multicolumn{2}{m{12.6050005cm}|}{Si  ${n}_{k}=1\rightarrow {\mathit{CCe}}_{i}=0$ }\\\hline
 \end{tabular}
 \end{table}
+
+
+\subsubsection{Excentricité}
+\label{metric_Ec}
 \begin{table}[H]
 \raggedright
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Excentricité (Ec)}\\\hline
- &
+Excentricité ($Ec$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~local 
@@ -1499,7 +1568,7 @@ Niveau~local
 {\mathit{Ec}}_{i}=\underset{j}{\mathit{max}}{d}_{\mathit{ij}}
 \end{equation*}
 } &
-Distance maximale de la tache i vers une autre tache de sa composante. \\\hline
+Distance maximale de la tache $i$ vers une autre tache de sa composante. \\\hline
 Valeurs &
 \multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0
 
@@ -1508,13 +1577,15 @@ Valeur maximale :  $+{\infty}$
 }\\\hline
 \end{tabular}
 \end{table}
+
+\subsubsection{Corrélation de connectivité}
+\label{metric_CCor}
 \begin{table}[H]
 \raggedright
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 
 \hline
-\multicolumn{3}{|m{16.044998cm}|}{Corrélation de connectivité (CCor)}\\\hline
- &
+Corrélation de connectivité ($CCor$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
 Niveau~local 
@@ -1524,7 +1595,7 @@ Niveau~local
 {\mathit{CCor}}_{i}=\frac{{\left|{N}_{i}\right|}^{2}}{\sum _{j{\in}{N}_{i}}{\left|{N}_{j}\right|}}
 \end{equation*}
 } &
-Rapport entre le degré du nœud i et le degré de ses nœuds voisins j\\\hline
+Rapport entre le degré du nœud $i$ et le degré de ses nœuds voisins $j$\\\hline
 Valeurs &
 \multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0
 

@@ -1,5 +1,15 @@
 ## Changelog
 
+##### version 2.1.7 (13/09/2017)
+- UI : add Corridor calculation on linkset contextual menu
+- UI : DEM is visible in layers
+- UI : in most input distance fields, shows the unit: cost or meter
+- UI : default probability sets to 0.5
+- CLI : --corridor command supports distance conversion
+- CLI : --graph command add name option
+- CLI : add --cluster command
+- Full support of ascii grid format (.asc)
+
 ##### version 2.1.6 (13/07/2017)
 - Project migration to sourcesup
 

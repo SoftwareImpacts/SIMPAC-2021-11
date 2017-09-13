@@ -93,6 +93,7 @@ import org.thema.data.GlobalDataStore;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
+import org.thema.drawshape.image.CoverageShape;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.DefaultGroupLayer;
 import org.thema.drawshape.layer.FeatureLayer;
@@ -1774,6 +1775,24 @@ public final class Project {
             exoLayers.addLayerLast(l);
         }
         
+        if(isDemExist()) {
+            if(getAbsoluteFile(demFile).exists()) {
+                try {
+                    GridCoverage2D g = IOImage.loadCoverage(getAbsoluteFile(demFile));
+                    RasterLayer l = new RasterLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DEM"), 
+                            new CoverageShape(g, new RasterStyle()));
+                    l.setVisible(false);
+                    l.setDrawLegend(false);
+                    rootLayer.addLayerLast(l);
+                } catch (IOException ex) {
+                    Logger.getLogger(Project.class.getName()).log(Level.WARNING, null, ex);
+                    JOptionPane.showMessageDialog(null, "DEM file cannot be loaded.", "DEM", JOptionPane.WARNING_MESSAGE);
+                }
+            } else {
+                demFile = null;
+            }
+        }
+        
     }
 
     /**
@@ -2018,11 +2037,8 @@ public final class Project {
         if(!isDemExist()) {
             throw new IllegalStateException("No DEM file");
         }
-        if(demFile.isAbsolute()) {
-            return getExtRaster(demFile);
-        } else {
-            return getExtRaster(new File(getDirectory(), demFile.getPath()));
-        }
+        
+        return getExtRaster(getAbsoluteFile(demFile));
     }
     
     /**
@@ -2038,8 +2054,27 @@ public final class Project {
         } else {
             this.demFile = demFile.getAbsoluteFile();
         }
-        // try loading DEM
-        getDemRaster();
+
+        // if the DEM layer already exists, remove it
+        String layerName = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DEM");
+        for(Layer l : new ArrayList<>(rootLayer.getLayers())) {
+            if(l.getName().equals(layerName)) {
+                rootLayer.removeLayer(l);
+            }
+        }
+         
+        // Add new layer
+        try {
+            GridCoverage2D g = IOImage.loadCoverage(demFile);
+            RasterLayer l = new RasterLayer(layerName, 
+                    new CoverageShape(g, new RasterStyle()));
+            l.setVisible(false);
+            rootLayer.addLayerLast(l);
+        } catch (IOException ex) {
+            Logger.getLogger(Project.class.getName()).log(Level.WARNING, null, ex);
+            JOptionPane.showMessageDialog(null, "DEM file cannot be loaded.", "DEM", JOptionPane.WARNING_MESSAGE);
+        }
+        
         save();
     }
     
@@ -2048,6 +2083,19 @@ public final class Project {
      */
     public boolean isDemExist() {
         return demFile != null;
+    }
+    
+    /**
+     * If the path of the f is relative, sets the project directory as parent directory and return a new absolute file
+     * @param f 
+     * @return the absolute path for a file
+     */
+    public File getAbsoluteFile(File f) {
+        if(f.isAbsolute()) {
+            return f;
+        } else {
+            return new File(getDirectory(), f.getPath());
+        }
     }
     
     /**
