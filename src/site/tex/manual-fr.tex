@@ -57,7 +57,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		12/05/2016\\
+		13/09/2017\\
 	}
 	
 \end{titlepage}
@@ -402,7 +402,6 @@ Dans la fenêtre de dialogue qui s’ouvre suite au choix d’un de ces quatre m
  & Centralité de proximité & CCe &  &  & × & \\
  & Excentricité & Ec &  &  & × & \\
  & Corrélation de connectivité & CCor &  &  & × & \\
- & Elément de coupure & Cut &  &  & × & \\
  & Nombre de composantes & NC & × &  &  & \\
  & Diamètre & GD & × & × &  & ×\\
  & Indice d’Harary & H & × & × &  & ×\\
@@ -807,7 +806,6 @@ La mémoire allouée au programme joue aussi un rôle important. Si il n’y a p
 
 \subsection{Détail de calcul des métriques}
 
-Tableau récapitulatif des métriques présentes dans Graphab
 \begin{table}[H]
 	\begin{tabular}{|c|p{7cm}|l|c|c|c|c|}
 		\hline
@@ -836,16 +834,15 @@ Tableau récapitulatif des métriques présentes dans Graphab
 		& Centralité de proximité & CCe &  &  & × & \\
 		& Excentricité & Ec &  &  & × & \\
 		& Corrélation de connectivité & CCor &  &  & × & \\
-		& Elément de coupure & Cut &  &  & × & \\
 		& Nombre de composantes & NC & × &  &  & \\
 		& Diamètre & GD & × & × &  & ×\\
 		& Indice d’Harary & H & × & × &  & ×\\
 		\hline
 	\end{tabular}
-
+	\caption{Tableau récapitulatif des métriques présentes dans Graphab}
 \end{table}
 
-Termes mathématiques utilisés
+
 
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{12.604cm}|}
@@ -908,6 +905,7 @@ $
  &
 Exposant permettant de pondérer plus ou moins la capacité\\\hline
 \end{tabular}
+\caption{Termes mathématiques utilisés}
 \end{table}
 
 
@@ -923,7 +921,7 @@ Exposant permettant de pondérer plus ou moins la capacité\\\hline
 Signification\\\hline
 Niveau~global &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-F=\sum _{i=1}^{n}{\sum _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{{a}_{j}^{\beta }}}{e}^{-\alpha {d}_{\mathit{ij}}}
+S\#F=\sum _{i=1}^{n}{\sum _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{{a}_{j}^{\beta }}}{e}^{-\alpha {d}_{\mathit{ij}}}
 \end{equation*}
 } &
 Pour le graphe entier : somme des dispersions potentielles à partir de toutes les taches.\\\hline
@@ -975,7 +973,7 @@ Delta &
 \mathit{PC}=\frac{1}{{A}^{2}}\sum _{i=1}^{n}{\sum _{j=1}^{n}{{a}_{i}^{\beta }}}{{a}_{j}^{\beta }e}^{-\alpha {d}_{\mathit{ij}}}
 \end{equation*}
 } &
-Pour le graphe entier : somme des produits de la capacité de tous les couples de taches pondérées par leur probabilité d’interaction, divisée par le carré de la zone d’étude. Ce rapport équivaut à la probabilité que deux individus tirés au hasard dans la zone d’étude parviennent à entrer en contact.
+Somme des produits de la capacité de tous les couples de taches pondérées par leur probabilité d’interaction, divisée par le carré de la zone d’étude. Ce rapport équivaut à la probabilité que deux individus tirés au hasard dans la zone d’étude parviennent à entrer en contact.
 
 \\\hline
 Valeurs &
@@ -1144,7 +1142,7 @@ Delta &
 \mathit{IIC}=\frac{1}{{A}^{2}}\sum _{i=1}^{n}{\sum _{j=1}^{n}{{\frac{{a}_{i}{a}_{j}}{{1+\mathit{nl}}_{\mathit{ij}}}}}}
 \end{equation*}
 } &
-Pour le graphe entier : produit des capacités des taches divisé par le nombre de liens qui les sépare, la somme étant divisée par le carré de la surface de la zone d’étude. IIC est construit comme l’indice PC, mais en utilisant l’inverse d’une distance topologique plutôt qu’une fonction exponentielle négative de la distance basée sur l’impédance des liens.
+Produit des capacités des taches divisé par le nombre de liens qui les sépare, la somme étant divisée par le carré de la surface de la zone d’étude. IIC est construit comme l’indice PC, mais en utilisant l’inverse d’une distance topologique plutôt qu’une fonction exponentielle négative de la distance basée sur l’impédance des liens.
 
 \\\hline
 Valeurs &
@@ -1217,7 +1215,7 @@ Niveau~global &
 \mathit{MSC}=\frac{1}{\mathit{nc}}\sum _{k=1}^{\mathit{nc}}{{\mathit{ac}}_{k}}
 \end{equation*}
 } &
-Pour le graphe entier : moyenne des capacités des composantes.
+Moyenne des capacités des composantes.
 
 \\\hline
 Valeurs &
@@ -1243,7 +1241,7 @@ Niveau~global &
 \mathit{SLC}=\mathit{max}\{{\mathit{ac}}_{k}\}
 \end{equation*}
 } &
-Pour le graphe entier : plus grande capacité des composantes.
+Plus grande capacité des composantes.
 
 \\\hline
 Valeurs &
@@ -1269,13 +1267,13 @@ Niveau~global &
 \mathit{CCP}=\sum _{k=1}^{\mathit{nc}}{{\left(\frac{{\mathit{ac}}_{k}}{\sum _{l}{{\mathit{ac}}_{l}}}\right)}^{2}}
 \end{equation*}
 } &
-Pour le graphe entier : probabilité que deux points choisis au hasard sur le graphe appartiennent à la même composante.
+Probabilité que deux points choisis au hasard sur le graphe appartiennent à la même composante.
 
 \\\hline
 Valeurs &
-\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : capacité minimale (autant de composantes que de taches et capacités uniformes)
+\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : $\rightarrow 0$ (autant de composantes que de taches et capacités uniformes)
 
-Valeur maximale : somme des capacités (1 seule composante)
+Valeur maximale : 1 (une seule composante)
 
 }\\\hline
 Référence &
@@ -1297,7 +1295,7 @@ Niveau~global &
 \mathit{ECS}=\frac{1}{\sum _{k}{{\mathit{ac}}_{k}}}\sum _{k=1}^{\mathit{nc}}{{{\mathit{ac}}_{k}^{2}}}
 \end{equation*}
 } &
-Pour le graphe entier : ?
+Taille attendue d'une composante
 
 \\\hline
 Valeurs &
@@ -1322,18 +1320,22 @@ Référence &
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
-Niveau~global  Niveau composante &
+Niveau~global  
+
+Niveau composante 
+
+Delta &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-H=\sum _{i=1}^{n}{\sum _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{\frac{1}{{\mathit{nl}}_{\mathit{ij}}}}}
+H=\frac{1}{2}\sum _{i=1}^{n}{\sum _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{\frac{1}{{\mathit{nl}}_{\mathit{ij}}}}}
 \end{equation*}
 } &
 Somme de l’inverse du nombre de liens séparant tous les couples de taches.
 
 \\\hline
 Valeurs &
-\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : capacité minimale (autant de composantes que de taches et capacités uniformes)
+\multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0 pour un graphe sans lien (autant de composantes que de taches)
 
-Valeur maximale : somme des capacités (1 seule composante)
+Valeur maximale : $\frac{n(n-1)}{2}$ pour un graphe complet
 
 }\\\hline
 Commentaire &
@@ -1352,7 +1354,9 @@ Référence &
  &
 \multicolumn{1}{m{4.4810004cm}|}{Formule} &
 Signification\\\hline
-Niveau~global  Niveau composante
+Niveau~global  
+
+Niveau composante
 
 Delta &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
@@ -1417,8 +1421,8 @@ Niveau~local
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
 {\mathit{Dg}}_{i}=\left|{N}_{i}\right|
 \end{equation*}
-} &
-Nombre de taches voisines de la tache i\\\hline
+} & 
+Nombre de liens connectés au noeud $i$ \textit{ie.} nombre de taches voisines de la tache $i$\\\hline
 Valeurs &
 \multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0
 
@@ -1499,7 +1503,7 @@ Niveau~local
 {\mathit{Ec}}_{i}=\underset{j}{\mathit{max}}{d}_{\mathit{ij}}
 \end{equation*}
 } &
-Distance maximale de la tache i vers une autre tache de sa composante. \\\hline
+Distance maximale de la tache $i$ vers une autre tache de sa composante. \\\hline
 Valeurs &
 \multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0
 
@@ -1524,7 +1528,7 @@ Niveau~local
 {\mathit{CCor}}_{i}=\frac{{\left|{N}_{i}\right|}^{2}}{\sum _{j{\in}{N}_{i}}{\left|{N}_{j}\right|}}
 \end{equation*}
 } &
-Rapport entre le degré du nœud i et le degré de ses nœuds voisins j\\\hline
+Rapport entre le degré du nœud $i$ et le degré de ses nœuds voisins $j$\\\hline
 Valeurs &
 \multicolumn{2}{m{12.6050005cm}|}{Valeur minimale : 0
 

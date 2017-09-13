@@ -57,7 +57,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2016-05-12\\
+	2017-09-13\\
 	}
 	
 \end{titlepage}
@@ -385,7 +385,8 @@ Whichever the selected level, the user must first specify the graph on which the
 \hhline{~~~---~}
  & & & Global & Comp. & Local &\\
 \hline
-\multirow{6}{*}{Weighted} & Flux & F & × & × & × &\\
+\multirow{6}{*}{Weighted} 
+& Flux & F & × & × & × &\\
 \hhline{~------}
  & Probability of connectivity & PC & × & × &  & ×\\
 \hhline{~------}
@@ -399,7 +400,8 @@ Whichever the selected level, the user must first specify the graph on which the
  \hhline{~------}
  & Current flow & CF &  &  & × & \\ 
 \hline
-\multirow{4}{*}{Area} & Mean size of the components & MSC & × &  &  & \\
+\multirow{4}{*}{Area} 
+& Mean size of the components & MSC & × &  &  & \\
 \hhline{~------}
  & Size of the largest component & SLC & × &  &  & \\
 \hhline{~------}
@@ -407,7 +409,8 @@ Whichever the selected level, the user must first specify the graph on which the
 \hhline{~------}
  & Expected cluster size & ECS & × &  &  & \\
 \hline
-\multirow{9}{*}{Topological} & Node Degree & Dg &  &  & × & \\
+\multirow{9}{*}{Topological} 
+& Node Degree & Dg &  &  & × & \\
 \hhline{~------}
  & Clustering coefficient  & CC &  &  & × & \\
 \hhline{~------}
@@ -417,13 +420,11 @@ Whichever the selected level, the user must first specify the graph on which the
 \hhline{~------}
  & Connectivity correlation & CCor &  &  & × & \\
 \hhline{~------}
- & Number of components & Cut &  &  & × & \\
+ & Number of components & NC & × &  &  & \\
 \hhline{~------}
- & Graph diameter & NC & × &  &  & \\
+ & Graph diameter & GD & × & × &  & ×\\
 \hhline{~------}
- & Harary Index & GD & × & × &  & ×\\
-\hhline{~------}
- & Node Degree & H & × & × &  & ×\\
+ & Harary Index & H & × & × &  & ×\\
 \hline
 \end{tabular}
 \caption{Connectivity metrics and computing level}
@@ -831,7 +832,6 @@ recommended you install the 64-bit version of Java to use the available memory b
 
 \subsection{Details of metric calculations}
 
-Summary table of metrics in Graphab
 
 \begin{table}[H]
 \begin{tabular}{|c|l|l|c|c|c|c|}
@@ -840,7 +840,8 @@ Summary table of metrics in Graphab
 	\hhline{~~~---~}
 	& & & Global & Comp. & Local &\\
 	\hline
-	\multirow{6}{*}{Weighted} & Flux & F & × & × & × &\\
+	\multirow{6}{*}{Weighted} 
+	& Flux & F & × & × & × &\\
 	\hhline{~------}
 	& Probability of connectivity & PC & × & × &  & ×\\
 	\hhline{~------}
@@ -854,7 +855,8 @@ Summary table of metrics in Graphab
 	\hhline{~------}	
 	& Current flow & CF &  &  & × & \\
 	\hline
-	\multirow{4}{*}{Area} & Mean size of the components & MSC & × &  &  & \\
+	\multirow{4}{*}{Area} 
+	& Mean size of the components & MSC & × &  &  & \\
 	\hhline{~------}
 	& Size of the largest component & SLC & × &  &  & \\
 	\hhline{~------}
@@ -862,7 +864,8 @@ Summary table of metrics in Graphab
 	\hhline{~------}
 	& Expected cluster size & ECS & × &  &  & \\
 	\hline
-	\multirow{9}{*}{Topological} & Node Degree & Dg &  &  & × & \\
+	\multirow{9}{*}{Topological} 
+	& Node Degree & Dg &  &  & × & \\
 	\hhline{~------}
 	& Clustering coefficient  & CC &  &  & × & \\
 	\hhline{~------}
@@ -872,20 +875,18 @@ Summary table of metrics in Graphab
 	\hhline{~------}
 	& Connectivity correlation & CCor &  &  & × & \\
 	\hhline{~------}
-	& Number of components & Cut &  &  & × & \\
+	& Number of components & NC & × &  &  & \\
 	\hhline{~------}
-	& Graph diameter & NC & × &  &  & \\
+	& Graph diameter & GD & × & × &  & ×\\
 	\hhline{~------}
-	& Harary Index & GD & × & × &  & ×\\
-	\hhline{~------}
-	& Node Degree & H & × & × &  & ×\\
+	& Harary Index & H & × & × &  & ×\\
 	\hline
 \end{tabular}
+\caption{Summary table of metrics in Graphab}
 \end{table}
 
 \bigskip
 
-Mathematical terms used
 \begin{table}[H]
 	\begin{tabular}{|m{2cm}|m{13cm}|}
 		\hline
@@ -902,6 +903,7 @@ Mathematical terms used
 		$\alpha$ & Brake on movement distance  \\\hline
 		$\beta$	& Exponent to weight more or less capacity\\\hline
 	\end{tabular}
+	\caption{Mathematical terms used}
 \end{table}
 
 
@@ -916,7 +918,7 @@ Mathematical terms used
 Meaning\\\hline
 Global level &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-F=\sum _{i=1}^{n}{\sum
+S\#F=\sum _{i=1}^{n}{\sum
 _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{{a}_{j}^{\beta
 }}}{e}^{-\alpha {d}_{\mathit{ij}}}
 \end{equation*}
@@ -982,7 +984,7 @@ _{j=1}^{n}{{a}_{i}^{\beta }}}{{a}_{j}^{\beta }e}^{-\alpha
 {d}_{\mathit{ij}}}
 \end{equation*}
 } &
-For the entire graph: sum of products of capacity of all pairs of patches weighted by their interaction probability, divided by the square of the area of the study zone. This ratio is the equivalent to the probability that two points randomly placed in the study area are connected.\\\hline
+Sum of products of capacity of all pairs of patches weighted by their interaction probability, divided by the square of the area of the study zone. This ratio is the equivalent to the probability that two points randomly placed in the study area are connected.\\\hline
 Values &
 \multicolumn{2}{m{12.6050005cm}|}{Values correspond to a probability.
 	
@@ -1262,7 +1264,7 @@ Global level &
 _{k=1}^{\mathit{nc}}{{\mathit{ac}}_{k}}
 \end{equation*}
 } &
-For the entire graph: mean of the component capacities.
+Mean of the component capacities.
 
 \\\hline
 Values &
@@ -1287,7 +1289,7 @@ Global level &
 \mathit{SLC}=\mathit{max}\{{\mathit{ac}}_{k}\}
 \end{equation*}
 } &
-For the entire graph: largest capacity of components.
+Largest capacity of components.
 
 \\\hline
 Values &
@@ -1314,13 +1316,12 @@ _{k=1}^{\mathit{nc}}{{\left(\frac{{\mathit{ac}}_{k}}{\sum
 _{l}{{\mathit{ac}}_{l}}}\right)}^{2}}
 \end{equation*}
 } &
-For the entire graph: probability that two points randomly placed on the
+Probability that two points randomly placed on the
 graph belong to the same component.\\\hline
 Values &
-\multicolumn{2}{m{12.6050005cm}|}{Minimum value: minimum capacity (as
-many components as patches and regular capacities)
+\multicolumn{2}{m{12.6050005cm}|}{Minimum value: $\rightarrow 0$ (as many components as patches and regular capacities)
 
-Maximum value: sum of capacities (only one component)
+Maximum value: 1 (only one component)
 
 }\\\hline
 Reference &
@@ -1342,7 +1343,7 @@ Global level &
 _{k=1}^{\mathit{nc}}{{{\mathit{ac}}_{k}^{2}}}
 \end{equation*}
 } &
-For the entire graph:~size of a component 
+Expected size of a component 
 
 \\\hline
 Values &
@@ -1369,9 +1370,11 @@ Reference &
 Meaning\\\hline
 Global level
 
-Component level &
+Component level
+
+Delta  &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-H=\sum _{i=1}^{n}{\sum
+H=\frac{1}{2}\sum _{i=1}^{n}{\sum
 _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{\frac{1}{{\mathit{nl}}_{\mathit{ij}}}}}
 \end{equation*}
 } &
@@ -1379,10 +1382,9 @@ Sum of the inverse of the number of links between all pairs of patches.
 
 \\\hline
 Values &
-\multicolumn{2}{m{12.6050005cm}|}{Minimum value: minimum capacity (as
-many components as patches and regular capacities)
+\multicolumn{2}{m{12.6050005cm}|}{Minimum value: 0 for a graph with no edges
 
-Maximum value: sum of capacities (only one component)
+Maximum value: $\frac{n(n-1)}{2}$ for a complete graph
 
 }\\\hline
 Comment &
@@ -1403,7 +1405,9 @@ Reference &
 Meaning\\\hline
 Global level
 
-Component level Delta &
+Component level 
+
+Delta &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
 \mathit{GD}=\underset{\mathit{ij}}{\mathit{max}}{d}_{\mathit{ij}}
 \end{equation*}
@@ -1474,7 +1478,8 @@ Local level
 {\mathit{Dg}}_{i}=\left|{N}_{i}\right|
 \end{equation*}
 } &
-Number of the patches close to the patch i\\\hline
+Number of edges connected to the node $i$ \textit{ie.}
+number of patches connected directly to the patch $i$\\\hline
 Values &
 \multicolumn{2}{m{12.6050005cm}|}{Minimum value: 0
 
