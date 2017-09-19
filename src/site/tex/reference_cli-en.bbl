@@ -1,0 +1,74 @@
+\begin{thebibliography}{11}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[Clauzel et~al.(2015{\natexlab{a}})]{2015_addpatch_rainette}
+Celine Clauzel, Cyrielle Bannwarth, and Jean-Christophe Foltete,
+  2015{\natexlab{a}}.
+\newblock Integrating regional-scale connectivity in habitat restoration: An
+  application for amphibian conservation in eastern france.
+\newblock \emph{Journal for Nature Conservation}, 23 98 -- 107.
+
+\bibitem[Clauzel et~al.(2015{\natexlab{b}})]{2015_monkey}
+Celine Clauzel, Deng Xiqing, Wu~Gongsheng, Patrick Giraudoux, and Li~Li,
+  2015{\natexlab{b}}.
+\newblock Assessing the impact of road developments on connectivity across
+  multiple scales: Application to yunnan snub-nosed monkey conservation.
+\newblock \emph{Biological Conservation}, 192 207 -- 217.
+
+\bibitem[Clauzel et~al.(2013)]{2013_SDM_rainette}
+Céline Clauzel, Xavier Girardet, and Jean-Christophe Foltête, 2013.
+\newblock Impact assessment of a high-speed railway line on species
+  distribution: Application to the european tree frog (hyla arborea) in
+  franche-comté.
+\newblock \emph{Journal of Environmental Management}, 127 125 -- 134.
+
+\bibitem[Folt{\^e}te and Vuidel(2017)]{2017_clustering}
+Jean-Christophe Folt{\^e}te and Gilles Vuidel, 2017.
+\newblock Using landscape graphs to delineate ecologically functional areas.
+\newblock \emph{Landscape Ecology}, 32(2) 249--263.
+
+\bibitem[Foltête et~al.(2012{\natexlab{a}})]{2012_graphab_EMS}
+Jean-Christophe Foltête, Céline Clauzel, and Gilles Vuidel,
+  2012{\natexlab{a}}.
+\newblock A software tool dedicated to the modelling of landscape networks.
+\newblock \emph{Environmental Modelling and Software}, 38 316 -- 327.
+
+\bibitem[Foltête et~al.(2012{\natexlab{b}})]{2012_SDM}
+Jean-Christophe Foltête, Céline Clauzel, Gilles Vuidel, and Pierline
+  Tournant, 2012{\natexlab{b}}.
+\newblock Integrating graph-based connectivity metrics into species
+  distribution models.
+\newblock \emph{Landscape Ecology}, 27(4) 557--569.
+
+\bibitem[Foltête et~al.(2016)]{2016_campagnole}
+Jean-Christophe Foltête, Geoffroy Couval, Marilyne Fontanier, Gilles Vuidel,
+  and Patrick Giraudoux, 2016.
+\newblock A graph-based approach to defend agro-ecological systems against
+  water vole outbreaks.
+\newblock \emph{Ecological Indicators}, 71 87 -- 98.
+
+\bibitem[Foltête et~al.(2014)]{2014_LUP}
+Jean-Christophe Foltête, Xavier Girardet, and Céline Clauzel, 2014.
+\newblock A methodological framework for the use of landscape graphs in
+  land-use planning.
+\newblock \emph{Landscape and Urban Planning}, 124 140 -- 150.
+
+\bibitem[Girardet et~al.(2013)]{2013_SDM}
+Xavier Girardet, Jean-Christophe Foltête, and Céline Clauzel, 2013.
+\newblock Designing a graph-based approach to landscape ecological assessment
+  of linear infrastructures.
+\newblock \emph{Environmental Impact Assessment Review}, 42 10 -- 17.
+
+\bibitem[Newman(2006)]{Newman2006}
+M.~E.~J. Newman, 2006.
+\newblock Modularity and community structure in networks.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 103(23)
+  8577--8582.
+
+\bibitem[Sahraoui et~al.(2017)]{2017_landmod}
+Yohan Sahraoui, Jean-Christophe Folt{\^e}te, and C{\'e}line Clauzel, 2017.
+\newblock A multi-species approach for assessing the impact of land-cover
+  changes on landscape connectivity.
+\newblock \emph{Landscape Ecology}, 32(9) 1819--1835.
+
+\end{thebibliography}

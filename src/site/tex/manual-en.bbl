@@ -1,0 +1,140 @@
+\begin{thebibliography}{22}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[Bodin and Saura(2010)]{Bodin2010}
+Orjan Bodin and Santiago Saura, 2010.
+\newblock Ranking individual habitat patches as connectivity providers:
+  Integrating network analysis and patch removal experiments.
+\newblock \emph{Ecological Modelling}, 221(19) 2393 -- 2405.
+
+\bibitem[Brandes et~al.(2008)]{Brandes2008}
+U.~Brandes, D.~Delling, M.~Gaertler, R.~Gorke, M.~Hoefer, Z.~Nikoloski, and
+  D.~Wagner, 2008.
+\newblock On modularity clustering.
+\newblock \emph{Knowledge and Data Engineering, IEEE Transactions on}, 20(2)
+  172--188.
+
+\bibitem[Clauzel et~al.(2015{\natexlab{a}})]{2015_addpatch_rainette}
+Celine Clauzel, Cyrielle Bannwarth, and Jean-Christophe Foltete,
+  2015{\natexlab{a}}.
+\newblock Integrating regional-scale connectivity in habitat restoration: An
+  application for amphibian conservation in eastern france.
+\newblock \emph{Journal for Nature Conservation}, 23 98 -- 107.
+
+\bibitem[Clauzel et~al.(2015{\natexlab{b}})]{2015_monkey}
+Celine Clauzel, Deng Xiqing, Wu~Gongsheng, Patrick Giraudoux, and Li~Li,
+  2015{\natexlab{b}}.
+\newblock Assessing the impact of road developments on connectivity across
+  multiple scales: Application to yunnan snub-nosed monkey conservation.
+\newblock \emph{Biological Conservation}, 192 207 -- 217.
+
+\bibitem[Clauzel et~al.(2013)]{2013_SDM_rainette}
+Céline Clauzel, Xavier Girardet, and Jean-Christophe Foltête, 2013.
+\newblock Impact assessment of a high-speed railway line on species
+  distribution: Application to the european tree frog (hyla arborea) in
+  franche-comté.
+\newblock \emph{Journal of Environmental Management}, 127 125 -- 134.
+
+\bibitem[Everitt and Dunn(2001)]{Everitt2001}
+Brian~S Everitt and Graham Dunn, 2001.
+\newblock \emph{Applied multivariate data analysis}, volume~2.
+\newblock Wiley Online Library.
+
+\bibitem[Folt{\^e}te and Vuidel(2017)]{2017_clustering}
+Jean-Christophe Folt{\^e}te and Gilles Vuidel, 2017.
+\newblock Using landscape graphs to delineate ecologically functional areas.
+\newblock \emph{Landscape Ecology}, 32(2) 249--263.
+
+\bibitem[Foltête et~al.(2012{\natexlab{a}})]{2012_graphab_EMS}
+Jean-Christophe Foltête, Céline Clauzel, and Gilles Vuidel,
+  2012{\natexlab{a}}.
+\newblock A software tool dedicated to the modelling of landscape networks.
+\newblock \emph{Environmental Modelling and Software}, 38 316 -- 327.
+
+\bibitem[Foltête et~al.(2012{\natexlab{b}})]{2012_SDM}
+Jean-Christophe Foltête, Céline Clauzel, Gilles Vuidel, and Pierline
+  Tournant, 2012{\natexlab{b}}.
+\newblock Integrating graph-based connectivity metrics into species
+  distribution models.
+\newblock \emph{Landscape Ecology}, 27(4) 557--569.
+
+\bibitem[Foltête et~al.(2014)]{2014_LUP}
+Jean-Christophe Foltête, Xavier Girardet, and Céline Clauzel, 2014.
+\newblock A methodological framework for the use of landscape graphs in
+  land-use planning.
+\newblock \emph{Landscape and Urban Planning}, 124 140 -- 150.
+
+\bibitem[Girardet et~al.(2015)]{2015_collisions}
+Xavier Girardet, Géraldine Conruyt-Rogeon, and Jean-Christophe Foltête, 2015.
+\newblock Does regional landscape connectivity influence the location of roe
+  deer roadkill hotspots?
+\newblock \emph{European Journal of Wildlife Research}, 61(5) 731--742.
+
+\bibitem[Girardet et~al.(2013)]{2013_SDM}
+Xavier Girardet, Jean-Christophe Foltête, and Céline Clauzel, 2013.
+\newblock Designing a graph-based approach to landscape ecological assessment
+  of linear infrastructures.
+\newblock \emph{Environmental Impact Assessment Review}, 42 10 -- 17.
+
+\bibitem[McRae et~al.(2008)]{McRae2008}
+Brad~H. McRae, Brett~G. Dickson, Timothy~H. Keitt, and Viral~B. Shah, 2008.
+\newblock Using circuit theory to model connectivity in ecology, evolution, and
+  conservation.
+\newblock \emph{Ecology}, 89(10) 2712 -- 2724.
+
+\bibitem[Minor and Urban(2008)]{Minor2008}
+Emily Minor and Dean Urban, 2008.
+\newblock A graph-theory framework for evaluating landscape connectivity and
+  conservation planning.
+\newblock \emph{Conservation biology}, 22 297--307.
+
+\bibitem[Newman(2006)]{Newman2006}
+M.~E.~J. Newman, 2006.
+\newblock Modularity and community structure in networks.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 103(23)
+  8577--8582.
+
+\bibitem[O’Brien et~al.(2006)]{OBrien2006}
+Dan O’Brien, Micheline Manseau, Andrew Fall, and Marie-Josée Fortin, 2006.
+\newblock Testing the importance of spatial configuration of winter habitat for
+  woodland caribou: An application of graph theory.
+\newblock \emph{Biological Conservation}, 130(1) 70 -- 83.
+
+\bibitem[Pascual-Hortal and Saura(2006)]{Pascual2006}
+Lucía Pascual-Hortal and Santiago Saura, 2006.
+\newblock Comparison and development of new graph-based landscape connectivity
+  indices: towards the priorization of habitat patches and corridors for
+  conservation.
+\newblock \emph{Landscape Ecology}, 21(7) 959--967.
+
+\bibitem[Ricotta et~al.(2000)]{Ricotta2000}
+C.~Ricotta, A.~Stanisci, G.C. Avena, and C.~Blasi, 2000.
+\newblock Quantifying the network connectivity of landscape mosaics: a
+  graph-theoretical approach.
+\newblock \emph{Community Ecology}, 1(1) 89--94.
+
+\bibitem[Saura and Pascual-Hortal(2007)]{Saura2007}
+Santiago Saura and Lucía Pascual-Hortal, 2007.
+\newblock A new habitat availability index to integrate connectivity in
+  landscape conservation planning: Comparison with existing indices and
+  application to a case study.
+\newblock \emph{Landscape and Urban Planning}, 83(2–3) 91 -- 103.
+
+\bibitem[Saura and Rubio(2010)]{Saura2010}
+Santiago Saura and Lidón Rubio, 2010.
+\newblock A common currency for the different ways in which patches and links
+  can contribute to habitat availability and connectivity in the landscape.
+\newblock \emph{Ecography}, 33(3) 523--537.
+
+\bibitem[Saura and Torné(2009)]{Saura2009}
+Santiago Saura and Josep Torné, 2009.
+\newblock Conefor sensinode 2.2: A software package for quantifying the
+  importance of habitat patches for landscape connectivity.
+\newblock \emph{Environmental Modelling and Software}, 24(1) 135 -- 139.
+
+\bibitem[Urban and Keitt(2001)]{Urban2001}
+Dean Urban and Timothy Keitt, 2001.
+\newblock Landscape connectivity: A graph-theoretic perspective.
+\newblock \emph{Ecology}, 82(5) 1205--1218.
+
+\end{thebibliography}
