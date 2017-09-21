@@ -1,4 +1,3 @@
-% This file was converted to LaTeX by Writer2LaTeX ver. 1.0.2
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -44,7 +43,7 @@
 	\bigskip	
 	{\Huge
 	\bfseries
-	Graphab 2.1\\
+	Graphab 2.2\\
 	\bigskip
 	User Manual\\
 	}
@@ -57,7 +56,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2017-09-13\\
+	2017-09-21\\
 	}
 	
 \end{titlepage}
@@ -397,9 +396,11 @@ Whichever the selected level, the user must first specify the graph on which the
 		\multirow{6}{*}{Weighted} 
 		& \nameref{metric_F} & F & × & × & × &\\
 		\hhline{~------}
+		& \nameref{metric_EC} & EC & × & × &  & ×\\
+		\hhline{~------}
 		& \nameref{metric_PC} & PC & × & × &  & ×\\
 		\hhline{~------}
-		& \nameref{metric_FPC}  & FPC &  &  & × &\\
+		& \nameref{metric_IF}  & IF &  &  & × &\\
 		\hhline{~------}
 		& \nameref{metric_dPC} & dPC &  &  &  & ×\\
 		\hhline{~------} 
@@ -543,9 +544,10 @@ Table \ref{metric_poss} summarizes possible metrics calculations.
 \hline
 \multirow{6}{*}{Weighted} 
  & Flux & F & × & × & × & × & × & ×\\
- & Probability of connectivity & PC & × & × & × & × & × & ×\\
- & Flow Probability of connectivity  & FPC & × & × & × & × &  &\\
- & Fractions of delta Probability of connectivity & dPC & × & × & × & × &  &\\
+ & Equivalent Connectivity & EC & × & × & × & & × & ×\\
+ & Probability of connectivity & PC & × & × & × & & × & ×\\
+ & Interaction Flux  & IF & × & × & × & × &  & ×\\
+ & Fractions of delta Probability of connectivity & dPC & × & × & × &  &  &\\
  & Betweenness centrality index & BC & × & × & × & × &  &×\\
  & Integral index of connectivity & IIC & × &  &  &  & × & \\
  & Current flow & CF & × &  &  & × &  & ×\\
@@ -851,9 +853,11 @@ recommended you install the 64-bit version of Java to use the available memory b
 	\multirow{6}{*}{Weighted} 
 	& \nameref{metric_F} & F & × & × & × &\\
 	\hhline{~------}
+	& \nameref{metric_EC} & EC & × & × &  & ×\\
+	\hhline{~------}
 	& \nameref{metric_PC} & PC & × & × &  & ×\\
 	\hhline{~------}
-	& \nameref{metric_FPC}  & FPC &  &  & × &\\
+	& \nameref{metric_IF}  & IF &  &  & × &\\
 	\hhline{~------}
 	& \nameref{metric_dPC} & dPC &  &  &  & ×\\
 	\hhline{~------} 
@@ -942,14 +946,14 @@ _{\begin{matrix}j=1\\j{\neq}i\end{matrix}}^{n}{{a}_{j}^{\beta
 }}{e}^{-\alpha {d}_{\mathit{ij}}}
 \end{equation*}
 } &
-For the focal patch i : sum of capacity of patches other than i and
+For the focal patch $i$ : sum of capacity of patches other than i and
 weighted according to their minimum distance to the focal patch through
 the graph. This sum is an indicator of the potential dispersion from
-the patch i or, conversely to the patch i.\\\hline
+the patch $i$ or, conversely to the patch $i$.\\\hline
 Values &
 \multicolumn{2}{m{12.6050005cm}|}{
-Values depend on the definition of a.
-If a represents an area, F expresses an area.
+Values depend on the definition of $a$.
+If $a$ represents an area, F expresses an area.
 
 Minimum value: 0
 
@@ -976,12 +980,12 @@ References &
 \end{tabular}
 \end{table}
 
-\subsubsection{Probability of Connectivity}
-\label{metric_PC}
+\subsubsection{Equivalent Probability}
+\label{metric_EC}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-Probability of Connectivity ($PC$) &
+Equivalent Probability ($EC$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Global level 
@@ -990,73 +994,108 @@ Component level
 
 Delta &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-\mathit{PC}=\frac{1}{{A}^{2}}\sum _{i=1}^{n}{\sum
-_{j=1}^{n}{{a}_{i}^{\beta }}}{{a}_{j}^{\beta }e}^{-\alpha
-{d}_{\mathit{ij}}}
+\mathit{EC}=\sqrt{\sum _{i=1}^{n}{\sum _{j=1}^{n}{{a}_{i}}}{{a}_{j}e}^{-\alpha {d}_{\mathit{ij}}}}
 \end{equation*}
 } &
-Sum of products of capacity of all pairs of patches weighted by their interaction probability, divided by the square of the area of the study zone. This ratio is the equivalent to the probability that two points randomly placed in the study area are connected.\\\hline
+Square root of the sum of products of capacity of all pairs of patches weighted by their interaction probability. \\\hline
 Values &
-\multicolumn{2}{m{12.6050005cm}|}{Values correspond to a probability.
+\multicolumn{2}{m{12.6050005cm}|}{Unit corresponds to the capacity unit of the patches.
 	
 Minimum value: 0
 
-Maximum value: 1
+Maximum value: sum of capacities
 }\\\hline
 Comment &
 \multicolumn{2}{m{12.6050005cm}|}{For each pair of patches, the path of
 the graph used is the one that maximizes ${e}^{-\mathit{\alpha d}}$,
-i.e. the one that minimizes the distance d (or the cost) between the
-patches i and j.
+i.e. the one that minimizes the distance $d$ (or the cost) between the
+patches $i$ and $j$.
 
-In CS22, the weighting of capacities is set to 1 ; in Graphab it can be
-modified. 
-
-If a does not represent patch area, the result is no longer a
-probability.
 }\\\hline
 Reference &
 \multicolumn{2}{m{12.6050005cm}|}{
-\cite{Saura2007}
+\cite{Saura2011}
 }\\\hline
 \end{tabular}
 \end{table}
 
-\subsubsection{Flow Probability of Connectivity}
-\label{metric_FPC}
+\subsubsection{Probability of Connectivity}
+\label{metric_PC}
+\begin{table}[H]
+	\begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
+		\hline
+		Probability of Connectivity ($PC$) &
+		\multicolumn{1}{m{4.4810004cm}|}{Formula} &
+		Meaning\\\hline
+		Global level 
+		
+		Component level
+		
+		Delta &
+		\multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
+			\mathit{PC}=\frac{1}{{A}^{2}}\sum _{i=1}^{n}{\sum
+				_{j=1}^{n}{{a}_{i}}}{{a}_{j} e}^{-\alpha
+				{d}_{\mathit{ij}}}
+			\end{equation*}
+		} &
+		Sum of products of capacity of all pairs of patches weighted by their interaction probability, divided by the square of the area of the study zone. This ratio is the equivalent to the probability that two points randomly placed in the study area are connected.\\\hline
+		Values &
+		\multicolumn{2}{m{12.6050005cm}|}{Values correspond to a probability.
+			
+			Minimum value: 0
+			
+			Maximum value: 1
+		}\\\hline
+		Comment &
+		\multicolumn{2}{m{12.6050005cm}|}{For each pair of patches, the path of
+			the graph used is the one that maximizes ${e}^{-\mathit{\alpha d}}$,
+			i.e. the one that minimizes the distance $d$ (or the cost) between the
+			patches $i$ and $j$.
+			
+			This metric is not available when $a_i$ does not represent patch area.
+		}\\\hline
+		Reference &
+		\multicolumn{2}{m{12.6050005cm}|}{
+			\cite{Saura2007}
+		}\\\hline
+	\end{tabular}
+\end{table}
+
+\subsubsection{Interaction Flux (replace FPC)}
+\label{metric_IF}
 \begin{table}[H]
 \begin{tabular}{|m{3.24cm}|m{4.4810004cm}m{7.924cm}|}
 \hline
-Flow Probability of Connectivity
-($FPC$) &
+Interaction Flux
+($IF$) &
 \multicolumn{1}{m{4.4810004cm}|}{Formula} &
 Meaning\\\hline
 Local level &
 \multicolumn{1}{m{4.4810004cm}|}{\begin{equation*}
-{\mathit{FPC}}_{i}=\frac{1}{{A}^{2}}\sum _{j=1}^{n}{{{a}_{i}^{\beta
-}{a}_{j}^{\beta }e}^{-\alpha {d}_{\mathit{ij}}}}
+{\mathit{IF}}_{i}=\sum _{j=1}^{n}{{{a}_{i}^{\beta }{a}_{j}^{\beta }e}^{-\alpha {d}_{\mathit{ij}}}}
 \end{equation*}
 } &
 Sum of products of the focal patch capacity with all the other patches,
-weighted by their interaction probability and divided by the square of
-the area of the study zone.\\\hline
+weighted by their interaction probability.\\\hline
 Values &
 \multicolumn{2}{m{12.6050005cm}|}{
 Minimum value: 0
 
-Maximum value: 1
+Maximum value: sum of capacities
 }\\\hline
 Comment &
 \multicolumn{2}{m{12.6050005cm}|}{For each pair of patches, the path of
 the graph used is one that maximizes ${e}^{-\mathit{\alpha d}}$, i.e.
-one that minimizes the distance d (or the cost) between the patches i
-and j.
+one that minimizes the distance $d$ (or the cost) between the patches $i$
+and $j$.
 
-This metric is just the local contribution of a patch in the $PC$ index,
-since  $\mathit{PC}=\sum _{i}{{\mathit{FPC}}_{i}}$. It is the
-equivalent of ${dPC}_{flux}+{dPC}_{area}$ not divided
-by the global value of $PC$. However, the $FPC$ metric is obtained faster because it is not calculated on the basis of patch removal (delta mode).
+This metric corresponds to the local contribution of a patch in the $PC$ index, since  $\mathit{PC}=\frac{1}{A^2}\sum _{i}{{\mathit{IF}}_{i}}$, with $\beta = 1$. 
+
+It is the equivalent of ${dPC}_{flux}+{dPC}_{area}$ not divided
+by the global value of $PC$. However, the $IF$ metric is obtained faster because it is not calculated on the basis of patch removal (delta mode).
 }\\\hline
+References &
+\multicolumn{2}{m{12.6050005cm}|}{\cite{2014_LUP},\cite{2017_landmod}}\\\hline
 \end{tabular}
 \end{table}
 
@@ -1078,8 +1117,7 @@ Delta &
 {{\mathit{dPC}}_{i}=\mathit{dPC}}_{\mathit{area}}+{\mathit{dPC}}_{\mathit{flux}}{+\mathit{dPC}}_{\mathit{connector}}
 \end{equation*}
 \begin{equation*}
-{\mathit{dPC}}_{\mathit{area}}=\frac{{a}_{i}^{2\beta
-}}{{A}^{2}\mathit{PC}}
+{\mathit{dPC}}_{\mathit{area}}=\frac{{a}_{i}^{2}}{{A}^{2}\mathit{PC}}
 \end{equation*}
 \begin{equation*}
 {dPC}_{flux}=\frac{{FPC}_{i}}{PC}-{dPC}_{area}
@@ -1104,12 +1142,9 @@ Minimum value: 0
 Maximum value: 1
 }\\\hline
 Comment &
-\multicolumn{2}{m{13.353cm}|}{In CS22, the weighting of capacities is
-set to 1; in Graphab it can be modified. 
+\multicolumn{2}{m{13.353cm}|}{
 
-If a does not represent patch area, the result is no longer a
-probability and $dPC_{area}$ does not express a loss of area but a loss of
-capacity.
+If $a$ does not represent patch area, $dPC_{area}$ does not express a loss of area but a loss of capacity.
 
 }\\\hline
 Reference &

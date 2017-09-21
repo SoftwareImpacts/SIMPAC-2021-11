@@ -51,6 +51,11 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         // External capacity
         File importFile = null;
         String idField, capaField;
+
+        public boolean isCalcArea() {
+            return calcArea;
+        }
+        
     }
 
     /** has user clicked Ok ? */
@@ -83,7 +88,7 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         model = new DefaultComboBoxModel(project.getCodes().toArray());
         codeList.setModel(model);
 
-        if(!params.calcArea) {
+        if(!params.isCalcArea()) {
             if(params.importFile == null) {
                 neighborhoodRadioButton.setSelected(true);
                 if(params.costName == null) {

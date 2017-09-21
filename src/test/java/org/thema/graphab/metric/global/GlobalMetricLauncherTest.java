@@ -58,13 +58,20 @@ public class GlobalMetricLauncherTest {
     @Test
     public void testCalcMetric() {
         HashMap<String, Double> resIndices = new HashMap<String, Double>() {{
-            put("PC_d1000_p0.05_beta1-graph_comp_cout10", 2.597275864295179E-4);
-            put("PC_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 3.2880609909219453E-4);
-            put("PC_d1000_p0.05_beta1-graph_comp_euclid_1000_nointra", 9.581715576493942E-5);
-            put("PC_d1000_p0.05_beta1-graph_plan_cout10_300", 2.3271157678692673E-4);            
-            put("PC_d1000_p0.05_beta1-graph_plan_cout10_mst", 1.9835638747391063E-4);
-            put("PC_d1000_p0.05_beta1-graph_plan_cout1_len", 6.69054229355518E-5);
-//            put("PC_d1000_p0.05_beta1-graph_plan_euclid", 7.045308587598926E-5);
+            put("EC_d1000_p0.05-graph_comp_cout10", Math.sqrt(2.597275864295179E-4) * project.getArea());
+            put("EC_d1000_p0.05-graph_comp_cout10_500_nopath", Math.sqrt(3.2880609909219453E-4) * project.getArea());
+            put("EC_d1000_p0.05-graph_comp_euclid_1000_nointra", Math.sqrt(9.581715576493942E-5) * project.getArea());
+            put("EC_d1000_p0.05-graph_plan_cout10_300", Math.sqrt(2.3271157678692673E-4) * project.getArea());            
+            put("EC_d1000_p0.05-graph_plan_cout10_mst", Math.sqrt(1.9835638747391063E-4) * project.getArea());
+            put("EC_d1000_p0.05-graph_plan_cout1_len", Math.sqrt(6.69054229355518E-5) * project.getArea());
+            
+            put("PC_d1000_p0.05-graph_comp_cout10", 2.597275864295179E-4);
+            put("PC_d1000_p0.05-graph_comp_cout10_500_nopath", 3.2880609909219453E-4);
+            put("PC_d1000_p0.05-graph_comp_euclid_1000_nointra", 9.581715576493942E-5);
+            put("PC_d1000_p0.05-graph_plan_cout10_300", 2.3271157678692673E-4);            
+            put("PC_d1000_p0.05-graph_plan_cout10_mst", 1.9835638747391063E-4);
+            put("PC_d1000_p0.05-graph_plan_cout1_len", 6.69054229355518E-5);
+//            put("PC_d1000_p0.05-graph_plan_euclid", 7.045308587598926E-5);
             put("S#F_d1000_p0.05_beta1-graph_comp_cout10", 1.452507396441085E8);
             put("S#F_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 1.9303189629387736E8);
             put("S#F_d1000_p0.05_beta1-graph_comp_euclid_1000_nointra", 3.831238163096813E7);
@@ -114,7 +121,7 @@ public class GlobalMetricLauncherTest {
             put("E#eBC_d1000_p0.05_beta1-graph_comp_cout10", 0.7339459732275027);
             put("D#BC_d1000_p0.05_beta1-graph_comp_cout10", 0.9736784563148873);
             put("D#eBC_d1000_p0.05_beta1-graph_comp_cout10", 0.9845967148211576);
-            put("PCCirc_d1000_p0.05_beta1-graph_comp_cout10", 0.00133658324001119);
+            put("ECCirc_d1000_p0.05-graph_comp_cout10", 7164952.08893959);
         }};
         
         HashSet<String> testIndices = new HashSet<>();
@@ -136,7 +143,7 @@ public class GlobalMetricLauncherTest {
         }
         
         // The Wilks metric is not tested for the moment
-        assertEquals("Check all global metrics", Project.getGlobalMetricsFor(Project.Method.GLOBAL).size()-1, testIndices.size());
+        assertEquals("Check all global metrics", Project.getGlobalMetricsFor(Project.Method.GLOBAL).size(), testIndices.size());
         
     }
     

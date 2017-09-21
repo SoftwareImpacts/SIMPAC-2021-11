@@ -18,6 +18,7 @@ package org.thema.graphab.addpatch;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,6 +27,7 @@ import org.thema.common.Config;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.graphab.Project;
 import org.thema.graphab.ProjectTest;
+import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.global.PCMetric;
 
 /**
@@ -56,7 +58,7 @@ public class AddPatchCommandTest {
     @Test
     public void testAddPatch() throws Throwable {
         PCMetric indice = new PCMetric();
-        indice.setParams(1000, 0.05, 1);
+        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
         
         AddPatchCommand addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_cout10_500_nopath"), null, 1000, 1, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
@@ -119,7 +121,7 @@ public class AddPatchCommandTest {
         }
         
         project = ProjectTest.loadTestProject();
-        indice.setParams(10000, 0.05, 1);
+        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"), null, 1000, 1, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
         metric = new double[] {
@@ -140,7 +142,7 @@ public class AddPatchCommandTest {
         }
         
         project = ProjectTest.loadTestProject();
-        indice.setParams(10000, 0.05, 1);
+        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"), null, 1000, 2, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
         metric = new double[] {
@@ -161,7 +163,7 @@ public class AddPatchCommandTest {
         }
         
         project = ProjectTest.loadTestProject();
-        indice.setParams(10000, 0.05, 1);
+        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"),
                 new File("target/test-classes/org/thema/graphab/patch_alea.shp"), null);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());

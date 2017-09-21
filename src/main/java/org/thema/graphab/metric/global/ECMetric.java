@@ -17,11 +17,10 @@
  */
 
 
-package org.thema.graphab.metric.local;
+package org.thema.graphab.metric.global;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.geotools.graph.structure.Graphable;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
@@ -31,36 +30,37 @@ import org.thema.graphab.metric.AlphaParamMetric;
 import org.thema.graphab.metric.ParamPanel;
 
 /**
- * Local Probability of Connectivity.
- * PC index for one patch.
+ * Equivalent Connectivity metric.
  * 
  * @author Gilles Vuidel
  */
-public final class FPCLocalMetric extends LocalSingleMetric {
+public class ECMetric extends AbstractPathMetric {
 
-    private AlphaParamMetric alphaParam = new AlphaParamMetric();
+    private AlphaParamMetric alphaParam = new AlphaParamMetric(false);
     
     @Override
-    public double calcSingleMetric(Graphable g, GraphGenerator gen) {
-        Node node = (Node) g;
-        double srcCapa = Project.getPatchCapacity(node);
-        GraphPathFinder pathFinder = gen.getPathFinder(node);
+    public Double calcPartMetric(GraphPathFinder finder, GraphGenerator g) {
         double sum = 0;
-        for(Node n : pathFinder.getComputedNodes()) {
-            sum += Math.exp(-alphaParam.getAlpha() * pathFinder.getCost(n)) * Math.pow(srcCapa * Project.getPatchCapacity(n), alphaParam.getBeta());            
-        }            
-        
-        return sum / Math.pow(gen.getProject().getArea(), 2);
+        double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
+        for(Node node : finder.getComputedNodes()) {
+            sum += srcCapa * Project.getPatchCapacity(node) * Math.exp(-alphaParam.getAlpha()*finder.getCost(node));
+        }
+        return sum;
     }
 
+    @Override
+    public void mergePart(Object part) {
+        metric += (Double)part;
+    }
+
+    @Override
+    public void endCalc(GraphGenerator g) {
+        metric = Math.sqrt(metric);       
+    }
+    
     @Override
     public String getShortName() {
-        return "FPC";
-    }
-
-    @Override
-    public boolean calcNodes() {
-        return true;
+        return "EC";
     }
     
     @Override

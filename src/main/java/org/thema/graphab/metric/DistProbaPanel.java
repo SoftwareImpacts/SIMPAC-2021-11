@@ -30,22 +30,33 @@ import org.thema.graphab.links.Linkset;
  */
 public class DistProbaPanel extends ParamPanel {
 
-    public static final String DIST = "d";
-    public static final String PROBA = "p";
-    public static final String A = "beta";
-
     /** 
      * Creates new form DistProbaPanel.
      * 
      * @param dist distance
      * @param p proba
-     * @param a beta
      */
-    public DistProbaPanel(Linkset linkset, double dist, double p, double a) {
+    public DistProbaPanel(Linkset linkset, double dist, double p) {
+        this(linkset, dist, p, Double.NaN);
+    }
+    
+    /** 
+     * Creates new form DistProbaPanel.
+     * 
+     * @param dist distance
+     * @param p proba
+     * @param beta beta exponent
+     */
+    public DistProbaPanel(Linkset linkset, double dist, double p, double beta) {
         initComponents();
         dSpinner.setValue(dist);
         pSpinner.setValue(p);
-        aSpinner.setValue(a);
+        if(Double.isNaN(beta)) {
+            betaLabel.setEnabled(false);
+            betaSpinner.setEnabled(false);
+        } else {
+            betaSpinner.setValue(beta);
+        }
         if(linkset.isCostUnit()) {
             unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitCost"));
         } else {
@@ -56,9 +67,11 @@ public class DistProbaPanel extends ParamPanel {
     @Override
     public Map<String, Object> getParams() {
         HashMap<String, Object> params = new HashMap<>();
-        params.put(DIST, dSpinner.getValue());
-        params.put(PROBA, pSpinner.getValue());
-        params.put(A, aSpinner.getValue());
+        params.put(AlphaParamMetric.DIST, dSpinner.getValue());
+        params.put(AlphaParamMetric.PROBA, pSpinner.getValue());
+        if(betaSpinner.isEnabled()) {
+            params.put(AlphaParamMetric.BETA, betaSpinner.getValue());
+        }
         return params;
     }
 
@@ -86,8 +99,11 @@ public class DistProbaPanel extends ParamPanel {
     /**
      * @return beta
      */
-    public double getA() {
-        return (Double)aSpinner.getValue();
+    public double getBeta() {
+        if(!betaSpinner.isEnabled()) {
+            throw new IllegalArgumentException("This metric has not beta parameter.");
+        }
+        return (Double)betaSpinner.getValue();
     }
 
     /** This method is called from within the constructor to
@@ -106,8 +122,8 @@ public class DistProbaPanel extends ParamPanel {
         dSpinner = new javax.swing.JSpinner();
         jLabel7 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
-        jLabel9 = new javax.swing.JLabel();
-        aSpinner = new javax.swing.JSpinner();
+        betaLabel = new javax.swing.JLabel();
+        betaSpinner = new javax.swing.JSpinner();
         unitLabel = new javax.swing.JLabel();
 
         jLabel5.setText("α");
@@ -135,9 +151,9 @@ public class DistProbaPanel extends ParamPanel {
 
         jLabel6.setText("d");
 
-        jLabel9.setText("β");
+        betaLabel.setText("β");
 
-        aSpinner.setModel(new javax.swing.SpinnerNumberModel(1.0d, 0.0d, null, 0.1d));
+        betaSpinner.setModel(new javax.swing.SpinnerNumberModel(1.0d, 0.0d, null, 0.1d));
 
         unitLabel.setText("meter");
 
@@ -159,10 +175,10 @@ public class DistProbaPanel extends ParamPanel {
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel7)
-                                    .addComponent(jLabel9))
+                                    .addComponent(betaLabel))
                                 .addGap(12, 12, 12)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(aSpinner)
+                                    .addComponent(betaSpinner)
                                     .addComponent(pSpinner)))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel6)
@@ -192,8 +208,8 @@ public class DistProbaPanel extends ParamPanel {
                     .addComponent(pSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel9)
-                    .addComponent(aSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(betaLabel)
+                    .addComponent(betaSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -207,14 +223,14 @@ public class DistProbaPanel extends ParamPanel {
 }//GEN-LAST:event_dSpinnerStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JSpinner aSpinner;
     private javax.swing.JTextField alphaTextField;
+    private javax.swing.JLabel betaLabel;
+    private javax.swing.JSpinner betaSpinner;
     private javax.swing.JSpinner dSpinner;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JSpinner pSpinner;
     private javax.swing.JLabel unitLabel;
     // End of variables declaration//GEN-END:variables

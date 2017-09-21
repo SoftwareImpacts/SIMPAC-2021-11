@@ -37,11 +37,20 @@ public final class AlphaParamMetric implements Serializable {
     public static final String PROBA = "p";
     public static final String BETA = "beta";
     
+    private boolean hasBeta;
     private double alpha = 6.931471805599453E-4;
     private double d = 1000;
     private double p = 0.5;
     private double beta = 1.0;
 
+    public AlphaParamMetric() {
+        this(true);
+    }
+    
+    public AlphaParamMetric(boolean hasBeta) {
+        this.hasBeta = hasBeta;
+    }
+    
     /**
      * @return alpha = -Math.log(p) / d;
      */
@@ -53,20 +62,10 @@ public final class AlphaParamMetric implements Serializable {
      * @return beta the exponent of the capacity
      */
     public double getBeta() {
+        if(!hasBeta) {
+            throw new IllegalArgumentException("This metric has not beta parameter.");
+        }
         return beta;
-    }
-    
-    /**
-     * Set the parameters and calculate alpha
-     * @param d the distance
-     * @param p the probability
-     * @param beta the exponent of the capacity
-     */
-    public void setParams(double d, double p, double beta) {
-        this.d = d;
-        this.p = p;
-        this.beta = beta;
-        alpha = getAlpha(d, p);
     }
     
     /**
@@ -84,10 +83,12 @@ public final class AlphaParamMetric implements Serializable {
         } else {
             throw new IllegalArgumentException("Parameter " + PROBA + " not found");
         }
-        if(params.containsKey(BETA)) {
-            beta = ((Number)params.get(BETA)).doubleValue();
-        } else {
-            throw new IllegalArgumentException("Parameter " + BETA + " not found");
+        if(hasBeta) {
+            if(params.containsKey(BETA)) {
+                beta = ((Number)params.get(BETA)).doubleValue();
+            } else {
+                throw new IllegalArgumentException("Parameter " + BETA + " not found");
+            }
         }
 
         alpha = getAlpha(d, p);
@@ -100,7 +101,9 @@ public final class AlphaParamMetric implements Serializable {
         LinkedHashMap<String, Object> params = new LinkedHashMap<>();
         params.put(DIST, d);
         params.put(PROBA, p);
-        params.put(BETA, beta);
+        if(hasBeta) {
+            params.put(BETA, beta);
+        }
         return params;
     }
     
@@ -109,7 +112,11 @@ public final class AlphaParamMetric implements Serializable {
      * @return DistProbaPanel for editing parameters
      */
     public ParamPanel getParamPanel(Linkset linkset) {
-        return new DistProbaPanel(linkset, d, p, beta);
+        if(hasBeta) {
+            return new DistProbaPanel(linkset, d, p, beta);
+        } else {
+            return new DistProbaPanel(linkset, d, p);
+        }
     }
     
     /**

@@ -69,7 +69,7 @@ public class DeltaMetricTaskTest {
         r.read("Id");
         int nbGraph = 0;
         DeltaPCMetric deltaPC = new DeltaPCMetric();
-        deltaPC.setParams(new HashMap<String, Object>() {{ put(AlphaParamMetric.BETA, 1.0); put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
+        deltaPC.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
         GlobalMetricLauncher launcher = new GlobalMetricLauncher(deltaPC);
         String startName = "d_" + deltaPC.getDetailName() + "|";
         for(GraphGenerator gen : project.getGraphs()) {

@@ -1,4 +1,4 @@
-\begin{thebibliography}{22}
+\begin{thebibliography}{24}
 \providecommand{\natexlab}[1]{#1}
 
 \bibitem[Bodin and Saura(2010)]{Bodin2010}
@@ -112,6 +112,19 @@ C.~Ricotta, A.~Stanisci, G.C. Avena, and C.~Blasi, 2000.
 \newblock Quantifying the network connectivity of landscape mosaics: a
   graph-theoretical approach.
 \newblock \emph{Community Ecology}, 1(1) 89--94.
+
+\bibitem[Sahraoui et~al.(2017)]{2017_landmod}
+Yohan Sahraoui, Jean-Christophe Folt{\^e}te, and C{\'e}line Clauzel, 2017.
+\newblock A multi-species approach for assessing the impact of land-cover
+  changes on landscape connectivity.
+\newblock \emph{Landscape Ecology}, 32(9) 1819--1835.
+
+\bibitem[Saura et~al.(2011)]{Saura2011}
+Santiago Saura, Christine Estreguil, Coralie Mouton, and Mónica
+  Rodríguez-Freire, 2011.
+\newblock Network analysis to assess landscape connectivity trends: Application
+  to european forests (1990–2000).
+\newblock \emph{Ecological Indicators}, 11(2) 407 -- 416.
 
 \bibitem[Saura and Pascual-Hortal(2007)]{Saura2007}
 Santiago Saura and Lucía Pascual-Hortal, 2007.

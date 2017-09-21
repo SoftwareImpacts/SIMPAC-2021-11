@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.thema.graphab.Project;
 import org.thema.graphab.Project.Method;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Linkset;

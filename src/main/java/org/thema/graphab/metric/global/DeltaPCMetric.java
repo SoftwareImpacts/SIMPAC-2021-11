@@ -41,7 +41,7 @@ import org.thema.graphab.metric.ParamPanel;
  */
 public class DeltaPCMetric extends AbstractPathMetric {
 
-    private AlphaParamMetric alphaParam = new AlphaParamMetric();
+    private AlphaParamMetric alphaParam = new AlphaParamMetric(false);
     
     @Override
     public boolean isAcceptMethod(Method method) {
@@ -53,7 +53,7 @@ public class DeltaPCMetric extends AbstractPathMetric {
         double sum = 0;
         double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
         for(Node node : finder.getComputedNodes()) { 
-            sum += Math.pow(srcCapa * Project.getPatchCapacity(node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*finder.getCost(node));
+            sum += srcCapa * Project.getPatchCapacity(node) * Math.exp(-alphaParam.getAlpha()*finder.getCost(node));
         }
         
         return sum;
@@ -79,7 +79,7 @@ public class DeltaPCMetric extends AbstractPathMetric {
                 double srcCapa = Project.getPatchCapacity(remNode);
                 for(Node node : pathFinder.getComputedNodes()) {
                     if (node.getObject() != remNode.getObject()) {
-                        flux += Math.pow(srcCapa * Project.getPatchCapacity(node), alphaParam.getBeta()) * Math.exp(-alphaParam.getAlpha()*pathFinder.getCost(node));
+                        flux += srcCapa * Project.getPatchCapacity(node) * Math.exp(-alphaParam.getAlpha()*pathFinder.getCost(node));
                     }
                 }
                 

@@ -80,4 +80,9 @@ public class IICMetric extends GlobalMetric implements PreCalcMetric<Node> {
     public TypeParam getTypeParam() {
         return TypeParam.NODE;
     }     
+    
+    @Override
+    public boolean isAcceptGraph(GraphGenerator graph) {
+        return graph.getProject().getCapacityParams().isCalcArea();
+    }
 }

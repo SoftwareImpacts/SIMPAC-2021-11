@@ -37,13 +37,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.text.StringContent;
+import javax.swing.text.html.HTMLDocument;
 import org.geotools.feature.SchemaException;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
@@ -149,7 +154,6 @@ public class MainFrame extends javax.swing.JFrame {
         addPointDataMenuItem = new javax.swing.JMenuItem();
         addPointMenuItem = new javax.swing.JMenuItem();
         setDEMMenuItem = new javax.swing.JMenuItem();
-        remPatchAttrMenuItem = new javax.swing.JMenuItem();
         indiceMenu = new javax.swing.JMenu();
         calcIndiceMenuItem = new javax.swing.JMenuItem();
         compIndiceMenuItem = new javax.swing.JMenuItem();
@@ -296,14 +300,6 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         dataMenu.add(setDEMMenuItem);
-
-        remPatchAttrMenuItem.setText(bundle.getString("MainFrame.remPatchAttrMenuItem.text")); // NOI18N
-        remPatchAttrMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                remPatchAttrMenuItemActionPerformed(evt);
-            }
-        });
-        dataMenu.add(remPatchAttrMenuItem);
 
         jMenuBar.add(dataMenu);
 
@@ -1002,8 +998,24 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_calcCapaMenuItemActionPerformed
 
     private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
-        JOptionPane.showMessageDialog(this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle")
-                .getString("MainFrame.AboutMessage"), "Graphab - " + getVersion(), JOptionPane.PLAIN_MESSAGE, new ImageIcon(getIconImage()));
+        String text = "<html>\n" +
+                "<h1>Graphab 2</h1>\n" +
+                "<p>\n" +
+                "Laboratoire ThéMA - UMR 6049<br/>\n" +
+                "CNRS - Université de Franche Comté<br/>\n" +
+                "</p>\n" +
+                "<br/>\n" +
+                "<p>\n" +
+                "J. C. Foltête, G. Vuidel, C. Clauzel, X. Girardet<br>\n" +
+                "</p>\n" +
+                "<br/>\n" +
+                "<a href=\"https://sourcesup.renater.fr/graphab\">https://sourcesup.renater.fr/graphab</a>\n" +
+                "</html>";
+        JEditorPane pane = new JEditorPane("text/html", text);
+        pane.setBackground(new Color(0, 0, 0, 0));
+        pane.setEditable(false);
+        JOptionPane.showMessageDialog(this, pane, 
+            "Graphab - " + getVersion(), JOptionPane.PLAIN_MESSAGE, new ImageIcon(getIconImage()));
     }//GEN-LAST:event_aboutMenuItemActionPerformed
 
     private void logMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logMenuItemActionPerformed
@@ -1082,27 +1094,6 @@ public class MainFrame extends javax.swing.JFrame {
     private void addPatchMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPatchMenuItemActionPerformed
         new AddPatchDialog(this, project).setVisible(true);
     }//GEN-LAST:event_addPatchMenuItemActionPerformed
-
-    private void remPatchAttrMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remPatchAttrMenuItemActionPerformed
-        List attrList = new ArrayList(project.getPatches().get(0).getAttributeNames());
-        attrList = attrList.subList(4, attrList.size());
-        JList list = new JList(attrList.toArray());
-        int res = JOptionPane.showConfirmDialog(this, new JScrollPane(list), 
-                java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("MainFrame.remPatchAttrMenuItem.text"), 
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if(res == JOptionPane.CANCEL_OPTION) {
-            return;
-        }
-         
-        for(Object attr : list.getSelectedValuesList()) {
-            DefaultFeature.removeAttribute((String)attr, project.getPatches());
-        }
-        try {
-            project.savePatch();
-        } catch (IOException | SchemaException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_remPatchAttrMenuItemActionPerformed
 
     /**
      * Changes the current view, to show the result of a local or delta metric.
@@ -1391,7 +1382,6 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem prefMenuItem;
     private javax.swing.JMenuItem projectRemPatchMenuItem;
     private javax.swing.JMenuItem quitMenuItem;
-    private javax.swing.JMenuItem remPatchAttrMenuItem;
     private javax.swing.JMenuItem setDEMMenuItem;
     private javax.swing.JPanel statusPanel;
     // End of variables declaration//GEN-END:variables

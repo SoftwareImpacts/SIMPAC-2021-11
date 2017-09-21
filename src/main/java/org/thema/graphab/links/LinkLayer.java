@@ -32,10 +32,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import org.geotools.feature.SchemaException;
 import org.jfree.data.statistics.Regression;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -47,6 +50,7 @@ import org.thema.data.feature.FeatureGetter;
 import org.thema.drawshape.layer.FeatureLayer;
 import org.thema.drawshape.style.FeatureStyle;
 import org.thema.drawshape.style.LineStyle;
+import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
 
@@ -163,7 +167,7 @@ public class LinkLayer extends FeatureLayer {
                 JOptionPane.showMessageDialog(null, panel);
             }
         });
-        menu.add(new AbstractAction("Extract path costs") {
+        menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_path_costs")) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -175,6 +179,30 @@ public class LinkLayer extends FeatureLayer {
                 }
             }
         });
+        menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("RemoveAttrMenuItem.text")) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List attrList = new ArrayList(linkset.getPaths().get(0).getAttributeNames());
+                attrList = attrList.subList(4, attrList.size());
+                JList list = new JList(attrList.toArray());
+                int res = JOptionPane.showConfirmDialog(null, new JScrollPane(list), 
+                        java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("RemoveAttrMenuItem.text"), 
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                if(res == JOptionPane.CANCEL_OPTION) {
+                    return;
+                }
+
+                for(Object attr : list.getSelectedValuesList()) {
+                    DefaultFeature.removeAttribute((String)attr, linkset.getPaths());
+                }
+                try {
+                    linkset.saveLinks();
+                } catch (IOException ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Properties...")) {
             @Override
             public void actionPerformed(ActionEvent e) {

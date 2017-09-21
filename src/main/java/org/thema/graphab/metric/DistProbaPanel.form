@@ -32,11 +32,11 @@
                           <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="jLabel7" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="jLabel9" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="betaLabel" alignment="0" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="aSpinner" max="32767" attributes="0"/>
+                                  <Component id="betaSpinner" max="32767" attributes="0"/>
                                   <Component id="pSpinner" max="32767" attributes="0"/>
                               </Group>
                           </Group>
@@ -77,8 +77,8 @@
               </Group>
               <EmptySpace max="32767" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="aSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="betaLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="betaSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -132,12 +132,12 @@
         <Property name="text" type="java.lang.String" value="d"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JLabel" name="jLabel9">
+    <Component class="javax.swing.JLabel" name="betaLabel">
       <Properties>
         <Property name="text" type="java.lang.String" value="&#x3b2;"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JSpinner" name="aSpinner">
+    <Component class="javax.swing.JSpinner" name="betaSpinner">
       <Properties>
         <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
           <SpinnerModel initial="1.0" minimum="0.0" numberType="java.lang.Double" stepSize="0.1" type="number"/>

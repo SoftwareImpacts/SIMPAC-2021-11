@@ -132,7 +132,7 @@ public class GraphLayers extends GraphGroupLayer {
                           
                         Modularity mod = new Modularity(graph.getGraph(), new EdgeWeighter() {
                             private final double alpha = distProbaPanel.getAlpha();
-                            private final double beta = distProbaPanel.getA();
+                            private final double beta = distProbaPanel.getBeta();
                             @Override
                             public double getWeight(Edge e) {
                                 return Math.pow(Project.getPatchCapacity(e.getNodeA()) * Project.getPatchCapacity(e.getNodeB()), beta) 

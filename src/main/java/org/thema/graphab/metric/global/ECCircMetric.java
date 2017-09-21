@@ -24,30 +24,51 @@ import java.util.Map;
 import org.geotools.graph.structure.Node;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
-import org.thema.graphab.graph.GraphPathFinder;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.metric.AlphaParamMetric;
+import org.thema.graphab.metric.Circuit;
 import org.thema.graphab.metric.ParamPanel;
+import org.thema.graphab.metric.PreCalcMetric;
 
 /**
- * Probability of Connectivity metric.
+ * Equivalent Connectivity Circuit version.
+ * The shortest path is replaced by the resistance of the circuit.
  * 
  * @author Gilles Vuidel
  */
-public class PCMetric extends AbstractPathMetric {
+public class ECCircMetric extends GlobalMetric implements PreCalcMetric<Node> {
 
     private AlphaParamMetric alphaParam = new AlphaParamMetric(false);
+    private double metric;
+    private Circuit circuit;
     
     @Override
-    public Double calcPartMetric(GraphPathFinder finder, GraphGenerator g) {
+    public Double calcPartMetric(Node n1, GraphGenerator g) {
         double sum = 0;
-        double srcCapa = Project.getPatchCapacity(finder.getNodeOrigin());
-        for(Node node : finder.getComputedNodes()) {
-            sum += srcCapa * Project.getPatchCapacity(node) * Math.exp(-alphaParam.getAlpha()*finder.getCost(node));
+        double srcCapa = Project.getPatchCapacity(n1);
+        for(Node n2 : g.getNodes()) {
+            double r = circuit.computeR(n1, n2);
+            sum += srcCapa * Project.getPatchCapacity(n2) * Math.exp(-alphaParam.getAlpha()*r);
         }
         return sum;
     }
 
+    @Override
+    public Double[] calcMetric(GraphGenerator g) {
+        return new Double[]{metric};
+    }
+
+    @Override
+    public void startCalc(GraphGenerator g) {
+        metric = 0;
+        circuit = new Circuit(g);
+    }
+
+    @Override
+    public TypeParam getTypeParam() {
+        return TypeParam.NODE;
+    }
+    
     @Override
     public void mergePart(Object part) {
         metric += (Double)part;
@@ -55,12 +76,13 @@ public class PCMetric extends AbstractPathMetric {
 
     @Override
     public void endCalc(GraphGenerator g) {
-        metric = metric / Math.pow(g.getProject().getArea(), 2);       
+        circuit = null;
+        metric = Math.sqrt(metric);       
     }
     
     @Override
     public String getShortName() {
-        return "PC";
+        return "ECCirc";
     }
     
     @Override
@@ -83,10 +105,5 @@ public class PCMetric extends AbstractPathMetric {
         return Type.WEIGHT;
     }
 
-    @Override
-    public boolean isAcceptGraph(GraphGenerator graph) {
-        return graph.getProject().getCapacityParams().isCalcArea();
-    }
-    
-    
+
 }

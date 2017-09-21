@@ -38,6 +38,7 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import java.awt.Color;
 import java.awt.color.ColorSpace;
+import java.awt.event.ActionEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -69,7 +70,11 @@ import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageBuilder;
 import org.geotools.coverage.grid.GridCoverageFactory;
@@ -117,6 +122,7 @@ import org.thema.graphab.metric.Metric;
 import org.thema.graphab.metric.global.AbstractLocal2GlobalMetric.TypeElem;
 import org.thema.graphab.metric.global.CCPMetric;
 import org.thema.graphab.metric.global.DeltaPCMetric;
+import org.thema.graphab.metric.global.ECMetric;
 import org.thema.graphab.metric.global.ECSMetric;
 import org.thema.graphab.metric.global.GDMetric;
 import org.thema.graphab.metric.global.GlobalMetric;
@@ -136,7 +142,7 @@ import org.thema.graphab.metric.local.ConCorrLocalMetric;
 import org.thema.graphab.metric.local.DgLocalMetric;
 import org.thema.graphab.metric.local.EccentricityLocalMetric;
 import org.thema.graphab.metric.local.FLocalMetric;
-import org.thema.graphab.metric.local.FPCLocalMetric;
+import org.thema.graphab.metric.local.IFLocalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
 import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.util.DistanceOp;
@@ -566,7 +572,11 @@ public final class Project {
      * @return the linkset named linkName or null if it does not exist
      */
     public Linkset getLinkset(String linkName) {
-        return costLinks.get(linkName);
+        if(linkName == null) {
+            return null;
+        } else {
+            return costLinks.get(linkName);
+        }
     }
 
     /**
@@ -1729,8 +1739,7 @@ public final class Project {
     private void createLayers() {
         CoordinateReferenceSystem crs = getCRS();
         rootLayer = new DefaultGroupLayer(name, true);
-        rootLayer.addLayerFirst(new FeatureLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Patch"), patches,
-                new FeatureStyle(new Color(0x65a252), new Color(0x426f3c)), crs));
+        rootLayer.addLayerFirst(new PatchLayer(this));
 
         linkLayers = new DefaultGroupLayer(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Link_sets"));
         rootLayer.addLayerFirst(linkLayers);
@@ -2496,12 +2505,12 @@ public final class Project {
     
     static {
         GLOBAL_METRICS = new ArrayList(Arrays.asList(new SumLocal2GlobalMetric(new FLocalMetric(), TypeElem.NODE), 
-                new PCMetric(), new IICMetric(), new CCPMetric(),
+                new ECMetric(), new PCMetric(), new IICMetric(), new CCPMetric(),
                 new MSCMetric(), new SLCMetric(), new ECSMetric(), new GDMetric(), new HMetric(), new NCMetric(),
                 new DeltaPCMetric(), new WilksMetric()));
-        LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new FPCLocalMetric(), new CFLocalMetric(),
-                new DgLocalMetric(), new CCLocalMetric(), new ClosenessLocalMetric(), new ConCorrLocalMetric(),
-                new EccentricityLocalMetric()));
+        LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new IFLocalMetric(), 
+                new CFLocalMetric(), new DgLocalMetric(), new CCLocalMetric(), new ClosenessLocalMetric(), 
+                new ConCorrLocalMetric(), new EccentricityLocalMetric()));
     }
     
     /**

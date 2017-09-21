@@ -1,5 +1,12 @@
 ## Changelog
 
+##### version 2.1.8 (21/09/2017)
+- Metric : remove beta parameter from PC and dPC
+- Metric : remove FPC metric (replaced by IF metric)
+- Metric : add EC global metric and IF local metric
+- Metric : PC and IIC metrics are available only if patch capacities represent area
+- UI : move "Remove attributes" menu entry in patch and linkset contextual menu
+
 ##### version 2.1.7 (13/09/2017)
 - UI : add Corridor calculation on linkset contextual menu
 - UI : DEM is visible in layers
