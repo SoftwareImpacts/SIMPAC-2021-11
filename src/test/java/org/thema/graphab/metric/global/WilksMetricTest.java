@@ -53,20 +53,29 @@ public class WilksMetricTest {
             put(WilksMetric.NB_PATCH, 2);
             put(WilksMetric.WEIGHT_AREA, false);
         }});
-        assertArrayEquals(new Double[]{0.9002233972616329, 0.9822583533006123, 14.0}, metric.calcMetric(graph));
+        Double[] result = metric.calcMetric(graph);
+        assertEquals(0.9002233972616329, result[0], 1e-10);
+        assertEquals(0.9822583533006123, result[1], 1e-10);
+        assertEquals(14, result[2], 0);
         
         metric.setParams(new HashMap<String, Object>() {{ 
             put(WilksMetric.ATTRS, Arrays.asList(Project.AREA_ATTR, Project.PERIM_ATTR)); 
             put(WilksMetric.NB_PATCH, 2);
             put(WilksMetric.WEIGHT_AREA, true);
         }});
-        assertArrayEquals(new Double[]{1.12318472518711, 1.0, 14.0}, metric.calcMetric(graph));
+        result = metric.calcMetric(graph);
+        assertEquals(1.12318472518711, result[0], 1e-10);
+        assertEquals(1, result[1], 1e-10);
+        assertEquals(14, result[2], 0);
     
         metric.setParams(new HashMap<String, Object>() {{ 
             put(WilksMetric.ATTRS, Arrays.asList(Project.AREA_ATTR, Project.PERIM_ATTR)); 
             put(WilksMetric.NB_PATCH, 4);
             put(WilksMetric.WEIGHT_AREA, false);
         }});
-        assertArrayEquals(new Double[]{0.9677880588729856, 0.9829389692802237, 6.0}, metric.calcMetric(graph));
+        result = metric.calcMetric(graph);
+        assertEquals(0.9677880588729856, result[0], 1e-10);
+        assertEquals(0.9829389692802237, result[1], 1e-10);
+        assertEquals(6, result[2], 0);
     }
 }

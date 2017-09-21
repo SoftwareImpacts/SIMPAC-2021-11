@@ -79,7 +79,6 @@ public class AddPatchCommandTest {
         }
         
         project = ProjectTest.loadTestProject();
-        
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_cout10_500_nopath"), 
                 new File("target/test-classes/org/thema/graphab/patch_alea.shp"), null);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
@@ -100,7 +99,6 @@ public class AddPatchCommandTest {
         }
         
         project = ProjectTest.loadTestProject();
-        
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_cout10_500_nopath"), 
                 new File("target/test-classes/org/thema/graphab/point_alea.shp"), null);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
@@ -121,7 +119,7 @@ public class AddPatchCommandTest {
         }
         
         project = ProjectTest.loadTestProject();
-        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
+        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 10000); put(AlphaParamMetric.PROBA, 0.05);}});
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"), null, 1000, 1, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
         metric = new double[] {
@@ -142,7 +140,7 @@ public class AddPatchCommandTest {
         }
         
         project = ProjectTest.loadTestProject();
-        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
+//        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"), null, 1000, 2, 1);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());
         metric = new double[] {
@@ -163,7 +161,7 @@ public class AddPatchCommandTest {
         }
         
         project = ProjectTest.loadTestProject();
-        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
+//        indice.setParams(new HashMap<String, Object>() {{put(AlphaParamMetric.DIST, 1000); put(AlphaParamMetric.PROBA, 0.05);}});
         addPatchCmd = new AddPatchCommand(10, indice, project.getGraph("graph_comp_euclid_1000_nointra"),
                 new File("target/test-classes/org/thema/graphab/patch_alea.shp"), null);
         addPatchCmd.run(new TaskMonitor.EmptyMonitor());

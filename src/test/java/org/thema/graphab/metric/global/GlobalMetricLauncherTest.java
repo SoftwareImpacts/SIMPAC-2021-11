@@ -143,7 +143,7 @@ public class GlobalMetricLauncherTest {
         }
         
         // The Wilks metric is not tested for the moment
-        assertEquals("Check all global metrics", Project.getGlobalMetricsFor(Project.Method.GLOBAL).size(), testIndices.size());
+        assertEquals("Check all global metrics", Project.getGlobalMetricsFor(Project.Method.GLOBAL).size()-1, testIndices.size());
         
     }
     
