@@ -375,7 +375,7 @@ public class CLITools {
         return new Project(name, new File(dir, name), coverage, new TreeSet<>(codes), patchCodes, nodata, con8, minArea, simp);
     }
     
-    public void batchModel(List<String> args) throws IOException, MathException {
+    private void batchModel(List<String> args) throws IOException, MathException {
 
         String var = args.remove(0);
         String arg = args.remove(0);
@@ -418,12 +418,14 @@ public class CLITools {
     }
 
     private void createLinkset(List<String> args) throws IOException, SchemaException {
+        Map<String, String> params = extractAndCheckParams(args, Arrays.asList("distance"), null);
+        
         int type = Linkset.PLANAR;
         double threshold = 0;
         String linkName = null;
         int type_dist;
-        String t = args.remove(0).split("=")[1];
-        switch(t) {
+
+        switch(params.remove("distance")) {
             case "euclid":
                 type_dist = Linkset.EUCLID;
                 break;
@@ -434,20 +436,20 @@ public class CLITools {
                 type_dist = Linkset.CIRCUIT;
                 break;
             default:
-                throw new IllegalArgumentException("Unknown linkset distance : " + t);
+                throw new IllegalArgumentException("Unknown linkset distance type");
         }
-        if(!args.isEmpty() && args.get(0).startsWith("name=")) {
-            String [] tok = args.remove(0).split("=");
-            linkName = tok[1];
+        if(params.containsKey("name")) {
+            linkName = params.remove("name");
         }
-        if(!args.isEmpty() && args.get(0).startsWith("complete")) {
-            String arg = args.remove(0);
+        if(params.containsKey("complete")) {
             type = Linkset.COMPLETE;
-            if(arg.contains("=")) {
-                String [] tok = arg.split("=");
-                threshold = Double.parseDouble(tok[1]);
+            String arg = params.remove("complete");
+            if(arg != null) {
+                threshold = Double.parseDouble(arg);
             }
         }
+        
+        useLinksets.clear();
         if(type_dist == Linkset.EUCLID) {
             if(linkName == null) {
                 linkName = "euclid_" + (type == Linkset.COMPLETE ? ("comp"+threshold) : "plan");
@@ -458,18 +460,16 @@ public class CLITools {
         } else {
             boolean circuit = type_dist == Linkset.CIRCUIT;
             double coefSlope = 0;
-            if(args.get(0).startsWith("slope=")) {
-                String arg = args.remove(0);
-                String [] tok = arg.split("=");
-                coefSlope = Double.parseDouble(tok[1]);
+            if(params.containsKey("slope")) {
+                coefSlope = Double.parseDouble(params.remove("slope"));
             }
             boolean removeCrossPath = false;
-            if(args.get(0).equals("remcrosspath")) {
-                args.remove(0);
+            if(params.containsKey("remcrosspath")) {
+                params.remove("remcrosspath");
                 removeCrossPath = true;
             }
-            if(args.get(0).startsWith("extcost=")) {
-                File extCost = new File(args.remove(0).split("=")[1]);
+            if(params.containsKey("extcost")) {
+                File extCost = new File(params.remove("extcost"));
                 if(linkName == null) {
                     linkName = (circuit ? "circ_" : "cost_") + extCost.getName();
                 } 
@@ -483,10 +483,9 @@ public class CLITools {
                 List<Double> dynCodes = null;
                 Range rangeCost = null;
                 String name = null;
-                while(!args.isEmpty() && args.get(0).contains("=")) {
-                    String [] tok = args.remove(0).split("=");
-                    Range codes = Range.parse(tok[0]);
-                    Range cost = Range.parse(tok[1]);
+                for(String param : params.keySet()) {
+                    Range codes = Range.parse(param);
+                    Range cost = Range.parse(params.remove(param));
                     if(cost.isSingle()) {
                         for(Double code : codes.getValues()) {
                             costs[code.intValue()] = cost.getMin();
@@ -498,7 +497,7 @@ public class CLITools {
                         }
                         rangeCost = cost;
                         dynCodes = codes.getValues();
-                        name = tok[0].replace(',', '_');
+                        name = param.replace(',', '_');
                     }
                 }
 
@@ -508,7 +507,6 @@ public class CLITools {
                 } else {
                     name = linkName;
                 }
-                useLinksets.clear();
                 for(Double c : rangeCost.getValues()) {
                     System.out.println("Calc cost " + c);
                     for(Double code : dynCodes) {
@@ -539,27 +537,26 @@ public class CLITools {
     }
 
     private void createGraph(List<String> args) throws IOException, SchemaException {
+        Map<String, String> params = extractAndCheckParams(args, Collections.EMPTY_LIST, Arrays.asList("name", "nointra", "threshold"));
+        
         int type = GraphGenerator.COMPLETE;
         boolean intra = true;
         Range range = null;
         String singleName = null;
         
-        if(!args.isEmpty() && args.get(0).startsWith("name=")) {
-            singleName = args.remove(0).split("=")[1];
+        if(params.containsKey("name")) {
+            singleName = params.get("name");
         }
         
-        if(!args.isEmpty() && args.get(0).equals("nointra")) {
+        if(params.containsKey("nointra")) {
             intra = false;
-            args.remove(0);
         }
-        if(!args.isEmpty() && args.get(0).startsWith("threshold=")) {
+        if(params.containsKey("threshold")) {
             type = GraphGenerator.THRESHOLD;
-            String arg = args.remove(0);
-            String [] tok = arg.split("=");
-            range = Range.parse(tok[1]);
+            range = Range.parse(params.get("threshold"));
         }
         
-        if(singleName != null && getLinksets().size() > 1 || range.getValues().size() > 1) {
+        if(singleName != null && (getLinksets().size() > 1 || range != null && range.getValues().size() > 1)) {
             throw new IllegalArgumentException("name parameter can be used only when creating only one graph");
         }
         
@@ -584,7 +581,6 @@ public class CLITools {
     }
     
     private void clustering(List<String> args) throws IOException, SchemaException {
-        
         Map<String, String> params = extractAndCheckParams(args, Arrays.asList("d", "p"), Arrays.asList("beta", "nb"));
         final double alpha = AlphaParamMetric.getAlpha(Double.parseDouble(params.get("d")), Double.parseDouble(params.get("p")));
         final double beta = params.containsKey("beta") ? Double.parseDouble(params.get("beta")) : 1;
@@ -616,6 +612,9 @@ public class CLITools {
     }
 
     private void calcGlobalMetric(List<String> args) throws IOException {
+        if(args.isEmpty()) {
+            throw new IllegalArgumentException("Needs a global metric shortname");
+        }
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
 
@@ -623,10 +622,11 @@ public class CLITools {
 
         GlobalMetric metric = Project.getGlobalMetric(indName);
         System.out.println("Global metric " + metric.getName());
+        List<String> paramNames = new ArrayList<>(ranges.keySet());
         
         try (FileWriter fw = new FileWriter(new File(project.getDirectory(), metric.getShortName() + ".txt"))) {
             fw.write("Graph");
-            for(String param : ranges.keySet()) {
+            for(String param : paramNames) {
                 fw.write("\t" + param);
             }
             for(String resName : metric.getResultNames()) {
@@ -636,7 +636,7 @@ public class CLITools {
             
             for(GraphGenerator graph : getGraphs()) {    
                 HashMap<String, Object> params = new HashMap<>();                
-                List<String> paramNames = new ArrayList<>(ranges.keySet());
+                
                 int [] indParam = new int[ranges.size()];
                 boolean end = false;
                 while(!end) {
@@ -649,7 +649,7 @@ public class CLITools {
                     System.out.println(graph.getName() + " - " + metric.getDetailName() + " : " + res[0]);
                     
                     fw.write(graph.getName());
-                    for(String param : params.keySet()) {
+                    for(String param : paramNames) {
                         fw.write("\t" + params.get(param));
                     }
                     for(Double val : res) {
@@ -680,6 +680,10 @@ public class CLITools {
     }
     
     private void calcCompMetric(List<String> args) throws IOException, SchemaException {
+        if(args.isEmpty()) {
+            throw new IllegalArgumentException("Needs a global metric shortname");
+        }
+        
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
 
@@ -728,6 +732,9 @@ public class CLITools {
     }
     
     private void calcLocalMetric(List<String> args) throws IOException, SchemaException {
+        if(args.isEmpty()) {
+            throw new IllegalArgumentException("Needs a local metric shortname");
+        }
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
 

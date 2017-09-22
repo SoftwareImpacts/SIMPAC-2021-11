@@ -1165,9 +1165,10 @@ public class MainFrame extends javax.swing.JFrame {
     public static List<String> calcCompMetric(ProgressBar monitor, GraphGenerator graph,
                 GlobalMetric metric, double maxCost) {
         GlobalMetricLauncher launcher = new GlobalMetricLauncher(metric);
+        String [] resNames = metric.getResultNames();
         List<String> attrNames = new ArrayList<>();
-        for(String name : metric.getResultNames()) {
-            String attr = metric.getDetailName() + "_" + name + "_" + graph.getName();
+        for(String name : resNames) {
+            String attr = metric.getDetailName() + (resNames.length > 1 ? "|" + name : "") + "_" + graph.getName();
             DefaultFeature.addAttribute(attr, graph.getComponentFeatures(), Double.NaN);
             attrNames.add(attr);
         }
@@ -1177,9 +1178,8 @@ public class MainFrame extends javax.swing.JFrame {
         for(int i = 0; i < graph.getComponents().size(); i++) {
             Double [] res = launcher.calcMetric(graph.getComponentGraphGen(i), true, null);
             DefaultFeature f = graph.getComponentFeatures().get(i);
-            String [] names = metric.getResultNames();
-            for(int j = 0; j < names.length; j++) {
-                f.setAttribute(metric.getDetailName() + "_" + names[j] + "_" + graph.getName(), res[j]);
+            for(int j = 0; j < resNames.length; j++) {
+                f.setAttribute(metric.getDetailName() + (resNames.length > 1 ? "|" + resNames[j] : "") + "_" + graph.getName(), res[j]);
             }
             monitor.incProgress(1);
         }
