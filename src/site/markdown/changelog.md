@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.1.9 (22/09/2017)
+- CLI : --graph name option does not work correctly
+- Circuit linkset : throw exception for one special case in optim mode
+
 ##### version 2.1.8 (21/09/2017)
 - Metric : remove beta parameter from PC and dPC
 - Metric : remove FPC metric (replaced by IF metric)

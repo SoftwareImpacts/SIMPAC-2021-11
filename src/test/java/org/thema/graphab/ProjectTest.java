@@ -118,8 +118,6 @@ public class ProjectTest {
             put("comp_cout10_all", 11476);
             put("comp_cout10_500", 361);
             put("comp_cout10_500_nopath", 1704); // and keep links
-            put("plan_circ", 399);
-
         }};
         HashMap<String, Double> sumCosts = new HashMap<String, Double>() {{
             put("comp_cout10", 317252.9343452);
@@ -132,7 +130,6 @@ public class ProjectTest {
             put("plan_cout10_keep_links", 78962.696132);
             put("plan_cout1_len", 27588.8605768);
             put("plan_euclid", 377561.1225223806);
-            put("plan_circ", 409.4970207847323);
         }};
         HashMap<String, Double> sumDists = new HashMap<String, Double>() {{
             put("comp_cout10", 1858377.81871097);
@@ -145,7 +142,6 @@ public class ProjectTest {
             put("plan_cout10_keep_links", 459194.940464);
             put("plan_cout1_len", 386225.769698995);
             put("plan_euclid", 377561.1225223806);
-            put("plan_circ", Double.NaN);
         }};
         
         // for circuit linkset
@@ -175,6 +171,36 @@ public class ProjectTest {
 
     }
 
+    /**
+     * Test addLinkset method for circuit.
+     * Check the number of links, sum of costs
+     */
+    @Test
+    public void testAddCircuitLinkset() throws Throwable {
+        Project prj = loadCrossProject();
+        double [] costs = new double[256];
+        Arrays.fill(costs, 1.0);
+        Linkset linkset = new Linkset(prj, "circ", Linkset.COMPLETE, costs, null, false, 0);
+        prj.addLinkset(linkset, false);
+        
+        assertEquals(10, linkset.getPaths().size());
+        double sumCost = 0;
+        for(Path p : linkset.getPaths()) {
+            sumCost += p.getCost();
+        }
+        assertEquals(5.094316110093207, sumCost, 1e-10);
+        
+        
+        linkset = new Linkset(prj, "circ", Linkset.PLANAR, costs, null, true, 0);
+        prj.addLinkset(linkset, false);
+        assertEquals(8, linkset.getPaths().size());
+        sumCost = 0;
+        for(Path p : linkset.getPaths()) {
+            sumCost += p.getCost();
+        }
+        assertEquals(3.8846987460794975, sumCost, 1e-10);
+    }
+    
     /**
      * Test addGraph method.
      * Check the number of links, sum of costs and the number of components
@@ -285,5 +311,15 @@ public class ProjectTest {
     
     public static Project loadCrossProject() throws IOException {
         return Project.loadProject(new File("target/test-classes/org/thema/graphab/cross_project/cross.xml"), true);
+    }
+    
+    public static Project loadCrossProjectWithCapa() throws IOException, SchemaException {
+        Project prj = Project.loadProject(new File("target/test-classes/org/thema/graphab/cross_project/cross.xml"), true);
+        CapaPatchDialog.CapaPatchParam param = new CapaPatchDialog.CapaPatchParam();
+        param.importFile = new File("target/test-classes/org/thema/graphab/cross_project/capa.csv");
+        param.idField="id";
+        param.capaField="capa";
+        prj.setCapacities(param, false);
+        return prj;
     }
 }

@@ -164,33 +164,6 @@
       </Linkset>
     </entry>
     <entry>
-      <string>plan_circ</string>
-      <Linkset>
-        <name>plan_circ</name>
-        <type>2</type>
-        <type__dist>4</type__dist>
-        <type__length>1</type__length>
-        <costs>
-          <double>0.0</double>
-          <double>1.0</double>
-          <double>2.0</double>
-          <double>3.0</double>
-          <double>4.0</double>
-          <double>5.0</double>
-          <double>6.0</double>
-          <double>7.0</double>
-          <double>8.0</double>
-          <double>9.0</double>
-          <double>10.0</double>
-        </costs>
-        <realPaths>false</realPaths>
-        <removeCrossPatch>false</removeCrossPatch>
-        <coefSlope>0.0</coefSlope>
-        <distMax>NaN</distMax>
-        <optimCirc>true</optimCirc>
-      </Linkset>
-    </entry>
-    <entry>
       <string>plan_cout1</string>
       <Linkset>
         <name>plan_cout1</name>
@@ -363,7 +336,7 @@
       <string>graph_plan_cout10_300</string>
       <Graph>
         <name>graph_plan_cout10_300</name>
-        <cost reference="../../../../costLinks/entry[8]/Linkset"/>
+        <cost reference="../../../../costLinks/entry[7]/Linkset"/>
         <type>2</type>
         <threshold>300.0</threshold>
         <intraPatchDist>true</intraPatchDist>
@@ -374,7 +347,7 @@
       <string>graph_plan_cout10_mst</string>
       <Graph>
         <name>graph_plan_cout10_mst</name>
-        <cost reference="../../../../costLinks/entry[8]/Linkset"/>
+        <cost reference="../../../../costLinks/entry[7]/Linkset"/>
         <type>3</type>
         <threshold>0.0</threshold>
         <intraPatchDist>true</intraPatchDist>
@@ -385,7 +358,7 @@
       <string>graph_plan_cout1_len</string>
       <Graph>
         <name>graph_plan_cout1_len</name>
-        <cost reference="../../../../costLinks/entry[10]/Linkset"/>
+        <cost reference="../../../../costLinks/entry[9]/Linkset"/>
         <type>1</type>
         <threshold>0.0</threshold>
         <intraPatchDist>true</intraPatchDist>
@@ -396,7 +369,7 @@
       <string>graph_plan_euclid</string>
       <Graph>
         <name>graph_plan_euclid</name>
-        <cost reference="../../../../costLinks/entry[11]/Linkset"/>
+        <cost reference="../../../../costLinks/entry[10]/Linkset"/>
         <type>1</type>
         <threshold>0.0</threshold>
         <intraPatchDist>true</intraPatchDist>

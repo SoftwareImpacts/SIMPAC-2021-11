@@ -150,7 +150,7 @@ public final class CircuitRaster {
     public PatchODCircuit getODCircuit(Feature patch1, Feature patch2) {
         Rectangle compZone = new Rectangle(0, 0, rasterPatch.getWidth(), rasterPatch.getHeight());
         Rectangle zone = compZone;
-        Raster rasterZone = rasterPatch;
+        Raster rasterZone = null;
         if(optimCirc) {
             Geometry gEnv = new GeometryFactory().toGeometry(patch1.getGeometry().getEnvelopeInternal());
             gEnv.apply(project.getSpace2grid());
@@ -162,12 +162,8 @@ public final class CircuitRaster {
             while(!connex) {
                 env.expandBy(2+env.maxExtent());
                 zone = compZone.createIntersection(new Rectangle((int)env.getMinX(), (int)env.getMinY(), (int)env.getWidth(), (int)env.getHeight())).getBounds();
-                if(zone.equals(compZone)) {
-                    connex = true;
-                } else {
-                    rasterZone = checkConnexity(patch1, patch2, zone);
-                    connex = rasterZone != null;
-                }
+                rasterZone = checkConnexity(patch1, patch2, zone);
+                connex = rasterZone != null;
                 if(!connex) {
                     Logger.getLogger(CircuitRaster.class.getName()).info("Two patches (" + patch1 + "-" + patch2 + ") are not connected with rect : " + zone + " -> expand rect");
                 }
@@ -448,7 +444,7 @@ public final class CircuitRaster {
                             cols.add(indMat2);
                         }
                     }
-                    if (!isPatch || indMat >= 2) {
+                    if (indMat >= 2) {
                         if (cols.isEmpty()) {
                             throw new RuntimeException("Isolated pixel at (" + x + "," + y +")");
                         }
