@@ -61,6 +61,7 @@ public class PointImportDialog extends javax.swing.JDialog {
         initComponents();
         setLocationRelativeTo(parent);
         getRootPane().setDefaultButton(okButton);
+        
     }
 
 
@@ -72,6 +73,7 @@ public class PointImportDialog extends javax.swing.JDialog {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        bindingGroup = new org.jdesktop.beansbinding.BindingGroup();
 
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
@@ -83,6 +85,7 @@ public class PointImportDialog extends javax.swing.JDialog {
         jLabel3 = new javax.swing.JLabel();
         xComboBox = new javax.swing.JComboBox();
         multipleSelectionPanel = new org.thema.common.swing.MultipleSelectionPanel();
+        importAttrCheckBox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle"); // NOI18N
@@ -118,6 +121,12 @@ public class PointImportDialog extends javax.swing.JDialog {
 
         jLabel3.setText(bundle1.getString("PointImportDialog.jLabel3.text")); // NOI18N
 
+        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, importAttrCheckBox, org.jdesktop.beansbinding.ELProperty.create("${selected}"), multipleSelectionPanel, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        bindingGroup.addBinding(binding);
+
+        importAttrCheckBox.setText(bundle1.getString("PointImportDialog.importAttrCheckBox.text")); // NOI18N
+        importAttrCheckBox.setEnabled(true);
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -125,24 +134,30 @@ public class PointImportDialog extends javax.swing.JDialog {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(multipleSelectionPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 475, Short.MAX_VALUE)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                        .add(0, 0, Short.MAX_VALUE)
                         .add(okButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 67, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(cancelButton))
-                    .add(selectFilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 475, Short.MAX_VALUE)
+                    .add(selectFilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 492, Short.MAX_VALUE)
                     .add(layout.createSequentialGroup()
                         .add(jLabel1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(idComboBox, 0, 125, Short.MAX_VALUE)
+                        .add(idComboBox, 0, 131, Short.MAX_VALUE)
                         .add(18, 18, 18)
                         .add(jLabel3)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(xComboBox, 0, 125, Short.MAX_VALUE)
+                        .add(xComboBox, 0, 131, Short.MAX_VALUE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jLabel2)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(yComboBox, 0, 127, Short.MAX_VALUE)))
+                        .add(yComboBox, 0, 133, Short.MAX_VALUE))
+                    .add(layout.createSequentialGroup()
+                        .add(importAttrCheckBox)
+                        .add(0, 0, Short.MAX_VALUE))
+                    .add(layout.createSequentialGroup()
+                        .add(12, 12, 12)
+                        .add(multipleSelectionPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -162,13 +177,17 @@ public class PointImportDialog extends javax.swing.JDialog {
                     .add(jLabel2)
                     .add(yComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(18, 18, 18)
-                .add(multipleSelectionPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE)
+                .add(importAttrCheckBox)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(multipleSelectionPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 220, Short.MAX_VALUE)
                 .add(18, 18, 18)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cancelButton)
                     .add(okButton))
                 .addContainerGap())
         );
+
+        bindingGroup.bind();
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -245,6 +264,7 @@ public class PointImportDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
     private javax.swing.JComboBox idComboBox;
+    private javax.swing.JCheckBox importAttrCheckBox;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -253,6 +273,7 @@ public class PointImportDialog extends javax.swing.JDialog {
     private org.thema.common.swing.SelectFilePanel selectFilePanel;
     private javax.swing.JComboBox xComboBox;
     private javax.swing.JComboBox yComboBox;
+    private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 
 }

@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.1.10 (09/10/2017)
+- UI : number of components in graph properties
+- UI : add point set dialog, disable attribute import by default
+
 ##### version 2.1.9 (22/09/2017)
 - CLI : --graph name option does not work correctly
 - Circuit linkset : throw exception for one special case in optim mode
