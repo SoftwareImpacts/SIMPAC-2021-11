@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.1.11 (11/10/2017)
+- UI : distance conversion, show plot below
+- UI : Pointset distance dialog locks UI during calculation
+
 ##### version 2.1.10 (09/10/2017)
 - UI : number of components in graph properties
 - UI : add point set dialog, disable attribute import by default

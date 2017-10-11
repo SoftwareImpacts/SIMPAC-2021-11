@@ -21,7 +21,10 @@ package org.thema.graphab.links;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,13 +35,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import org.geotools.feature.SchemaException;
+import javax.swing.SwingUtilities;
 import org.jfree.data.statistics.Regression;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -139,7 +143,7 @@ public class LinkLayer extends FeatureLayer {
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Dist2Cost")) {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String res = JOptionPane.showInputDialog("Distance : ");
+                String res = JOptionPane.showInputDialog(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DistMetric") + " : ");
                 if(res == null) {
                     return;
                 }
@@ -152,19 +156,23 @@ public class LinkLayer extends FeatureLayer {
 
                 double [] coef = Regression.getOLSRegression(dataregr, 0);
                 double cost = linkset.estimCost(dist);
-                
-                JTextArea text = new JTextArea(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
+                final JFrame frm = showScatterPlot(Path.DIST_ATTR, Path.COST_ATTR, true);
+                final JTextArea text = new JTextArea(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
                         coef[0], coef[1], dist, cost));
-                JButton but = new JButton(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Plot")) {
+                text.addComponentListener(new ComponentAdapter() {
+                    // event for moving plot window below message dialog
                     @Override
-                    public void actionPerformed(ActionEvent e) {
-                        showScatterPlot(Path.DIST_ATTR, Path.COST_ATTR, true);
+                    public void componentResized(ComponentEvent e) {
+                        super.componentResized(e); //To change body of generated methods, choose Tools | Templates.
+                        Point p = SwingUtilities.windowForComponent(text).getLocation();
+                        frm.setLocation(p.x, p.y+130);
                     }
+                    
                 });
-                JPanel panel = new JPanel(new BorderLayout());
-                panel.add(text, BorderLayout.CENTER);
-                panel.add(but, BorderLayout.EAST);
-                JOptionPane.showMessageDialog(null, panel);
+
+                JOptionPane.showMessageDialog(null, text, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Dist2Cost"), JOptionPane.PLAIN_MESSAGE);
+                frm.setVisible(false);
+                frm.dispose();
             }
         });
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_path_costs")) {

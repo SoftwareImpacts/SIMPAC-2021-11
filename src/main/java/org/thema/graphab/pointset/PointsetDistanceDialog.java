@@ -371,6 +371,8 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
+        setVisible(false);
+        dispose();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -512,8 +514,6 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                 } 
                 mon.close();
                 JOptionPane.showMessageDialog(PointsetDistanceDialog.this, "Operation finished");
-                setVisible(false);
-                dispose();
             }
         }).start();
 
