@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.2 (24/10/2017)
+- Final version
+
 ##### version 2.1.11 (11/10/2017)
 - UI : distance conversion, show plot below
 - UI : Pointset distance dialog locks UI during calculation

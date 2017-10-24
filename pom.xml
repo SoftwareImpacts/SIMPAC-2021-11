@@ -4,7 +4,7 @@
 
     <groupId>org.thema</groupId>
     <artifactId>graphab</artifactId>
-    <version>2.1.11</version>
+    <version>2.2</version>
     <packaging>jar</packaging>
 
     <name>Graphab</name>
@@ -68,7 +68,6 @@
                         <phase>site</phase>
                         <goals>
                             <goal>latex</goal>
-<!--                            <goal>tex4ht</goal> -->
                         </goals>
                     </execution>
                 </executions>
@@ -201,20 +200,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.7</version>
+                <version>2.9</version>
                 <reportSets>
                     <reportSet>
                         <reports>
                             <report>summary</report>
                             <report>license</report>
+                            <report>scm</report>
+                            <report>project-team</report>
                         </reports>
                     </reportSet>
                 </reportSets>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.7</version>
             </plugin>
         </plugins>
     </reporting>
