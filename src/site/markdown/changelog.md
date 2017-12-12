@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.2.1 (12/12/2017)
+- CLI : --linkset command throws ConcurrentModificationException when used with several costs
+
 ##### version 2.2 (24/10/2017)
 - Final version
 

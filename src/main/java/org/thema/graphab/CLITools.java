@@ -485,7 +485,7 @@ public class CLITools {
                 String name = null;
                 for(String param : params.keySet()) {
                     Range codes = Range.parse(param);
-                    Range cost = Range.parse(params.remove(param));
+                    Range cost = Range.parse(params.get(param));
                     if(cost.isSingle()) {
                         for(Double code : codes.getValues()) {
                             costs[code.intValue()] = cost.getMin();

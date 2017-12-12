@@ -93,8 +93,8 @@ public class CLIToolsTest {
         checkAndRemoveLinkset("euclid_comp0.0", Linkset.COMPLETE, Linkset.EUCLID, 10);
         cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=euclid", "name=comp2", "complete=2"});
         checkAndRemoveLinkset("comp2", Linkset.COMPLETE, Linkset.EUCLID, 4);
-        cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=cost", "0,255=1"});
-        checkAndRemoveLinkset("cost_0_255", Linkset.PLANAR, Linkset.COST, 8);
+        cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=cost", "name=plan", "0=1", "255=10"});
+        checkAndRemoveLinkset("plan", Linkset.PLANAR, Linkset.COST, 8);
         cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=cost", "complete", "remcrosspath", "0,255=1"});
         checkAndRemoveLinkset("cost_0_255", Linkset.COMPLETE, Linkset.COST, 8);
         cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=cost", "0,255=1:1:2"});
