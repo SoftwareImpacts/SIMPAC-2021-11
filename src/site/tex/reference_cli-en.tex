@@ -23,7 +23,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.2\\
+		Graphab 2.3\\
 		\bigskip
 		Reference Manual\\
 		Command Line Interface\\
@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2017-09-11\\
+		2017-12-20\\
 	}
 	
 \end{titlepage}
@@ -163,7 +163,7 @@ Commands list :
 --show
 --linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
---corridor maxcost=[{]valcost[}]
+--corridor maxcost=[{]valcost[}] [format=raster|vector]
 --graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
 --usegraph graph1,...,graphn
 --cluster d=val p=val [beta=val] [nb=val]
@@ -471,7 +471,7 @@ By default, all graphs are selected.
 
 \subsection{--corridor : calculate corridors}
 \begin{Verbatim}[commandchars=\\\{\}]
---corridor maxcost=\textit{valcost}
+--corridor maxcost=\textit{valcost} [format=raster|vector]
 \end{Verbatim}
 
 \subsubsection{Required parameter}
@@ -479,10 +479,16 @@ By default, all graphs are selected.
 	\item \verb|maxcost=[{]valcost[}]|: maximum cost paths forming a corridor. Surrounded by braces, the distance given in meter is converted automatically in cost unit.
 \end{itemize}
 
+\subsubsection{Optional parameter}
+\begin{itemize}
+	\item \verb+format=raster|vector+ : output format raster (.tif) or vector (.shp). The default format is vector.
+\end{itemize}
+
 \subsubsection{Description}
 The \verb|--corridor| command calculates the corridor associated to each link of a link set.
-The result is stored in a shapefile for each selected link set.
-For each link, the shapefile contains a polygon representing the set of paths having a distance less than or equal to \textit{valcost}.
+The result is stored in a shapefile (or raster file) for each selected link set.
+For each link, the shapefile contains a polygon representing the set of paths having a distance less than or equal to \textit{valcost}. In raster format, each pixel counts the number of corridors passing through it.
+
 This command does not operate on euclidean link sets, they are ignored.
 
 \subsubsection{Example}

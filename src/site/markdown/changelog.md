@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.3 (20/12/2017)
+- Corridor : throws Coordinate Out of bounds exception in rare cases
+- CLI : --corridor add format option for raster export
+
 ##### version 2.2.1 (12/12/2017)
 - CLI : --linkset command throws ConcurrentModificationException when used with several costs
 

@@ -19,6 +19,7 @@
 package org.thema.graphab;
 
 import com.vividsolutions.jts.geom.Geometry;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
@@ -109,7 +110,7 @@ public class CLITools {
                     "--show\n" + 
                     "--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
-                    "--corridor maxcost=[{]valcost[}]\n" +
+                    "--corridor maxcost=[{]valcost[}] [format=raster|vector]\n" +
                     "--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]\n" +
                     "--usegraph graph1,...,graphn\n" +
                     "--cluster d=val p=val [beta=val] [nb=val]\n" +                    
@@ -1330,11 +1331,13 @@ public class CLITools {
     }
     
     private void corridor(List<String> args) throws IOException, SchemaException {
-        if(args.isEmpty() || !args.get(0).startsWith("maxcost="))  {
-            throw new IllegalArgumentException("maxcost option is missing in command --corridor");
+        Map<String, String> params = extractAndCheckParams(args, Arrays.asList("maxcost"), Arrays.asList("format"));
+                
+        Range rMax = Range.parse(params.get("maxcost"));
+        boolean raster = false;
+        if("raster".equals(params.get("format"))) {
+            raster = true;
         }
-        
-        Range rMax = Range.parse(args.remove(0).split("=")[1]);
         
         for(Linkset link : getLinksets()) {
             if(link.getType_dist() == Linkset.EUCLID) {
@@ -1343,10 +1346,20 @@ public class CLITools {
 
             System.out.println("Linkset : " + link.getName());
             double maxCost = rMax.getValue(link);
-            List<Feature> corridors = link.computeCorridor(null, maxCost);
-            
-            DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
-                    "-corridor-" + maxCost + ".shp"), project.getCRS());
+            if(raster) {
+                Raster corridors = link.computeRasterCorridor(null, maxCost);
+                Rectangle2D zone = project.getZone();
+                double res = project.getResolution();
+                Rectangle2D extZone = new Rectangle2D.Double(
+                    zone.getX()-res, zone.getY()-res, zone.getWidth()+2*res, zone.getHeight()+2*res);
+                new RasterLayer("corridor", new RasterShape(corridors, extZone, new RasterStyle(), true), project.getCRS())
+                        .saveRaster(new File(project.getDirectory(), link.getName() +
+                            "-corridor-" + maxCost + ".tif"));
+            } else {
+                List<Feature> corridors = link.computeCorridor(null, maxCost);
+                DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
+                        "-corridor-" + maxCost + ".shp"), project.getCRS());
+            }
         }
     }
     

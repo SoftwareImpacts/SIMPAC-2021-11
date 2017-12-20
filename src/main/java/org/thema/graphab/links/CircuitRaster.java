@@ -594,9 +594,10 @@ public final class CircuitRaster {
             solve(); 
             double threshold = 1 / (maxCost / getR());
             Raster current = getCurrentMap();
-            WritableRaster corridor = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_BYTE, zone.width, zone.height, 1), null);
-            for(int y = 0; y < zone.height; y++) {
-                for (int x = 0; x < zone.width; x++) {
+            WritableRaster corridor = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_BYTE, zone.width, zone.height, 1), 
+                    zone.getLocation());
+            for(int y = zone.y; y < zone.getMaxY(); y++) {
+                for (int x = zone.x; x < zone.getMaxX(); x++) {
                     if (current.getSampleDouble(x, y, 0) >= threshold) {
                         corridor.setSample(x, y, 0, 1);
                     }
@@ -612,14 +613,15 @@ public final class CircuitRaster {
          */
         public Raster getCurrentMap() {
             solve(); 
-            WritableRaster current = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_FLOAT, zone.width, zone.height, 1), null);
+            WritableRaster current = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_FLOAT, zone.width, zone.height, 1), 
+                     zone.getLocation());
             for(int y = 0; y < zone.height; y++) {
                 for (int x = 0; x < zone.width; x++) {
                     int indMat = getIndMat(x, y);
                     if (indMat == -1) {
-                        current.setSample(x, y, 0, Float.NaN);
+                        current.setSample(x+zone.x, y+zone.y, 0, Float.NaN);
                     } else if (indMat < 2) {
-                        current.setSample(x, y, 0, Float.NaN);
+                        current.setSample(x+zone.x, y+zone.y, 0, Float.NaN);
                     } else {
                         double sum = 0;
                         int[] col = tabMatrix[indMat];
@@ -628,7 +630,7 @@ public final class CircuitRaster {
                                 sum += Math.abs((U.get(ind) - U.get(indMat)) * A.get(ind, indMat));
                             }
                         }
-                        current.setSample(x, y, 0, sum/2);
+                        current.setSample(x+zone.x, y+zone.y, 0, sum/2);
                     }
                 }
             }
@@ -808,8 +810,7 @@ public final class CircuitRaster {
          */
         public Geometry getCorridor(double maxCost) {
             Raster r = getCorridorMap(maxCost);
-            Geometry corridor = SpatialOp.vectorize(r, new Envelope(0, zone.width, 0, zone.height), 1);
-            corridor = AffineTransformation.translationInstance(zone.x, zone.y).transform(corridor);
+            Geometry corridor = SpatialOp.vectorize(r, JTS.rectToEnv(zone), 1);
             corridor = project.getGrid2space().transform(corridor);
             List<Geometry> geomTouches = new ArrayList<>();
             for(int i = 0; i < corridor.getNumGeometries(); i++) {
