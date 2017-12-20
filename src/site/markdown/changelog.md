@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.2.2 (20/12/2017)
+- Corridor : throws Coordinate Out of bounds exception in rare cases
+
 ##### version 2.2.1 (12/12/2017)
 - CLI : --linkset command throws ConcurrentModificationException when used with several costs
 

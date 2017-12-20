@@ -635,7 +635,7 @@ public class Linkset {
 
         final int id1 = (Integer)path.getPatch1().getId();
         final int id2 = (Integer)path.getPatch2().getId();
-        WritableRaster corridor = Raster.createBandedRaster(DataBuffer.TYPE_BYTE, rect.width, rect.height, 1, new Point(rect.x, rect.y));
+        WritableRaster corridor = Raster.createBandedRaster(DataBuffer.TYPE_BYTE, rect.width+2, rect.height+2, 1, new Point(rect.x-1, rect.y-1));
         for(int y = rect.y; y < rect.getMaxY(); y++) {
             for(int x = rect.x; x < rect.getMaxX(); x++) {
                 int id = project.getRasterPatch().getSample(x, y, 0);
