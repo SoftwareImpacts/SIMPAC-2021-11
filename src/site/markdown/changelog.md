@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.2.3 (09/02/2018)
+- Linkset creation : negative cost is now checked and throw an exception
+
 ##### version 2.2.2 (20/12/2017)
 - Corridor : throws Coordinate Out of bounds exception in rare cases
 

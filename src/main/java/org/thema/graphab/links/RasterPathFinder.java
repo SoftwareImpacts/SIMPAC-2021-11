@@ -493,6 +493,9 @@ public final class RasterPathFinder implements SpacePathFinder {
                 final double c = getCost(x+X[i], y+Y[i]);
                 final double newCost = current.dist + 
                         (COST[i] * (currentCost + c) / 2) * (1 + (coefSlope != 0 ? getSlope(x, y, i)*coefSlope : 0));
+                if(newCost < current.dist) {
+                    throw new IllegalStateException("Negative cost is forbidden. Check your cost.");
+                }
                 final int ind = current.ind + IND[i];
                 if(newCost < getDist(ind)) {
                     Node newNode = new Node(ind, newCost);
