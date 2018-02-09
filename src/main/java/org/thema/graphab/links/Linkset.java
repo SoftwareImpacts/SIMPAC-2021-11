@@ -51,7 +51,6 @@ import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.media.jai.JAI;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.jfree.data.statistics.Regression;
 import org.jfree.data.xy.XYSeries;
