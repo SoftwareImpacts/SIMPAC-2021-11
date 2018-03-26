@@ -228,7 +228,7 @@ public class RSTGridReader extends AbstractGridCoverage2DReader  {
         }
         
         Category [] tabCat = new Category[1];
-        tabCat[0] = new Category("values", new Color[]{Color.BLACK, Color.WHITE}, range, 1, 0);
+        tabCat[0] = new Category("values", new Color[]{Color.BLACK, Color.WHITE}, range);
 
         return tabCat;
     }

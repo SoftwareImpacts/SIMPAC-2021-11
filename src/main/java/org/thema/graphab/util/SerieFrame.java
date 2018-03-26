@@ -22,6 +22,7 @@ package org.thema.graphab.util;
 
 import java.awt.BorderLayout;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -38,7 +39,7 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.ExtensionFileFilter;
+import org.thema.common.Util;
 import org.thema.drawshape.layer.RasterLayer;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -130,28 +131,13 @@ public class SerieFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void exportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportButtonActionPerformed
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setAcceptAllFileFilterUsed(false);
-        ExtensionFileFilter svgFilter = new ExtensionFileFilter(
-                "Image SVG", ".svg");
-        fileChooser.addChoosableFileFilter(svgFilter);
-        ExtensionFileFilter txtFilter = new ExtensionFileFilter(
-                "Texte", ".txt");
-        fileChooser.addChoosableFileFilter(txtFilter);
         
-        int option = fileChooser.showSaveDialog(null);
-        if (option != JFileChooser.APPROVE_OPTION) {
+        File file = Util.getFileSave(".txt|.svg");
+        if(file == null) {
             return;
-        }
-
-
-        String filename = fileChooser.getSelectedFile().getPath();
-        if(fileChooser.getFileFilter() == svgFilter) {
-            if (!filename.endsWith(".svg")) {
-                filename = filename + ".svg";
-            }
-
-
+        } 
+        
+        if(file.getName().endsWith(".svg")) { 
             DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
             Document document = domImpl.createDocument(null, "svg", null);
 
@@ -162,7 +148,7 @@ public class SerieFrame extends javax.swing.JFrame {
             chart.draw(svgGenerator, new Rectangle2D.Float(0, 0, 600, 400));
 
             // Write svg file
-            try (OutputStream outputStream = new FileOutputStream(filename)) {
+            try (OutputStream outputStream = new FileOutputStream(file)) {
                 Writer out = new OutputStreamWriter(outputStream, "UTF-8");
                 svgGenerator.stream(out, true /* use css */);
                 outputStream.flush();
@@ -170,11 +156,7 @@ public class SerieFrame extends javax.swing.JFrame {
                 Logger.getLogger(RasterLayer.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-            if (!filename.endsWith(".txt")) {
-                filename = filename + ".txt";
-            }
-
-            try (FileWriter w = new FileWriter(filename)) {
+            try (FileWriter w = new FileWriter(file)) {
                 w.write(xLabel);
                 for (int i = 0; i < series.getSeriesCount(); i++) {
                     w.write("\t" + series.getSeriesKey(i).toString());
