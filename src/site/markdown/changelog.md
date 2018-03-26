@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.2.4 (26/03/2018)
+- Java 9 compatibility - Graphab can be run with Java 9
+
 ##### version 2.2.3 (09/02/2018)
 - Linkset creation : negative cost is now checked and throw an exception
 

@@ -1443,13 +1443,8 @@ public final class Project {
      * @throws IOException 
      */
     public void save() throws IOException {
-        XStream xstream = new XStream();
-        xstream.alias("Project", Project.class);
-        xstream.alias("Pointset", Pointset.class);
-        xstream.alias("Linkset", Linkset.class);
-        xstream.alias("Graph", GraphGenerator.class);
         try (FileWriter fw = new FileWriter(getProjectFile())) {
-            xstream.toXML(this, fw);
+            getXStream().toXML(this, fw);
         }
     }
 
@@ -1804,6 +1799,20 @@ public final class Project {
         
     }
 
+    private static XStream getXStream() {
+        XStream xstream = new XStream();
+        XStream.setupDefaultSecurity(xstream); // to be removed after 1.5
+        xstream.allowTypesByWildcard(new String[] {
+            "org.thema.**", "java.awt.**"
+        });
+        xstream.alias("Project", Project.class);
+        xstream.alias("Pointset", Pointset.class);
+        xstream.alias("Linkset", Linkset.class);
+        xstream.alias("Graph", GraphGenerator.class);
+        
+        return xstream;
+    }
+    
     /**
      * Loads a project.
      * @param file the xml project file
@@ -1813,16 +1822,7 @@ public final class Project {
      */
     public static synchronized Project loadProject(File file, boolean all) throws IOException {
         
-        XStream xstream = new XStream();
-        xstream.alias("Project", Project.class);
-        xstream.alias("Pointset", Pointset.class);
-        xstream.alias("Linkset", Linkset.class);
-        xstream.alias("Graph", GraphGenerator.class);
-        
-        // pour compatibilité avec projet 1.1-beta2 et antérieur
-        xstream.alias("org.thema.graphab.ExoData", Pointset.class);
-        xstream.alias("org.thema.graphab.CostDistance", Linkset.class);
-        xstream.alias("org.thema.graphab.GraphGenerator", GraphGenerator.class);
+        XStream xstream = getXStream();
         
         Project prj;
         try (FileReader fr = new FileReader(file)) {
