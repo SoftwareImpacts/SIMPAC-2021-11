@@ -2050,7 +2050,7 @@ public final class Project {
      * @param demFile the DEM file
      * @throws IOException 
      */
-    public void setDemFile(File demFile) throws IOException {
+    public void setDemFile(File demFile, boolean save) throws IOException {
         String prjPath = getDirectory().getAbsolutePath();
         if(demFile.getAbsolutePath().startsWith(prjPath)) { 
             this.demFile = new File(demFile.getAbsolutePath().substring(prjPath.length()+1));
@@ -2058,27 +2058,30 @@ public final class Project {
             this.demFile = demFile.getAbsoluteFile();
         }
 
-        // if the DEM layer already exists, remove it
-        String layerName = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DEM");
-        for(Layer l : new ArrayList<>(rootLayer.getLayers())) {
-            if(l.getName().equals(layerName)) {
-                rootLayer.removeLayer(l);
+        if(rootLayer != null) {
+            // if the DEM layer already exists, remove it
+            String layerName = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DEM");
+            for(Layer l : new ArrayList<>(rootLayer.getLayers())) {
+                if(l.getName().equals(layerName)) {
+                    rootLayer.removeLayer(l);
+                }
+            }
+
+            // Add new layer
+            try {
+                GridCoverage2D g = IOImage.loadCoverage(demFile);
+                RasterLayer l = new RasterLayer(layerName, 
+                        new CoverageShape(g, new RasterStyle()));
+                l.setVisible(false);
+                rootLayer.addLayerLast(l);
+            } catch (IOException ex) {
+                Logger.getLogger(Project.class.getName()).log(Level.WARNING, null, ex);
+                JOptionPane.showMessageDialog(null, "DEM file cannot be loaded.", "DEM", JOptionPane.WARNING_MESSAGE);
             }
         }
-         
-        // Add new layer
-        try {
-            GridCoverage2D g = IOImage.loadCoverage(demFile);
-            RasterLayer l = new RasterLayer(layerName, 
-                    new CoverageShape(g, new RasterStyle()));
-            l.setVisible(false);
-            rootLayer.addLayerLast(l);
-        } catch (IOException ex) {
-            Logger.getLogger(Project.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(null, "DEM file cannot be loaded.", "DEM", JOptionPane.WARNING_MESSAGE);
+        if(save) {
+            save();
         }
-        
-        save();
     }
     
     /**

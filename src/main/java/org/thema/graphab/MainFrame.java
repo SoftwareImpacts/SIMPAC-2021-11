@@ -1060,7 +1060,7 @@ public class MainFrame extends javax.swing.JFrame {
             return;
         }
         try {
-            project.setDemFile(f);
+            project.setDemFile(f, true);
         } catch (IOException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(MainFrame.this, "Error " + ex.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);

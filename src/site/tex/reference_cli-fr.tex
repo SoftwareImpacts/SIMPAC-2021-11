@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		20/12/2017\\
+ 		28/05/2018\\
  	}
  	
  \end{titlepage}
@@ -162,6 +162,7 @@ java -jar graphab.jar [-proc n] --create prjname landrasterfile habitat=code1,..
 java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]
 Commands list :
 --show
+--dem rasterfile
 --linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
 --corridor maxcost=[{]valcost[}] [format=raster|vector]
@@ -351,6 +352,17 @@ Cette commande créera un projet méta-tache basé sur le graphe \textit{2000m\_
 
 \subsubsection{Références}
 \cite{2015_monkey}, \cite{2016_campagnole}
+
+\subsection{--dem : chargement d'un MNT}
+Cette commande définit le chemin vers un MNT qui pourra être utilisé dans la création des liens pour tenir compte de la pente.
+\begin{Verbatim}[commandchars=\\\{\}]
+--dem \textit{rasterfile}
+\end{Verbatim}
+
+\subsubsection{Paramètre obligatoire}
+\begin{itemize}
+	\item \verb|rasterfile| : fichier raster au format Tiff ou AsciiGrid représentant les altitudes. La géométrie du raster doit correspondre exactement à la carte du paysage.
+\end{itemize}
 
 \section{Jeu de liens et graphes}
 

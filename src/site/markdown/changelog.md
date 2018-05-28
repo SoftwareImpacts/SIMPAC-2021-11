@@ -1,5 +1,11 @@
 ## Changelog
 
+##### version 2.3.3 (28/05/2018)
+- CLI : add --dem command for importing DEM in the project
+
+##### version 2.2.5 (28/05/2018)
+- CLI : add --dem command for importing DEM in the project
+
 ##### version 2.3.2 (26/03/2018)
 - Java 9 compatibility - Graphab can be run with Java 9
 
