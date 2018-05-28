@@ -107,6 +107,7 @@ public class CLITools {
                     "java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]\n" +
                     "Commands list :\n" +
                     "--show\n" + 
+                    "--dem rasterfile\n" +
                     "--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
                     "--corridor maxcost=[{]valcost[}]\n" +
@@ -227,6 +228,8 @@ public class CLITools {
                 useObj(p, args);
             } else if(p.startsWith("--show")) {
                 showProject();
+            } else if(p.equals("--dem")) {
+                setDEM(args);
             } else {
                 throw new IllegalArgumentException("Unknown command " + p);
             }
@@ -373,6 +376,10 @@ public class CLITools {
         }
 
         return new Project(name, new File(dir, name), coverage, new TreeSet<>(codes), patchCodes, nodata, con8, minArea, simp);
+    }
+    
+    private void setDEM(List<String> args) throws IOException {
+        project.setDemFile(new File(args.remove(0)), save);
     }
     
     private void batchModel(List<String> args) throws IOException, MathException {

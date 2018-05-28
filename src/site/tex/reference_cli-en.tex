@@ -23,7 +23,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.2\\
+		Graphab 2.2.5\\
 		\bigskip
 		Reference Manual\\
 		Command Line Interface\\
@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2017-09-11\\
+		2018-05-28\\
 	}
 	
 \end{titlepage}
@@ -161,6 +161,7 @@ java -jar graphab.jar [-proc n] --create prjname landrasterfile habitat=code1,..
 java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]
 Commands list :
 --show
+--dem rasterfile
 --linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
 --corridor maxcost=[{]valcost[}]
@@ -347,6 +348,16 @@ This command creates a meta-patch project based on the graph \textit{2000m\_eucl
 \subsubsection{References}
 \cite{2015_monkey}, \cite{2016_campagnole}
 
+\subsection{--dem : import DEM}
+This command imports a DEM in the project for calculating slope in linkset creation.
+\begin{Verbatim}[commandchars=\\\{\}]
+--dem \textit{rasterfile}
+\end{Verbatim}
+
+\subsubsection{Paramètre obligatoire}
+\begin{itemize}
+	\item \verb|rasterfile| : raster file in tiff or ascii grid format. The grid geometry must be the same as the landscape map.
+\end{itemize}
 
 \section{Graph management}
 
