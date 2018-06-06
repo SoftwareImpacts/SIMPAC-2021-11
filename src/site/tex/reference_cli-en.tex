@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2018-05-28\\
+		2018-06-06\\
 	}
 	
 \end{titlepage}
@@ -170,6 +170,7 @@ Commands list :
 --cluster d=val p=val [beta=val] [nb=val]
 --pointset pointset.shp
 --usepointset pointset1,...,pointsetn
+--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
 --capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]
 --gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
@@ -723,7 +724,7 @@ If several link sets are selected, a interpolation is calculated for each link s
 \end{Verbatim}
 
 
-\section{SDM}
+\section{Pointset and SDM}
 \subsection{--pointset : import pointset}
 \begin{Verbatim}[commandchars=\\\{\}]
 --pointset \textit{pointset.shp}
@@ -739,6 +740,35 @@ After \verb|--pointset| command execution, pointset selection is set to the crea
 \end{Verbatim}
 Selects pointsets to be used in the following \verb|--model| command.
 By default, all pointsets are selected.
+
+\subsection{--pointdistance : calculate distance matrix of pointsets}
+\begin{Verbatim}[commandchars=\\\{\}]
+--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=\textit{val} proba=\textit{val}]
+\end{Verbatim}
+
+\subsubsection{Required parameters}
+\begin{itemize}
+	\item \verb|type|: distance calculation can be based on \verb|raster| or \verb|graph|
+	\item \verb|distance|: from a raster, the distance can be \verb|leastcost| or \verb|circuit|, from a graph, the distance can be \verb|leastcost|, \verb|circuit|, \verb|flow| or \verb|circuitflow|
+\end{itemize}
+
+\subsubsection{Optional parameters}
+For \verb|flow| and \verb|circuitflow| distances the following parameters must be given:
+\begin{itemize}
+	\item \verb|dist|: the distance between two patches
+	\item \verb|proba|: the probability of movement between two patches for the distance \verb|dist|
+\end{itemize}
+
+\subsubsection{Description}
+This command calculates distance matrix for each selected pointset and saves each matrix in a text file beginning with \verb|distance_|.
+For raster based distance, a matrix will be calculated for each selected pointset and linkset, for graph based distance, a matrix will be calculated for each selected pointset and graph. In the latter case, selected graphs must have the same linkset than selected pointsets.
+
+\subsubsection{Example}
+In the following example, the least cost distances between points are calculated based on cost raster of each selected linkset and for each selected pointset.
+\begin{Verbatim}
+--pointdistance type=raster distance=leastcost
+\end{Verbatim}
+
 
 \subsection{--model : calculate SDM}
 \begin{Verbatim}[commandchars=\\\{\}]

@@ -658,7 +658,7 @@ L'option Circuit permet de calculer la "distance de résistance" entre chaque po
 En mode graphe, les distances sont calculées en fonction du graphe sélectionné. Ce graphe doit être basé sur le jeu de lien utilisé à l'import du jeu de point.
 
 \begin{itemize}
-	\item Simple : distance calculée suivant le plus court chemin sur le graphe de référence. Le type de distance correspond à celui qui a été utilisé pour la définition du jeu de lien qui a servi à définir le graphe de référence. Aux deux extrémités du chemin considéré, le calcul intègre la distance entre chaque point et la tache la plus proche. Suivant le choix qui a été fait au moment de la création du graphe, le calcul intègre éventuellement les distances intra-taches.	
+	\item Simple : distance calculée suivant le plus court chemin sur le graphe de référence. Le type de distance correspond à celui qui a été utilisé pour la définition du jeu de lien qui a servi à définir le graphe de référence. Aux deux extrémités du chemin considéré, le calcul intègre la distance entre chaque point et la tache la plus proche. Suivant le choix qui a été fait au moment de la création du graphe, le calcul intègre éventuellement les distances intra-taches.	Si les 2 points sont rattachés à la même tache, la distance calculée correspond au chemin de moindre coût sur le raster.
 	\item Circuit : calcule la "distance de résistance" entre les taches les plus proches de chaque point. Le graphe est vu comme un réseau électrique où chaque lien du graphe représente une résistance. Cette option permet de tenir compte de l'ensemble des chemins possibles et non pas uniquement du plus court.
 \end{itemize}
 

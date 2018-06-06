@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.3.4 (04/06/2018)
+- Pointset distance matrix : when 2 points are attached to the same patch, calculates the raster distance between the 2 points
+- CLI : add --pointdistance command for calculating distance matrix between points
+
 ##### version 2.3.3 (28/05/2018)
 - CLI : add --dem command for importing DEM in the project
 

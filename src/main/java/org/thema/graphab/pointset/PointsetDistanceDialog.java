@@ -19,11 +19,9 @@
 
 package org.thema.graphab.pointset;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,18 +30,12 @@ import java.util.logging.Logger;
 import javax.swing.*;
 import org.thema.common.Config;
 import org.thema.common.ProgressBar;
-import org.thema.common.parallel.ParallelFExecutor;
-import org.thema.common.parallel.SimpleParallelTask.IterParallelTask;
 import org.thema.data.feature.DefaultFeature;
-import org.thema.data.feature.Feature;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.Project;
-import org.thema.graphab.graph.GraphPathFinder;
-import org.thema.graphab.links.CircuitRaster;
-import org.thema.graphab.metric.Circuit;
-import org.thema.graphab.links.SpacePathFinder;
 import org.thema.graphab.metric.DistProbaPanel;
+import org.thema.graphab.pointset.Pointset.Distance;
 
 /**
  * Dialog for calculating several distance matrices between the pointset.
@@ -379,134 +371,22 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
                 final List<DefaultFeature> exos = pointset.getFeatures();
                 ProgressBar mon = Config.getProgressBar("Distances...", exos.size());
 
-                final double [][][] distances = new double[exos.size()][exos.size()][2];  
+                final double [][][] distances;  
                 if(rasterRadioButton.isSelected()) {
-                    Linkset costDist = (Linkset) costComboBox.getSelectedItem();
-                    final List<Coordinate> dests = new ArrayList<>();
-                    for(Feature f : exos) {
-                        dests.add(f.getGeometry().getCoordinate());
-                    }
-                    IterParallelTask task;
-                    if(costRadioButton.isSelected()) {
-                        final Linkset linkset = costDist.getCostVersion();
-                        task = new IterParallelTask(exos.size(), mon) {
-                            @Override
-                            protected void executeOne(Integer ind) {
-                                try {
-                                    SpacePathFinder pathFinder = project.getPathFinder(linkset);
-                                    List<double[]> dist = pathFinder.calcPaths(exos.get(ind).getGeometry().getCoordinate(), dests);
-                                    for(int j = ind+1; j < exos.size(); j++) {
-                                        distances[ind][j][0] = dist.get(j)[0];
-                                        distances[ind][j][1] = dist.get(j)[1];
-                                        distances[j][ind][0] = distances[ind][j][0];
-                                        distances[j][ind][1] = distances[ind][j][1];
-                                    }
-                                } catch (IOException ex) {
-                                    throw new RuntimeException(ex);
-                                } 
-                            }
-                        };
-                    } else {
-                        final CircuitRaster circuit;
-                        try {
-                            circuit = project.getRasterCircuit(costDist.getCircuitVersion());
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                        task = new IterParallelTask(exos.size(), mon) {
-                            @Override
-                            protected void executeOne(Integer ind) {
-                                for(int j = ind+1; j < exos.size(); j++) {
-                                    distances[ind][j][0] = circuit.getODCircuit(dests.get(ind), dests.get(j)).getR();
-                                    distances[ind][j][1] = Double.NaN;
-                                    distances[j][ind][0] = distances[ind][j][0];
-                                    distances[j][ind][1] = Double.NaN;
-                                }
-                            }
-                        };
-                    }
-                    new ParallelFExecutor(task).executeAndWait();
-                    if(task.isCanceled()) {
-                        return;
-                    }
-                } else if(costGraphRadioButton.isSelected()) {
-                    GraphGenerator graph = (GraphGenerator) graphCostComboBox.getSelectedItem();
-                    if(simpleRadioButton.isSelected()) {
-                        for(int i = 0; i < exos.size(); i++) {
-                            Feature exo1 = exos.get(i);
-                            Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
-                            GraphPathFinder finder = graph.getPathFinder(graph.getNode(patch1));
-                            for(int j = 0; j < exos.size(); j++) {
-                                if(i == j) {
-                                    continue;
-                                }
-                                Feature exo2 = exos.get(j);
-                                Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
-                                Double dist = finder.getCost(graph.getNode(patch2));
-                                if(dist == null) {
-                                    dist = Double.NaN;
-                                }
-                                dist += ((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
-                                        ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue();
-                                distances[i][j][0] = dist;
-                            }
-                            mon.incProgress(1);
-                        }
-                    } else if(flowRadioButton.isSelected()) {
-                        double alpha = probaPanel.getAlpha();
-
-                        for(int i = 0; i < exos.size(); i++) {
-                            Feature exo1 = exos.get(i);
-                            Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
-                            GraphPathFinder finder = graph.getFlowPathFinder(graph.getNode(patch1), alpha);
-                            for(int j = 0; j < exos.size(); j++) {
-                                if(i == j) {
-                                    continue;
-                                }
-                                Feature exo2 = exos.get(j);
-                                Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
-                                Double dist = finder.getCost(graph.getNode(patch2));
-                                if(dist == null) {
-                                    dist = Double.NaN;
-                                }
-
-                                distances[i][j][0] = dist - Math.log(Project.getPatchCapacity(patch1)*Project.getPatchCapacity(patch2)
-                                            / Math.pow(project.getTotalPatchCapacity(), 2))
-                                        + alpha * (((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
-                                        ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue());
-                            }
-                            mon.incProgress(1);
-                        }
-                    } else {
-                        Circuit circuit = circuitFlowRadioButton.isSelected() ? new Circuit(graph, probaPanel.getAlpha()) : new Circuit(graph);
-
-                        for(int i = 0; i < exos.size(); i++) {
-                            Feature exo1 = exos.get(i);
-                            Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
-
-                            for(int j = 0; j < exos.size(); j++) {
-                                if(i == j) {
-                                    continue;
-                                }
-                                Feature exo2 = exos.get(j);
-                                Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
-                                if(patch1.equals(patch2)) {
-                                    continue;
-                                }
-                                distances[i][j][0] = circuit.computeR(graph.getNode(patch1), graph.getNode(patch2));
-                            }
-                            mon.incProgress(1);
-                        }
-                    }
+                    distances = pointset.calcRasterDistanceMatrix((Linkset) costComboBox.getSelectedItem(), 
+                            costRadioButton.isSelected() ? Distance.LEASTCOST : Distance.CIRCUIT, mon);
+                } else {
+                    Distance type = simpleRadioButton.isSelected() ? Distance.LEASTCOST : 
+                            flowRadioButton.isSelected() ? Distance.FLOW : 
+                            circuitGraphRadioButton.isSelected() ? Distance.CIRCUIT : Distance.CIRCUIT_FLOW;
+                    double alpha = probaPanel.getAlpha();
+                    distances = pointset.calcGraphDistanceMatrix((GraphGenerator) graphCostComboBox.getSelectedItem(),
+                            type, alpha, mon);
                 }
+                
                 mon.setNote("Saving...");
-                try (FileWriter fw = new FileWriter(new File(project.getDirectory(), fileTextField.getText()))) {
-                    fw.write("Id1\tId2\tDistance\tLength\n");
-                    for(int i = 0; i < exos.size(); i++) {
-                        for(int j = 0; j < exos.size(); j++) {
-                            fw.write(exos.get(i).getId() + "\t" + exos.get(j).getId() + "\t" + distances[i][j][0] + "\t" + distances[i][j][1] + "\n");
-                        }
-                    }
+                try {
+                    pointset.saveMatrix(distances, new File(project.getDirectory(), fileTextField.getText()));
                 } catch (IOException ex) {
                     Logger.getLogger(PointsetDistanceDialog.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(PointsetDistanceDialog.this, "An error has occured : \n" + ex.getLocalizedMessage());

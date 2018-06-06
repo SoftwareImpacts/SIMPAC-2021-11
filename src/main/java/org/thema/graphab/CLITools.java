@@ -77,6 +77,7 @@ import org.thema.graphab.metric.local.LocalMetric;
 import org.thema.graphab.model.DistribModel;
 import org.thema.graphab.model.Logistic;
 import org.thema.graphab.pointset.Pointset;
+import org.thema.graphab.pointset.Pointset.Distance;
 import org.thema.graphab.util.RSTGridReader;
 import org.thema.parallel.ExecutorService;
 import org.thema.parallel.ParallelExecutor;
@@ -117,6 +118,7 @@ public class CLITools {
                     "--cluster d=val p=val [beta=val] [nb=val]\n" +                    
                     "--pointset pointset.shp\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
+                    "--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]\n" +
                     "--capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
                     "--gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
@@ -231,6 +233,8 @@ public class CLITools {
                 showProject();
             } else if(p.equals("--dem")) {
                 setDEM(args);
+            } else if(p.equals("--pointdistance")) {
+                calcPointDistance(args);
             } else {
                 throw new IllegalArgumentException("Unknown command " + p);
             }
@@ -1366,6 +1370,46 @@ public class CLITools {
                 List<Feature> corridors = link.computeCorridor(null, maxCost);
                 DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
                         "-corridor-" + maxCost + ".shp"), project.getCRS());
+            }
+        }
+    }
+    
+    private void calcPointDistance(List<String> args) throws IOException {
+        Map<String, String> params = extractAndCheckParams(args, Arrays.asList("type", "distance"), Arrays.asList("dist", "proba"));
+        String distType = params.get("distance");
+        Distance type;
+        switch (distType) {
+            case "leastcost":
+                type = Distance.LEASTCOST;
+                break;
+            case "circuit":
+                type = Distance.CIRCUIT;
+                break;
+            case "flow":
+                type = Distance.FLOW;
+                break;
+            case "circuitflow":
+                type = Distance.CIRCUIT_FLOW;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown distance type : " + distType);
+        }
+        for(Pointset pointset : getExos()) {
+            if(params.get("type").equals("raster")) {
+                for(Linkset linkset : getLinksets()) {
+                    double [][][] distances = pointset.calcRasterDistanceMatrix(linkset, type, new TaskMonitor.EmptyMonitor());
+                    pointset.saveMatrix(distances, new File(project.getDirectory(), "distance_" + pointset.getName() + "_raster_" + linkset.getName() + "-" + type + ".txt"));
+                }
+            } else {
+                double alpha = Double.NaN;
+                if(type == Distance.FLOW || type == Distance.CIRCUIT_FLOW) {
+                    alpha = AlphaParamMetric.getAlpha(Double.parseDouble(params.get("dist")), Double.parseDouble(params.get("proba")));
+                }
+                for(GraphGenerator graph : getGraphs()) {
+                    double [][][] distances = pointset.calcGraphDistanceMatrix(graph, type, alpha, new TaskMonitor.EmptyMonitor());
+                    pointset.saveMatrix(distances, new File(project.getDirectory(), "distance_" + pointset.getName() + "_graph_" + graph.getName() + "-" + type +
+                            (Double.isNaN(alpha) ? "" : "-d"+params.get("dist")+"-p"+params.get("proba")) + ".txt"));
+                }
             }
         }
     }

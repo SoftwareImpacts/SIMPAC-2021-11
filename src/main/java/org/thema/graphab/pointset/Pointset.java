@@ -19,9 +19,26 @@
 
 package org.thema.graphab.pointset;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import org.thema.common.ProgressBar;
+import org.thema.common.parallel.ParallelFExecutor;
+import org.thema.common.parallel.SimpleParallelTask.IterParallelTask;
 import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.Feature;
+import org.thema.graphab.Project;
+import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.graph.GraphPathFinder;
+import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.Linkset;
+import org.thema.graphab.links.SpacePathFinder;
+import org.thema.graphab.metric.Circuit;
 
 /**
  * A set of points connected to nearest patch with distance defined by a linkset.
@@ -32,6 +49,13 @@ public class Pointset {
     public static final int AG_NONE = 0;
     public static final int AG_SUM = 1;
 
+    public enum Distance {
+        LEASTCOST,
+        CIRCUIT,
+        FLOW,
+        CIRCUIT_FLOW
+    }
+    
     private final String name;
     private final Linkset cost;
     private final double maxCost;
@@ -114,4 +138,168 @@ public class Pointset {
         return "Name : " + name + "\nLinkset : " + cost.getName();
     }
     
+    public double [][][] calcRasterDistanceMatrix(Linkset costDist, Distance type, ProgressBar mon) {
+        final List<DefaultFeature> exos = getFeatures();
+        final double [][][] distances = new double[exos.size()][exos.size()][2];  
+        final List<Coordinate> dests = new ArrayList<>();
+        for(Feature f : exos) {
+            dests.add(f.getGeometry().getCoordinate());
+        }
+        IterParallelTask task;
+        if(type == Distance.LEASTCOST) {
+            final Linkset linkset = costDist.getCostVersion();
+            task = new IterParallelTask(exos.size(), mon) {
+                @Override
+                protected void executeOne(Integer ind) {
+                    try {
+                        SpacePathFinder pathFinder = linkset.getProject().getPathFinder(linkset);
+                        List<double[]> dist = pathFinder.calcPaths(exos.get(ind).getGeometry().getCoordinate(), dests);
+                        for(int j = ind+1; j < exos.size(); j++) {
+                            distances[ind][j][0] = dist.get(j)[0];
+                            distances[ind][j][1] = dist.get(j)[1];
+                            distances[j][ind][0] = distances[ind][j][0];
+                            distances[j][ind][1] = distances[ind][j][1];
+                        }
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    } 
+                }
+            };
+        } else if(type == Distance.CIRCUIT) {
+            final CircuitRaster circuit;
+            try {
+                circuit = costDist.getProject().getRasterCircuit(costDist.getCircuitVersion());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            task = new IterParallelTask(exos.size(), mon) {
+                @Override
+                protected void executeOne(Integer ind) {
+                    for(int j = ind+1; j < exos.size(); j++) {
+                        distances[ind][j][0] = circuit.getODCircuit(dests.get(ind), dests.get(j)).getR();
+                        distances[ind][j][1] = Double.NaN;
+                        distances[j][ind][0] = distances[ind][j][0];
+                        distances[j][ind][1] = Double.NaN;
+                    }
+                }
+            };
+        } else {
+            throw new IllegalArgumentException("Distance type unknown in raster : " + type);
+        }
+        new ParallelFExecutor(task).executeAndWait();
+        if(task.isCanceled()) {
+            throw new CancellationException();
+        }
+        
+        return distances;
+    }
+    
+    public double [][][] calcGraphDistanceMatrix(GraphGenerator graph, Distance type, double alpha, ProgressBar mon) {
+        final List<DefaultFeature> exos = getFeatures();
+        final double [][][] distances = new double[exos.size()][exos.size()][2];  
+        Project project = graph.getProject();
+        
+        if(graph.getLinkset() != getLinkset()) {
+            throw new IllegalArgumentException("The pointset cannot be used with the linkset of the graph " + graph.getName());
+        }
+        
+        switch(type) {
+        case LEASTCOST:
+            for(int i = 0; i < exos.size(); i++) {
+                Feature exo1 = exos.get(i);
+                Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
+                GraphPathFinder finder = graph.getPathFinder(graph.getNode(patch1));
+                for(int j = 0; j < exos.size(); j++) {
+                    if(i == j) {
+                        continue;
+                    }
+                    Feature exo2 = exos.get(j);
+                    Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
+                    Double dist = finder.getCost(graph.getNode(patch2));
+                    if(dist == null) {
+                        dist = Double.NaN;
+                    } else if(dist == 0) {
+                        try {
+                            List<double[]> paths = graph.getProject().getRasterPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
+                            dist = paths.get(0)[0];
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    } else {
+                        dist += ((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
+                                ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue();
+                    }
+                    distances[i][j][0] = dist;
+                }
+                mon.incProgress(1);
+            }
+            break;
+        case FLOW:    
+            for(int i = 0; i < exos.size(); i++) {
+                Feature exo1 = exos.get(i);
+                Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
+                GraphPathFinder finder = graph.getFlowPathFinder(graph.getNode(patch1), alpha);
+                for(int j = 0; j < exos.size(); j++) {
+                    if(i == j) {
+                        continue;
+                    }
+                    Feature exo2 = exos.get(j);
+                    Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
+                    Double dist = finder.getCost(graph.getNode(patch2));
+                    if(dist == null) {
+                        dist = Double.NaN;
+                    } else if(dist == 0) {
+                        try {
+                            List<double[]> paths = graph.getProject().getRasterPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
+                            dist = alpha * paths.get(0)[0];
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    } else {
+                        dist += - Math.log(Project.getPatchCapacity(patch1)*Project.getPatchCapacity(patch2)
+                                / Math.pow(project.getTotalPatchCapacity(), 2))
+                            + alpha * (((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
+                            ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue());
+                    }
+                    distances[i][j][0] = dist;
+                }
+                mon.incProgress(1);
+            }
+            break;
+        case CIRCUIT:
+        case CIRCUIT_FLOW:
+            Circuit circuit = type == Distance.CIRCUIT_FLOW ? new Circuit(graph, alpha) : new Circuit(graph);
+
+            for(int i = 0; i < exos.size(); i++) {
+                Feature exo1 = exos.get(i);
+                Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
+
+                for(int j = 0; j < exos.size(); j++) {
+                    if(i == j) {
+                        continue;
+                    }
+                    Feature exo2 = exos.get(j);
+                    Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
+                    if(patch1.equals(patch2)) {
+                        continue;
+                    }
+                    distances[i][j][0] = circuit.computeR(graph.getNode(patch1), graph.getNode(patch2));
+                }
+                mon.incProgress(1);
+            }
+        }
+        
+        return distances;
+    }
+    
+    public void saveMatrix(double [][][] matrix, File file) throws IOException {
+        try (FileWriter fw = new FileWriter(file)) {
+            fw.write("Id1\tId2\tDistance\tLength\n");
+            for(int i = 0; i < features.size(); i++) {
+                for(int j = 0; j < features.size(); j++) {
+                    fw.write(features.get(i).getId() + "\t" + features.get(j).getId() + "\t" + matrix[i][j][0] + "\t" + matrix[i][j][1] + "\n");
+                }
+            }
+        } 
+    }
 }

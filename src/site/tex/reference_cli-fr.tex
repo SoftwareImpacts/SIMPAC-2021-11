@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		28/05/2018\\
+ 		06/06/2018\\
  	}
  	
  \end{titlepage}
@@ -171,6 +171,7 @@ Commands list :
 --cluster d=val p=val [beta=val] [nb=val]
 --pointset pointset.shp
 --usepointset pointset1,...,pointsetn
+--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
 --capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]
 --gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
@@ -735,7 +736,7 @@ Si plusieurs jeux de liens sont sélectionnés, une interpolation différente se
 	--interp test 10 var=F_d1000_p0.5_beta1_2000m_euclid d=1000 p=0.5 multi=1000 sum
 \end{Verbatim}
 
-\section{SDM}
+\section{Jeu de points et SDM}
 \subsection{--pointset : import de jeu de points}
 \begin{Verbatim}[commandchars=\\\{\}]
 --pointset \textit{pointset.shp}
@@ -751,6 +752,34 @@ Après la commande \verb|--pointset|, les jeux de points sélectionnés correspo
 \end{Verbatim}
 Sélectionne les jeux de points à utiliser par la commande \verb|--model|.
 Par défaut, tous les jeux de points sont sélectionnés.
+
+\subsection{--pointdistance : matrice de distances d'un jeu de point}
+\begin{Verbatim}[commandchars=\\\{\}]
+--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=\textit{val} proba=\textit{val}]
+\end{Verbatim}
+
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|type|: le calcul de distance est basé sur le \verb|raster| de coût ou sur un graphe \verb|graph|
+	\item \verb|distance|: à partir d'un raster, la distance peut être moindre coût (\verb|leastcost|) ou \verb|circuit|, à partir d'un graphe, la distance peut être \verb|leastcost|, \verb|circuit|, \verb|flow| or \verb|circuitflow|
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+Pour les distances \verb|flow| et \verb|circuitflow| les paramètres suivants doivent être renseignés :
+\begin{itemize}
+	\item \verb|dist| : la distance entre 2 taches
+	\item \verb|proba| : la probabilité de mouvement entre 2 taches pour la distance \verb|dist|
+\end{itemize}
+
+\subsubsection{Description}
+Cette commande calcule la matrice de distances pour chaque jeu de points sélectionnés et enregistre chaque matrice dans un fichier texte commençant par \verb|distance_|.
+Pour un calcul basé sur un raster de coût, une matrice de distance sera calculé pour chaque jeu de points et chaque jeu de liens sélectionnés, pour un calcul basé sur un graphe, une matrice de distance sera calculé pour chaque jeu de points et chaque graphe sélectionnés. Dans ce second cas, les graphes sélectionnés doivent être issus du même jeu de liens que les jeux de points sélectionnés.
+
+\subsubsection{Exemple}
+Dans l'exemple ci-dessous, les distances de moindre coût entre les points sera calculées à partir des raster de coûts de chaque jeu de liens sélectionné et ce, pour chaque jeu de points sélectionné.
+\begin{Verbatim}
+--pointdistance type=raster distance=leastcost
+\end{Verbatim}
 
 \subsection{--model : calcul du SDM}
 \begin{Verbatim}[commandchars=\\\{\}]
