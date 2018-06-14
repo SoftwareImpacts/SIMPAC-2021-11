@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.2.6 (14/06/2018)
+- Add patch : error when saving landuse.tif with Lambert CRS
+
 ##### version 2.2.5 (28/05/2018)
 - CLI : add --dem command for importing DEM in the project
 
