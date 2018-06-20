@@ -1,5 +1,11 @@
 ## Changelog
 
+##### version 2.3.5 (14/06/2018)
+- Add patch : error when saving landuse.tif with Lambert CRS
+
+##### version 2.2.6 (14/06/2018)
+- Add patch : error when saving landuse.tif with Lambert CRS
+
 ##### version 2.3.4 (04/06/2018)
 - Pointset distance matrix : when 2 points are attached to the same patch, calculates the raster distance between the 2 points
 - CLI : add --pointdistance command for calculating distance matrix between points
