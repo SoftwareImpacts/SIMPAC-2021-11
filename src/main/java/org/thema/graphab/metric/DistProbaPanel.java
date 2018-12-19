@@ -30,6 +30,14 @@ import org.thema.graphab.links.Linkset;
  */
 public class DistProbaPanel extends ParamPanel {
 
+    
+    /** 
+     * Creates new form DistProbaPanel.
+     * 
+     */
+    public DistProbaPanel() {
+        this(null, 1000, 0.05, 1.0);
+    }
     /** 
      * Creates new form DistProbaPanel.
      * 
@@ -57,13 +65,18 @@ public class DistProbaPanel extends ParamPanel {
         } else {
             betaSpinner.setValue(beta);
         }
-        if(linkset.isCostUnit()) {
+        
+        setLinkset(linkset);
+    }
+
+    public void setLinkset(Linkset linkset) {
+        if(linkset != null && linkset.isCostUnit()) {
             unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitCost"));
         } else {
             unitLabel.setText(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("UnitMeter"));
         }
     }
-
+    
     @Override
     public Map<String, Object> getParams() {
         HashMap<String, Object> params = new HashMap<>();

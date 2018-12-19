@@ -26,7 +26,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -122,17 +124,16 @@ public class GraphLayers extends GraphGroupLayer {
             public void actionPerformed(ActionEvent e) {
                 new Thread(new Runnable() {
                     @Override
-                    public void run() {
-                        String modName = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Modularity");
-                        final DistProbaPanel distProbaPanel = new DistProbaPanel(graph.getLinkset(), 1000, 0.05, 1);
-                        int res = JOptionPane.showConfirmDialog(null, distProbaPanel, modName, JOptionPane.OK_CANCEL_OPTION);
-                        if(res != JOptionPane.OK_OPTION) {
+                    public void run() {                          
+                        final ClusteringDialog dlg = new ClusteringDialog(null, graph);
+                        dlg.setVisible(true);
+                        if(!dlg.isOk) {
                             return;
                         }
-                          
+                        
                         Modularity mod = new Modularity(graph.getGraph(), new EdgeWeighter() {
-                            private final double alpha = distProbaPanel.getAlpha();
-                            private final double beta = distProbaPanel.getBeta();
+                            private final double alpha = dlg.alpha;
+                            private final double beta = dlg.beta;
                             @Override
                             public double getWeight(Edge e) {
                                 return Math.pow(Project.getPatchCapacity(e.getNodeA()) * Project.getPatchCapacity(e.getNodeB()), beta) 
@@ -143,7 +144,15 @@ public class GraphLayers extends GraphGroupLayer {
                                 return 0;
                             }
                         });
-
+                        if(dlg.keepBest) {
+                            mod.setKeepList(Collections.EMPTY_SET);
+                        } else {
+                            Set<Integer> set = new HashSet<>();
+                            for(Double val : dlg.keepList.getValues()) {
+                                set.add(val.intValue());
+                            }
+                            mod.setKeepList(set);
+                        }
                         mod.partitions();
                         TreeMap<Integer, Double> modularities = mod.getModularities();
                         XYSeriesCollection series = new XYSeriesCollection();
@@ -154,6 +163,7 @@ public class GraphLayers extends GraphGroupLayer {
                         }
                         series.addSeries(serie);
 
+                        String modName = java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Modularity");
                         SerieFrame frm = new SerieFrame(modName + " - " + graph.getName(),
                                 series, "Nb clusters", modName);
                         frm.pack();

@@ -19,10 +19,10 @@
 
 package org.thema.graphab.addpatch;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
@@ -255,7 +255,7 @@ public class AddPatchCommand {
      * @throws SchemaException 
      */
     private List<DefaultFeature> addPatchShp(ProgressBar bar, TreeMap<Integer, Double> metricValues, boolean saveDetail) throws IOException, SchemaException  {
-        List<DefaultFeature> points = DefaultFeature.loadFeatures(shapeFile, false);
+        List<DefaultFeature> points = DefaultFeature.loadFeatures(shapeFile);
         HashMap<Geometry, Double> testGeoms = new HashMap<>();
         for(Feature f : points) {
             testGeoms.put(f.getGeometry(), 
@@ -397,7 +397,7 @@ public class AddPatchCommand {
         DefaultFeature.saveFeatures(addedPatches, new File(dir, "addpatch-" + name + ".shp"));
         GraphGenerator newGraph = new GraphGenerator(gen, "");
         DefaultFeature.saveFeatures(newGraph.getLinks(), new File(dir, "links-" + name + ".shp"));
-        newGraph.getLayers().getEdgeLayer().exportToShapefile(new File(dir, "topo-links-" + name + ".shp"));
+        newGraph.getLayers().getEdgeLayer().export(new File(dir, "topo-links-" + name + ".shp"));
         
         new RasterLayer("", new RasterShape(gen.getProject().getImageSource(), gen.getProject().getZone(), new RasterStyle(), true), gen.getProject().getCRS())
                 .saveRaster(new File(dir, "landuse.tif"));

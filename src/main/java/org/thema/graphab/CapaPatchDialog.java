@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
@@ -43,6 +44,8 @@ public class CapaPatchDialog extends javax.swing.JDialog {
     public static class CapaPatchParam {
         // Area capacity
         boolean calcArea = true;
+        Map<Integer, Double> codeWeight;
+                
         // Neighborhood capacity
         String costName;
         HashSet<Integer> codes;
@@ -54,6 +57,21 @@ public class CapaPatchDialog extends javax.swing.JDialog {
 
         public boolean isCalcArea() {
             return calcArea;
+        }
+        
+        public boolean isArea() {
+            if(!calcArea) {
+                return false;
+            }
+            if(codeWeight == null || codeWeight.isEmpty()) {
+                return true;
+            }
+            for(Double val : codeWeight.values()) {
+                if(val != 1.0) {
+                    return false;
+                }
+            }
+            return true;
         }
         
     }

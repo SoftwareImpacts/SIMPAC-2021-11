@@ -20,9 +20,9 @@
 
 package org.thema.graphab.model;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BandedSampleModel;
@@ -480,7 +480,7 @@ public class DistribModel {
         // calculates the distances from the pixel or from the patches ?
         // It depends on a lot of criteria. The first solution can be used in all cases, but the second is faster for multiAttach in most cases
         if(linkset.getType_dist() == Linkset.EUCLID || !multiAttach || avg || !linkset.isCostLength() || wi*h < project.getPatches().size()) {
-            raster = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_FLOAT, wi, h, 1), null);
+            raster = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_DOUBLE, wi, h, 1), null);
             task = new AbstractParallelFTask(monitor) {
                 @Override
                 protected Object execute(int start, int end) {

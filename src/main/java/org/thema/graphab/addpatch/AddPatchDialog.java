@@ -145,7 +145,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
 
         jLabel3.setText(bundle1.getString("AddPatchDialog.jLabel3.text")); // NOI18N
 
-        nbPatchSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
+        nbPatchSpinner.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
 
         jLabel4.setText(bundle1.getString("AddPatchDialog.jLabel4.text")); // NOI18N
 
@@ -160,7 +160,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, gridRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jPanel1, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        nbMultiPatchSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
+        nbMultiPatchSpinner.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, gridRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), nbMultiPatchSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
@@ -180,7 +180,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, gridRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel6, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        windowSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
+        windowSpinner.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, gridRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), windowSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
@@ -261,7 +261,7 @@ public class AddPatchDialog extends javax.swing.JDialog {
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, gridRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel5, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        resoSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1000.0d), Double.valueOf(0.0d), null, Double.valueOf(100.0d)));
+        resoSpinner.setModel(new javax.swing.SpinnerNumberModel(1000.0d, 0.0d, null, 100.0d));
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, gridRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), resoSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);

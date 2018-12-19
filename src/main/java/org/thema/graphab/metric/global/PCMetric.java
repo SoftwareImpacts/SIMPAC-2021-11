@@ -85,7 +85,7 @@ public class PCMetric extends AbstractPathMetric {
 
     @Override
     public boolean isAcceptGraph(GraphGenerator graph) {
-        return graph.getProject().getCapacityParams().isCalcArea();
+        return graph.getProject().getCapacityParams().isArea();
     }
     
     

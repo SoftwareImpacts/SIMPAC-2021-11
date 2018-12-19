@@ -20,8 +20,8 @@
 package org.thema.graphab.graph;
 
 import org.thema.graph.Modularity;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.operation.union.CascadedPolygonUnion;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;

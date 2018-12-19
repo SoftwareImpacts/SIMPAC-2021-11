@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2018-06-06\\
+		2018-12-13\\
 	}
 	
 \end{titlepage}
@@ -171,7 +171,7 @@ Commands list :
 --pointset pointset.shp
 --usepointset pointset1,...,pointsetn
 --pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
---capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]
+--capa [area [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden ...
 --gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
@@ -297,10 +297,16 @@ Pay attention to the element's name. The CLI is case sensitive and does not mana
 
 \subsection{--capa : set patch capacity}
 \begin{Verbatim}[commandchars=\\\{\}]
---capa [maxcost=\textit{valcost} codes=\textit{code1,code2,...,coden} [weight]]
+--capa [area [code1,..,coden=weight ...]] | [maxcost=\textit{valcost} codes=\textit{code1,code2,...,coden} [weight]]
 \end{Verbatim}
 
-\subsubsection{Optional parameters}
+\subsubsection{Area parameters}
+\begin{itemize}
+	\item \verb|area|: set capacity to the patch area (default)
+	\item \verb|code1,..,coden=weight ...|: weights of land cover codes used for defining patches. This parameter is useful only when patches are defined with several land cover codes.
+\end{itemize}
+
+\subsubsection{Neighborhood parameters}
 \begin{itemize}
 	\item \verb|maxcost=[{]valcost[}]|: maximum cost distance for the neighborhood
 	\item \verb|codes=code1,code2,...,coden|: land cover codes used to calculate the neighborhood area
@@ -308,12 +314,26 @@ Pay attention to the element's name. The CLI is case sensitive and does not mana
 \end{itemize}
 
 \subsubsection{Description}
-The \verb|--capa| command calculates the capacity of the patches and saves the project unless the \verb|-nosave| option is used. Without parameter, the capacity is defined as the area of the patch in $m^2$. With parameters, the capacity is calculated as the area of land cover elements around the patch, up to the distance \textit{valcost}.
+The \verb|--capa| command calculates the capacity of the patches and saves the project unless the \verb|-nosave| option is used. Without parameter or with \verb|area| parameter, the capacity is defined as the area of the patch in $m^2$. With \verb|maxcost| parameter, the capacity is calculated as the area of land cover elements around the patch, up to the distance \textit{valcost}.
 The distances are calculated from the cost defined in the selected link set. If the link set is euclidean, costs are set to 1 for all land cover codes.
 
 This command supports only one selected link set (cf. \nameref{uselinkset}).
 
-\subsubsection{Example}
+\subsubsection{Examples}
+
+\begin{Verbatim}
+	--capa
+\end{Verbatim}
+\begin{Verbatim}
+	--capa area
+\end{Verbatim}
+The two above examples calculates the capacity as the patch area.
+
+\begin{Verbatim}
+	--capa area 1=0.5 5=2
+\end{Verbatim}
+Set the patch capacity to the patch area (in $m^2$) weighted by 0.5 for land cover code 1 and 2 for land cover 5. The patches have to be defined by land cover codes 1 and 5.
+
 \begin{Verbatim}
 	--capa maxcost=100 codes=1,3
 \end{Verbatim}

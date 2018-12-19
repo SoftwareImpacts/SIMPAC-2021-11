@@ -83,6 +83,6 @@ public class IICMetric extends GlobalMetric implements PreCalcMetric<Node> {
     
     @Override
     public boolean isAcceptGraph(GraphGenerator graph) {
-        return graph.getProject().getCapacityParams().isCalcArea();
+        return graph.getProject().getCapacityParams().isArea();
     }
 }

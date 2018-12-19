@@ -21,14 +21,14 @@ package org.thema.graphab.links;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.util.AffineTransformation;
-import com.vividsolutions.jts.index.strtree.STRtree;
-import com.vividsolutions.jts.linearref.LengthIndexedLine;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.util.AffineTransformation;
+import org.locationtech.jts.index.strtree.STRtree;
+import org.locationtech.jts.linearref.LengthIndexedLine;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
@@ -641,14 +641,15 @@ public class Linkset {
                     } else {
                         CircuitRaster circuit = project.getRasterCircuit(Linkset.this);
                         CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(path.getPatch1(), path.getPatch2());
-                        corridor = odCircuit.getCorridorMap(maxCost);
+                        corridor = odCircuit.getCurrentMap();
                     }
                     if(corridor != null) {
                         synchronized(Linkset.this) {
                             for(int y = corridor.getMinY(); y < corridor.getBounds().getMaxY(); y++) {
                                 for (int x = corridor.getMinX(); x < corridor.getBounds().getMaxX(); x++) {
-                                    if(corridor.getSample(x, y, 0) == 1) {
-                                        corridors.setSample(x, y, 0, corridors.getSample(x, y, 0) + 1);
+                                    double val = corridor.getSampleDouble(x, y, 0);
+                                    if(val > 0) {
+                                        corridors.setSample(x, y, 0, corridors.getSample(x, y, 0) + val);
                                     }
                                 }
                             }

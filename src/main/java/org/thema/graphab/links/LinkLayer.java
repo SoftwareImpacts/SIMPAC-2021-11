@@ -25,6 +25,7 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -109,29 +110,29 @@ public class LinkLayer extends FeatureLayer {
             @Override
             public void actionPerformed(ActionEvent e) {
                 
-//                if(linkset.getType_dist() != Linkset.COST) {
-//                    JOptionPane.showMessageDialog(null, "Corridor can be calculated on cost linkset only.", "Corridor", JOptionPane.ERROR_MESSAGE);
-//                    return;
-//                }
-                
-                final String maxCost = JOptionPane.showInputDialog("Max cost : ");
-                if(maxCost == null) {
+                final CorridorDialog dlg = new CorridorDialog(null, enabled);
+                dlg.setVisible(true);
+                if(!dlg.isOk) {
                     return;
                 }
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        List<Feature> corridors = linkset.computeCorridor(Config.getProgressBar("Corridor..."), Double.parseDouble(maxCost));
-                        FeatureLayer l = new FeatureLayer(linkset.getName() +
-                                "-corridor-" + maxCost, corridors, new FeatureStyle(new Color(32, 192, 0, 50), null));
-                        l.setRemovable(true);
-                        linkset.getProject().getAnalysisLayer().addLayerFirst(l);
+                        if(dlg.raster) {
+                            Raster corridors = linkset.computeRasterCorridor(Config.getProgressBar("Corridor..."), dlg.maxCost);
+                        } else {
+                            List<Feature> corridors = linkset.computeCorridor(Config.getProgressBar("Corridor..."), dlg.maxCost);
+                            FeatureLayer l = new FeatureLayer(linkset.getName() +
+                                    "-corridor-" + dlg.maxCost, corridors, new FeatureStyle(new Color(32, 192, 0, 50), null));
+                            l.setRemovable(true);
+                            linkset.getProject().getAnalysisLayer().addLayerFirst(l);
 
-                        try {
-                            DefaultFeature.saveFeatures(corridors, new File(linkset.getProject().getDirectory(), linkset.getName() +
-                                    "-corridor-" + maxCost + ".shp"), linkset.getProject().getCRS());
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
+                            try {
+                                DefaultFeature.saveFeatures(corridors, new File(linkset.getProject().getDirectory(), linkset.getName() +
+                                        "-corridor-" + dlg.maxCost + ".shp"), linkset.getProject().getCRS());
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }
                     }
                 }).start();

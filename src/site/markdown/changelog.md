@@ -1,5 +1,11 @@
 ## Changelog
 
+##### version 2.3.6 (19/12/2018)
+- CLI : --capa command : weighted area for patch capacity when patches are defined by several codes
+- Corridor : raster output in GUI
+- Clustering : clustering sizes can be set in GUI to decrease memory usage
+- Add GeoPackage support for vector data
+
 ##### version 2.3.5 (14/06/2018)
 - Add patch : error when saving landuse.tif with Lambert CRS
 

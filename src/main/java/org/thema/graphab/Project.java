@@ -23,19 +23,19 @@ import org.thema.graphab.links.LinkLayer;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.thoughtworks.xstream.XStream;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.util.AffineTransformation;
-import com.vividsolutions.jts.geom.util.NoninvertibleTransformationException;
-import com.vividsolutions.jts.index.strtree.ItemBoundable;
-import com.vividsolutions.jts.index.strtree.ItemDistance;
-import com.vividsolutions.jts.index.strtree.STRtree;
-import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.util.AffineTransformation;
+import org.locationtech.jts.geom.util.NoninvertibleTransformationException;
+import org.locationtech.jts.index.strtree.ItemBoundable;
+import org.locationtech.jts.index.strtree.ItemDistance;
+import org.locationtech.jts.index.strtree.STRtree;
+import org.locationtech.jts.operation.union.CascadedPolygonUnion;
 import java.awt.Color;
 import java.awt.color.ColorSpace;
 import java.awt.geom.Rectangle2D;
@@ -2360,9 +2360,29 @@ public final class Project {
                 setCapacity(p, ((Number)r.getValue(id, param.capaField)).doubleValue());
             }
             r.dispose();
-        } else if(param.calcArea) {
-            for(DefaultFeature patch : patches) {
-                setCapacity(patch, patch.getGeometry().getArea());
+        } else if(param.isCalcArea()) {
+            if(param.isArea()) {
+                for(DefaultFeature patch : patches) {
+                    setCapacity(patch, patch.getGeometry().getArea());
+                }
+            } else {
+                // weighted area
+                for(DefaultFeature patch : patches) {
+                    int id = (int) patch.getId();
+                    double sum = 0;
+                    Raster rPatch = getRasterPatch();
+                    Raster land = getImageSource();
+                    Envelope env = getSpace2grid().transform(patch.getGeometry()).getEnvelopeInternal();
+                    for(double y = (int)env.getMinY() + 0.5; y <= Math.ceil(env.getMaxY()); y++) {
+                        for(double x = (int)env.getMinX() + 0.5; x <= Math.ceil(env.getMaxX()); x++) {
+                            if(rPatch.getSample((int)x, (int)y, 0) == id) {
+                                double w = param.codeWeight.get(land.getSample((int)x, (int)y, 0));
+                                sum += w * getResolution()*getResolution();
+                            }
+                        }
+                    }
+                    setCapacity(patch, sum);
+                }
             }
         } else {
             calcNeighborAreaCapacity(getLinkset(param.costName), param.maxCost, param.codes, param.weightCost);

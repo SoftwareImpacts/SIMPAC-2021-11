@@ -39,6 +39,7 @@ import org.junit.Test;
 import org.thema.common.Config;
 import org.thema.common.io.IOFile;
 import org.thema.data.IOImage;
+import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.graph.GraphPathFinder;
@@ -302,6 +303,41 @@ public class ProjectTest {
         for(Feature patch : prj.getPatches()) {
             assertTrue(Project.getPatchArea(patch) >= 100000);
             assertTrue(Project.getPatchCapacity(patch) >= 100000);
+        }
+    }
+    
+    @Test
+    public void testSetCapacity() throws IOException, SchemaException {
+        CapaPatchDialog.CapaPatchParam param = new CapaPatchDialog.CapaPatchParam();
+        param.calcArea = true;
+        param.codeWeight = new HashMap<Integer, Double>() {{ put(1, 1.0);}};
+        Assert.assertTrue(param.isArea());
+        project.setCapacities(param, false);
+        for(DefaultFeature patch : project.getPatches()) {
+            Assert.assertEquals(Project.getPatchArea(patch), Project.getPatchCapacity(patch), 1e-5);
+        }
+        param.calcArea = true;
+        param.codeWeight = new HashMap<Integer, Double>() {{ put(1, 2.0);}};
+        Assert.assertFalse(param.isArea());
+        project.setCapacities(param, false);
+        for(DefaultFeature patch : project.getPatches()) {
+            Assert.assertEquals(Project.getPatchArea(patch)*2, Project.getPatchCapacity(patch), Project.getPatchArea(patch)*1e-3);
+        }
+        
+        GridCoverage2D cov = IOImage.loadTiff(new File("target/test-classes/org/thema/graphab/source.tif"));
+        Project prj = new Project("test", new File("/tmp"), cov, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), new TreeSet(Arrays.asList(1,2)), Double.NaN, false, 0, false);
+        param = new CapaPatchDialog.CapaPatchParam();
+        param.calcArea = true;
+        param.codeWeight = new HashMap<Integer, Double>() {{ put(1, 2.0); put(2, 2.0);}};
+        Assert.assertFalse(param.isArea());
+        prj.setCapacities(param, false);
+        for(DefaultFeature patch : prj.getPatches()) {
+            Assert.assertEquals(Project.getPatchArea(patch)*2, Project.getPatchCapacity(patch), Project.getPatchArea(patch)*1e-3);
+        }
+        
+        prj = loadCrossProjectWithCapa();
+        for(DefaultFeature patch : prj.getPatches()) {
+            Assert.assertEquals((Integer)patch.getId(), Project.getPatchCapacity(patch), 1e-10);
         }
     }
     

@@ -20,7 +20,7 @@
 package org.thema.graphab.pointset;
 
 import au.com.bytecode.opencsv.CSVReader;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import java.awt.HeadlessException;
 import java.io.File;
 import java.io.FileReader;
@@ -32,6 +32,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
+import org.geotools.data.FileDataStore;
+import org.geotools.data.FileDataStoreFinder;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.opengis.feature.type.AttributeType;
 
@@ -125,7 +127,6 @@ public class PointImportDialog extends javax.swing.JDialog {
         bindingGroup.addBinding(binding);
 
         importAttrCheckBox.setText(bundle1.getString("PointImportDialog.importAttrCheckBox.text")); // NOI18N
-        importAttrCheckBox.setEnabled(true);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -213,7 +214,7 @@ public class PointImportDialog extends javax.swing.JDialog {
 
     private void selectFilePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectFilePanelActionPerformed
         File f = selectFilePanel.getSelectedFile();
-        shpFile = f.getName().toLowerCase().endsWith(".shp");
+        shpFile = !f.getName().toLowerCase().endsWith(".csv");
 
         xComboBox.setEnabled(!shpFile);
         yComboBox.setEnabled(!shpFile);
@@ -221,7 +222,7 @@ public class PointImportDialog extends javax.swing.JDialog {
         List<String> attrs = new ArrayList<>();
         try {
             if(shpFile) {
-                ShapefileDataStore datastore = new ShapefileDataStore(f.toURL());
+                FileDataStore datastore = FileDataStoreFinder.getDataStore(f.toURI().toURL());
                 List<AttributeType> types = datastore.getSchema().getTypes();
                 DefaultComboBoxModel model = new DefaultComboBoxModel();
                 for(AttributeType type : types) {

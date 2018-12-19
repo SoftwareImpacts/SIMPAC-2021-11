@@ -276,4 +276,26 @@ public class CLIToolsTest {
         thrown.expect(IllegalArgumentException.class);
         cli.execute(new String[]{"--project", prjFile, "--lmetric"});
     }
+    
+    @Test
+    public void testExecuteCapa() throws Exception {
+        System.out.println("executeCapa");
+
+        CLITools cli = new CLITools();
+        
+        cli.execute(new String[]{"--project", prjFile, "--capa", "area", "0=1.0"});
+        Project prj = Project.loadProject(new File(prjFile), false);
+        for(DefaultFeature patch : prj.getPatches()) {
+            assertEquals(Project.getPatchArea(patch), Project.getPatchCapacity(patch), 1e-10);
+        }
+        
+        cli.execute(new String[]{"--project", prjFile, "--capa", "area", "0=2.0"});
+        prj = Project.loadProject(new File(prjFile), false);
+        for(DefaultFeature patch : prj.getPatches()) {
+            assertEquals(Project.getPatchArea(patch)*2, Project.getPatchCapacity(patch), 1e-10);
+        }
+        
+        thrown.expect(IllegalArgumentException.class);
+        cli.execute(new String[]{"--project", prjFile, "--capa", "vds"});
+    }
 }

@@ -18,7 +18,7 @@
 
 package org.thema.graphab;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
@@ -79,6 +79,7 @@ import org.thema.graphab.model.Logistic;
 import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.pointset.Pointset.Distance;
 import org.thema.graphab.util.RSTGridReader;
+import org.thema.graphab.util.Range;
 import org.thema.parallel.ExecutorService;
 import org.thema.parallel.ParallelExecutor;
 
@@ -119,7 +120,7 @@ public class CLITools {
                     "--pointset pointset.shp\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
                     "--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]\n" +
-                    "--capa [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
+                    "--capa [area [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
                     "--gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
@@ -612,6 +613,11 @@ public class CLITools {
                     }
                 });
 
+            if(nb == -1) {
+                mod.setKeepList(Collections.EMPTY_SET);
+            } else {
+                mod.setKeepList(Collections.singleton(nb));
+            }
             mod.partitions();
             
             Set<Modularity.Cluster> part = nb == -1 ? mod.getBestPartition() : mod.getPartition(nb);
@@ -1167,26 +1173,44 @@ public class CLITools {
     private void calcCapa(List<String> args) throws IOException, SchemaException {
         
         CapaPatchDialog.CapaPatchParam params = new CapaPatchDialog.CapaPatchParam();
-        if(!args.isEmpty() && args.get(0).startsWith("maxcost=")) {
-            if(getLinksets().size() > 1) {
-                throw new IllegalArgumentException("--capa command works only for one linkset. Select a linkset with --uselinkset.");
-            }
-            Linkset linkset = getLinksets().iterator().next();
-            params.calcArea = false;
-            params.weightCost = false;
-            Range maxcost = Range.parse(args.remove(0).split("=")[1]);
-            params.maxCost = maxcost.getValue(linkset);
-            params.costName = linkset.getName();
-            String[] tokens = args.remove(0).split("=")[1].split(",");
-            params.codes = new HashSet<>();
-            for(String tok : tokens) {
-                params.codes.add(Integer.parseInt(tok));
-            }
-            if(!args.isEmpty() && args.get(0).equals("weight")) {
-                params.weightCost = true;
-            }
+        if(args.isEmpty()) {
+           params.calcArea = true;
+           params.codeWeight = null;
         } else {
-            params.calcArea = true;
+            String arg = args.remove(0);
+            if(arg.startsWith("maxcost=")) {
+                if(getLinksets().size() > 1) {
+                    throw new IllegalArgumentException("--capa command works only for one linkset. Select a linkset with --uselinkset.");
+                }
+                Linkset linkset = getLinksets().iterator().next();
+                params.calcArea = false;
+                params.weightCost = false;
+                Range maxcost = Range.parse(args.remove(0).split("=")[1]);
+                params.maxCost = maxcost.getValue(linkset);
+                params.costName = linkset.getName();
+                String[] tokens = args.remove(0).split("=")[1].split(",");
+                params.codes = new HashSet<>();
+                for(String tok : tokens) {
+                    params.codes.add(Integer.parseInt(tok));
+                }
+                if(!args.isEmpty() && args.get(0).equals("weight")) {
+                    params.weightCost = true;
+                }
+            } else if(arg.equals("area")) {
+                params.calcArea = true;
+                params.codeWeight = new HashMap<>();
+                while(!args.isEmpty()) {
+                    arg = args.remove(0);
+                    String[] tokens = arg.split("=");
+                    String[] codes = tokens[0].split(",");
+                    double w = Double.parseDouble(tokens[1]);
+                    for(String code : codes) {
+                        params.codeWeight.put(Integer.parseInt(code), w);
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("Unknown argument " + arg + " for --capa command");
+            }
         }
         project.setCapacities(params, save);
     }
@@ -1477,156 +1501,5 @@ public class CLITools {
         }
         
         return params;
-    }
-}
-
-
-
-/**
- * CLI range parsing and distance conversion.
- * 
- * @author Gilles Vuidel
- */
-class Range {
-    private double min, max, inc;
-    private List<Double> values;
-    private boolean convDist;
-
-    private Range(double val, boolean convDist) {
-        this(val, 1, val, convDist);
-    }
-
-    private Range(double min, double max, boolean convDist) {
-        this(min, 1, max, convDist);
-    }
-
-    private Range(double min, double inc, double max, boolean convDist) {
-        this.min = min;
-        this.max = max;
-        this.inc = inc;
-        this.convDist = convDist;
-    }
-
-    private Range(List<Double> values, boolean convDist) {
-        this.values = values;
-        this.min = Collections.min(values);
-        this.max = Collections.max(values);
-        this.convDist = convDist;
-    }
-
-    /**
-     * @return all values of the range
-     * @throws IllegalStateException if the range must convert the values
-     */
-    public List<Double> getValues() {
-        if(convDist) {
-            throw new IllegalStateException("Cannot convert distance without linkset");
-        }
-        if(values == null) {
-            List<Double> lst = new ArrayList<>();
-            for(double v = min; v <= max; v += inc) {
-                lst.add(v);
-            }
-            return lst;
-        } else {
-            return values;
-        }
-    }
-
-    /**
-     * May convert the values from distance to cost.
-     * @param linkset the linkset for conversion if needed
-     * @return all the values
-     */
-    public List<Double> getValues(Linkset linkset) {
-        if(convDist) {
-            List<Double> lst = new ArrayList<>();
-            for(double v = min; v <= max; v += inc) {
-                lst.add(linkset.estimCost(v));
-            }
-            return lst;
-        } else {
-            return getValues();
-        }
-    }
-
-    /**
-     * Returns the first value (minimum value).
-     * May convert the value from distance to cost
-     * @param linkset the linkset for conversion if needed
-     * @return the first value
-     */
-    public double getValue(Linkset linkset) {
-        if(convDist) {
-            return linkset.estimCost(min);
-        } else {
-            return min;
-        }
-    }
-
-    /**
-     * @return if this range contains only one number
-     */
-    public boolean isSingle() {
-        return getSize() == 1;
-    }
-
-    /**
-     * @return the minimum value (this value is never converted)
-     */
-    public double getMin() {
-        return min;
-    }
-
-    /**
-     * @return the number of values
-     */
-    public int getSize() {
-        if(values == null) {
-            int n = 0;
-            for(double v = min; v <= max; v += inc) {
-                n++;
-            }
-            return n;
-        } else {
-            return values.size();
-        }
-    }
-
-    /**
-     * Parse the string and extract the range.
-     * It can be :
-     * - a single number
-     * - a list of number separated by comma
-     * - a real range of the form min:max or min:inc:max
-     * All three cases can be surrounded by bracket for automatic conversion from distance to cost
-     * @param s the string containing the number 
-     * @return the new range
-     */
-    public static Range parse(String s) {
-        boolean conv = false;
-        if(s.startsWith("{")) {
-            s = s.substring(1, s.length()-1).trim();
-            conv = true;
-        }
-        String [] tok = s.split(":");
-        if(tok.length == 1) {
-            tok = s.split(",");
-            if(tok.length == 1) {
-                return new Range(Double.parseDouble(tok[0]), conv);
-            } else {
-                List<Double> values = new ArrayList<>(tok.length);
-                for(String tok1 : tok) {
-                    values.add(Double.parseDouble(tok1));
-                }
-                return new Range(values, conv);
-            }
-
-        } else if(tok.length == 2) {
-            return new Range(Double.parseDouble(tok[0]), Double.parseDouble(tok[1]), conv);
-        } else if(tok.length == 3) {
-            return new Range(Double.parseDouble(tok[0]), Double.parseDouble(tok[1]), Double.parseDouble(tok[2]), conv);
-        }
-        return  null;
     }
 }

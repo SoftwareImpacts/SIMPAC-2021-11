@@ -16,7 +16,7 @@
  */
 package org.thema.graphab.links;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Coordinate;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

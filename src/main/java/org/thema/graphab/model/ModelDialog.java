@@ -20,8 +20,8 @@
 package org.thema.graphab.model;
 
 import au.com.bytecode.opencsv.CSVWriter;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 import java.awt.Frame;
 import java.io.File;
 import java.io.FileWriter;

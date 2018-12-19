@@ -43,7 +43,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.2\\
+		Graphab 2.3\\
 		\bigskip
 		Manuel d’utilisation\\
 	}
@@ -56,7 +56,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		21/09/2017\\
+		13/12/2018\\
 	}
 	
 \end{titlepage}
@@ -308,9 +308,11 @@ La distance coût maximale $d_{max}$ doit être renseignée avant de lancer le c
 	\includegraphics[scale=0.5]{img/manual-fr_corridor.png} 
 \end{figure}
 
-Le résultat s'affiche dans une nouvelle couche vectorielle qui contient pour chaque lien du jeu de liens sélectionné un polygone représentant son corridor. Les liens ayant une distance supérieure à $d_{max}$ n'auront pas de corridor.
+Le résultat s'affiche dans une nouvelle couche vectorielle ou raster selon le choix effectué. En vectoriel, la couche contient pour chaque lien du jeu de liens sélectionné un polygone représentant son corridor. Les liens ayant une distance supérieure à $d_{max}$ n'auront pas de corridor. En raster, chaque pixel de la couche contient le nombre de corridors passant par celui-ci.
 
-L'affichage par défaut utilise la transparence pour faire apparaître les superpositions de corridors.
+Le résultat est automatiquement enregistré dans le répertoire du projet.
+
+En vectoriel, l'affichage par défaut utilise la transparence pour faire apparaître les superpositions de corridors.
 
 
 \section{Capacité des taches}

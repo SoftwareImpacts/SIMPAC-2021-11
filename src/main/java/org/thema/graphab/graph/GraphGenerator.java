@@ -19,9 +19,9 @@
  
 package org.thema.graphab.graph;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.operation.union.CascadedPolygonUnion;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;

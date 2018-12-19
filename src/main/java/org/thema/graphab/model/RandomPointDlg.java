@@ -19,8 +19,8 @@
 
 package org.thema.graphab.model;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -111,11 +111,11 @@ public class RandomPointDlg extends javax.swing.JDialog {
         java.util.ResourceBundle bundle1 = java.util.ResourceBundle.getBundle("org/thema/graphab/model/Bundle"); // NOI18N
         jLabel2.setText(bundle1.getString("RandomPointDlg.jLabel2.text")); // NOI18N
 
-        resoSpinner.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
+        resoSpinner.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
 
         jLabel3.setText(bundle1.getString("RandomPointDlg.jLabel3.text")); // NOI18N
 
-        mindDistSpinner.setModel(new javax.swing.SpinnerNumberModel(Double.valueOf(1000.0d), Double.valueOf(0.0d), null, Double.valueOf(1.0d)));
+        mindDistSpinner.setModel(new javax.swing.SpinnerNumberModel(1000.0d, 0.0d, null, 1.0d));
 
         genButton.setText(bundle1.getString("RandomPointDlg.genButton.text")); // NOI18N
         genButton.addActionListener(new java.awt.event.ActionListener() {
@@ -174,7 +174,7 @@ public class RandomPointDlg extends javax.swing.JDialog {
                         .addComponent(nameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(genButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(closeButton, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -329,7 +329,7 @@ public class RandomPointDlg extends javax.swing.JDialog {
 
     private void shapeSelectFilePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shapeSelectFilePanelActionPerformed
         try {
-            List<DefaultFeature> features = DefaultFeature.loadFeatures(shapeSelectFilePanel.getSelectedFile(), false);
+            List<DefaultFeature> features = DefaultFeature.loadFeatures(shapeSelectFilePanel.getSelectedFile());
         
             coverage = new DefaultFeatureCoverage(features);
             int nb = features.size();
