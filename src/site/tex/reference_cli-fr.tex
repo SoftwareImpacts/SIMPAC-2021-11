@@ -25,7 +25,7 @@
  	\bigskip	
  	{\Huge
  		\bfseries
- 		Graphab 2.3\\
+ 		Graphab 2.4\\
  		\bigskip
  		Manuel de référence\\
  		Ligne de commande\\
@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		13/12/2018\\
+ 		19/12/2018\\
  	}
  	
  \end{titlepage}
@@ -74,24 +74,24 @@ Graphab fonctionne sur n'importe quel ordinateur supportant Java 7 ou supérieur
 
 \section{Installation et lancement du programme}
 
-Graphab est téléchargeable à cette adresse : \url{http://thema.univ-fcomte.fr/productions/graphab}.
+Graphab est téléchargeable à cette adresse : \url{https://sourcesup.renater.fr/graphab}.
 
 \begin{itemize}
 	\item Télécharger et installer Java 7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
-	\item Télécharger graphab-2.2.jar
-	\item Lancer graphab-2.2.jar
+	\item Télécharger graphab-2.4.jar
+	\item Lancer graphab-2.4.jar
 \end{itemize}
 
 \section{Lancer Graphab en ligne de commande}
 Il faut tout d'abord ouvrir une fenêtre de terminal, puis aller dans le répertoire contenant Graphab avec la commande \textit{cd}.
 Enfin, vous pouvez saisir la commande suivante pour afficher l'écran d'aide de Graphab :
 \begin{Verbatim}
-	java -jar graphab-2.2.jar --help
+	java -jar graphab-2.4.jar --help
 \end{Verbatim}
 Résultat
 \begin{Verbatim}
 Usage :
-java -jar graphab-2.2.jar --project prjfile.xml
+java -jar graphab-2.4.jar --project prjfile.xml
 ...
 ...
 \end{Verbatim}
@@ -142,7 +142,7 @@ Les commandes \textit{--create} et \textit{--project} peuvent être utilisées u
 Après une de ces deux commandes, toutes les autres commandes seront exécutées séquentiellement dans le même ordre que sur la ligne.
 
 \begin{Verbatim}
-	java -jar graphab-2.2.jar --project prj.xml --graph --gmetric NC  
+	java -jar graphab-2.4.jar --project prj.xml --graph --gmetric NC  
 \end{Verbatim}
 Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la commande \textit{--graph}, puis la commande \textit{--gmetric}.
 
@@ -152,7 +152,7 @@ Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la comm
 \subsection{--help : affichage de l'aide}
 Commande :
 \begin{Verbatim}
-	java -jar graphab-2.2.jar --help
+	java -jar graphab-2.4.jar --help
 \end{Verbatim}
 Résultat :
 \begin{verbatim}
@@ -194,7 +194,7 @@ Cette commande affiche l'ensemble des métriques disponibles avec leur abréviat
 
 Commande :
 \begin{Verbatim}
-	java -jar graphab-2.2.jar --metrics
+	java -jar graphab-2.4.jar --metrics
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -238,7 +238,7 @@ Résultat :
 \subsection{--create : création d'un projet}
 
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.2.jar --create \textit{prjname} \textit{landrasterfile} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
+java -jar graphab-2.4.jar --create \textit{prjname} \textit{landrasterfile} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
 	[minarea=\textit{val}] [con8] [simp] [dir=\textit{path}]
 \end{Verbatim}
 
@@ -267,7 +267,7 @@ Les commandes suivantes seront exécutées sur le projet nouvellement créé.
 \subsection{--project : chargement d'un projet}
 Cette commande définit le chemin vers le fichier xml du projet à charger.
 \begin{Verbatim}[commandchars=\\\{\}]
-	java -jar graphab-2.2.jar --project \textit{path2myproject/myproject.xml}
+	java -jar graphab-2.4.jar --project \textit{path2myproject/myproject.xml}
 \end{Verbatim}
 Charge le projet \textit{myproject} contenu dans le répertoire \textit{path2myproject}.
 
@@ -280,7 +280,7 @@ Cette commande est utile pour récupérer les noms exacts des éléments pour le
 
 Commande :
 \begin{Verbatim}[commandchars=\\\{\}]
-	java -jar graphab-2.2.jar --project \textit{path2myproject/myproject.xml} --show
+	java -jar graphab-2.4.jar --project \textit{path2myproject/myproject.xml} --show
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -1215,7 +1215,7 @@ Tous les exemples qui suivent peuvent être testés avec le projet exemple fourn
 \section{Afficher le projet}
 Affiche les éléments du projet :
 \begin{Verbatim}
-	java -jar graphab-2.2.jar --project sample_project/Project.xml --show
+	java -jar graphab-2.4.jar --project sample_project/Project.xml --show
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -1238,7 +1238,7 @@ Résultat :
 \section{Métrique globale à plusieurs distances}
 Calcule la métrique PC sur le graphe \textit{2000m-3500cost} en faisant varier le paramètre \textit{d} de 1000 à 5000 par pas de 1000 :
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.2.jar --project sample_project/Project.xml
+	java -jar graphab-2.4.jar --project sample_project/Project.xml
 		--usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
 \end{Verbatim}
 Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
@@ -1254,7 +1254,7 @@ Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
 \section{Métrique globale sur un graphe seuillé à plusieurs distances}
 Crée 6 graphes seuillés de 2000 à 2500, à partir du jeu de lien \textit{Complete\_cost} et calcule la métrique IIC pour chaque :
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.2.jar --project sample_project/Project.xml
+	java -jar graphab-2.4.jar --project sample_project/Project.xml
 		--uselinkset Complete_cost --graph threshold=2000:100:2500 --gmetric IIC
 \end{Verbatim}
 Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
@@ -1272,7 +1272,7 @@ Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
 Calcule un graphe non seuillé à partir du jeu de lien \textit{Planar\_Euclid}, calcule 2 métriques locales (Dg et F) sur le graphe créé, ajoute le jeu de point 
 sur le jeu de lien \textit{Planar\_Euclid} et calcule le SDM pour les 2 métriques avec la variable PRESENCE, sans modifier le projet.
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.2.jar -nosave --project sample_project/Project.xml 
+	java -jar graphab-2.4.jar -nosave --project sample_project/Project.xml 
 		--uselinkset Planar_Euclid 
 		--graph 
 		--lmetric Dg --lmetric F d=1000 p=0.05 beta=1 
@@ -1293,7 +1293,7 @@ Le résultat est stocké dans le fichier model-PRESENCE-dW1000.txt dans le répe
 Si votre ordinateur a plus qu'un coeur (la plupart), vous pouvez tirer partie de la parallélisation pour accélérer vos calculs avec Graphab.
 Il faut définir le nombre de coeurs (ou processeurs) que Graphab peut utiliser avec l'option \verb|-proc| après la commande \verb|--project| :
 \begin{Verbatim}
-	java -jar graphab-2.2.jar -proc 8 --project path2myproject/myproject.xml ...
+	java -jar graphab-2.4.jar -proc 8 --project path2myproject/myproject.xml ...
 \end{Verbatim}
 Par défaut, en ligne de commande, le nombre de coeurs utilisés correspond au nombre défini dans la fenêtre Préférences de l'interface graphique.
 
@@ -1302,7 +1302,7 @@ En augmentant le nombre de coeurs utilisés par Graphab, vous augmentez, par la 
 \subsection{Cluster : MPI}
 Graphab peut aussi être utilisé sur des clusters de calcul supportant Java avec OpenMPI.
 \begin{Verbatim}
-	mpirun java -jar graphab-2.2.jar -mpi --project path2myproject/myproject.xml ...
+	mpirun java -jar graphab-2.4.jar -mpi --project path2myproject/myproject.xml ...
 \end{Verbatim}
 Seulement certaines commandes peuvent être utilisées dans l'environnement MPI : \verb|--gmetric|, \verb|--cmetric|, \verb|--lmetric|, \verb|--delta|, \verb|--addpatch|,\verb|--gtest|,\verb|--remelem|,\verb|--landmod|
 
@@ -1313,8 +1313,8 @@ Si l'exécution se termine par une erreur OutOfMemoryError ou GC overhead, vous 
 
 Pour définir manuellement la mémoire maximale utilisable par Graphab, il faut utiliser l'option Java \verb|-Xmx| :
 \begin{Verbatim}
-	java -Xmx4g -jar graphab-2.2.jar ... # 4Gb allocated
-	java -Xmx1500m -jar graphab-2.2.jar ... # 1500 Mb -> 1.5Gb allocated
+	java -Xmx4g -jar graphab-2.4.jar ... # 4Gb allocated
+	java -Xmx1500m -jar graphab-2.4.jar ... # 1500 Mb -> 1.5Gb allocated
 \end{Verbatim}
 Si vous ne pouvez pas allouer plus de 1 GB ou 1.5 GB alors que votre ordinateur a plus de mémoire vive, vous utilisez sûrement une version 32-bit de Java qui est limitée à moins de 2 GB.
 Pour tester votre version de Java :

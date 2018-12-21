@@ -49,12 +49,16 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.thema.common.Config;
 import org.thema.common.collection.HashMap2D;
+import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureGetter;
+import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.FeatureLayer;
+import org.thema.drawshape.layer.RasterLayer;
 import org.thema.drawshape.style.FeatureStyle;
 import org.thema.drawshape.style.LineStyle;
+import org.thema.drawshape.style.RasterStyle;
 import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
@@ -120,6 +124,16 @@ public class LinkLayer extends FeatureLayer {
                     public void run() {
                         if(dlg.raster) {
                             Raster corridors = linkset.computeRasterCorridor(Config.getProgressBar("Corridor..."), dlg.maxCost);
+                            RasterLayer l = new RasterLayer(linkset.getName() +
+                                    "-corridor-" + dlg.maxCost, new RasterShape(corridors, linkset.getProject().getZone(), new RasterStyle(), true), linkset.getProject().getCRS());
+                            l.setRemovable(true);
+                            linkset.getProject().getAnalysisLayer().addLayerFirst(l);
+                            try {
+                                l.saveRaster(new File(linkset.getProject().getDirectory(), linkset.getName() +
+                                        "-corridor-" + dlg.maxCost + ".tif"));
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         } else {
                             List<Feature> corridors = linkset.computeCorridor(Config.getProgressBar("Corridor..."), dlg.maxCost);
                             FeatureLayer l = new FeatureLayer(linkset.getName() +

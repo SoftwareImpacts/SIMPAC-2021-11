@@ -31,6 +31,7 @@ import org.locationtech.jts.index.strtree.STRtree;
 import org.locationtech.jts.linearref.LengthIndexedLine;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.BandedSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
@@ -629,7 +630,8 @@ public class Linkset {
             throw new IllegalArgumentException("Euclidean linkset is not supported for corridor");
         }
         
-        final WritableRaster corridors = project.getRasterPatch().createCompatibleWritableRaster();
+        final WritableRaster corridors = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_DOUBLE, 
+                    project.getImageSource().getWidth(), project.getImageSource().getHeight(), 1), new Point(1, 1));
         
         ParallelFTask task = new SimpleParallelTask<Path>(getPaths(), progressBar) {
             @Override

@@ -23,7 +23,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.3\\
+		Graphab 2.4\\
 		\bigskip
 		Reference Manual\\
 		Command Line Interface\\
@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2018-12-13\\
+		2018-12-19\\
 	}
 	
 \end{titlepage}
@@ -70,12 +70,12 @@ Graphab runs on any computer supporting Java 7 or later (PC under Linux, Windows
 
 \section{Installing the software and launching a project}
 
-Graphab can be downloaded from \url{http://thema.univ-fcomte.fr/productions/graphab}.
+Graphab can be downloaded from \url{https://sourcesup.renater.fr/graphab}.
 
 \begin{itemize}
 	\item Download and install Java 7 or later - \href{http://www.java.com}{java.com}. If you have a 64-bit operating system, it is best to install the 64-bit version of Java.
-	\item Download graphab-2.2.jar
-	\item Launch graphab-2.2.jar
+	\item Download graphab-2.4.jar
+	\item Launch graphab-2.4.jar
 \end{itemize}
 
 \section{Launch Graphab in CLI mode}
@@ -83,7 +83,7 @@ First you have to open a terminal window.
 Then, go to the directory of the Graphab program with \textit{cd} command.
 Finally, type the following command to display the Graphab help screen :
 \begin{Verbatim}
-	java -jar graphab-2.2.jar --help
+	java -jar graphab-2.4.jar --help
 \end{Verbatim}
 Result:
 \begin{verbatim}
@@ -140,7 +140,7 @@ The \verb|--create| and \verb|--project| commands can be used only once and must
 After one of these commands, all other commands will be executed sequentially with the same order as the command line.
 
 \begin{Verbatim}
-	java -jar graphab-2.2.jar --project prj.xml --graph --gmetric NC  
+	java -jar graphab-2.4.jar --project prj.xml --graph --gmetric NC  
 \end{Verbatim}
 Load a project, then execute the graph command and after that, execute the gmetric command.
 
@@ -151,7 +151,7 @@ Load a project, then execute the graph command and after that, execute the gmetr
 \subsection{--help : display help}
 Command :
 \begin{Verbatim}
-java -jar graphab-2.2.jar --help
+java -jar graphab-2.4.jar --help
 \end{Verbatim}
 Result :
 \begin{verbatim}
@@ -193,7 +193,7 @@ This command lists all available metrics with their short name, description, and
 
 Command :
 \begin{Verbatim}
-java -jar graphab-2.2.jar --metrics
+java -jar graphab-2.4.jar --metrics
 \end{Verbatim}
 Result :
 \begin{Verbatim}
@@ -234,7 +234,7 @@ Result :
 \subsection{--create : create project}
 
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.2.jar --create \textit{prjname} \textit{landrasterfile} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
+java -jar graphab-2.4.jar --create \textit{prjname} \textit{landrasterfile} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
 	[minarea=\textit{val}] [con8] [simp] [dir=\textit{path}]
 \end{Verbatim}
 
@@ -262,7 +262,7 @@ The following commands will be executed on the new project.
 \subsection{--project : load project}
 This command sets the path to the project xml file.
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.2.jar --project \textit{path2myproject/myproject.xml}
+java -jar graphab-2.4.jar --project \textit{path2myproject/myproject.xml}
 \end{Verbatim}
 This command loads the project myproject contained in the path2myproject folder.
 
@@ -274,7 +274,7 @@ Lists linksets, graphs and pointsets contained in the selected project. This com
 
 Command :
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.2.jar --project \textit{path2myproject/myproject.xml} --show
+java -jar graphab-2.4.jar --project \textit{path2myproject/myproject.xml} --show
 \end{Verbatim}
 Result :
 \begin{Verbatim}
@@ -1206,7 +1206,7 @@ All the following examples can be tested with the sample project available on Gr
 \section{Display project}
 First, display project elements :
 \begin{Verbatim}
-java -jar graphab-2.2.jar --project sample_project/Project.xml --show
+java -jar graphab-2.4.jar --project sample_project/Project.xml --show
 \end{Verbatim}
 Result :
 \begin{Verbatim}
@@ -1229,7 +1229,7 @@ Presence_absence
 \section{Batch metric parameter}
 Calculates PC metric on the graph \textit{2000m-3500cost} varying \textit{d} parameter from 1000 to 5000 by step of 1000 :
 \begin{Verbatim}
-java -jar graphab-2.2.jar --project sample_project/Project.xml 
+java -jar graphab-2.4.jar --project sample_project/Project.xml 
   --usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
 \end{Verbatim}
 Results are written in the file PC.txt in the project folder :
@@ -1245,7 +1245,7 @@ Graph	d	p	beta	PC
 \section{Batch thresholded graph and global metric}
 Creates 6 thresholded graphs from the linkset \textit{Complete\_cost} and computes the IIC metric :
 \begin{Verbatim}
-java -jar graphab-2.2.jar --project sample_project/Project.xml --uselinkset Complete_cost
+java -jar graphab-2.4.jar --project sample_project/Project.xml --uselinkset Complete_cost
   --graph threshold=2000:100:2500 --gmetric IIC
 \end{Verbatim}
 Results are written in the file IIC.txt in the project folder :
@@ -1263,7 +1263,7 @@ thresh_2500.0_Complete_cost	1.4197576370824857E-6
 Calculates a graph from the linkset Planar\_Euclid, calculates 2 metrics (Dg and F) on the created graph, adds pointset on Planar\_Euclid linkset 
 and calculates SDM for the two metrics versus the PRESENCE variable, without modifying the project.
 \begin{Verbatim}
-java -jar graphab-2.2.jar -nosave --project sample_project/Project.xml  
+java -jar graphab-2.4.jar -nosave --project sample_project/Project.xml  
   --uselinkset Planar_Euclid 
   --graph 
   --lmetric Dg --lmetric F d=1000 p=0.05 beta=1 
@@ -1284,13 +1284,13 @@ If your computer has more than one core (most of them), you can take advantage o
 Most Graphab commands are parallelized. You can speed up command execution by defining the number
 of cores (or processors) used by Graphab with the option \verb|-proc| after the project command :
 \begin{Verbatim}
-	java -jar graphab-2.2.jar -proc 8 --project path2myproject/myproject.xml ...
+	java -jar graphab-2.4.jar -proc 8 --project path2myproject/myproject.xml ...
 \end{Verbatim}
 By default, CLI mode uses the number of processors defined in the preferences window of the GUI.
 \subsection{Computer cluster : mpi}
 Graphab can be run on computer clusters wich support Java for OpenMPI.
 \begin{Verbatim}
-	mpirun java -jar graphab-2.2.jar -mpi --project path2myproject/myproject.xml ...
+	mpirun java -jar graphab-2.4.jar -mpi --project path2myproject/myproject.xml ...
 \end{Verbatim}
 Only some commands can be used in mpi environments : \verb|--gmetric|, \verb|--cmetric|, \verb|--lmetric|, \verb|--delta|, \verb|--addpatch|,\verb|--gtest|,\verb|--remelem|,\verb|--landmod|
 
@@ -1302,8 +1302,8 @@ If Graphab execution terminates with OutOfMemoryError or GC overhead, you need t
 
 To define manually the maximum amount of memory allocated to Graphab, use Java option \verb|-Xmx|:
 \begin{Verbatim}
-	java -Xmx4g -jar graphab-2.2.jar ... # 4Gb allocated
-	java -Xmx1500m -jar graphab-2.2.jar ... # 1500 Mb -> 1.5Gb allocated
+	java -Xmx4g -jar graphab-2.4.jar ... # 4Gb allocated
+	java -Xmx1500m -jar graphab-2.4.jar ... # 1500 Mb -> 1.5Gb allocated
 \end{Verbatim}
 If you cannot allocate more than 1Gb or 1.5G and your computer has more memory available, you have probably a
  32-bit version of Java, which is limited to less than 2Gb of memory.

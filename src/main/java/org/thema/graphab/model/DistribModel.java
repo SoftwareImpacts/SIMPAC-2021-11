@@ -20,6 +20,7 @@
 
 package org.thema.graphab.model;
 
+import java.awt.Point;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -542,7 +543,7 @@ public class DistribModel {
             };
         } else {
             raster = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_DOUBLE, 
-                    project.getRasterPatch().getWidth(), project.getRasterPatch().getHeight(), 1), null);
+                    project.getImageSource().getWidth(), project.getImageSource().getHeight(), 1), new Point(1, 1));
             task = new AbstractParallelFTask(monitor) {
                 @Override
                 protected Object execute(int start, int end) {

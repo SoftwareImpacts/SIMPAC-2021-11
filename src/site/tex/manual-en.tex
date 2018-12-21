@@ -43,7 +43,7 @@
 	\bigskip	
 	{\Huge
 	\bfseries
-	Graphab 2.2\\
+	Graphab 2.4\\
 	\bigskip
 	User Manual\\
 	}
@@ -56,7 +56,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2017-09-21\\
+	2018-12-19\\
 	}
 	
 \end{titlepage}
@@ -97,7 +97,7 @@ Graphab runs on any computer supporting Java 7 or later (PC under Linux, Windows
 
 \subsection{Installing the software and launching a project}
 
-Graphab can be downloaded from \url{http://thema.univ-fcomte.fr/productions/graphab}.
+Graphab can be downloaded from \url{https://sourcesup.renater.fr/graphab}.
 
 \begin{itemize}
 	\item Download and install Java 7 or later - \href{http://www.java.com}{java.com}. If you have a 64-bit operating system, it is best to install the 64-bit version of Java.
@@ -282,7 +282,12 @@ Modularity is calculated with a weight($w_{ij}$) defined for each link of the gr
 $$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
 The two parameters $\beta$ et $\alpha$ are used to define respectively the importance of the patch capacity ($a_i a_j$) and the importance of the distance ($d_{ij}$) for the weight of the link $w_{ij}$. If $\alpha = \beta = 0$, then the weights are identical: $w_{ij} = 1$.  
 
-The graph clustering is available by right-clicking on the name of the graph. In the first window, the user defines the paramters $\alpha$ et $\beta$. The parameter $\alpha$ is not defined directly, it is determined from two other parameters: a distance $d$ and a probability $p$ (cf. \nameref{param_weight}). To define $\alpha$ to 0, $p$ must be equal to 1.
+The graph clustering is available by right-clicking on the name of the graph. In the first window, the user defines the paramters $\alpha$ et $\beta$. The parameter $\alpha$ is not defined directly, it is determined from two other parameters: a distance $d$ and a probability $p$ (cf. \nameref{param_weight}). To define $\alpha$ to 0, $p$ must be equal to 1.\\
+The right part of the window allows to select which clustering to keep in memory. By default, all clustering are kept in memory to display them after. These settings are useful to avoid memory overflow with large graphs (more than 5,000 nodes). In this case, graphab can keep only the best clustering (ie. with the best modularity) or keep all clustering in a given size interval between 1 and the number of nodes.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.36]{img/manual-en_clustering.png} 
+\end{figure}
 
 After validating this window, the calculation starts until a clustering maximizing modularity is obtained. The result is displayed as a new layer of the graph. Two other windows complete this result.
 
@@ -312,7 +317,8 @@ The maximum cost distance $d_{max}$ must be entered before launching the calcula
 	\includegraphics[scale=0.5]{img/manual-en_corridor.png} 
 \end{figure}
 
-The result is displayed in a new vector layer containing for each link of the selected linkset a polygon representing its corridor. Links with a distance greater than $d_{max}$ will have no corridor.
+The result is displayed in a new vector or raster layer depending on the selected output. In vector output, the layer contains for each link of the selected linkset a polygon representing its corridor. Links with a distance greater than $d_{max}$ will have no corridor.
+In raster output, each pixel contains the number of corridors passing through it.
 
 For vector layer, The default view uses transparency to show corridor overlays.
 
@@ -793,7 +799,7 @@ The properties of link sets, graph elements (nodes, links, and components), and 
 The Style menu includes the display parameters for objects: color, line width, label, symbol size (for nodes only). Objects can be represented in the same way (single symbol) or according to some attribute. A discretization method can be applied to classify objects according to the values of the selected attribute. By default, the legend of objects is displayed in the table of contents. It can be masked by unchecking
 the Legend button.
 
-The Export~menu can be used to export objects to a shapefile (*.shp) or a text file (*.txt).
+The Export~menu can be used to export objects to a shapefile (*.shp), a geopackage (.gpkg) or a text file (*.txt).
 
 The Statistic menu displays the distribution of the values of one or more attributes:
 \begin{itemize}

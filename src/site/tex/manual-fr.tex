@@ -43,7 +43,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.3\\
+		Graphab 2.4\\
 		\bigskip
 		Manuel d’utilisation\\
 	}
@@ -56,7 +56,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		13/12/2018\\
+		19/12/2018\\
 	}
 	
 \end{titlepage}
@@ -96,7 +96,7 @@ Graphab fonctionne sur tout ordinateur supportant Java 7 ou supérieur (PC sous 
 
 \subsection{Installation et lancement du programme}
 
-Graphab est téléchargeable à cette adresse : \url{http://thema.univ-fcomte.fr/productions/graphab}.
+Graphab est téléchargeable à cette adresse : \url{https://sourcesup.renater.fr/graphab}.
 
 \begin{itemize}
 	\item Télécharger et installer Java 7 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
@@ -276,7 +276,12 @@ La modularité est calculée à partir d'un poids ($w_{ij}$) défini pour chaque
 $$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
 Les 2 paramètres $\beta$ et $\alpha$ permettent de définir respectivement l'importance de la capacité des taches ($a_i a_j$) et l'importance de la distance ($d_{ij}$) pour le poids du lien $w_{ij}$. Si $\alpha = \beta = 0$ alors les poids sont tous identiques : $w_{ij} = 1$.
 
-Le partitionnement est accessible depuis le menu contextuel d'un graphe (clic droit sur le nom d'un graphe). La première fenêtre demande de renseigner les paramètres $\alpha$ et $\beta$. Le paramètre $\alpha$ n'est pas renseigné directement, il est déterminé à partir de deux autres paramètres : une distance $d$ et une probabilité $p$ (cf. \nameref{param_weight}). Pour définir $\alpha$ à 0, il faut mettre $p$ à 1. 
+Le partitionnement est accessible depuis le menu contextuel d'un graphe (clic droit sur le nom d'un graphe). La première fenêtre demande de renseigner les paramètres $\alpha$ et $\beta$. Le paramètre $\alpha$ n'est pas renseigné directement, il est déterminé à partir de deux autres paramètres : une distance $d$ et une probabilité $p$ (cf. \nameref{param_weight}). Pour définir $\alpha$ à 0, il faut mettre $p$ à 1.\\
+La partie droite de la fenêtre permet de choisir quel(s) partitionnement(s) conservés. Par défaut tous les partitionnements calculés sont conservés en mémoire pour pouvoir les afficher par la suite. Ce paramétrage est utile pour éviter la saturation de la mémoire dans le cas de gros graphes (supérieur à 5000 noeuds). Dans ce cas, on peut conserver uniquement le meilleur ou bien donner un intervalle de tailles de partitions à conserver compris entre 1 et le nombre de noeuds du graphe.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.36]{img/manual-fr_clustering.png} 
+\end{figure}
 
 Après validation de cette fenêtre, le calcul se lance jusqu'à obtenir un partitionnement maximisant la modularité. Le résultat s'affiche sur une nouvelle couche du graphe. Deux autres fenêtres viennent compléter ce résultat. 
 
@@ -765,7 +770,7 @@ Les propriétés de chaque jeu de liens, des éléments d’un graphe (nœuds, l
 
 Le menu Style donne accès aux paramètres d’affichage des objets : couleur, épaisseur des contours, étiquettes, taille des symboles (pour les nœuds uniquement). Les objets peuvent être représentés de la même manière (symbole unique) ou en fonction d’un attribut. Il est possible d’appliquer une méthode de discrétisation pour classer les objets en fonction des valeurs de l’attribut sélectionné. Par défaut, la légende des objets est affichée dans la table des matières. Il est possible de la cacher en décochant le bouton Légende.
 
-Le menu Export permet d’exporter les objets dans un fichier vecteur (*.shp) ou un fichier texte (*.txt).
+Le menu Export permet d’exporter les objets dans un fichier vecteur (*.shp), geopackage (*.gpkg) ou un fichier texte (*.txt).
 
 Le menu Statistiques permet d’afficher la distribution des valeurs d’un ou plusieurs attributs : 
 \begin{itemize}

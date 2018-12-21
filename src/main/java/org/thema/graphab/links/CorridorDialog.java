@@ -73,37 +73,38 @@ public class CorridorDialog extends javax.swing.JDialog {
         rasterRadioButton = new javax.swing.JRadioButton();
         vectorRadioButton = new javax.swing.JRadioButton();
 
-        setTitle("Corridor");
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/links/Bundle"); // NOI18N
+        setTitle(bundle.getString("CorridorDialog.title")); // NOI18N
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 closeDialog(evt);
             }
         });
 
-        okButton.setText("OK");
+        okButton.setText(bundle.getString("CorridorDialog.okButton.text")); // NOI18N
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okButtonActionPerformed(evt);
             }
         });
 
-        cancelButton.setText("Cancel");
+        cancelButton.setText(bundle.getString("CorridorDialog.cancelButton.text")); // NOI18N
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
 
-        jLabel1.setText("Max cost");
+        jLabel1.setText(bundle.getString("CorridorDialog.jLabel1.text")); // NOI18N
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Output"));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("CorridorDialog.jPanel1.border.title"))); // NOI18N
 
         buttonGroup1.add(rasterRadioButton);
         rasterRadioButton.setSelected(true);
-        rasterRadioButton.setText("Raster");
+        rasterRadioButton.setText(bundle.getString("CorridorDialog.rasterRadioButton.text")); // NOI18N
 
         buttonGroup1.add(vectorRadioButton);
-        vectorRadioButton.setText("Vector");
+        vectorRadioButton.setText(bundle.getString("CorridorDialog.vectorRadioButton.text")); // NOI18N
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);

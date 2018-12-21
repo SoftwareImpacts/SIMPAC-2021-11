@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.4-beta (21/12/2018)
+- Bug on raster corridor output
+- Interpolation : in some cases raster was shift by 1 pixel
+
 ##### version 2.3.6 (19/12/2018)
 - CLI : --capa command : weighted area for patch capacity when patches are defined by several codes
 - Corridor : raster output in GUI

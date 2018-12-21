@@ -91,52 +91,53 @@ public class ClusteringDialog extends javax.swing.JDialog {
         jLabel3 = new javax.swing.JLabel();
         incSpinner = new javax.swing.JSpinner();
 
-        setTitle("Modularity clustering");
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/graph/Bundle"); // NOI18N
+        setTitle(bundle.getString("ClusteringDialog.title")); // NOI18N
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 closeDialog(evt);
             }
         });
 
-        okButton.setText("OK");
+        okButton.setText(bundle.getString("ClusteringDialog.okButton.text")); // NOI18N
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okButtonActionPerformed(evt);
             }
         });
 
-        cancelButton.setText("Cancel");
+        cancelButton.setText(bundle.getString("ClusteringDialog.cancelButton.text")); // NOI18N
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
 
-        distProbaPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Weight"));
+        distProbaPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("ClusteringDialog.distProbaPanel.border.title"))); // NOI18N
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Keep clustering"));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("ClusteringDialog.jPanel1.border.title"))); // NOI18N
 
         buttonGroup1.add(allRadioButton);
         allRadioButton.setSelected(true);
-        allRadioButton.setText("All");
+        allRadioButton.setText(bundle.getString("ClusteringDialog.allRadioButton.text")); // NOI18N
 
         buttonGroup1.add(bestRadioButton);
-        bestRadioButton.setText("Best modularity");
+        bestRadioButton.setText(bundle.getString("ClusteringDialog.bestRadioButton.text")); // NOI18N
 
         buttonGroup1.add(listRadioButton);
-        listRadioButton.setText("Nb clusters");
+        listRadioButton.setText(bundle.getString("ClusteringDialog.listRadioButton.text")); // NOI18N
 
         minSpinner.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, listRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), minSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        jLabel1.setText("Min");
+        jLabel1.setText(bundle.getString("ClusteringDialog.jLabel1.text")); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, listRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel1, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        jLabel2.setText("Max");
+        jLabel2.setText(bundle.getString("ClusteringDialog.jLabel2.text")); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, listRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel2, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
@@ -146,7 +147,7 @@ public class ClusteringDialog extends javax.swing.JDialog {
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, listRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), maxSpinner, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
-        jLabel3.setText("Inc");
+        jLabel3.setText(bundle.getString("ClusteringDialog.jLabel3.text")); // NOI18N
 
         binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, listRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), jLabel3, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
