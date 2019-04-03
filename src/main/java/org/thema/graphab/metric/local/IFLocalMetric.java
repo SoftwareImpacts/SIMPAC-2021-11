@@ -35,15 +35,16 @@ import org.thema.graphab.metric.ParamPanel;
  * 
  * @author Gilles Vuidel
  */
-public final class IFLocalMetric extends LocalSingleMetric {
+public final class IFLocalMetric extends LocalSingleMetric implements PathLocalMetric {
 
     private AlphaParamMetric alphaParam = new AlphaParamMetric();
+    private double maxCost = Double.NaN;
     
     @Override
     public double calcSingleMetric(Graphable g, GraphGenerator gen) {
         Node node = (Node) g;
         double srcCapa = Project.getPatchCapacity(node);
-        GraphPathFinder pathFinder = gen.getPathFinder(node);
+        GraphPathFinder pathFinder = gen.getPathFinder(node, maxCost);
         double sum = 0;
         for(Node n : pathFinder.getComputedNodes()) {
             sum += Math.exp(-alphaParam.getAlpha() * pathFinder.getCost(n)) * Math.pow(srcCapa * Project.getPatchCapacity(n), alphaParam.getBeta());            
@@ -80,5 +81,10 @@ public final class IFLocalMetric extends LocalSingleMetric {
     @Override
     public Type getType() {
         return Type.WEIGHT;
+    }
+
+    @Override
+    public void setMaxCost(double maxCost) {
+        this.maxCost = maxCost;
     }
 }

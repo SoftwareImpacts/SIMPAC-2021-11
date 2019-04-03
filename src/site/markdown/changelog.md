@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.4 (03/04/2019)
+- Optimize distance conversion and scatter plot display
+- Java 8 minimum requirement
+
 ##### version 2.4-beta (21/12/2018)
 - Bug on raster corridor output
 - Interpolation : in some cases raster was shift by 1 pixel

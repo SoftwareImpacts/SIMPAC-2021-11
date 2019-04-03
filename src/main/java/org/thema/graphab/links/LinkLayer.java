@@ -19,7 +19,6 @@
 
 package org.thema.graphab.links;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -35,21 +34,16 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import org.jfree.data.statistics.Regression;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import org.thema.common.Config;
 import org.thema.common.collection.HashMap2D;
-import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureGetter;
@@ -163,13 +157,15 @@ public class LinkLayer extends FeatureLayer {
                     return;
                 }
                 double dist = Double.parseDouble(res);
-                XYSeries s =  new XYSeries("regr");
+                double[][] data = new double[getFeatures().size()][2];
+                int i = 0;
                 for(Feature f : getFeatures()) {
-                    s.add(Math.log(((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue()), Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue()));
+                    data[i][0] = Math.log(((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue());
+                    data[i][1] = Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue());
+                    i++;        
                 }
-                XYSeriesCollection dataregr = new XYSeriesCollection(s);
 
-                double [] coef = Regression.getOLSRegression(dataregr, 0);
+                double [] coef = Regression.getOLSRegression(data);
                 double cost = linkset.estimCost(dist);
                 final JFrame frm = showScatterPlot(Path.DIST_ATTR, Path.COST_ATTR, true);
                 final JTextArea text = new JTextArea(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 

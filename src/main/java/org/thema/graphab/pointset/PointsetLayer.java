@@ -79,12 +79,14 @@ public class PointsetLayer extends FeatureLayer {
                     List<String> attrNames = new ArrayList<>(exoData.get(0).getAttributeNames());
                     attrNames.addAll(project.getPatches().iterator().next().getAttributeNames());
                     attrNames.addAll(gen.getComponentFeatures().get(0).getAttributeNames());
+                    attrNames.add(0, "id");
                     w.writeNext(attrNames.toArray(new String[attrNames.size()]));
                     String[] attrs = new String[attrNames.size()];
                     for (Feature exo : exoData) {
-                        int n = exo.getAttributeNames().size();
-                        for (int i = 0; i < n; i++) {
-                            attrs[i] = exo.getAttribute(i) != null ? exo.getAttribute(i).toString() : null;
+                        int n = exo.getAttributeNames().size()+1;
+                        attrs[0] = exo.getId().toString();
+                        for (int i = 1; i < n; i++) {
+                            attrs[i] = exo.getAttribute(i-1) != null ? exo.getAttribute(i-1).toString() : null;
                         }
                         Feature patch = project.getPatch((Integer) exo.getAttribute(Project.EXO_IDPATCH));
                         for (int i = 0; i < patch.getAttributeNames().size(); i++) {

@@ -86,6 +86,7 @@ import org.thema.graphab.metric.PreCalcMetric;
 import org.thema.graphab.metric.PreCalcMetricTask;
 import org.thema.graphab.metric.global.GlobalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
+import org.thema.graphab.metric.local.PathLocalMetric;
 import org.thema.graphab.model.MetricInterpolDlg;
 import org.thema.graphab.model.ModelDialog;
 import org.thema.graphab.model.RandomPointDlg;
@@ -1199,6 +1200,10 @@ public class MainFrame extends javax.swing.JFrame {
             monitor = monitor.getSubProgress(1);
         }
 
+        if(metric instanceof PathLocalMetric) {
+            ((PathLocalMetric)metric).setMaxCost(maxCost);
+        }
+        
         monitor.setMaximum((metric.calcNodes() ? graph.getGraph().getNodes().size() : 0) +
                 (metric.calcEdges() ? graph.getGraph().getEdges().size() : 0));
 

@@ -445,13 +445,16 @@ public class Linkset {
         if(type_dist == EUCLID) {
             return distance;
         }
-        XYSeries s =  new XYSeries("regr");
+        
+        double[][] data = new double[getPaths().size()][2];
+        int i = 0;
         for(Feature f : getPaths()) {
-            s.add(Math.log(((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue()), Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue()));
+            data[i][0] = Math.log(((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue());
+            data[i][1] = Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue());
+            i++;        
         }
-        XYSeriesCollection dataregr = new XYSeriesCollection(s);
+        double [] coef = Regression.getOLSRegression(data);
 
-        double [] coef = Regression.getOLSRegression(dataregr, 0);
         return Math.exp(Math.log(distance) * coef[1] + coef[0]);
     }
 
