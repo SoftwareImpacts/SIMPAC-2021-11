@@ -56,7 +56,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2018-12-19\\
+	2019-04-03\\
 	}
 	
 \end{titlepage}
@@ -93,18 +93,18 @@ Foltête J.C., Clauzel C., Vuidel G., 2012. A software tool dedicated to the mod
 
 \subsection{System requirements}
 
-Graphab runs on any computer supporting Java 7 or later (PC under Linux, Windows, Mac, etc.). However, when dealing with very large datasets, the amount of RAM memory in the computer will limit the maximum number of nodes and links that can be processed in a single run with Graphab. In addition, for some complex metrics, processing power (CPU) will determine the speed of computing. For details, see section \nameref{limit} below and the journal article  \cite{2012_graphab_EMS}.
+Graphab runs on any computer supporting Java 8 or later (PC under Linux, Windows, Mac, etc.). However, when dealing with very large datasets, the amount of RAM memory in the computer will limit the maximum number of nodes and links that can be processed in a single run with Graphab. In addition, for some complex metrics, processing power (CPU) will determine the speed of computing. For details, see section \nameref{limit} below and the journal article  \cite{2012_graphab_EMS}.
 
 \subsection{Installing the software and launching a project}
 
 Graphab can be downloaded from \url{https://sourcesup.renater.fr/graphab}.
 
 \begin{itemize}
-	\item Download and install Java 7 or later - \href{http://www.java.com}{java.com}. If you have a 64-bit operating system, it is best to install the 64-bit version of Java.
-	\item Download graphab-2.0.jar
-	\item Launch graphab-2.0.jar
+	\item Download and install Java 8 or later - \href{http://www.java.com}{java.com}. If you have a 64-bit operating system, it is best to install the 64-bit version of Java.
+	\item Download graphab-2.4.jar
+	\item Launch graphab-2.4.jar
 \end{itemize}
-After launching graphab-2.0.jar, the File menu provides access to four sections:
+After launching graphab-2.4.jar, the File menu provides access to four sections:
 \begin{itemize}
 	\item File / New project: to create a new project in which all data and results are saved automatically.  
 	\item File / Open project: to open an existing project.
@@ -320,7 +320,7 @@ The maximum cost distance $d_{max}$ must be entered before launching the calcula
 The result is displayed in a new vector or raster layer depending on the selected output. In vector output, the layer contains for each link of the selected linkset a polygon representing its corridor. Links with a distance greater than $d_{max}$ will have no corridor.
 In raster output, each pixel contains the number of corridors passing through it.
 
-For vector layer, The default view uses transparency to show corridor overlays.
+For vector layer, the default view uses transparency to show corridor overlays.
 
 
 \section{Patch capacity}
