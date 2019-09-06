@@ -536,7 +536,7 @@ public class DistribModel {
                 }
                 @Override
                 public RasterLayer getResult() { 
-                    return new RasterLayer("_" + resol, 
+                    return new RasterLayer(var + "-" + linkset.getName() + "_" + resol, 
                         new RasterShape(raster, new Rectangle2D.Double(minx-resol/2, maxy-h*resol+resol/2, wi*resol, h*resol),
                         new RasterStyle(), true), project.getCRS());
                 }
@@ -587,7 +587,7 @@ public class DistribModel {
                 }
                 @Override
                 public RasterLayer getResult() { 
-                    return new RasterLayer("_" + project.getResolution(), 
+                    return new RasterLayer(var + "-" + linkset.getName() + "_"  + project.getResolution(), 
                         new RasterShape(raster, project.getZone(), new RasterStyle(), true), project.getCRS());
                 }
             };

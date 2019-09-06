@@ -16,19 +16,12 @@
  */
 package org.thema.graphab.links;
 
-import org.locationtech.jts.geom.Coordinate;
-import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.thema.common.Config;
-import org.thema.common.ProgressBar;
-import org.thema.common.collection.HashMap2D;
-import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.ProjectTest;

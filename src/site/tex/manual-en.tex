@@ -43,7 +43,7 @@
 	\bigskip	
 	{\Huge
 	\bfseries
-	Graphab 2.4\\
+	Graphab 2.5\\
 	\bigskip
 	User Manual\\
 	}
@@ -56,7 +56,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2019-04-03\\
+	2019-09-06\\
 	}
 	
 \end{titlepage}
@@ -188,7 +188,7 @@ Two topologies are available:
 	\item complete: all the links between patches are potentially taken into account. 
 \end{itemize}
 
-Max distance: this option specifies a threshold distance for the complete topology. Links that exceed this distance are no longer created. This limits the number of links created and so accelerates the creation of the link set. The unit of the distance depends on the type of distance: in meters for the euclidean distance and in cost for the least cost distance.
+Max distance: this option specifies a threshold distance. Links that exceed this distance are no longer created. This limits the number of links created and so accelerates the creation of the link set. The unit of the distance depends on the type of distance: in meters for the euclidean distance and in cost for the least cost distance.
 
 Ignore links crossing patch: this option means that a link between two patches (A and C in the figure below) which crosses an intermediate patch (B) is not created. It is recommended for calculating the betweenness centrality metric (BC) to take into account how often a patch lies on the shortest path between all pairs of patches in the graph. If the option is unchecked, a link is created between two patches (A and C) crossing an intermediate patch, representing the complete true distance between A and C.
 

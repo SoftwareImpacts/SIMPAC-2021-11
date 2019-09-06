@@ -1,5 +1,14 @@
 ## Changelog
 
+##### version 2.5 (06/09/2019)
+- Memory usage of linkset calculation has been optimized
+- Planar linkset can be thresholded as complete linkset (UI and CLI)
+- UI : linkset costs can be loaded from another linkset
+- UI : project creation : check if habitat code have been selected
+- UI : new graph is not thresholed by default
+- CLI : syntax of --linkset command have been changed for distance threshold (maxcost parameter)
+- CLI : --linkset command check if all codes have a cost assigned
+
 ##### version 2.4 (03/04/2019)
 - Optimize distance conversion and scatter plot display
 - Java 8 minimum requirement

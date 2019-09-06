@@ -25,7 +25,7 @@
  	\bigskip	
  	{\Huge
  		\bfseries
- 		Graphab 2.4\\
+ 		Graphab 2.5\\
  		\bigskip
  		Manuel de référence\\
  		Ligne de commande\\
@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		03/04/2019\\
+ 		06/09/2019\\
  	}
  	
  \end{titlepage}
@@ -163,7 +163,7 @@ java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 
 Commands list :
 --show
 --dem rasterfile
---linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] ...
+--linkset distance=euclid|cost [name=linkname] [complete] [maxcost=valcost] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
 --corridor maxcost=[{]valcost[}] [format=raster|vector]
 --graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
@@ -384,7 +384,7 @@ Cette commande définit le chemin vers un MNT qui pourra être utilisé dans la 
 
 \subsection{--linkset : création d'un jeu de liens}
 \begin{Verbatim}[commandchars=\\\{\}]
---linkset distance=euclid|cost [name=\textit{linkname}] [complete[=\textit{dmax}]] [slope=\textit{coef}] [remcrosspath] 
+--linkset distance=euclid|cost [name=\textit{linkname}] [complete] [maxcost=\textit{valcost}] [slope=\textit{coef}] [remcrosspath] 
 	[[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} | extcost=\textit{rasterfile}]
 \end{Verbatim}
 
@@ -396,7 +396,8 @@ Cette commande définit le chemin vers un MNT qui pourra être utilisé dans la 
 \subsubsection{Paramètres optionnels généraux}
 \begin{itemize}
 	\item \verb|name=linkname| : nom du jeu de lien qui sera créé
-	\item \verb|complete[=dmax]| : passe en topologie complète au lieu de planaire. On peut ajouter le paramètre \textit{dmax} pour limiter les liens à une distance maximale.
+	\item \verb|complete| : passe en topologie complète au lieu de planaire 
+	\item \verb|maxcost=valcost| : le paramètre \textit{maxcost} permet de limiter le calcul des liens à une distance maximale.
 \end{itemize}
 
 \subsubsection{Paramètres spécifiques au cas distance=cost}
@@ -1028,7 +1029,7 @@ Pour le même graphe, le fichier détaillé se nomme gtest-2000m\_euclid-IIC-det
 \begin{Verbatim}[commandchars=\\\{\}]
 --addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...]
 	[gridres=\textit{min:inc:max} [capa=\textit{capa_file}] [multi=\textit{npatch},\textit{size}]]
-	| [pointfile=\textit{file.shp} [capa=\textit{capa_field}]]
+	| [patchfile=\textit{file.shp} [capa=\textit{capa_field}]]
 \end{Verbatim}
 
 \subsubsection{Paramètres généraux}
@@ -1048,11 +1049,11 @@ Pour chaque test d'une nouvelle tache, le graphe est recalculé incluant cette n
 Les taches créées ont une emprise au sol d'un pixel, si le pixel d'occupation du sol correspondant à la tache à tester est déjà dans la catégorie habitat ou bien est en dehors de la zone d'étude, la tache est ignorée. 
 Les taches à tester peuvent être donnée par l'intermédiaire d'une grille régulière ou bien d'un ensemble de points ou polygones provenant d'un shapefile.
 
-\subsubsection{Test sur un jeu de points}
+\subsubsection{Test sur un jeu de données vectoriel}
 \begin{Verbatim}[commandchars=\\\{\}]
---addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...] pointfile=\textit{file.shp} [capa=\textit{capa_field}]
+--addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...] patchfile=\textit{file.shp} [capa=\textit{capa_field}]
 \end{Verbatim}
-Pour chaque point du shapefile, le programme teste l'ajout d'une tache sur le pixel couvrant le point, si le pixel n'est pas en NoData ou bien déjà dans la classe habitat.
+Pour chaque élément du shapefile (point ou polygone), le programme teste l'ajout d'une tache sur le(s) pixel(s) couvrant l'objet vectoriel, si le(s) pixel(s) ne sont pas en NoData ou bien déjà dans la classe habitat.
 
 Le paramètre \verb|capa| permet de définir un attribut du shapefile contenant une valeur de capacité pour chaque tache testée.
 Si le paramètre \verb|capa| n'est pas renseigné, la capacité des nouvelles taches sera de 1.
@@ -1096,7 +1097,7 @@ La ligne de commande ci-dessous est équivalente à la précédente mais s'exéc
 
 Un autre exemple avec un jeu de points :
 \begin{Verbatim}
-	--addpatch 5 IIC pointfile=testpoint.shp
+	--addpatch 5 IIC patchfile=testpoint.shp
 \end{Verbatim}
 Les résultats seront stockés dans le répertoire \textit{addpatch\_n5\_graph\_IIC\_shptestpoint.shp}.
 

@@ -111,7 +111,7 @@ public class CLITools {
                     "Commands list :\n" +
                     "--show\n" + 
                     "--dem rasterfile\n" +
-                    "--linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
+                    "--linkset distance=euclid|cost [name=linkname] [complete] [maxcost=valcost] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
                     "--corridor maxcost=[{]valcost[}] [format=raster|vector]\n" +
                     "--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]\n" +
@@ -120,7 +120,7 @@ public class CLITools {
                     "--pointset pointset.shp\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
                     "--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]\n" +
-                    "--capa [area [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
+                    "--capa [area [code1,..,coden=weight ...]] | [file=capacity.csv id=fieldname capa=fieldname] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
                     "--gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
@@ -457,15 +457,18 @@ public class CLITools {
         if(params.containsKey("complete")) {
             type = Linkset.COMPLETE;
             String arg = params.remove("complete");
+            // for compatibility only use maxcost inplace
             if(arg != null) {
                 threshold = Double.parseDouble(arg);
             }
         }
-        
+        if(params.containsKey("maxcost")) {
+            threshold = Double.parseDouble(params.remove("maxcost"));
+        }
         useLinksets.clear();
         if(type_dist == Linkset.EUCLID) {
             if(linkName == null) {
-                linkName = "euclid_" + (type == Linkset.COMPLETE ? ("comp"+threshold) : "plan");
+                linkName = "euclid_" + (type == Linkset.COMPLETE ? "comp" : "plan")+threshold;
             }
             Linkset cost = new Linkset(project, linkName, type, true, threshold);
             project.addLinkset(cost, save);
@@ -496,12 +499,15 @@ public class CLITools {
                 List<Double> dynCodes = null;
                 Range rangeCost = null;
                 String name = null;
+                Set<Integer> codeSet = new HashSet<>();
+                codeSet.add((int)project.getNoData());
                 for(String param : params.keySet()) {
                     Range codes = Range.parse(param);
                     Range cost = Range.parse(params.get(param));
                     if(cost.isSingle()) {
                         for(Double code : codes.getValues()) {
                             costs[code.intValue()] = cost.getMin();
+                            codeSet.add(code.intValue());
                         }
                     }
                     if(rangeCost == null || !cost.isSingle()) {
@@ -510,10 +516,15 @@ public class CLITools {
                         }
                         rangeCost = cost;
                         dynCodes = codes.getValues();
+                        for(Double code : codes.getValues()) {
+                            codeSet.add(code.intValue());
+                        }
                         name = param.replace(',', '_');
                     }
                 }
-
+                if(!codeSet.containsAll(project.getCodes())){
+                    throw new IllegalArgumentException("--linkset : some codes are missing");
+                }
                 boolean multi = !rangeCost.isSingle();
                 if(linkName == null) {
                     name = (circuit ? "circ_" : "cost_") + name;
@@ -1208,6 +1219,10 @@ public class CLITools {
                         params.codeWeight.put(Integer.parseInt(code), w);
                     }
                 }
+            } else if(arg.startsWith("file=")) {
+                params.importFile = new File(arg.split("=")[1]);
+                params.idField = args.remove(0).split("=")[1];
+                params.capaField = args.remove(0).split("=")[1];
             } else {
                 throw new IllegalArgumentException("Unknown argument " + arg + " for --capa command");
             }

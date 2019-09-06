@@ -23,7 +23,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.4\\
+		Graphab 2.5\\
 		\bigskip
 		Reference Manual\\
 		Command Line Interface\\
@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2019-04-03\\
+		2019-09-06\\
 	}
 	
 \end{titlepage}
@@ -162,7 +162,7 @@ java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 
 Commands list :
 --show
 --dem rasterfile
---linkset distance=euclid|cost [name=linkname] [complete[=dmax]] [slope=coef] [remcrosspath] ...
+--linkset distance=euclid|cost [name=linkname] [complete] [maxcost=valcost] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
 --corridor maxcost=[{]valcost[}] [format=raster|vector]
 --graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
@@ -382,16 +382,22 @@ This command imports a DEM in the project for calculating slope in linkset creat
 
 \section{Graph management}
 
-\subsection{--linkset : create cost linkset}
+\subsection{--linkset : create linkset}
 \begin{Verbatim}[commandchars=\\\{\}]
---linkset distance=euclid|cost [name=\textit{linkname}] [complete[=\textit{dmax}]] [slope=\textit{coef}] [remcrosspath] 
+--linkset distance=euclid|cost [name=\textit{linkname}] [complete] [maxcost=\textit{valcost}] [slope=\textit{coef}] [remcrosspath] 
 [[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} | extcost=\textit{rasterfile}]
 \end{Verbatim}
+
+\subsubsection{Mandatory parameter}
+\begin{itemize}
+	\item \verb-distance=euclid|cost-: set euclidean distance or raster based distance (cost). For cost distance, costs must be sets (see below).
+\end{itemize}
 
 \subsubsection{Optional parameters}
 \begin{itemize}
 	\item \verb|name=linkname|: link set name to create
-	\item \verb|complete[=dmax]|: set to complete topology in place of planar topology. The \textit{dmax} value can be added to limit path calculation up to the given distance \textit{dmax}.
+	\item \verb|complete|: set to complete topology in place of planar topology
+	\item \verb|maxcost=valcost|: limit path calculation up to the given distance \textit{valcost}.
 \end{itemize}
 
 \subsubsection{Parameters for the case distance=cost}
@@ -429,7 +435,7 @@ The default topology is planar; use the \verb|complete| option to create a compl
 
 With a complete topology, you can prescribe a threshold to avoid the creation of too many links (threshold = 100):
 \begin{Verbatim}
-	--linkset distance=cost complete=100 1,2,3,4,5,6,7=1
+	--linkset distance=cost complete maxcost=100 1,2,3,4,5,6,7=1
 \end{Verbatim}
 
 A range or value list can be used to create multiple linksets:
@@ -1015,7 +1021,7 @@ For the same graph, the detailed file, named gtest-2000m\_euclid-IIC-detail.txt,
 \begin{Verbatim}[commandchars=\\\{\}]
 --addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...]
 [gridres=\textit{min:inc:max} [capa=\textit{capa_file}] [multi=\textit{npatch},\textit{size}]]
-| [pointfile=\textit{file.shp} [capa=\textit{capa_field}]]
+| [patchfile=\textit{file.shp} [capa=\textit{capa_field}]]
 \end{Verbatim}
 
 \subsubsection{Global paramaters}
@@ -1039,10 +1045,10 @@ Patches location to be tested can be given through a regular grid or a set of po
 
 \subsubsection{Point set test}
 \begin{Verbatim}[commandchars=\\\{\}]
---addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...] pointfile=\textit{file.shp} [capa=\textit{capa_field}]
+--addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...] patchfile=\textit{file.shp} [capa=\textit{capa_field}]
 \end{Verbatim}
 
-For each point of the shapefile, the program tests the addition of a patch on the pixel covering the point, if the pixel is not NoData or already in the habitat class.
+For each element of the shapefile (point or polygon), the program tests the addition of a patch on the pixel(s) covering the object, if the pixels are not NoData or already in the habitat class.
 
 The \verb|capa| parameter defines an attribute of the shapefile containing a capacity value for each tested patch.
 If the \verb|capa| parameter is not specified, the capacity of new patches will be 1.

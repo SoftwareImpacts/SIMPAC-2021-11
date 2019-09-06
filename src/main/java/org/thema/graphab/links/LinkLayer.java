@@ -164,7 +164,7 @@ public class LinkLayer extends FeatureLayer {
                     data[i][1] = Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue());
                     i++;        
                 }
-
+                
                 double [] coef = Regression.getOLSRegression(data);
                 double cost = linkset.estimCost(dist);
                 final JFrame frm = showScatterPlot(Path.DIST_ATTR, Path.COST_ATTR, true);

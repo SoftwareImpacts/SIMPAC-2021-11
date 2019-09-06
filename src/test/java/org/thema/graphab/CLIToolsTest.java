@@ -88,13 +88,19 @@ public class CLIToolsTest {
         CLITools cli = new CLITools();
         
         cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=euclid"});
-        checkAndRemoveLinkset("euclid_plan", Linkset.PLANAR, Linkset.EUCLID, 8);
+        checkAndRemoveLinkset("euclid_plan0.0", Linkset.PLANAR, Linkset.EUCLID, 8);
+        cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=euclid", "maxcost=2"});
+        checkAndRemoveLinkset("euclid_plan2.0", Linkset.PLANAR, Linkset.EUCLID, 4);
         cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=euclid", "complete"});
         checkAndRemoveLinkset("euclid_comp0.0", Linkset.COMPLETE, Linkset.EUCLID, 10);
-        cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=euclid", "name=comp2", "complete=2"});
+        cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=euclid", "name=comp2", "complete=2"}); // old notation
+        checkAndRemoveLinkset("comp2", Linkset.COMPLETE, Linkset.EUCLID, 4);
+        cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=euclid", "name=comp2", "complete", "maxcost=2"});
         checkAndRemoveLinkset("comp2", Linkset.COMPLETE, Linkset.EUCLID, 4);
         cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=cost", "name=plan", "0=1", "255=10"});
         checkAndRemoveLinkset("plan", Linkset.PLANAR, Linkset.COST, 8);
+        cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=cost", "name=plan4", "maxcost=22", "0=1", "255=10"});
+        checkAndRemoveLinkset("plan4", Linkset.PLANAR, Linkset.COST, 4);
         cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=cost", "complete", "remcrosspath", "0,255=1"});
         checkAndRemoveLinkset("cost_0_255", Linkset.COMPLETE, Linkset.COST, 8);
         cli.execute(new String[]{"--project", prjFile, "--linkset", "distance=cost", "0,255=1:1:2"});

@@ -60,6 +60,11 @@ public class EuclidePathFinder implements SpacePathFinder {
     }
     
     @Override
+    public List<double[]> calcPathsInsidePatch(Coordinate p, List<Coordinate> dests) {
+        return calcPaths(p, dests);
+    }
+    
+    @Override
     public HashMap<DefaultFeature, Path> calcPaths(Coordinate p, double maxCost, boolean realPath) {
         return calcPaths(new GeometryFactory().createPoint(p), maxCost, realPath);
     }
@@ -87,32 +92,6 @@ public class EuclidePathFinder implements SpacePathFinder {
         }
         
         return paths;
-    }
-
-    /**
-     * Unsupported operation !
-     * @param oPatch
-     * @param maxCost
-     * @param realPath
-     * @param all
-     * @return 
-     * @throws UnsupportedOperationException
-     */
-    @Override
-    public HashMap<Feature, Path> calcPaths(Feature oPatch, double maxCost, boolean realPath, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    /**
-     * Unsupported operation !
-     * @param oPatch
-     * @param dPatch
-     * @return 
-     * @throws UnsupportedOperationException
-     */
-    @Override
-    public HashMap<Feature, Path> calcPaths(Feature oPatch, Collection<Feature> dPatch) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override

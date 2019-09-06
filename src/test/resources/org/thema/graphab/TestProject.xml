@@ -150,7 +150,7 @@
         </costs>
         <realPaths>true</realPaths>
         <removeCrossPatch>true</removeCrossPatch>
-        <distMax>-1.0</distMax>
+        <distMax>0.0</distMax>
       </Linkset>
     </entry>
     <entry>
@@ -175,7 +175,7 @@
         </costs>
         <realPaths>true</realPaths>
         <removeCrossPatch>true</removeCrossPatch>
-        <distMax>-1.0</distMax>
+        <distMax>0.0</distMax>
       </Linkset>
     </entry>
     <entry>
@@ -200,7 +200,7 @@
         </costs>
         <realPaths>true</realPaths>
         <removeCrossPatch>false</removeCrossPatch>
-        <distMax>-1.0</distMax>
+        <distMax>0.0</distMax>
       </Linkset>
     </entry>
     <entry>
@@ -225,7 +225,7 @@
         </costs>
         <realPaths>true</realPaths>
         <removeCrossPatch>true</removeCrossPatch>
-        <distMax>-1.0</distMax>
+        <distMax>0.0</distMax>
       </Linkset>
     </entry>
     <entry>
@@ -237,7 +237,7 @@
         <type__length>2</type__length>
         <realPaths>true</realPaths>
         <removeCrossPatch>false</removeCrossPatch>
-        <distMax>-1.0</distMax>
+        <distMax>0.0</distMax>
       </Linkset>
     </entry>
     <entry>

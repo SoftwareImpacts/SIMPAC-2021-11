@@ -488,6 +488,10 @@ public class NewProjectDialog extends javax.swing.JDialog {
                 }
                 return true;
             case 1:
+                if(getHabitatCodes().isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Select habitat code(s).", "Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
                 if(getHabitatCodes().contains(noDataComboBox.getSelectedItem())) {
                     JOptionPane.showMessageDialog(this, "Habitat codes contain nodata code.", "Error", JOptionPane.ERROR_MESSAGE);
                     return false;

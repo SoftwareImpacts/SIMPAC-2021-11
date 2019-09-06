@@ -4,12 +4,12 @@
 
     <groupId>org.thema</groupId>
     <artifactId>graphab</artifactId>
-    <version>2.4</version>
+    <version>2.5</version>
     <packaging>jar</packaging>
 
     <name>Graphab</name>
     <description>Graphab is a software application for modeling ecological networks using landscape graphs</description>
-    <url>https://sourcesup.renater/${project.artifactId}/</url>
+    <url>https://sourcesup.renater/www/${project.artifactId}/</url>
     <build>
         <plugins>
             <plugin>
@@ -79,7 +79,7 @@
                     <dependency>
                         <groupId>org.apache.maven.wagon</groupId>
                         <artifactId>wagon-webdav-jackrabbit</artifactId>
-                        <version>2.6</version>
+                        <version>3.1.0</version>
                     </dependency>
                     <dependency>
                         <groupId>lt.velykis.maven.skins</groupId>
@@ -116,7 +116,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>drawshape</artifactId>
-            <version>1.7</version>
+            <version>1.7.1</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -159,7 +159,7 @@
         <repository>
             <id>thema-sourcesup</id>
             <name>ThéMA libs Repository</name>
-            <url>http://sourcesup.renater.fr/nexus/content/repositories/themalibs-releases/</url>
+            <url>https://sourcesup.renater.fr/nexus/content/repositories/themalibs-releases/</url>
         </repository>
     </repositories>
     <organization>
@@ -182,13 +182,12 @@
     <distributionManagement>
         <site>
             <id>sourcesup</id>
-            <url>dav:https://sourcesup.renater.fr/${project.artifactId}/maven</url>
+            <url>davs://sourcesup.renater.fr/www/${project.artifactId}/maven</url>
         </site>
     </distributionManagement>
     <scm>
-        <connection>scm:git:https://git.renater.fr/${project.artifactId}.git</connection>
-        <developerConnection>scm:git:git+ssh://git@git.renater.fr:2222/${project.artifactId}.git</developerConnection>
-        <url>https://sourcesup.renater.fr/scm/browser.php?group_id=3413</url>
+        <connection>scm:git:https://git.renater.fr/anonscm/git/${project.artifactId}/${project.artifactId}.git</connection>
+        <url>https://sourcesup.renater.fr/scm/browser.php?group_id=3413&amp;scm_plugin=scmgit</url>
     </scm>
     <reporting>
         <plugins>

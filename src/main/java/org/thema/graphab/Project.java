@@ -1793,7 +1793,7 @@ public final class Project {
         
     }
 
-    private static XStream getXStream() {
+    public static XStream getXStream() {
         XStream xstream = new XStream();
         XStream.setupDefaultSecurity(xstream); // to be removed after 1.5
         xstream.allowTypesByWildcard(new String[] {

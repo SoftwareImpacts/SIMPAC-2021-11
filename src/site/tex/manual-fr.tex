@@ -43,7 +43,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.4\\
+		Graphab 2.5\\
 		\bigskip
 		Manuel d’utilisation\\
 	}
@@ -56,7 +56,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		19/12/2018\\
+		06/09/2019\\
 	}
 	
 \end{titlepage}
@@ -184,7 +184,7 @@ Deux topologies sont disponibles :
 	\item complet : tous les liens entre les taches sont potentiellement pris en compte.
 \end{itemize}
 
-Distance max : Cette option disponible pour la topologie complète permet de préciser un seuil de distance au-delà duquel les liens ne sont plus créés. Elle permet ainsi de limiter le nombre de liens créés et d’accélérer la création des liens en topologie complète. L'unité de la distance dépend du type de distance : en mètre pour la distance euclidienne et en coût pour la distance de moindre coût.
+Distance max : Cette option permet de préciser un seuil de distance au-delà duquel les liens ne sont plus créés. Elle permet ainsi de limiter le nombre de liens créés et d’accélérer la création des liens. L'unité de la distance dépend du type de distance : en mètre pour la distance euclidienne et en coût pour la distance de moindre coût.
 
 Supprimer les liens traversant les taches : cette option, décochée par défaut, permet de ne pas créer de lien entre deux taches (A et C sur la figure suivante) passant par une tache intermédiaire (B). Ceci est recommandé pour le calcul de la métrique de centralité intermédiaire (BC) pour prendre en compte la fréquence avec laquelle chaque tache se trouve sur les plus courts chemins liant les paires de nœuds sur le graphe. A noter : cette option fournit une approximation de la distance intra-taches entre A et C. Si la case est décochée, un lien entre A et C passant par B sera créé et représentera la distance complète réelle entre les deux taches. 
 

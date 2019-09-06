@@ -144,7 +144,7 @@ public class Linkset {
      * @param name linkset name
      * @param type linkset type (ie. topology) COMPLETE or PLANAR
      * @param realPaths are real paths stored
-     * @param distMax max cost distance for complete topology only or 0 for no max
+     * @param distMax max cost distance or 0 for no max
      */
     public Linkset(Project project, String name, int type, boolean realPaths, double distMax) {
         this.project = project;
@@ -166,7 +166,7 @@ public class Linkset {
      * @param type_length length COST_LENGTH or DIST_LENGTH
      * @param realPaths are real paths stored
      * @param removeCrossPatch remove links crossing patch ?
-     * @param distMax max cost distance for complete topology only or 0 for no max
+     * @param distMax max cost distance or 0 for no max
      * @param extCostFile raster file containing costs
      * @param coefSlope coefficient for slope or 0 to avoid slope calculation
      */
@@ -184,7 +184,7 @@ public class Linkset {
      * @param type_length length COST_LENGTH or DIST_LENGTH
      * @param realPaths are real paths stored
      * @param removeCrossPatch remove links crossing patch ?
-     * @param distMax max cost distance for complete topology only or 0 for no max
+     * @param distMax max cost distance or 0 for no max
      * @param extCostFile raster file containing costs or null
      * @param coefSlope coefficient for slope or 0 to avoid slope calculation
      */
@@ -743,7 +743,7 @@ public class Linkset {
                             if(dests.isEmpty()) {
                                 continue;
                             }
-                            paths = pathfinder.calcPaths(orig, dests);
+                            paths = pathfinder.calcPaths(orig, dests, getDistMax());
                         }
                         
                         for(Feature d : paths.keySet()) {
@@ -824,16 +824,18 @@ public class Linkset {
                         for(Feature dest : nearPatches) {
                             if (((Integer)orig.getId()) < (Integer)dest.getId()) {
                                 Path p = Path.createEuclidPath(orig, dest);
-                                if (getDistMax() == 0 || p.getDist() <= getDistMax()) {
+                                if (getDistMax() <= 0 || p.getDist() <= getDistMax()) {
                                     links.add(p);
                                 }
                             }
                         }
                     } else {
                         for (Integer dId : project.getPlanarLinks().getNeighbors(orig)) {
-                            Feature d = project.getPatch(dId);
                             if (((Integer)orig.getId()) < dId) {
-                                links.add(Path.createEuclidPath(orig, d));
+                                Path p = Path.createEuclidPath(orig, project.getPatch(dId));
+                                if (getDistMax() <= 0 || p.getDist() <= getDistMax()) {
+                                    links.add(p);
+                                }
                             }
                         }
                     }
@@ -972,7 +974,7 @@ public class Linkset {
                     Coordinate c1 = pointList.get(i);
 
                     List<Coordinate> dests = pointList.subList(i+1, pointList.size());
-                    List<double[]> values = pathFinder.calcPaths(c1, dests);
+                    List<double[]> values = pathFinder.calcPathsInsidePatch(c1, dests);
                     for(int k = 0; k < values.size(); k++) {
                         synchronized(mapIntraLinks) {
                             if(c1.compareTo(dests.get(k)) < 0) {

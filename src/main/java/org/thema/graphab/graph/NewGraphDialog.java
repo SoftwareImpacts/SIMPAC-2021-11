@@ -90,7 +90,6 @@ public class NewGraphDialog extends javax.swing.JDialog {
 
         java.util.ResourceBundle bundle1 = java.util.ResourceBundle.getBundle("org/thema/graphab/graph/Bundle"); // NOI18N
         okButton.setText(bundle1.getString("NewGraphDialog.okButton.text")); // NOI18N
-        okButton.setEnabled(false);
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okButtonActionPerformed(evt);

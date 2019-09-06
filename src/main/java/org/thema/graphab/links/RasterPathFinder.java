@@ -42,7 +42,6 @@ import java.util.PriorityQueue;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
-import org.thema.graphab.mpi.MpiLauncher;
 
 /**
  * Calculates leastcost path between patches or between points.
@@ -72,7 +71,7 @@ public final class RasterPathFinder implements SpacePathFinder {
     private final int [] IND, IND_ANTE;
     private final boolean doublePrec;
     
-    private PriorityQueue<Node> queue;
+    private PixelPriorityQueue queue;
 
     private int xd, yd, wd, hd;
     private double[] distDouble;
@@ -100,7 +99,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         
         demRaster = coefSlope != 0 ? project.getDemRaster() : null;
         resolution = project.getResolution();
-        doublePrec = !MpiLauncher.IsMPIWorker();
+        doublePrec = true;//!MpiLauncher.IsMPIWorker();
     }
 
     /**
@@ -129,13 +128,12 @@ public final class RasterPathFinder implements SpacePathFinder {
      * @param ry
      */
     private void initCoord(int rx, int ry) {
-        queue = new PriorityQueue<>();
+        queue = new PixelPriorityQueue();
 
         initDistBuf(rx-100, ry-100, 200, 200);
         final int w = rasterPatch.getWidth();
         // starting node
-        Node node = new Node(ry*w+rx, 0);
-        queue.add(node);
+        queue.add(ry*w+rx, 0);
         setDist(ry*w+rx, 0);
     }
     
@@ -152,21 +150,19 @@ public final class RasterPathFinder implements SpacePathFinder {
         GeometryFactory geomFactory = geom.getFactory();
         Geometry geomGrid = project.getSpace2grid().transform(geom);
         Envelope env = geomGrid.getEnvelopeInternal();
-        queue = new PriorityQueue<>();
+        
+        initDistBuf((int)env.getMinX()-100, (int)env.getMinY()-100, (int)env.getWidth()+200, (int)env.getHeight()+200);
+        
+        queue = new PixelPriorityQueue();
         for(double y = (int)env.getMinY() + 0.5; y <= Math.ceil(env.getMaxY()); y++) {
             for(double x = (int)env.getMinX() + 0.5; x <= Math.ceil(env.getMaxX()); x++) {
                 if(geomGrid.contains(geomFactory.createPoint(new Coordinate(x, y)))) {
-                    queue.add(new Node((int)y*w+(int)x, 0));
+                    queue.add((int)y*w+(int)x, 0);
+                    setDist((int)y*w+(int)x, 0);
                 }
             }
         }
 
-        initDistBuf((int)env.getMinX()-100, (int)env.getMinY()-100, (int)env.getWidth()+200, (int)env.getHeight()+200);
-
-        // initialisation des distances à zéro pour l'ensemble de la géométrie
-        for(Node n : queue) {
-            setDist(n.ind, 0);
-        }
     }
 
     /**
@@ -192,7 +188,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         initDistBuf((int)env.getMinX()-100, (int)env.getMinY()-100, (int)env.getWidth()+200, (int)env.getHeight()+200);
         
         //  ajout dans la queue des pixels de bord
-        queue = new PriorityQueue<>();
+        queue = new PixelPriorityQueue();
         for(int i = (int)env.getMinY(); i <= env.getMaxY(); i++) {
             for (int j = (int)env.getMinX(); j <= env.getMaxX(); j++) {
                 if (rasterPatch.getSample(j, i, 0) == id) {
@@ -204,7 +200,7 @@ public final class RasterPathFinder implements SpacePathFinder {
                         }
                     }
                     if(border) {
-                        queue.add(new Node(i*w+j, 0));
+                        queue.add(i*w+j, 0);
                     }       
                     if(border || initAll) {
                         setDist(j, i, 0);
@@ -234,10 +230,36 @@ public final class RasterPathFinder implements SpacePathFinder {
         }
 
         while(!queue.isEmpty() && !indDests.isEmpty()) {
-            Node n = updateNextNodes(queue, false);
-            indDests.remove(n.ind);
+            int ind = updateNextNodes(queue, false, false);
+            indDests.remove(ind);
         }
 
+        List<double[]> distances = new ArrayList<>(dests.size());
+        for(Coordinate dest : dests) {
+            Coordinate cp = project.getSpace2grid().transform(dest, new Coordinate());
+            int rx = (int)cp.x;
+            int ry = (int)cp.y;
+            distances.add(new double[]{(double)getDist(ry*w+rx), getPath(ry*w+rx).getLength()});
+        }
+        return distances;
+    }
+    
+    /**
+     * Calcule les distances cout à partir du point p vers tous les 
+     * destinations dests en restant à l'intérieur du patch. Utilisé pour calculer les distances intra taches
+     * @param p start point
+     * @param dests destination points
+     * @return les couts et longueurs des chemins de p vers les destinations
+     */
+    public List<double[]> calcPathsInsidePatch(Coordinate p, List<Coordinate> dests) {
+        initCoord(p);
+        
+
+        while(!queue.isEmpty()) {
+            updateNextNodes(queue, false, true);
+        }
+
+        final int w = rasterPatch.getWidth();
         List<double[]> distances = new ArrayList<>(dests.size());
         for(Coordinate dest : dests) {
             Coordinate cp = project.getSpace2grid().transform(dest, new Coordinate());
@@ -264,19 +286,19 @@ public final class RasterPathFinder implements SpacePathFinder {
         DefaultFeature geomPatch = new DefaultFeature(geom.getCentroid().getCoordinate().toString(), geom);
         HashMap<DefaultFeature, Path> paths = new HashMap<>();
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue, true);
-            if(maxCost > 0 && current.dist > maxCost) {
+            int ind = updateNextNodes(queue, true, false);
+            if(maxCost > 0 && getDist(ind) > maxCost) {
                 break;
             }
-            int curId = rasterPatch.getSample(getX(current.ind), getY(current.ind), 0);
+            int curId = rasterPatch.getSample(getX(ind), getY(ind), 0);
             if(curId > 0) {
                 DefaultFeature dest = project.getPatch(curId);
                 if(!paths.keySet().contains(dest)) {
-                    LineString line = getPath(current.ind);
+                    LineString line = getPath(ind);
                     if(realPath) {
-                        paths.put(dest, new Path(geomPatch, dest, current.dist, line));
+                        paths.put(dest, new Path(geomPatch, dest, getDist(ind), line));
                     } else {
-                        paths.put(dest, new Path(geomPatch, dest, current.dist, line.getLength()));
+                        paths.put(dest, new Path(geomPatch, dest, getDist(ind), line.getLength()));
                     }
                 }
             }
@@ -285,7 +307,13 @@ public final class RasterPathFinder implements SpacePathFinder {
         return paths;
     }
 
-    @Override
+    /**
+     * Calculates the paths from oPatch to all other patches
+     * if all == false, calculates for patches where id is greater than oPatch id
+     * @param oPatch the origin patch
+     * @param realPath keep the real path or just a straight line between centroid patches ?
+     * @return for each destination patch the path from oPatch
+     */
     public HashMap<Feature, Path> calcPaths(Feature oPatch, double maxCost, boolean realPath, boolean all) {
 
         initPatch(oPatch, false);
@@ -294,28 +322,34 @@ public final class RasterPathFinder implements SpacePathFinder {
 
         HashMap<Feature, Path> distances = new HashMap<>();
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue, false);
-            if(maxCost > 0 && current.dist > maxCost) {
+            int ind = updateNextNodes(queue, false, false);
+            if(maxCost > 0 && getDist(ind) > maxCost) {
                 break;
             }
-            int curId = rasterPatch.getSample(getX(current.ind), getY(current.ind), 0);
+            int curId = rasterPatch.getSample(getX(ind), getY(ind), 0);
             if(curId > 0 && curId != id && (all || curId > id)) {
                 Feature dest = project.getPatch(curId);
                 if(distances.keySet().contains(dest)) {
                     continue;
                 }
 
-                LineString line = getPath(current.ind);
-                distances.put(dest, realPath ? new Path(dest, oPatch, current.dist, line) :
-                    new Path(dest, oPatch, current.dist, line.getLength()));
+                LineString line = getPath(ind);
+                distances.put(dest, realPath ? new Path(dest, oPatch, getDist(ind), line) :
+                    new Path(dest, oPatch, getDist(ind), line.getLength()));
             }
         }
 
         return distances;
     }
 
-    @Override
-    public HashMap<Feature, Path> calcPaths(Feature oPatch, Collection<Feature> dPatch) {
+    /**
+     * Calculates the paths from oPatch to all dPatch
+     * @param oPatch the origin patch
+     * @param dPatch the destinations patches
+     * @param maxCost maximal distance, zero for no maximum
+     * @return for each destination patch the path from oPatch
+     */
+    public HashMap<Feature, Path> calcPaths(Feature oPatch, Collection<Feature> dPatch, double maxCost) {
 
         initPatch(oPatch, false);
         
@@ -326,18 +360,16 @@ public final class RasterPathFinder implements SpacePathFinder {
 
         HashMap<Feature, Path> distances = new HashMap<>();
         while(!queue.isEmpty() && !destId.isEmpty()) {
-            Node current = updateNextNodes(queue, false);
-
-            int curId = rasterPatch.getSample(getX(current.ind), getY(current.ind), 0);
+            int ind = updateNextNodes(queue, false, false);
+            if(maxCost > 0 && getDist(ind) > maxCost) {
+                break;
+            }
+            int curId = rasterPatch.getSample(getX(ind), getY(ind), 0);
             if(curId > 0 && destId.keySet().contains(curId)) {
                 Feature dest = destId.remove(curId);
-                LineString line = getPath(current.ind);
-                distances.put(dest, new Path(dest, oPatch, current.dist, line));
+                LineString line = getPath(ind);
+                distances.put(dest, new Path(dest, oPatch, getDist(ind), line));
             }
-        }
-
-        if(!destId.isEmpty()) {
-            throw new RuntimeException("Impossible de calculer le chemin de " + oPatch.getId() + " à " + Arrays.deepToString(destId.keySet().toArray()));
         }
 
         return distances;
@@ -360,12 +392,12 @@ public final class RasterPathFinder implements SpacePathFinder {
         initCoord(rx, ry);
 
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue, false);
+            int ind = updateNextNodes(queue, false, false);
 
-            int curId = rasterPatch.getSample(getX(current.ind), getY(current.ind), 0);
+            int curId = rasterPatch.getSample(getX(ind), getY(ind), 0);
             if(curId > 0) {
-                double len = getPath(current.ind).getLength();
-                return new double[] {curId, current.dist, len};
+                double len = getPath(ind).getLength();
+                return new double[] {curId, getDist(ind), len};
             }
             
         }
@@ -392,14 +424,14 @@ public final class RasterPathFinder implements SpacePathFinder {
         HashSet<Integer> counts = new HashSet<>();
 
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue, false);
-            if(current.dist > maxCost) {
+            int ind = updateNextNodes(queue, false, false);
+            if(getDist(ind) > maxCost) {
                 break;
             }
-            int code = rasterCode.getSample(getX(current.ind), getY(current.ind), 0);
-            if(current.dist > 0 && codes.contains(code) && !counts.contains(current.ind)) {
-                neighborhood += costWeighted ? Math.exp(-alpha*current.dist) : 1;
-                counts.add(current.ind);
+            int code = rasterCode.getSample(getX(ind), getY(ind), 0);
+            if(getDist(ind) > 0 && codes.contains(code) && !counts.contains(ind)) {
+                neighborhood += costWeighted ? Math.exp(-alpha*getDist(ind)) : 1;
+                counts.add(ind);
             }
         }
 
@@ -419,8 +451,8 @@ public final class RasterPathFinder implements SpacePathFinder {
         initPatch(oPatch, true);
 
         while(!queue.isEmpty()) {
-            Node current = updateNextNodes(queue, false);
-            if(maxCost > 0 && current.dist > maxCost) {
+            int ind = updateNextNodes(queue, false, false);
+            if(maxCost > 0 && getDist(ind) > maxCost) {
                 break;
             }
         }
@@ -473,40 +505,49 @@ public final class RasterPathFinder implements SpacePathFinder {
      * 
      * @param queue current queue
      * @param startFromPatch true for using patch cost defined by cost array for the first pixel (used for patch addition)
+     * @param insidePatch true for limiting calculation inside the patch (used for intrapatch distance calculation)
      * @return 
      */
-    private Node updateNextNodes(PriorityQueue<Node> queue, boolean startFromPatch) {
-        Node current = queue.poll();
-        while(!queue.isEmpty() && current.dist > getDist(current.ind)) {
-            current = queue.poll();
+    private double [] node = new double[2]; // used only for this function to avoid many allocations
+    
+    private int updateNextNodes(PixelPriorityQueue queue, boolean startFromPatch, boolean insidePatch) {
+        queue.poll(node);
+        int currentInd = (int)node[0];
+        double currentDist = node[1];
+        while(!queue.isEmpty() && currentDist > getDist(currentInd)) {
+            queue.poll(node);
+            currentInd = (int)node[0];
+            currentDist = node[1];
         }
         
-        final int x = current.ind % rasterPatch.getWidth();
-        final int y = current.ind / rasterPatch.getWidth();
+        final int x = currentInd % rasterPatch.getWidth();
+        final int y = currentInd / rasterPatch.getWidth();
         double currentCost = getCost(x, y);
-        if(startFromPatch && cost != null && current.dist == 0) {
+        if(startFromPatch && cost != null && currentDist == 0) {
             currentCost = cost[project.getPatchCodes().iterator().next()];
         }
-            
+        int patchId = rasterPatch.getSample(x, y, 0);
         for(int i = 0; i < CON; i++) {
             if(isInside(x + X[i], y + Y[i])) {
-                final double c = getCost(x+X[i], y+Y[i]);
-                final double newCost = current.dist + 
-                        (COST[i] * (currentCost + c) / 2) * (1 + (coefSlope != 0 ? getSlope(x, y, i)*coefSlope : 0));
-                if(newCost < current.dist) {
-                    throw new IllegalStateException("Negative cost is forbidden. Check your cost.");
+                if(insidePatch && rasterPatch.getSample(x+X[i], y+Y[i], 0) != patchId) {
+                    continue;
                 }
-                final int ind = current.ind + IND[i];
+                final double c = getCost(x+X[i], y+Y[i]);
+                final double newCost = currentDist + 
+                        (COST[i] * (currentCost + c) / 2) * (1 + (coefSlope != 0 ? getSlope(x, y, i)*coefSlope : 0));
+                if(newCost <= currentDist) {
+                    throw new IllegalStateException("Negative or null cost is forbidden. Check your cost.");
+                }
+                final int ind = currentInd + IND[i];
                 if(newCost < getDist(ind)) {
-                    Node newNode = new Node(ind, newCost);
                     setDist(ind, newCost);
                     setAnte(ind, (byte)i);
-                    queue.add(newNode);
+                    queue.add(ind, newCost);
                 }
             }
         }
         
-        return current;
+        return currentInd;
     }
 
     private boolean isInside(int x, int y) {
