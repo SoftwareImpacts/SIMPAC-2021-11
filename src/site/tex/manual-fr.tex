@@ -12,7 +12,6 @@
 \usepackage[top=2.501cm,bottom=2.501cm,left=2.501cm,right=2.501cm,nohead]{geometry}
 \usepackage{float}
 \usepackage{parskip}
-\usepackage{multirow}
 \usepackage{caption}
 \makeatletter
 \newcommand\arraybslash{\let\\\@arraycr}
@@ -386,11 +385,11 @@ Dans la fenêtre de dialogue qui s’ouvre suite au choix d’un de ces quatre m
 \begin{table}[H]
 	\begin{tabular}{|c|p{7cm}|l|c|c|c|c|}
 		\hline
-		\multirow{2}{*}{Famille} & \multirow{2}{*}{Métrique de connectivité} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3cm}|}{\centering Niveau de calcul} & \multirow{2}{1.5cm}{Delta métriques}\\
+		Famille & Métrique de connectivité & Code & \multicolumn{3}{m{3cm}|}{\centering Niveau de calcul} & Delta métriques\\
 		\hhline{~~~---~}
 		&  &  & Global & Comp. & Local & \\
 		\hline
-		\multirow{6}{2cm}{Métriques pondérées}
+		Métriques pondérées
 		& \nameref{metric_F} & F & × & × & × & \\
 		& \nameref{metric_EC} & EC & × & × &  & ×\\
 		& \nameref{metric_PC} & PC & × & × &  & ×\\
@@ -400,13 +399,13 @@ Dans la fenêtre de dialogue qui s’ouvre suite au choix d’un de ces quatre m
 		& \nameref{metric_IIC} & IIC & × & × &  & ×\\
 		& \nameref{metric_CF} & CF &  &  & × & \\
 		\hline
-		\multirow{4}{2cm}{Métriques de surface}
+		Métriques de surface
 		& \nameref{metric_MSC} & MSC & × &  &  & \\
 		& \nameref{metric_SLC} & SLC & × &  &  & \\
 		& \nameref{metric_CCP} & CCP & × &  &  & \\
 		& \nameref{metric_ECS} & ECS & × &  &  & \\
 		\hline
-		\multirow{9}{2cm}{Métriques topologiques}
+		Métriques topologiques
 		& \nameref{metric_Dg} & Dg &  &  & × & \\
 		& \nameref{metric_CC} & CC &  &  & × & \\
 		& \nameref{metric_CCe} & CCe &  &  & × & \\
@@ -516,13 +515,13 @@ La procédure se termine par l’ouverture d’une nouvelle fenêtre dans laquel
 Le tableau \ref{metric_poss} récapitule les possibilités de calcul des métriques.
 
 \begin{table}[H]
-\begin{tabular}{|c|m{5.162cm}|l|c|c|c|c|c|c|}
+\begin{tabular}{|m{2cm}|m{5.162cm}|l|>{\centering\arraybackslash}m{2cm}|>{\centering\arraybackslash}m{2cm}|c|c|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.5cm}|}
 \hline
-\multirow{2}{*}{Type} & \multirow{2}{*}{Métrique de connectivité} & \multirow{2}{*}{Code} & \multirow{2}{1.5cm}{\centering{Capacité des taches}} & \multirow{2}{1.5cm}{\centering{Distance intra-taches}} & \multicolumn{2}{m{1.8cm}|}{\centering Paramètres} & \multirow{2}{1.5cm}{\centering{Graphe par lot}} & \multirow{2}{1.55cm}{\centering{Paramètre par lot}}\\
+Type & Métrique de connectivité & Code & Capacité des taches & Distance intra-taches & \multicolumn{2}{m{1.8cm}|}{\centering Paramètres} & Graphe par lot & Paramètre par lot\\
 \hhline{~~~~~--~~}
  & & & & & \multicolumn{1}{m{0.9cm}|}{\centering{$\alpha$}} & $\beta$ & & \\
 \hline
-\multirow{6}{2cm}{Métriques pondérées}
+Métriques pondérées
  & Flux & F & × & × & × & × & × & ×\\
  & Connectivité équivalente & EC & × & × & × &  & × & ×\\
  & Probabilité de connectivité & PC & × & × & × &  & × & ×\\
@@ -532,13 +531,13 @@ Le tableau \ref{metric_poss} récapitule les possibilités de calcul des métriq
  & Indice Intégral de Connectivité & IIC & × &  &  &  & × & \\
  & Flux circuit & CF & × &  &  & × &  & ×\\
 \hline
-\multirow{4}{2cm}{Métriques de surface}
+Métriques de surface
  & Taille moyenne des composantes & MSC & × &  &  &  & × & \\
  & Taille de la plus grande composante & SLC & × &  &  &  & × & \\
  & Probabilité de coïncidence de classe & CCP & × &  &  &  & × & \\
  & Taille de composante attendue & ECS & × &  &  &  & × & \\
 \hline
-\multirow{9}{2cm}{Métriques topologiques}
+Métriques topologiques
  & Degré & Dg &  &  &  &  &  & \\
  & Coefficient de groupement & CC &  &  &  &  &  & \\
  & Centralité de proximité & CCe &  & x &  &  &  & \\
@@ -796,13 +795,11 @@ Dans \cite{2012_graphab_EMS}, plusieurs tests ont été effectués afin de mesur
 \hline
 Topologie & Distance & Ordinateur standard & Station de travail & Serveur\\
 \hline
-\multirow{2}{*}{Complète}
- & Euclidienne & 1927s (32 min) & 516s (8 min) & 133s (2 min)\\
+Complète & Euclidienne & 1927s (32 min) & 516s (8 min) & 133s (2 min)\\
 \hhline{~----}
  & Moindre coût & 19252s (5h 21 min) & 4301s (1h 11 min) & 1037s (17 min)\\
 \hline
-\multirow{2}{*}{Planaire}
- & Euclidienne & 43s & 12s & 2.6s\\
+Planaire & Euclidienne & 43s & 12s & 2.6s\\
 \hhline{~----}
  & Moindre coût & 1080s (18 min) & 295s (5 min) & 82s (1 min)\\
 \hline
@@ -818,13 +815,13 @@ La mémoire allouée au programme joue aussi un rôle important. Si il n’y a p
 \section{Métriques}
 
 \begin{table}[H]
-	\begin{tabular}{|c|p{7cm}|l|c|c|c|c|}
+	\begin{tabular}{|c|p{7cm}|l|c|c|c|>{\centering\arraybackslash}m{1.5cm}|}
 		\hline
-		\multirow{2}{*}{Famille} & \multirow{2}{*}{Métrique de connectivité} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3cm}|}{\centering Niveau de calcul} & \multirow{2}{1.5cm}{Delta métriques}\\
+		Famille & Métrique de connectivité & Code & \multicolumn{3}{m{3cm}|}{\centering Niveau de calcul} & Delta \\
 		\hhline{~~~---~}
-		&  &  & Global & Comp. & Local & \\
+		&  &  & Global & Comp. & Local & métrique\\
 		\hline
-		\multirow{6}{2cm}{Métriques pondérées}
+		Métriques pondérées
 		& \nameref{metric_F} & F & × & × & × & \\
 		& \nameref{metric_EC} & EC & × & × &  & ×\\
 		& \nameref{metric_PC} & PC & × & × &  & ×\\
@@ -834,13 +831,13 @@ La mémoire allouée au programme joue aussi un rôle important. Si il n’y a p
 		& \nameref{metric_IIC} & IIC & × & × &  & ×\\
 		& \nameref{metric_CF} & CF &  &  & × & \\
 		\hline
-		\multirow{4}{2cm}{Métriques de surface}
+		Métriques de surface
 		& \nameref{metric_MSC} & MSC & × &  &  & \\
 		& \nameref{metric_SLC} & SLC & × &  &  & \\
 		& \nameref{metric_CCP} & CCP & × &  &  & \\
 		& \nameref{metric_ECS} & ECS & × &  &  & \\
 		\hline
-		\multirow{9}{2cm}{Métriques topologiques}
+		Métriques topologiques
 		& \nameref{metric_Dg} & Dg &  &  & × & \\
 		& \nameref{metric_CC} & CC &  &  & × & \\
 		& \nameref{metric_CCe} & CCe &  &  & × & \\

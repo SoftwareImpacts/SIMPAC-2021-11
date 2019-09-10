@@ -11,7 +11,6 @@
 \usepackage[top=2.501cm,bottom=2.501cm,left=2.501cm,right=2.501cm,nohead]{geometry}
 \usepackage{float}
 \usepackage{parskip}
-\usepackage{multirow}
 \usepackage{caption}
 \makeatletter
 \newcommand\arraybslash{\let\\\@arraycr}
@@ -395,11 +394,11 @@ Whichever the selected level, the user must first specify the graph on which the
 \begin{table}[H]
 	\begin{tabular}{|c|l|l|c|c|c|c|}
 		\hline
-		\multirow{2}{*}{Family} & \multirow{2}{*}{\centering Connectivity metrics} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3.6cm}|}{\centering Computing level} & \multirow{2}{*}{\centering\arraybslash Delta metrics}\\
+		Family & Connectivity metrics & Code & \multicolumn{3}{m{3.6cm}|}{\centering Computing level} & Delta metrics\\
 		\hhline{~~~---~}
 		& & & Global & Comp. & Local &\\
 		\hline
-		\multirow{6}{*}{Weighted} 
+		Weighted
 		& \nameref{metric_F} & F & × & × & × &\\
 		\hhline{~------}
 		& \nameref{metric_EC} & EC & × & × &  & ×\\
@@ -416,7 +415,7 @@ Whichever the selected level, the user must first specify the graph on which the
 		\hhline{~------}	
 		& \nameref{metric_CF} & CF &  &  & × & \\
 		\hline
-		\multirow{4}{*}{Area} 
+		Area
 		& \nameref{metric_MSC} & MSC & × &  &  & \\
 		\hhline{~------}
 		& \nameref{metric_SLC} & SLC & × &  &  & \\
@@ -425,7 +424,7 @@ Whichever the selected level, the user must first specify the graph on which the
 		\hhline{~------}
 		& \nameref{metric_ECS} & ECS & × &  &  & \\
 		\hline
-		\multirow{9}{*}{Topological} 
+		Topological 
 		& \nameref{metric_Dg} & Dg &  &  & × & \\
 		\hhline{~------}
 		& \nameref{metric_CC}  & CC &  &  & × & \\
@@ -542,13 +541,13 @@ The procedure ends with the opening of a new window displaying the curve of the 
 Table \ref{metric_poss} summarizes possible metrics calculations.
 
 \begin{table}[H]
-\begin{tabular}{|c|p{5cm}|l|l|l|p{0.8cm}|p{0.8cm}|p{1cm}|p{1.3cm}|}
+\begin{tabular}{|c|p{5cm}|l|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{0.8cm}|>{\centering\arraybackslash}m{0.8cm}|>{\centering\arraybackslash}m{1cm}|>{\centering\arraybackslash}m{1cm}|}
 \hline
-\multirow{2}{*}{Family} & \multirow{2}{*}{Connectivity metrics} & \multirow{2}{*}{Code} & \multirow{2}{*}{\parbox{1.3cm}{Patch capacity}} & \multirow{2}{*}{\parbox{1.3cm}{Intra-patch distance}}  & \multicolumn{2}{m{1.8cm}|}{\centering Parameters} & \multirow{2}{*}{\parbox{1.3cm}{Batch graph}} & \multirow{2}{*}{\parbox{1.3cm}{Batch param}}\\
+Family & Connectivity metrics & Code & Patch capacity & Intra-patch distance  & \multicolumn{2}{m{1.8cm}|}{\centering Parameters} & Batch graph & Batch param\\
 \hhline{~~~~~--~~}
  & & & & & $\alpha$ & $\beta$ & & \\
 \hline
-\multirow{6}{*}{Weighted} 
+Weighted
  & Flux & F & × & × & × & × & × & ×\\
  & Equivalent Connectivity & EC & × & × & × & & × & ×\\
  & Probability of connectivity & PC & × & × & × & & × & ×\\
@@ -558,13 +557,13 @@ Table \ref{metric_poss} summarizes possible metrics calculations.
  & Integral index of connectivity & IIC & × &  &  &  & × & \\
  & Current flow & CF & × &  &  & × &  & ×\\
 \hline
-\multirow{4}{*}{Area} 
+Area
  & Mean size of the components & MSC & × &  &  &  & × & \\
  & Size of the largest component & SLC & × &  &  &  & × & \\
  & Class coincidence probability & CCP & × &  &  &  & × & \\
  & Expected cluster size & ECS & × &  &  &  & × & \\
 \hline
-\multirow{9}{*}{Topological} 
+Topological
  & Node Degree & Dg &  &  &  &  &  & \\
  & Clustering coefficient  & CC &  &  &  &  &  & \\
  & Closeness centrality & CCe &   & x &  &  &  & \\
@@ -827,12 +826,12 @@ tests: (1) one core (3 Go RAM) corresponding to a current desktop computer, (2) 
 \hline
 Topology & Distance & Current desktop & Workstation  & Server\\
 \hline
-\multirow{2}{*}{Complete}
+Complete
  & Euclidean & 1927s (32 min) & 516s (8 min) & 133s (2 min)\\
 \hhline{~----}
  & Least-cost & 19252s (5h 21 min) & 4301s (1h 11 min) & 1037s (17 min)\\
 \hline
-\multirow{2}{*}{Planar}
+Planar
  & Euclidean & 43s & 12s & 2.6s\\
 \hhline{~----}
  & Least-cost & 1080s (18 min) & 295s (5 min) & 82s (1 min)\\
@@ -852,11 +851,11 @@ recommended you install the 64-bit version of Java to use the available memory b
 \begin{table}[H]
 \begin{tabular}{|c|l|l|c|c|c|c|}
 	\hline
-	\multirow{2}{*}{Family} & \multirow{2}{*}{\centering Connectivity metrics} & \multirow{2}{*}{Code} & \multicolumn{3}{m{3.6cm}|}{\centering Computing level} & \multirow{2}{*}{\centering\arraybslash Delta metrics}\\
+	Family & Connectivity metrics & Code & \multicolumn{3}{m{3.6cm}|}{\centering Computing level} & Delta metrics\\
 	\hhline{~~~---~}
 	& & & Global & Comp. & Local &\\
 	\hline
-	\multirow{6}{*}{Weighted} 
+	Weighted
 	& \nameref{metric_F} & F & × & × & × &\\
 	\hhline{~------}
 	& \nameref{metric_EC} & EC & × & × &  & ×\\
@@ -873,7 +872,7 @@ recommended you install the 64-bit version of Java to use the available memory b
 	\hhline{~------}	
 	& \nameref{metric_CF} & CF &  &  & × & \\
 	\hline
-	\multirow{4}{*}{Area} 
+	Area
 	& \nameref{metric_MSC} & MSC & × &  &  & \\
 	\hhline{~------}
 	& \nameref{metric_SLC} & SLC & × &  &  & \\
@@ -882,7 +881,7 @@ recommended you install the 64-bit version of Java to use the available memory b
 	\hhline{~------}
 	& \nameref{metric_ECS} & ECS & × &  &  & \\
 	\hline
-	\multirow{9}{*}{Topological} 
+	Topological
 	& \nameref{metric_Dg} & Dg &  &  & × & \\
 	\hhline{~------}
 	& \nameref{metric_CC}  & CC &  &  & × & \\
