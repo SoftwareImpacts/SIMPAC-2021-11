@@ -672,7 +672,7 @@ public class MainFrame extends javax.swing.JFrame {
             @Override
             public void run() {
                 GlobalMetric indice = dlg.metric;
-                TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_delta_metrics..."), "", 0,
+                ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_delta_metrics..."),
                         100);
                 try {
                     DeltaMetricTask task = new DeltaMetricTask(monitor, dlg.graph, launcher, nodeEdge);
@@ -747,7 +747,7 @@ public class MainFrame extends javax.swing.JFrame {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_local_metrics..."));
+                ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_local_metrics..."), 100);
                 try {
                     long start = System.currentTimeMillis();
                     calcLocalMetric(monitor, dlg.graph, dlg.metric, Double.NaN);

@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.5.1 (06/11/2019)
+- UI : Bug from 2.5 null pointer when loading linkset panel
+- UI : Linkset panel save real path always checked by default
+
 ##### version 2.5 (06/09/2019)
 - Memory usage of linkset calculation has been optimized
 - Planar linkset can be thresholded as complete linkset (UI and CLI)

@@ -100,7 +100,7 @@ public class LinksetPanel extends javax.swing.JPanel {
      * @param cost the default cost, may be null
      */
     public void setCodes(Set<Integer> codes, double [] cost) {
-        if(cost.length <= Collections.max(codes)) {
+        if(cost != null && cost.length <= Collections.max(codes)) {
             throw new IllegalArgumentException("Cost table does not cover all codes");
         }
         
@@ -225,19 +225,15 @@ public class LinksetPanel extends javax.swing.JPanel {
         planarRadioButton.setText(bundle.getString("LinksetPanel.planarRadioButton.text")); // NOI18N
 
         distMaxLabel.setText(bundle.getString("LinksetPanel.distMaxLabel.text")); // NOI18N
-        distMaxLabel.setEnabled(true);
 
         dMaxSpinner.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, null, 1.0d));
-        dMaxSpinner.setEnabled(true);
 
         removeCrossPatchCheckBox.setText(bundle.getString("LinksetPanel.removeCrossPatchCheckBox.text")); // NOI18N
         removeCrossPatchCheckBox.setEnabled(false);
 
         realPathCheckBox.setText(bundle.getString("LinksetPanel.realPathCheckBox.text")); // NOI18N
 
-        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ, planarRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), realPathCheckBox, org.jdesktop.beansbinding.BeanProperty.create("selected"));
-        bindingGroup.addBinding(binding);
-        binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, completeRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), realPathCheckBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
+        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, completeRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), realPathCheckBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);
 
         realPathCheckBox.addActionListener(new java.awt.event.ActionListener() {
@@ -247,7 +243,6 @@ public class LinksetPanel extends javax.swing.JPanel {
         });
 
         unitLabel.setText(bundle.getString("LinksetPanel.unitLabel.text")); // NOI18N
-        unitLabel.setEnabled(true);
 
         javax.swing.GroupLayout topoPanelLayout = new javax.swing.GroupLayout(topoPanel);
         topoPanel.setLayout(topoPanelLayout);
