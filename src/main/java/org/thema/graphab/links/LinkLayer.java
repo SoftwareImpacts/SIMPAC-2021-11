@@ -41,6 +41,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import org.jfree.chart.ChartFrame;
+import org.jfree.chart.annotations.XYTitleAnnotation;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.ui.RectangleAnchor;
 import org.jfree.data.statistics.Regression;
 import org.thema.common.Config;
 import org.thema.common.collection.HashMap2D;
@@ -117,7 +121,7 @@ public class LinkLayer extends FeatureLayer {
                     @Override
                     public void run() {
                         if(dlg.raster) {
-                            Raster corridors = linkset.computeRasterCorridor(Config.getProgressBar("Corridor..."), dlg.maxCost);
+                            Raster corridors = linkset.computeRasterCorridor(Config.getProgressBar("Corridor..."), dlg.maxCost, null, null);
                             RasterLayer l = new RasterLayer(linkset.getName() +
                                     "-corridor-" + dlg.maxCost, new RasterShape(corridors, linkset.getProject().getZone(), new RasterStyle(), true), linkset.getProject().getCRS());
                             l.setRemovable(true);
@@ -168,8 +172,13 @@ public class LinkLayer extends FeatureLayer {
                 double [] coef = Regression.getOLSRegression(data);
                 double cost = linkset.estimCost(dist);
                 final JFrame frm = showScatterPlot(Path.DIST_ATTR, Path.COST_ATTR, true);
-                final JTextArea text = new JTextArea(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
+                String result = String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
+                        coef[0], coef[1], dist, cost);
+                
+                ((ChartFrame)frm).getChartPanel().getChart().setTitle(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
                         coef[0], coef[1], dist, cost));
+                
+                final JTextArea text = new JTextArea(result);
                 text.addComponentListener(new ComponentAdapter() {
                     // event for moving plot window below message dialog
                     @Override
@@ -182,8 +191,6 @@ public class LinkLayer extends FeatureLayer {
                 });
 
                 JOptionPane.showMessageDialog(null, text, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Dist2Cost"), JOptionPane.PLAIN_MESSAGE);
-                frm.setVisible(false);
-                frm.dispose();
             }
         });
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_path_costs")) {

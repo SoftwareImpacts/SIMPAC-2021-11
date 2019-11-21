@@ -45,7 +45,8 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         // Area capacity
         boolean calcArea = true;
         Map<Integer, Double> codeWeight;
-                
+        double exp = 1;
+        
         // Neighborhood capacity
         String costName;
         HashSet<Integer> codes;
@@ -60,18 +61,23 @@ public class CapaPatchDialog extends javax.swing.JDialog {
         }
         
         public boolean isArea() {
-            if(!calcArea) {
+            if(!calcArea || exp != 1) {
                 return false;
             }
+            
+            return !isWeightedArea();
+        }
+        
+        public boolean isWeightedArea() {
             if(codeWeight == null || codeWeight.isEmpty()) {
-                return true;
+                return false;
             }
             for(Double val : codeWeight.values()) {
                 if(val != 1.0) {
-                    return false;
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
         
     }

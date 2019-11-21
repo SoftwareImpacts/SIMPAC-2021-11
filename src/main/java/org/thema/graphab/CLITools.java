@@ -49,13 +49,20 @@ import org.apache.commons.math.MathException;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.feature.SchemaException;
 import org.geotools.graph.structure.Edge;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.thema.common.Config;
 import org.thema.common.JTS;
+import org.thema.common.ProgressBar;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
+import org.thema.common.swing.ProgressBarPanel;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
+import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.data.feature.Feature;
+import org.thema.data.feature.FeatureCoverage;
 import org.thema.drawshape.image.RasterShape;
 import org.thema.drawshape.layer.RasterLayer;
 import org.thema.drawshape.style.RasterStyle;
@@ -80,6 +87,9 @@ import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.pointset.Pointset.Distance;
 import org.thema.graphab.util.RSTGridReader;
 import org.thema.graphab.util.Range;
+import org.thema.msca.Cell;
+import org.thema.msca.SquareGrid;
+import org.thema.msca.operation.AbstractLayerOperation;
 import org.thema.parallel.ExecutorService;
 import org.thema.parallel.ParallelExecutor;
 
@@ -113,19 +123,19 @@ public class CLITools {
                     "--dem rasterfile\n" +
                     "--linkset distance=euclid|cost [name=linkname] [complete] [maxcost=valcost] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
-                    "--corridor maxcost=[{]valcost[}] [format=raster|vector]\n" +
+                    "--corridor maxcost=[{]min:inc:max[}] [format=raster|vector] [beta=exp|var=name]\n" +
                     "--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]\n" +
                     "--usegraph graph1,...,graphn\n" +
                     "--cluster d=val p=val [beta=val] [nb=val]\n" +                    
-                    "--pointset pointset.shp\n" +
+                    "--pointset pointset.shp [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
                     "--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]\n" +
-                    "--capa [area [code1,..,coden=weight ...]] | [file=capacity.csv id=fieldname capa=fieldname] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
+                    "--capa [area [exp=value] [code1,..,coden=weight ...]] | [file=capacity.csv id=fieldname capa=fieldname] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
                     "--gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]\n" +                    
-                    "--model variable distW=min:inc:max\n" +
+                    "--model variable distW=min:inc:max [vars=var1,...,varn] [raster=r1,...,rn]\n" +
                     "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +                    
                     "--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[patchfile=file.shp [capa=capa_field]]\n" +
                     "--remelem nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
@@ -169,6 +179,7 @@ public class CLITools {
             p = args.isEmpty() ? null : args.remove(0);
         }
         
+        Config.setProgressBar(new ConsoleProgress());
         TaskMonitor.setHeadlessStream(new PrintStream(File.createTempFile("java", "monitor")));
         if(p == null) {
             throw new IllegalArgumentException("No command to execute");
@@ -389,43 +400,84 @@ public class CLITools {
     }
     
     private void batchModel(List<String> args) throws IOException, MathException {
-
+        
         String var = args.remove(0);
         String arg = args.remove(0);
         String [] tok = arg.split("=");
         Range rangeW = Range.parse(tok[1]);
+        
+        final List<String> otherVars;
+        if(!args.isEmpty() && args.get(0).startsWith("vars=")) {
+            otherVars = Arrays.asList(args.remove(0).split("=")[1].split(","));
+        } else {
+            otherVars = Collections.EMPTY_LIST;
+        }
+        
+        final LinkedHashMap<String, GridCoverage2D> rasterVars = new LinkedHashMap<>();
+        if(!args.isEmpty() && args.get(0).startsWith("raster=")) {
+            List<String> rasters = Arrays.asList(args.remove(0).split("=")[1].split(","));
+            for(String raster : rasters) {
+                File file = new File(raster);
+                rasterVars.put(file.getName(), IOImage.loadCoverage(file));
+            }
+        }
 
         TreeSet<String> vars = new TreeSet<>(project.getGraphPatchVar(
                 getGraphs().iterator().next().getName()));
         for(GraphGenerator graph : getGraphs()) {
             vars.retainAll(project.getGraphPatchVar(graph.getName()));
         }
+        vars.addAll(otherVars);
+        vars.addAll(rasterVars.keySet());
 
         try (FileWriter wd = new FileWriter(new File(project.getDirectory(), "model-" + var + "-dW" + tok[1] + ".txt"))) {
-            wd.write("Graph\tMetric\tDistWeight\tR2\tAIC\tCoef\n");
+            wd.write("Graph\tPointset\tMetric\tDistWeight\tR2\tp-value\tCoef\n");
             for(GraphGenerator graph : getGraphs()) {
                 System.out.println(graph.getName());
-                Pointset exoData = null;
+                List<Pointset> exoDatas = new ArrayList<>();
                 for(Pointset exo : getExos()) {
                     if(exo.getLinkset() == graph.getLinkset()) {
-                        exoData = exo;
+                        exoDatas.add(exo);
                     }
                 }
-                if(exoData == null) {
+                if(exoDatas.isEmpty()) {
                     throw new RuntimeException("No available pointset for graph " + graph.getName());
                 }
-                for(String v : vars) {
-                    System.out.println(graph.getName() + " : " + v);
-
-                    for(Double d : rangeW.getValues()) {
-                        DistribModel model = new DistribModel(project, exoData, var, -Math.log(0.05) / d,
-                                Arrays.asList(v+"_"+graph.getName()), new LinkedHashMap(), true, false, 0, null);
-                        model.estimModel(new TaskMonitor.EmptyMonitor());
-                        Logistic estim = model.getLogisticModel();
-                        wd.write(String.format(Locale.US, "%s\t%s\t%g\t%g\t%g\t%g\n", graph.getName(), v, d, estim.getR2(), estim.getAIC(), estim.getCoefs()[1]));
-                    }
+                for(Pointset exoData : exoDatas) {
+                    new ParallelFExecutor(new SimpleParallelTask<String>(new ArrayList<String>(vars)) {
+                        @Override
+                        protected void executeOne(String v) {
+                            System.out.println(graph.getName() + " - " + exoData.getName() + " : " + v);
+                            if(!otherVars.contains(v) && !rasterVars.containsKey(v)) {
+                                v = v+"_"+graph.getName();
+                            }
+                            LinkedHashMap<String, GridCoverage2D> mRaster = new LinkedHashMap<>();
+                            boolean rast = rasterVars.containsKey(v);
+                            if(rast) {
+                                mRaster.put(v, rasterVars.get(v));
+                            }
+                               
+                            for(Double d : rast ? Collections.singletonList(1.0) : rangeW.getValues()) {
+                                DistribModel model = 
+                                        new DistribModel(project, exoData, var, -Math.log(0.05) / d, rast ? Collections.EMPTY_LIST : Arrays.asList(v), mRaster, true, false, 0, null);
+                                try {
+                                    model.estimModel(new TaskMonitor.EmptyMonitor());
+                                    Logistic estim = model.getLogisticModel();
+                                    synchronized(CLITools.this) {  
+                                        wd.write(String.format(Locale.US, "%s\t%s\t%s\t%g\t%g\t%g\t%g\n",
+                                                graph.getName(), exoData.getName(), v, d, estim.getR2(), estim.getProbaTest(), estim.getCoefs()[1]));
+                                        wd.flush();
+                                    }
+                                } catch (Exception ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                            }
+                            
+                        }
+                    }).executeAndWait();
+                    
+                    
                 }
-                wd.flush();
             }
         } 
     }
@@ -547,10 +599,145 @@ public class CLITools {
     }
 
     private void createPointset(List<String> args) throws IOException, SchemaException {
-        File f = new File(args.remove(0));
-        String name = f.getName().substring(0, f.getName().length()-4);
-        List<DefaultFeature> features = DefaultFeature.loadFeatures(f, true);
-        List<String> attrNames = features.get(0).getAttributeNames();
+        File file = new File(args.remove(0));
+        String name = file.getName().substring(0, file.getName().length()-4);
+        if(!args.isEmpty() && args.get(0).startsWith("name=")) {
+            name = args.remove(0).split("=")[1];
+        }
+        boolean rand_abs = false;
+        double part = 0;
+        boolean iPatch = false, oPatch = false;
+        double oDist = 0;
+        if(!args.isEmpty() && args.get(0).startsWith("random_absence=")) {
+            rand_abs = true;
+            part = Double.parseDouble(args.remove(0).split("=")[1]);
+            if(!args.isEmpty() && args.get(0).startsWith("inpatch")) {
+                iPatch = true;
+                args.remove(0);
+            } else if(!args.isEmpty() && args.get(0).startsWith("outpatch")) {
+                oPatch = true;
+                String arg = args.remove(0);
+                if(arg.contains("=")) {
+                    oDist = Double.parseDouble(arg.split("=")[1]);
+                }
+            }
+        }
+        
+        List<DefaultFeature> features = DefaultFeature.loadFeatures(file);
+        final List<String> attrNames;
+        if(rand_abs) {
+            attrNames = new ArrayList<>(Arrays.asList("presence"));
+        } else {
+            attrNames = new ArrayList<>();
+            for(String attr : features.get(0).getAttributeNames()) {
+                 if(features.get(0).getAttribute(attr) instanceof Number) {
+                     attrNames.add(attr);
+                 }
+            }
+        }
+
+        if(rand_abs) {
+            final boolean inPatch = iPatch, outPatch = oPatch;
+            final double outDist = oDist;
+            int nb = features.size();
+            DefaultFeatureCoverage coverage = new DefaultFeatureCoverage(features);
+
+            double area = project.getZone().getWidth()*project.getZone().getHeight();
+            double res = Math.sqrt(area / (part*nb));
+            double distMin = res/2;
+            
+            Rectangle2D rect = project.getZone();
+            double dx = rect.getWidth() - Math.ceil((rect.getWidth() - 2*res) / res) * res;
+            double dy = rect.getHeight() - Math.ceil((rect.getHeight() - 2*res) / res) * res;
+            rect = new Rectangle2D.Double(rect.getX()+dx/2, rect.getY()+dy/2,
+                    rect.getWidth()-dx, rect.getHeight()-dy);
+
+            SquareGrid grid = new SquareGrid(JTS.geomFromRect(rect).getEnvelopeInternal(), res);
+            DefaultFeatureCoverage<Feature> patchCov = new DefaultFeatureCoverage(project.getPatches());
+            final List<DefaultFeature> points = new ArrayList<>();
+            
+            grid.execute(new AbstractLayerOperation() {
+                int i = 1;
+                @Override
+                public void perform(Cell cell) {
+                    if(!coverage.getFeaturesIn(cell.getGeometry()).isEmpty()) {
+                        return;
+                    }
+                    GeometryFactory fact = new GeometryFactory();
+                    FeatureCoverage<Feature> zoneCov = null;
+                    if(inPatch) {
+                        zoneCov = new DefaultFeatureCoverage(patchCov.getFeaturesIn(cell.getGeometry()));
+                    } else if(outPatch) {
+                        List<Geometry> geoms = new ArrayList<>();
+                        for(Feature patch : patchCov.getFeaturesIn(cell.getGeometry())) {
+                            geoms.add(outDist == 0 ? patch.getGeometry() : patch.getGeometry().buffer(outDist));
+                        }
+                        Geometry outGeom = cell.getGeometry().difference(fact.buildGeometry(geoms).buffer(0));
+                        List<Feature> outFeatures = new ArrayList<>();
+                        for(int i = 0; i < outGeom.getNumGeometries(); i++) {
+                            outFeatures.add(new DefaultFeature(i, outGeom.getGeometryN(i)));
+                        }
+                        zoneCov = new DefaultFeatureCoverage(outFeatures);
+                    }
+                    if(zoneCov != null && zoneCov.getFeatures().isEmpty()) {
+                        return;
+                    }
+                    boolean good = false;
+                    double x = 0, y = 0;
+                    int ntest = 0;
+                    
+                    while(!good && ntest < 100) {
+                        if(inPatch) {
+                            int ind = (int)(Math.random()*zoneCov.getFeatures().size());
+                            Coordinate c = zoneCov.getFeatures().get(ind).getGeometry().intersection(cell.getGeometry()).getInteriorPoint().getCoordinate();
+                            x = c.x;
+                            y = c.y;
+                        } else {
+                            x = Math.random() * res + cell.getCentroid().getX() - res/2;
+                            y = Math.random() * res + cell.getCentroid().getY() - res/2;
+                        }
+                        try {
+                            good = project.isInZone(x, y);
+                        } catch (IOException ex) {
+                            Logger.getLogger(CLITools.class.getName()).log(Level.SEVERE, null, ex);
+                            good = false;
+                        }
+                        if(good && outPatch) {
+                            good = !zoneCov.getFeaturesIn(fact.createPoint(new Coordinate(x, y))).isEmpty();
+                        }
+                        int j = 0;
+                        while(good && j < points.size()) {
+                            if(points.get(j).getGeometry().getCoordinate()
+                                    .distance(new Coordinate(x, y)) < distMin) {
+                                good = false;
+                            }
+
+                            j++;
+                        }
+                        ntest++;
+                    }
+                    if(good) {
+                        points.add(new DefaultFeature("rand" + i++, new GeometryFactory()
+                                .createPoint(new Coordinate(x, y)), attrNames,
+                                Arrays.asList(new Object[]{0})));
+                    } else {
+                       System.err.println("Warning no location for random absence"); 
+                    }
+
+                }
+            });
+
+            System.out.println("Nb presence : " + features.size() + " - Nb Absence : " + points.size());
+            
+            for (Feature f : features) {
+                points.add(new DefaultFeature(f.getId().toString(), f.getGeometry(),
+                    attrNames, Arrays.asList(new Object[]{1})));
+            }
+            
+            features = points;
+        }
+
+
         useExos.clear();
         for(Linkset cost : getLinksets()) {
             Pointset exo = new Pointset(name + "_" + cost.getName(), cost, 0, Pointset.AG_NONE);
@@ -632,7 +819,7 @@ public class CLITools {
             mod.partitions();
             
             Set<Modularity.Cluster> part = nb == -1 ? mod.getBestPartition() : mod.getPartition(nb);
-            ModGraphGenerator g = new ModGraphGenerator(graph, part);
+            ModGraphGenerator g = new ModGraphGenerator(null, graph, part);
             project.addGraph(g, save);
             newGraphs.add(g);
         }
@@ -732,9 +919,8 @@ public class CLITools {
                 }
                 indice.setParams(params);
 
-                System.out.println(graph.getName() + " : " + indice.getDetailName());
-
-                MainFrame.calcCompMetric(new TaskMonitor.EmptyMonitor(), graph, indice, maxCost);
+                MainFrame.calcCompMetric(Config.getProgressBar(graph.getName() + " : " + indice.getDetailName()), 
+                        graph, indice, maxCost);
 
                 if(indParam.length > 0) {
                     indParam[0]++;
@@ -782,10 +968,8 @@ public class CLITools {
                     params.put(paramNames.get(i), ranges.get(paramNames.get(i)).getValues(graph.getLinkset()).get(indParam[i]));
                 }
                 indice.setParams(params);
-
-                System.out.println(graph.getName() + " : " + indice.getDetailName());
-
-                MainFrame.calcLocalMetric(new TaskMonitor.EmptyMonitor(), graph, indice, maxCost);
+                
+                MainFrame.calcLocalMetric(Config.getProgressBar(graph.getName() + " : " + indice.getDetailName()), graph, indice, maxCost);
 
                 if(indParam.length > 0) {
                     indParam[0]++;
@@ -851,18 +1035,17 @@ public class CLITools {
         }
         
         GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice, maxCost);
-        System.out.println("Global indice " + indice.getName());
+        System.out.println("Global metric " + indice.getName());
         for(GraphGenerator graph : getGraphs()) {
-            System.out.println(graph.getName());
             try (FileWriter wd = new FileWriter(new File(project.getDirectory(), "delta-" + indice.getDetailName() + "_" + graph.getName() + ".txt"))) {
                 wd.write("Id");
                 for(String name : indice.getResultNames()) {
                     wd.write("\td_" + name);
                 }
                 wd.write("\n");
-                
-                DeltaMetricTask task = ids.isEmpty() ? new DeltaMetricTask(new TaskMonitor.EmptyMonitor(), graph, launcher, patch ? 1 : 2) :
-                        new DeltaMetricTask(new TaskMonitor.EmptyMonitor(), graph, launcher, ids);
+                ProgressBar progress = Config.getProgressBar(graph.getName());
+                DeltaMetricTask task = ids.isEmpty() ? new DeltaMetricTask(progress, graph, launcher, patch ? 1 : 2) :
+                        new DeltaMetricTask(progress, graph, launcher, ids);
                 ExecutorService.execute(task);
                 wd.write("Init");
                 for(Double val : task.getInit()) {
@@ -1159,7 +1342,7 @@ public class CLITools {
                     System.out.println("Add patches with graph " + graph.getName() + 
                             " and metric " + indice.getShortName() + " at resolution " + res);
                     AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, capaFile, res, nbMulti, window);
-                    addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+                    addPatchCmd.run(Config.getProgressBar());
                 }
             }
         } else {
@@ -1175,7 +1358,7 @@ public class CLITools {
                 }
                 System.out.println("Add patches with graph " + graph.getName() + " and metric " + indice.getShortName());
                 AddPatchCommand addPatchCmd = new AddPatchCommand(nbPatch, indice, graph, patchFile, capaField);
-                addPatchCmd.run(new TaskMonitor.EmptyMonitor());
+                addPatchCmd.run(Config.getProgressBar());
             }
         }
         
@@ -1184,49 +1367,51 @@ public class CLITools {
     private void calcCapa(List<String> args) throws IOException, SchemaException {
         
         CapaPatchDialog.CapaPatchParam params = new CapaPatchDialog.CapaPatchParam();
-        if(args.isEmpty()) {
-           params.calcArea = true;
-           params.codeWeight = null;
-        } else {
-            String arg = args.remove(0);
-            if(arg.startsWith("maxcost=")) {
-                if(getLinksets().size() > 1) {
-                    throw new IllegalArgumentException("--capa command works only for one linkset. Select a linkset with --uselinkset.");
-                }
-                Linkset linkset = getLinksets().iterator().next();
-                params.calcArea = false;
-                params.weightCost = false;
-                Range maxcost = Range.parse(args.remove(0).split("=")[1]);
-                params.maxCost = maxcost.getValue(linkset);
-                params.costName = linkset.getName();
-                String[] tokens = args.remove(0).split("=")[1].split(",");
-                params.codes = new HashSet<>();
-                for(String tok : tokens) {
-                    params.codes.add(Integer.parseInt(tok));
-                }
-                if(!args.isEmpty() && args.get(0).equals("weight")) {
-                    params.weightCost = true;
-                }
-            } else if(arg.equals("area")) {
-                params.calcArea = true;
-                params.codeWeight = new HashMap<>();
-                while(!args.isEmpty()) {
-                    arg = args.remove(0);
-                    String[] tokens = arg.split("=");
+
+        String arg = args.remove(0);
+        if(arg.startsWith("maxcost=")) {
+            if(getLinksets().size() > 1) {
+                throw new IllegalArgumentException("--capa command works only for one linkset. Select a linkset with --uselinkset.");
+            }
+            Linkset linkset = getLinksets().iterator().next();
+            params.calcArea = false;
+            params.weightCost = false;
+            Range maxcost = Range.parse(arg.split("=")[1]);
+            params.maxCost = maxcost.getValue(linkset);
+            params.costName = linkset.getName();
+            String[] tokens = args.remove(0).split("=")[1].split(",");
+            params.codes = new HashSet<>();
+            for(String tok : tokens) {
+                params.codes.add(Integer.parseInt(tok));
+            }
+            if(!args.isEmpty() && args.get(0).equals("weight")) {
+                params.weightCost = true;
+            }
+        } else if(arg.equals("area")) {
+            params.calcArea = true;
+            params.exp = 1.0;
+            params.codeWeight = new HashMap<>();
+            while(!args.isEmpty() && !args.get(0).startsWith("--")) {
+                arg = args.remove(0);
+                String[] tokens = arg.split("=");
+                if(tokens[0].equals("exp")) {
+                    params.exp = Double.parseDouble(tokens[1]);
+                } else {
                     String[] codes = tokens[0].split(",");
                     double w = Double.parseDouble(tokens[1]);
                     for(String code : codes) {
                         params.codeWeight.put(Integer.parseInt(code), w);
                     }
                 }
-            } else if(arg.startsWith("file=")) {
-                params.importFile = new File(arg.split("=")[1]);
-                params.idField = args.remove(0).split("=")[1];
-                params.capaField = args.remove(0).split("=")[1];
-            } else {
-                throw new IllegalArgumentException("Unknown argument " + arg + " for --capa command");
             }
+        } else if(arg.startsWith("file=")) {
+            params.importFile = new File(arg.split("=")[1]);
+            params.idField = args.remove(0).split("=")[1];
+            params.capaField = args.remove(0).split("=")[1];
+        } else {
+            throw new IllegalArgumentException("Unknown argument " + arg + " for --capa command");
         }
+        
         project.setCapacities(params, save);
     }
     
@@ -1288,7 +1473,8 @@ public class CLITools {
             }
         }
         for(Linkset linkset : getLinksets()) {
-            RasterLayer raster = DistribModel.interpolate(project, res, var, AlphaParamMetric.getAlpha(d, p), linkset, multi, dmax, avg, new TaskMonitor.EmptyMonitor());
+            RasterLayer raster = DistribModel.interpolate(project, res, var, AlphaParamMetric.getAlpha(d, p), 
+                    linkset, multi, dmax, avg, Config.getProgressBar(linkset.getName()));
             raster.saveRaster(new File(project.getDirectory(), name + "-" + linkset.getName() + ".tif"));
         }
     }
@@ -1381,12 +1567,17 @@ public class CLITools {
     }
     
     private void corridor(List<String> args) throws IOException, SchemaException {
-        Map<String, String> params = extractAndCheckParams(args, Arrays.asList("maxcost"), Arrays.asList("format"));
+        Map<String, String> params = extractAndCheckParams(args, Arrays.asList("maxcost"), Arrays.asList("format", "beta", "var"));
                 
         Range rMax = Range.parse(params.get("maxcost"));
-        boolean raster = false;
-        if("raster".equals(params.get("format"))) {
-            raster = true;
+        boolean raster = "raster".equals(params.get("format"));
+        Double beta = null;
+        if(params.containsKey("beta")) {
+            beta = Double.parseDouble(params.get("beta"));
+        }
+        String var = null;
+        if(params.containsKey("var")) {
+            var = params.get("var");
         }
         
         for(Linkset link : getLinksets()) {
@@ -1395,20 +1586,22 @@ public class CLITools {
             }
 
             System.out.println("Linkset : " + link.getName());
-            double maxCost = rMax.getValue(link);
-            if(raster) {
-                Raster corridors = link.computeRasterCorridor(null, maxCost);
-                Rectangle2D zone = project.getZone();
-                double res = project.getResolution();
-                Rectangle2D extZone = new Rectangle2D.Double(
-                    zone.getX()-res, zone.getY()-res, zone.getWidth()+2*res, zone.getHeight()+2*res);
-                new RasterLayer("corridor", new RasterShape(corridors, extZone, new RasterStyle(), true), project.getCRS())
-                        .saveRaster(new File(project.getDirectory(), link.getName() +
-                            "-corridor-" + maxCost + ".tif"));
-            } else {
-                List<Feature> corridors = link.computeCorridor(null, maxCost);
-                DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
-                        "-corridor-" + maxCost + ".shp"), project.getCRS());
+            for(double maxCost : rMax.getValues(link)) {
+                ProgressBar progress = Config.getProgressBar("maxCost : " + maxCost);
+                if(raster) {
+                    Raster corridors = link.computeRasterCorridor(progress, maxCost, beta, var);
+                    Rectangle2D zone = project.getZone();
+                    double res = project.getResolution();
+                    Rectangle2D extZone = new Rectangle2D.Double(
+                        zone.getX()-res, zone.getY()-res, zone.getWidth()+2*res, zone.getHeight()+2*res);
+                    new RasterLayer("corridor", new RasterShape(corridors, extZone, new RasterStyle(), true), project.getCRS())
+                            .saveRaster(new File(project.getDirectory(), link.getName() +
+                                "-corridor-" + maxCost + "-" + (beta != null ? ("beta"+beta) : var != null ? var : "1") + ".tif"));
+                } else {
+                    List<Feature> corridors = link.computeCorridor(progress, maxCost);
+                    DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
+                            "-corridor-" + maxCost + ".shp"), project.getCRS());
+                }
             }
         }
     }
@@ -1516,5 +1709,96 @@ public class CLITools {
         }
         
         return params;
+    }
+    
+    public static class ConsoleProgress implements ProgressBar {
+        private double progress = 0;
+        private int minimum = 0, maximum = 1;
+        private String note = "";
+
+        public ConsoleProgress() {
+        }
+
+        public ConsoleProgress(String note, int max) {
+            this.note = note;
+            this.maximum = max;
+        }
+        
+        @Override
+        public void setMaximum(int max) {
+            maximum = max;
+        }
+
+        @Override
+        public void setMinimum(int min) {
+            minimum = min;
+        }
+
+        @Override
+        public void setProgress(double val) {
+            progress = val;
+            updateText();
+        }
+
+        @Override
+        public void incProgress(double val) {
+            synchronized (this) {
+                progress += val;
+            }
+            updateText();
+        }
+
+        @Override
+        public double getProgress() {
+            return progress;
+        }
+
+        @Override
+        public void setNote(String note) {
+            this.note = note;
+            updateText();
+        }
+
+        @Override
+        public String getNote() {
+            return note;
+        }
+
+        @Override
+        public ProgressBar getSubProgress(double size) {
+            return new ProgressBarPanel.SubProgress(this, size);
+        }
+
+        @Override
+        public void setIndeterminate(boolean bool) {
+            
+        }
+
+        @Override
+        public boolean inProgress() {
+            return progress != minimum && progress != maximum;
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public void reset() {
+            note = "";
+            progress = minimum;
+            System.out.print("\n");
+        }
+
+        @Override
+        public void close() {
+            
+        }
+        
+        private void updateText() {
+            System.out.print(String.format("\r%s : %.1f%%", note, (progress-minimum)/(maximum-minimum)*100));
+        }
+    
     }
 }

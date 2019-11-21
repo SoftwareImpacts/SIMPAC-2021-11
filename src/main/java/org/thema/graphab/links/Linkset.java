@@ -33,6 +33,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BandedSampleModel;
 import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferDouble;
+import java.awt.image.DataBufferFloat;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.File;
@@ -628,7 +630,7 @@ public class Linkset {
      * @param maxCost maximal cost distance 
      * @return list of features where id is equal to id path and geometry is a polygon or multipolygon
      */
-    public Raster computeRasterCorridor(ProgressBar progressBar, final double maxCost) {
+    public Raster computeRasterCorridor(ProgressBar progressBar, final double maxCost, final Double beta, final String metric) {
         if(getType_dist() == Linkset.EUCLID) {
             throw new IllegalArgumentException("Euclidean linkset is not supported for corridor");
         }
@@ -636,37 +638,95 @@ public class Linkset {
         final WritableRaster corridors = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_DOUBLE, 
                     project.getImageSource().getWidth(), project.getImageSource().getHeight(), 1), new Point(1, 1));
         
-        ParallelFTask task = new SimpleParallelTask<Path>(getPaths(), progressBar) {
+//        ParallelFTask task = new SimpleParallelTask<Path>(getPaths(), progressBar) {
+//            @Override
+//            protected void executeOne(Path path) {
+//                try {
+//                    Raster corridor;
+//                    if(getType_dist() == Linkset.COST) {
+//                        corridor = calcCostRasterCorridor(path, maxCost);
+//                    } else {
+//                        CircuitRaster circuit = project.getRasterCircuit(Linkset.this);
+//                        CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(path.getPatch1(), path.getPatch2());
+//                        corridor = odCircuit.getCurrentMap();
+//                    }
+//                    if(corridor != null) {
+//                        synchronized(Linkset.this) {
+//                            for(int y = corridor.getMinY(); y < corridor.getBounds().getMaxY(); y++) {
+//                                for (int x = corridor.getMinX(); x < corridor.getBounds().getMaxX(); x++) {
+//                                    double val = corridor.getSampleDouble(x, y, 0);
+//                                    if(val > 0) {
+//                                        corridors.setSample(x, y, 0, corridors.getSample(x, y, 0) + val);
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                } catch (IOException ex) {
+//                    throw new RuntimeException(ex);
+//                }
+//            }
+//        };
+//        new ParallelFExecutor(task).executeAndWait();
+
+        AbstractParallelTask<Raster, Raster> task = 
+                new AbstractParallelTask<Raster, Raster>(progressBar) {
             @Override
-            protected void executeOne(Path path) {
-                try {
-                    Raster corridor;
-                    if(getType_dist() == Linkset.COST) {
-                        corridor = calcCostRasterCorridor(path, maxCost);
-                    } else {
-                        CircuitRaster circuit = project.getRasterCircuit(Linkset.this);
-                        CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(path.getPatch1(), path.getPatch2());
-                        corridor = odCircuit.getCurrentMap();
-                    }
-                    if(corridor != null) {
-                        synchronized(Linkset.this) {
+            public Raster execute(int start, int end) {
+                WritableRaster raster = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_FLOAT, 
+                    project.getImageSource().getWidth(), project.getImageSource().getHeight(), 1), new Point(1, 1));
+                for(Path path : getPaths().subList(start, end)) {
+                    try {
+                        Raster corridor;
+                        if(getType_dist() == Linkset.COST) {
+                            double val = beta != null ? Math.pow(Project.getPatchCapacity(path.getPatch1()) * Project.getPatchCapacity(path.getPatch2()), beta) :
+                                (metric != null ? ((Number)path.getAttribute(metric)).doubleValue() : 1);
+                            corridor = calcCostRasterCorridor(path, maxCost, true, val);
+                        } else {
+                            CircuitRaster circuit = project.getRasterCircuit(Linkset.this);
+                            CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(path.getPatch1(), path.getPatch2());
+                            corridor = odCircuit.getCurrentMap();
+                        }
+                        if(corridor != null) {
                             for(int y = corridor.getMinY(); y < corridor.getBounds().getMaxY(); y++) {
                                 for (int x = corridor.getMinX(); x < corridor.getBounds().getMaxX(); x++) {
                                     double val = corridor.getSampleDouble(x, y, 0);
                                     if(val > 0) {
-                                        corridors.setSample(x, y, 0, corridors.getSample(x, y, 0) + val);
+                                        raster.setSample(x, y, 0, raster.getSample(x, y, 0) + val);
                                     }
                                 }
                             }
                         }
+
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
                     }
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                    incProgress(1);
                 }
+                return raster;
+            }
+
+            @Override
+            public void gather(Raster raster) {
+                double[] result = ((DataBufferDouble)corridors.getDataBuffer()).getData();
+                float[] sumBuf = ((DataBufferFloat)raster.getDataBuffer()).getData();
+                for(int i = 0; i < sumBuf.length; i++) {
+                     result[i] += sumBuf[i];
+                }
+            }
+
+            @Override
+            public int getSplitRange() {
+                return getPaths().size();
+            }
+
+            @Override
+            public Raster getResult() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
         };
         
-        new ParallelFExecutor(task).executeAndWait();
+        ExecutorService.execute(task);
         
         return corridors;
     }
@@ -678,7 +738,7 @@ public class Linkset {
     }
 
     private Geometry calcCostCorridor(Path path, double maxCost) throws IOException {
-        Raster corridor = calcCostRasterCorridor(path, maxCost);
+        Raster corridor = calcCostRasterCorridor(path, maxCost, false, 1);
         
         if(corridor == null) {
             return new GeometryFactory().buildGeometry(Collections.EMPTY_LIST);
@@ -689,7 +749,7 @@ public class Linkset {
         return project.getGrid2space().transform(geom);
     }
     
-    private Raster calcCostRasterCorridor(Path path, double maxCost) throws IOException {
+    private Raster calcCostRasterCorridor(Path path, double maxCost, final boolean inPatch, final double val) throws IOException {
         if(path.getCost() > maxCost) {
             return null;
         }
@@ -697,16 +757,20 @@ public class Linkset {
         Raster r1 = pathfinder.getDistRaster(path.getPatch1(), maxCost);
         Raster r2 = pathfinder.getDistRaster(path.getPatch2(), maxCost);
         final Rectangle rect = r1.getBounds().intersection(r2.getBounds());
-
         final int id1 = (Integer)path.getPatch1().getId();
         final int id2 = (Integer)path.getPatch2().getId();
-        WritableRaster corridor = Raster.createBandedRaster(DataBuffer.TYPE_BYTE, rect.width+2, rect.height+2, 1, new Point(rect.x-1, rect.y-1));
+        Raster rasterPatch = project.getRasterPatch();
+        WritableRaster corridor = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_DOUBLE, rect.width+2, rect.height+2, 1), new Point(rect.x-1, rect.y-1));
         for(int y = rect.y; y < rect.getMaxY(); y++) {
             for(int x = rect.x; x < rect.getMaxX(); x++) {
-                int id = project.getRasterPatch().getSample(x, y, 0);
-                if(id != id1 && id != id2 &&
-                        r1.getSampleDouble(x, y, 0)+r2.getSampleDouble(x, y, 0) <= maxCost) {
-                    corridor.setSample(x, y, 0, 1);
+                if(!inPatch) {
+                    int id = rasterPatch.getSample(x, y, 0);
+                    if(id == id1 || id == id2) {
+                        continue;
+                    }
+                }
+                if(r1.getSampleDouble(x, y, 0)+r2.getSampleDouble(x, y, 0) <= maxCost) {
+                    corridor.setSample(x, y, 0, val);
                 }
             }
         }

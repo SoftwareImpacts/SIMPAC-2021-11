@@ -71,6 +71,18 @@ public class Range {
             return values;
         }
     }
+    
+    private List<Double> getVals() {
+        if(values == null) {
+            List<Double> lst = new ArrayList<>();
+            for(double v = min; v <= max; v += inc) {
+                lst.add(v);
+            }
+            return lst;
+        } else {
+            return values;
+        }
+    }
 
     /**
      * May convert the values from distance to cost.
@@ -80,12 +92,12 @@ public class Range {
     public List<Double> getValues(Linkset linkset) {
         if(convDist) {
             List<Double> lst = new ArrayList<>();
-            for(double v = min; v <= max; v += inc) {
+            for(double v : getVals()) {
                 lst.add(linkset.estimCost(v));
             }
             return lst;
         } else {
-            return getValues();
+            return getVals();
         }
     }
 

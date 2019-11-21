@@ -135,7 +135,7 @@ public class CLIToolsTest {
         assertEquals(4, DefaultFeature.loadFeatures(f).size());
         
         cli.execute(new String[]{"--project", prjFile, "--corridor", "maxcost=3", "format=raster"});
-        f = new File(prjDir, "Jeulien1-corridor-3.0.tif");
+        f = new File(prjDir, "Jeulien1-corridor-3.0-1.tif");
         assertTrue(f.exists());
         
         thrown.expect(IllegalArgumentException.class);

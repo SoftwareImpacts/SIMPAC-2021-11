@@ -51,12 +51,12 @@ import org.thema.drawshape.style.LineStyle;
 import org.thema.drawshape.style.table.FeatureAttributeCollection;
 import org.thema.graph.pathfinder.EdgeWeighter;
 import org.thema.graph.shape.GraphGroupLayer;
+import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 import static org.thema.graphab.graph.GraphGenerator.COMPLETE;
 import static org.thema.graphab.graph.GraphGenerator.MST;
 import static org.thema.graphab.graph.GraphGenerator.THRESHOLD;
 import org.thema.graphab.links.Linkset;
-import org.thema.graphab.metric.DistProbaPanel;
 import org.thema.graphab.util.SerieFrame;
 
 /**
@@ -119,6 +119,20 @@ public class GraphLayers extends GraphGroupLayer {
     public JPopupMenu getContextMenu() {
         JPopupMenu menu = super.getContextMenu();       
 
+        menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("view_metric")) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<String> vars = graph.getProject().getGraphPatchAttr(graph.getName());
+                String var = (String)JOptionPane.showInputDialog(null, "Add variable : ", "Variable",
+                        JOptionPane.PLAIN_MESSAGE, null, vars.toArray(), vars.get(0));
+                if(var == null) {
+                    return;
+                }
+                
+                MainFrame.viewMetricResult(graph, var, true, false);
+            }
+            
+        });
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("partition")) {
             @Override
             public void actionPerformed(ActionEvent e) {

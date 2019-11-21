@@ -231,6 +231,7 @@ public class LinksetPanel extends javax.swing.JPanel {
         removeCrossPatchCheckBox.setText(bundle.getString("LinksetPanel.removeCrossPatchCheckBox.text")); // NOI18N
         removeCrossPatchCheckBox.setEnabled(false);
 
+        realPathCheckBox.setSelected(true);
         realPathCheckBox.setText(bundle.getString("LinksetPanel.realPathCheckBox.text")); // NOI18N
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, completeRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), realPathCheckBox, org.jdesktop.beansbinding.BeanProperty.create("enabled"));

@@ -193,13 +193,29 @@ public class Logistic {
         }
         return prod;
     }
+        
+    public double getLogLikelihood() {
+        double sum = 0;
+        for(int i = 0; i < n; i++) {
+            double v = Math.log(estim.value(A.getRow(i)))*Y.getEntry(i);
+            if(!Double.isNaN(v)) {
+                sum += v;
+            }
+            v = Math.log(1-estim.value(A.getRow(i)))*(1-Y.getEntry(i));
+            if(!Double.isNaN(v)) {
+                sum += v;
+            }
+        }
+        return sum;
+    }
 
     /**
      * The method {@link #regression() } must be called before
      * @return the likelihood ratio
      */
     public double getDiffLikelihood() {
-        return -2 * Math.log(constLog.getLikelihood() / getLikelihood());
+//        return -2 * Math.log(constLog.getLikelihood() / getLikelihood());
+        return -2 * (constLog.getLogLikelihood() - getLogLikelihood());
     }
 
     /**
@@ -218,7 +234,8 @@ public class Logistic {
      * @return the r square of the regression
      */
     public double getR2() {
-        return 1 - Math.log(getLikelihood()) / Math.log(constLog.getLikelihood());
+//        return 1 - Math.log(getLikelihood()) / Math.log(constLog.getLikelihood());
+        return 1 - getLogLikelihood() / constLog.getLogLikelihood();
     }
 
     /**
@@ -226,7 +243,8 @@ public class Logistic {
      * @return the AIC of the regression
      */
     public double getAIC() {
-        return 2 * nVar - 2 * Math.log(getLikelihood());
+//        return 2 * nVar - 2 * Math.log(getLikelihood());
+        return 2 * nVar - 2 * getLogLikelihood();
     }
 
 }

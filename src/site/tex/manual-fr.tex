@@ -55,7 +55,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		06/09/2019\\
+		21/11/2019\\
 	}
 	
 \end{titlepage}
@@ -172,7 +172,7 @@ Simplifier les taches pour graphe planaire : cette option, lorsqu’elle est coc
 La troisième fenêtre concerne la création d’un jeu de liens, ce qui implique la sélection de plusieurs paramètres : topologie et pondération des liens. La création de ce jeu de liens constitue la dernière étape dans la mise en place initiale du projet. Cependant, il est possible de créer à tout moment de nouveaux jeux de liens dans le même projet, par le menu : Graphes / Créer un jeu de liens.
 
 \begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-fr_img4.png} 
+	\includegraphics[scale=0.5]{img/manual-fr_linkset.png} 
 \end{figure}
 
 \subsubsection{Topologie des liens}
@@ -244,16 +244,16 @@ La création d’un graphe s’effectue par le menu : Graphe / Créer un graphe.
 
 Le graphe à créer doit tout d’abord être nommé.
 
-L’utilisateur doit ensuite sélectionner un des jeux de liens créés précédemment (cf. \nameref{linkset}), puis choisir un type de graphe :
+L’utilisateur doit ensuite sélectionner un des jeux de liens créés précédemment (cf. \nameref{linkset}), puis choisir un type d'élagage du graphe :
 \begin{itemize}
-	\item graphe seuillé : les liens retenus sont inférieurs ou égaux au seuil de distance choisi.
-	\item graphe non seuillé : tous les liens sont créés~entre les taches quelle que soit leur distance.
-	\item arbre couvrant minimal : graphe reliant toutes les taches dont le poids total des liens est minimal.
+	\item Aucun : tous les liens sont créés~entre les taches quelle que soit leur distance.
+	\item Distance maximale : les liens retenus sont inférieurs ou égaux à la distance choisie.
+	\item Arbre couvrant minimal : graphe reliant toutes les taches dont le poids total des liens est minimal.
 \end{itemize}
 
 Option «~Inclure les distances intra-taches~» : si la case est cochée, le calcul des métriques à l’étape 3 tient compte des distances intra-taches (recommandé) ; dans le cas contraire, seules les distances inter-taches sont prises en compte.
 
-Pour un graphe seuillé, l’unité de la distance de seuillage dépend du type de distance utilisé dans la création du jeu de liens. Si le jeu de lien a été créé en distance euclidienne, la distance de seuillage du graphe est exprimée en mètres. Si la création du jeu de lien a été réalisée en distance-coût et que l'impédance est en coût cumulé, la distance de seuillage du graphe est exprimée en coûts cumulés. L'unité (mètre ou coût) du jeu de liens sélectionné est rappelé à côté du champ "dist max".
+Pour un graphe élagué par une distance maximale, l’unité de cette distance dépend du type de distance utilisé dans la création du jeu de liens. Si le jeu de lien a été créé en distance euclidienne, la distance maximale est exprimée en mètres. Si la création du jeu de lien a été réalisée en distance-coût et que l'impédance est en coût cumulé, la distance maximale est exprimée en coûts cumulés. L'unité (mètre ou coût) du jeu de liens sélectionné est rappelé à côté du champ "Distance maximale".
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img7.png} 
@@ -263,9 +263,9 @@ Il est possible d’obtenir une approximation de la distance métrique (appelée
 
 $$Dist = e^{intercept + slope . log(DistM)}$$
 
-L'estimation peut être réalisée directement dans le logiciel à partir du menu Conversion dist. présent dans le menu contextuel d'un jeu de lien (clic droit sur le jeu de lien).
+L'estimation peut être réalisée directement dans le logiciel à partir du menu Conversion distance présent dans le menu contextuel d'un jeu de lien (clic droit sur le jeu de lien).
 
-Pour réaliser une analyse multiscalaire, il est souvent nécessaire de créer une série de graphes seuillés dont le seuil est défini de façon croissante. L’utilisateur peut créer manuellement cette série de graphes, mais si l’objectif est d’analyser le comportement d’une métrique de connectivité en fonction du seuil, il est préférable d’utiliser le menu : Métriques / Graphes par lot (cf. \ref{batch_graph}).
+Pour réaliser une analyse multiscalaire, il est souvent nécessaire de créer une série de graphes élagués dont la distance maximale est définie de façon croissante. L’utilisateur peut créer manuellement cette série de graphes, mais si l’objectif est d’analyser le comportement d’une métrique de connectivité en fonction de la distance maximale, il est préférable d’utiliser le menu : Métriques / Graphes par lot (cf. \ref{batch_graph}).
 
 \subsection{Partitionnement de graphe}
 
@@ -339,7 +339,7 @@ L’utilisateur doit sélectionner plusieurs critères : type de distance, dista
 
 Coûts : il s’agit de la métrique spatiale (euclidienne ou ensemble de coûts) correspondant à un des jeux de liens disponibles dans le projet. Il est à noter que l’usage des coûts dans cette procédure revient à définir un voisinage anisotropique autour des taches, ce qui peut différer fortement d’une fonction de type buffer dans un SIG. Pour des raisons de cohérence, il est conseillé d’utiliser le même type de distance que celui qui a permis de définir les liens du graphe. Dans le cas d’un jeu de lien créé avec une distance euclidienne, il faut choisir «~all cost = 1~».
 
-Coût max. : Comme pour la distance de seuillage du graphe, l’unité de cette distance maximale de voisinage dépend du type de distance utilisé dans la création du jeu de liens (euclidien ou distance-coût).
+Coût max. : comme pour la distance d'élagage du graphe, l’unité de cette distance maximale de voisinage dépend du type de distance utilisé dans la création du jeu de liens (euclidien ou distance-coût).
 
 Codes inclus : l’utilisateur peut choisir une ou plusieurs catégories paysagères, autre que la catégorie «~habitat~», ~à prendre en compte dans le calcul de la capacité. 
 
@@ -432,7 +432,7 @@ Quel que soit le niveau choisi, l’utilisateur doit d’abord indiquer le graph
 
 \subsubsection{Paramètre alpha}
 \label{metric_alpha}
-Plusieurs métriques intègrent dans leur calcul une pondération où les distances entre les taches sont converties en probabilité de déplacement. Ces métriques sont : F, FPC, PC, BC. La pondération est basée sur une fonction exponentielle de la forme :
+Plusieurs métriques intègrent dans leur calcul une pondération où les distances entre les taches sont converties en probabilité de déplacement. Ces métriques sont : F, IF, PC, EC, BC... La pondération est basée sur une fonction exponentielle de la forme :
 \begin{equation*}
 p={e}^{-\mathit{\alpha d}}
 \end{equation*}
@@ -449,7 +449,7 @@ La valeur $\alpha $ est automatiquement obtenue à partir de la formule :
 
 \subsubsection{Paramètre bêta}
 
-Les mêmes métriques F, PC, FPC, BC sont contrôlées par le paramètre $\beta$. Ce paramètre est l’exposant appliqué à la capacité des taches. Il joue sur l’équilibre relatif entre le poids des distances et le poids des capacités des taches dans la pondération des métriques. En prenant l’exemple de la métrique F en calcul local, dont la forme générique est la suivante :
+Certaines de ces métriques F, IF, BC sont aussi contrôlées par le paramètre $\beta$. Ce paramètre est l’exposant appliqué à la capacité des taches. Il joue sur l’équilibre relatif entre le poids des distances et le poids des capacités des taches dans la pondération des métriques. En prenant l’exemple de la métrique F en calcul local, dont la forme générique est la suivante :
 \begin{equation*}
 F=\sum {{a}^{\beta }}{e}^{-\mathit{\alpha d}}
 \end{equation*}
@@ -468,14 +468,14 @@ Au-delà de ces quelques exemples, toutes les valeurs de pondération sont possi
 
 \subsection{Calcul des métriques par lot}
 
-Chaque métrique compatible avec le niveau global peut être calculée en chaîne suivant la variation de l’échelle des distances. Cette variation peut concerner soit le seuillage du graphe (\ref{batch_graph}), soit le paramétrage des métriques elles-mêmes (\ref{batch_metric}). Le type de distance considéré pour le seuillage est celui qui a été défini pour le jeu de lien choisi, à savoir distance euclidienne, distance de moindre coût, chemin de moindre coût. 
+Chaque métrique compatible avec le niveau global peut être calculée en chaîne suivant la variation de l’échelle des distances. Cette variation peut concerner soit l'élagage du graphe (\ref{batch_graph}), soit le paramétrage des métriques elles-mêmes (\ref{batch_metric}). Le type de distance considéré pour l'élagage est celui qui a été défini pour le jeu de lien choisi, à savoir distance euclidienne, distance de moindre coût, chemin de moindre coût. 
 
 \subsubsection{Graphes par lot}
 \label{batch_graph}
-Le menu Métriques / Graphes par lot permet de créer une série de graphes seuillés à partir d’un jeu de liens donné, et de calculer pour chacun une métrique de niveau global. Les seuils des graphes successifs sont définis de façon croissante, suivant deux modes :
+Le menu Métriques / Graphes par lot permet de créer une série de graphes élagués à partir d’un jeu de liens donné, et de calculer pour chacun une métrique de niveau global. Les distances maximales des graphes successifs sont définis de façon croissante, suivant deux modes :
 \begin{itemize}
 	\item distance : un intervalle de distance fixe est déterminé entre les graphes successifs. Les valeurs de la métrique sont donc calculées à des intervalles réguliers de distance.
-	\item nombre de liens : un nombre de liens fixe est défini entre les graphes successifs. Ce nombre de liens est automatiquement transformé en distance utilisée pour seuiller le graphe. Ces distances seuil peuvent s’échelonner de façon irrégulière. 
+	\item nombre de liens : un nombre de liens fixe est défini entre les graphes successifs. Ce nombre de liens est automatiquement transformé en distance utilisée pour élaguer le graphe. Ces distances peuvent s’échelonner de façon irrégulière. 
 \end{itemize}
 
 \begin{figure}[H]
@@ -484,12 +484,12 @@ Le menu Métriques / Graphes par lot permet de créer une série de graphes seui
 
 Les graphes sont définis suivant trois critères donnés par l’utilisateur :
 \begin{itemize}
-	\item minimum : plus petit seuil, utilisé pour le premier graphe de la série. Par défaut, ce minimum est à 0, ce qui correspond à l’absence totale de liens.
-	\item maximum : seuil maximal, utilisé pour le dernier graphe de la série. Par défaut, ce maximum correspond à la distance maximale, ou le nombre de lien, du jeu de lien sélectionné.
+	\item minimum : plus petite distance, utilisée pour le premier graphe de la série. Par défaut, ce minimum est à 0, ce qui correspond à l’absence totale de liens.
+	\item maximum : distance maximale, utilisé pour le dernier graphe de la série. Par défaut, ce maximum correspond à la distance maximale, ou le nombre de lien, du jeu de lien sélectionné.
 	\item incrément : valeur de distance ajoutée à chaque nouveau graphe.
 \end{itemize}
 
-Une fois le calcul terminé, le logiciel ouvre une nouvelle fenêtre dans laquelle la courbe de la métrique choisie est affichée en fonction du seuil de distance. Les valeurs de cette courbe peuvent être enregistrées par le bouton export, en sélectionnant le format texte.
+Une fois le calcul terminé, le logiciel ouvre une nouvelle fenêtre dans laquelle la courbe de la métrique choisie est affichée en fonction de la distance. Les valeurs de cette courbe peuvent être enregistrées par le bouton export, en sélectionnant le format texte.
 
 \subsubsection{Paramètres par lot}
 \label{batch_metric}
@@ -572,7 +572,7 @@ L’interpolation des métriques est aussi utilisée automatiquement dans le cal
 
 
 \section{Ajout de taches}
-La fonction "Ajout de taches" est accessible à partir du menu Analyses. Elle permet de tester un ensemble d’emplacements pour créer de nouvelles taches d’habitat en fonction du gain de connectivité qu’elles procurent. Le logiciel calcule d’abord la métrique globale sélectionnée, puis ajoute virtuellement une tache et les liens entre cette tache et les taches existantes (seulement si leur distance est inférieure au seuillage du graphe dans le cas d’un graphe seuillé) et recalcule la métrique globale. Une fois tous les emplacements testés, le logiciel valide l’emplacement qui procure le gain maximal de connectivité. La procédure est répétée jusqu’à l’ajout du nombre souhaité de nouvelles taches.
+La fonction "Ajout de taches" est accessible à partir du menu Analyses. Elle permet de tester un ensemble d’emplacements pour créer de nouvelles taches d’habitat en fonction du gain de connectivité qu’elles procurent. Le logiciel calcule d’abord la métrique globale sélectionnée, puis ajoute virtuellement une tache et les liens entre cette tache et les taches existantes (seulement si leur distance est inférieure à la distance maximale du graphe dans le cas d’un graphe élagué) et recalcule la métrique globale. Une fois tous les emplacements testés, le logiciel valide l’emplacement qui procure le gain maximal de connectivité. La procédure est répétée jusqu’à l’ajout du nombre souhaité de nouvelles taches.
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_addpatch.png} 
@@ -612,7 +612,7 @@ Références :
 	\includegraphics[scale=0.5]{img/manual-fr_metapatch.png} 
 \end{figure}
 
-Pour utiliser cette fonction, il est nécessaire de créer un projet initial et un graphe seuillé à la distance souhaitée (par exemple à la distance quotidienne). Chaque composante de ce graphe seuillé correspondra à une méta-tache. Celle-ci est donc constituée de l’ensemble des taches d’habitat connectées entre elles.
+Pour utiliser cette fonction, il est nécessaire de créer un projet initial et un graphe élagué à la distance souhaitée (par exemple à la distance quotidienne). Chaque composante de ce graphe élagué correspondra à une méta-tache. Celle-ci est donc constituée de l’ensemble des taches d’habitat connectées entre elles.
 
 La capacité des méta-taches est définie par défaut comme la somme de la capacité des taches composant la méta-tache. L'autre option "Distance pondérée" permet de tenir compte de l'éloignement des taches entre elles. Pour cette option, il faut définir le paramètre $\alpha$ en donnant une distance $d$ et une probabilité $p$ associée (cf. \nameref{param_weight}). La capacité résultante ($C$) d'une méta-tache s'écrit : 
 
@@ -759,7 +759,7 @@ Les propriétés des graphes sont accessibles par un clic droit sur le nom du gr
 
 L'entrée Supprimer permet de supprimer le graphe sélectionné. Le projet est enregistré automatiquement après cette suppression.
 
-L'entrée Propriétés rappellent les paramètres utilisés pour la construction du graphe : le nom du graphe, le jeu de liens sélectionné, le type de graphe avec éventuellement le seuil de distance utilisé et le nombre de liens.
+L'entrée Propriétés rappellent les paramètres utilisés pour la construction du graphe : le nom du graphe, le jeu de liens sélectionné, le type de graphe avec éventuellement la distance maximale utilisée et le nombre de liens.
 
 L'entrée Matrice OD (matrice Origine-Destination) permet de créer un tableau indiquant la distance entre chaque paire de nœuds pour le graphe sélectionné. L’unité de la distance dépend du type de distance utilisé pour ce graphe. L’absence de connexion entre deux nœuds est notée NaN (Not a Number). Cette  matrice est archivée dans le dossier du projet sous la forme d’un fichier texte nommé «~nom du graphe-odmatrix.txt~». 
 
@@ -1103,7 +1103,7 @@ Delta &
 {\mathit{dPC}}_{\mathit{area}}=\frac{{a}_{i}^{2}}{{A}^{2}\mathit{PC}}
 \end{equation*}
 \begin{equation*}
-{dPC}_{flux}=\frac{{FPC}_{i}}{PC}-{dPC}_{area}
+{dPC}_{flux}=\frac{{IF}_{i}}{PC}-{dPC}_{area}
 \end{equation*}
 } &
 Taux de variation entre la valeur de l’indice PC et la valeur PC’ représentant la suppression de la tache $i$.

@@ -75,7 +75,8 @@ public class GraphGenerator {
     private int type;
     private double threshold;
     private boolean intraPatchDist;
-
+    private GraphGenerator parentGraph;
+    
     private boolean saved = false;
     
     protected transient List<Graph> components;
@@ -105,6 +106,20 @@ public class GraphGenerator {
     }
 
     /**
+     * Dupplicates the graph gen and changes the name of the graph 
+     * @param name the graph name
+     * @param gen the graph to dupplicate
+     */
+    public GraphGenerator(String name, GraphGenerator gen) {
+        this.name = name;
+        this.cost = gen.cost;
+        this.type = gen.type;
+        this.threshold = gen.threshold;
+        this.intraPatchDist = gen.intraPatchDist;
+        this.parentGraph = gen;
+    }
+    
+    /**
      * Dupplicates the graph gen and changes the name of the graph by adding prefix
      * @param gen the graph to dupplicate
      * @param prefix the name prefix
@@ -115,6 +130,7 @@ public class GraphGenerator {
         this.type = gen.type;
         this.threshold = gen.threshold;
         this.intraPatchDist = gen.intraPatchDist;
+        this.parentGraph = gen;
     }
     
     /**
@@ -141,6 +157,7 @@ public class GraphGenerator {
         this.threshold = gen.threshold;
         this.intraPatchDist = gen.intraPatchDist;
         this.graph = dupGraphWithout(stringToList(remIdNodes, true), stringToList(remIdEdges, false));
+        this.parentGraph = gen;
     }
             
     /**
@@ -156,6 +173,7 @@ public class GraphGenerator {
         intraPatchDist = gen.intraPatchDist;
         graph = gen.getComponents().get(indComp);
         components = Collections.singletonList(graph);
+        this.parentGraph = gen;
     }
 
     /**
@@ -734,6 +752,10 @@ public class GraphGenerator {
 
     public Project getProject() {
         return cost.getProject();
+    }
+
+    public GraphGenerator getParentGraph() {
+        return parentGraph;
     }
 
     /**

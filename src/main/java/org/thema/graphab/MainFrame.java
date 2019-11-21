@@ -1099,10 +1099,10 @@ public class MainFrame extends javax.swing.JFrame {
      * @param node show the results on nodes ?
      * @param edge show the results on edge ?
      */
-    public void viewMetricResult(GraphGenerator graph, String attr, boolean node, boolean edge) {
+    public static void viewMetricResult(GraphGenerator graph, String attr, boolean node, boolean edge) {
         // show the result
-        project.getRootLayer().setLayersVisible(false);
-        project.getGraphLayers().setExpanded(true);
+        graph.getProject().getRootLayer().setLayersVisible(false);
+        graph.getProject().getGraphLayers().setExpanded(true);
         GraphGroupLayer gl = graph.getLayers();
         gl.setExpanded(true);
         gl.setSpatialView(false);

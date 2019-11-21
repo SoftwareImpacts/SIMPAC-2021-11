@@ -7,3 +7,5 @@ org.thema.graphab.metric.global.BCEntropyMetric$Edge
 org.thema.graphab.metric.global.BCDivisionMetric$Node
 org.thema.graphab.metric.global.BCDivisionMetric$Edge
 org.thema.graphab.metric.global.ECCircMetric
+org.thema.graphab.metric.global.SumLocal2GlobalMetric$SumIFMetric
+org.thema.graphab.metric.global.SumLocal2GlobalMetric$SumIFInterMetric

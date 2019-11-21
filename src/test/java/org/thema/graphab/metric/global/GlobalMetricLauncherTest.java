@@ -65,6 +65,13 @@ public class GlobalMetricLauncherTest {
             put("EC_d1000_p0.05-graph_plan_cout10_mst", Math.sqrt(1.9835638747391063E-4) * project.getArea());
             put("EC_d1000_p0.05-graph_plan_cout1_len", Math.sqrt(6.69054229355518E-5) * project.getArea());
             
+            put("S#IF_d1000_p0.05_beta1-graph_comp_cout10", 2.597275864295179E-4 * project.getArea() * project.getArea());
+            put("S#IF_d1000_p0.05_beta1-graph_comp_cout10_500_nopath", 3.2880609909219453E-4 * project.getArea() * project.getArea());
+            put("S#IF_d1000_p0.05_beta1-graph_comp_euclid_1000_nointra", 9.581715576493942E-5 * project.getArea() * project.getArea());
+            put("S#IF_d1000_p0.05_beta1-graph_plan_cout10_300", 2.3271157678692673E-4 * project.getArea() * project.getArea());            
+            put("S#IF_d1000_p0.05_beta1-graph_plan_cout10_mst", 1.9835638747391063E-4 * project.getArea() * project.getArea());
+            put("S#IF_d1000_p0.05_beta1-graph_plan_cout1_len", 6.69054229355518E-5 * project.getArea() * project.getArea());
+            
             put("PC_d1000_p0.05-graph_comp_cout10", 2.597275864295179E-4);
             put("PC_d1000_p0.05-graph_comp_cout10_500_nopath", 3.2880609909219453E-4);
             put("PC_d1000_p0.05-graph_comp_euclid_1000_nointra", 9.581715576493942E-5);
@@ -142,8 +149,8 @@ public class GlobalMetricLauncherTest {
             testIndices.add(indName);
         }
         
-        // The Wilks metric is not tested for the moment
-        assertEquals("Check all global metrics", Project.getGlobalMetricsFor(Project.Method.GLOBAL).size()-1, testIndices.size());
+        // The Wilks metric and S#IFI are tested outside
+        assertEquals("Check all global metrics", Project.getGlobalMetricsFor(Project.Method.GLOBAL).size()-2, testIndices.size());
         
     }
     

@@ -253,8 +253,14 @@ public class ModularityDialog extends javax.swing.JDialog {
     private void graphButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_graphButtonActionPerformed
         Set<Modularity.Cluster> partition = optimCheckBox.isSelected() ? mod.getOptimPartition((int) nbSpinner.getValue())
                         : mod.getPartition((int) nbSpinner.getValue());
+        String name = "mod"+partition.size() + "_" + graph.getName();
+        name = JOptionPane.showInputDialog("Graph name", name);
+        if(graph.getProject().getGraphNames().contains(name)) {
+            JOptionPane.showMessageDialog(this, "Graph name already exists.");
+            return;
+        }
         try {
-            graph.getProject().addGraph(new ModGraphGenerator(graph, partition), true);
+            graph.getProject().addGraph(new ModGraphGenerator(name, graph, partition), true);
         } catch (IOException | SchemaException ex) {
             Logger.getLogger(ModularityDialog.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, "Error while creating the graph : " + ex);

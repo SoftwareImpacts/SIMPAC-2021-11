@@ -87,21 +87,22 @@ public class LoadCostsDialog extends javax.swing.JDialog {
         linksetComboBox = new javax.swing.JComboBox<>();
         prjSelectFilePanel = new org.thema.common.swing.SelectFilePanel();
 
-        setTitle("Load costs");
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/thema/graphab/links/Bundle"); // NOI18N
+        setTitle(bundle.getString("LoadCostsDialog.title")); // NOI18N
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 closeDialog(evt);
             }
         });
 
-        okButton.setText("OK");
+        okButton.setText(bundle.getString("LoadCostsDialog.okButton.text")); // NOI18N
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okButtonActionPerformed(evt);
             }
         });
 
-        cancelButton.setText("Cancel");
+        cancelButton.setText(bundle.getString("LoadCostsDialog.cancelButton.text")); // NOI18N
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
@@ -110,7 +111,7 @@ public class LoadCostsDialog extends javax.swing.JDialog {
 
         buttonGroup1.add(thisRadioButton);
         thisRadioButton.setSelected(true);
-        thisRadioButton.setText("from this project");
+        thisRadioButton.setText(bundle.getString("LoadCostsDialog.thisRadioButton.text")); // NOI18N
         thisRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 thisRadioButtonActionPerformed(evt);
@@ -118,13 +119,13 @@ public class LoadCostsDialog extends javax.swing.JDialog {
         });
 
         buttonGroup1.add(otherRadioButton);
-        otherRadioButton.setText("from another project");
+        otherRadioButton.setText(bundle.getString("LoadCostsDialog.otherRadioButton.text")); // NOI18N
 
-        jLabel1.setText("Linkset");
+        jLabel1.setText(bundle.getString("LoadCostsDialog.jLabel1.text")); // NOI18N
 
-        prjSelectFilePanel.setDescription("Project");
-        prjSelectFilePanel.setFileDesc("XML project file");
-        prjSelectFilePanel.setFileExts(".xml");
+        prjSelectFilePanel.setDescription(bundle.getString("LoadCostsDialog.prjSelectFilePanel.description")); // NOI18N
+        prjSelectFilePanel.setFileDesc(bundle.getString("LoadCostsDialog.prjSelectFilePanel.fileDesc")); // NOI18N
+        prjSelectFilePanel.setFileExts(bundle.getString("LoadCostsDialog.prjSelectFilePanel.fileExts")); // NOI18N
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, otherRadioButton, org.jdesktop.beansbinding.ELProperty.create("${selected}"), prjSelectFilePanel, org.jdesktop.beansbinding.BeanProperty.create("enabled"));
         bindingGroup.addBinding(binding);

@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		06/09/2019\\
+ 		21/11/2019\\
  	}
  	
  \end{titlepage}
@@ -165,19 +165,19 @@ Commands list :
 --dem rasterfile
 --linkset distance=euclid|cost [name=linkname] [complete] [maxcost=valcost] [slope=coef] [remcrosspath] ...
 --uselinkset linkset1,...,linksetn
---corridor maxcost=[{]valcost[}] [format=raster|vector]
+--corridor maxcost=[{]valcost[}] [format=raster|vector] [beta=exp|var=name]
 --graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
 --usegraph graph1,...,graphn
 --cluster d=val p=val [beta=val] [nb=val]
---pointset pointset.shp
+--pointset pointset.shp [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]
 --usepointset pointset1,...,pointsetn
 --pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
---capa [area [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden ...
+--capa [area [exp=value] [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden ...
 --gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]
---model variable distW=min:inc:max
+--model variable distW=min:inc:max [vars=var1,...,varn] [raster=r1,...,rn]
 --delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
 --addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] ...
 --remelem nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
@@ -201,8 +201,10 @@ Résultat :
 	===== Global metrics =====
 	S#F - Sum Flux (F)
 		params : [d, p, beta]
+	EC - Connectivité équivalente  (EC)
+		params : [d, p]
 	PC - Probabilité de connectivité (PC)
-		params : [d, p, beta]
+		params : [d, p]
 	IIC - Indice intégral de connectivité (IIC)
 	CCP - Probabilité de coïncidence (CCP)
 	MSC - Taille moyenne des composantes (MSC)
@@ -212,7 +214,7 @@ Résultat :
 	H - Harary indice (H)
 	NC - Nombre de composantes (NC)
 	dPC - Delta PC décomposé (dPC)
-		params : [d, p, beta]
+		params : [d, p]
 	W - Indice de Wilks (W)
 		params : [attrs, npatch, warea]
 	
@@ -221,7 +223,7 @@ Résultat :
 		params : [d, p, beta]
 	BC : Centralité intermédiaire (BC)
 		params : [d, p, beta]
-	FPC : PC Flux (FPC)
+	IF : Flux d'interaction (IF)
 		params : [d, p, beta]
 	Dg : Degré du noeud (Dg)
 	CC : Coefficient d'agrégation (CC)
@@ -303,12 +305,13 @@ Attention aux noms des éléments : la ligne de commande est sensible à la cass
 
 \subsection{--capa : capacité des taches}
 \begin{Verbatim}[commandchars=\\\{\}]
---capa [area [code1,..,coden=weight ...]] | [maxcost=\textit{valcost} codes=\textit{code1,code2,...,coden} [weight]]
+--capa [area [exp=\textit{value}] [code1,..,coden=weight ...]] | [maxcost=\textit{valcost} codes=\textit{code1,code2,...,coden} [weight]]
 \end{Verbatim}
 
 \subsubsection{Paramètres optionnels}
 \begin{itemize}
 	\item \verb|area|: défini la capacité comme la superficie de la taches (défaut)
+	\item \verb|exp=value|: modifie la surface des taches par un exposant.
 	\item \verb|code1,..,coden=weight ...|: pondération de la superficie de la tache par les codes d'occupation du sol la composant. Ce paramètre est utile seulement quand les taches sont définies par plusieurs codes d'occupation du sol.
 	\item \verb|maxcost=[{]valcost[}]| : coût cumulé maximum pour le voisinage
 	\item \verb|codes=code1,code2,...,coden| : codes d'occupation du sol à prendre en compte dans la surface de voisinage
@@ -488,13 +491,13 @@ Le paramètre \textit{threshold} permet de spécifier un seuil (100 dans l'exemp
 \end{Verbatim}
 Le nom du graphe sera la concaténation de  \textit{thresh\_100.0\_} et du nom du jeu de lien.
 
-Si le paramètre \verb|threshold| est défini avec un intervalle ou une liste de valeurs, un graphe seuillé pour chaque valeur de seuil et chaque jeu de liens sera créé :
+Si le paramètre \verb|threshold| est défini avec un intervalle ou une liste de valeurs, un graphe élagué pour chaque valeur de seuil et chaque jeu de liens sera créé :
 \begin{Verbatim}
 	--graph threshold=1000:100:1500
 ou
 	--graph threshold=1000,1100,1200,1300,1400,1500
 \end{Verbatim}
-Résultat : cette commande créera 6 graphes seuillés (1000, 1100, 1200, 1300, 1400, 1500) pour chaque jeu de liens sélectionné.
+Résultat : cette commande créera 6 graphes élagués (1000, 1100, 1200, 1300, 1400, 1500) pour chaque jeu de liens sélectionné.
 
 
 \subsection{--usegraph : sélection des graphes}
@@ -509,7 +512,7 @@ Par défaut, tous les graphes sont sélectionnés.
 
 \subsection{--corridor : calcul de corridors}
 \begin{Verbatim}[commandchars=\\\{\}]
---corridor maxcost=\textit{valcost} [format=raster|vector]
+--corridor maxcost=\textit{valcost} [format=raster|vector] [beta=\textit{exp}|var=\textit{name}]
 \end{Verbatim}
 
 \subsubsection{Paramètre obligatoire}
@@ -520,6 +523,8 @@ Par défaut, tous les graphes sont sélectionnés.
 \subsubsection{Paramètre optionnel}
 \begin{itemize}
 	\item \verb+format=raster|vector+ : format en sortie raster (.tif) ou vectoriel (.shp). Le format par défaut est vectoriel
+	\item \verb|beta=exp| : 
+	\item \verb|var=name| : 	
 \end{itemize}
 
 \subsubsection{Description}
@@ -1252,8 +1257,8 @@ Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
 	2000m-3500cost	5000.0	0.05	1.0	1.918332024845314E-6
 \end{Verbatim}
 
-\section{Métrique globale sur un graphe seuillé à plusieurs distances}
-Crée 6 graphes seuillés de 2000 à 2500, à partir du jeu de lien \textit{Complete\_cost} et calcule la métrique IIC pour chaque :
+\section{Métrique globale sur un graphe élagué à plusieurs distances}
+Crée 6 graphes élagués de 2000 à 2500, à partir du jeu de lien \textit{Complete\_cost} et calcule la métrique IIC pour chaque :
 \begin{Verbatim}[tabsize=4]
 	java -jar graphab-2.4.jar --project sample_project/Project.xml
 		--uselinkset Complete_cost --graph threshold=2000:100:2500 --gmetric IIC
@@ -1270,7 +1275,7 @@ Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
 \end{Verbatim}
 
 \section{Séquence SDM complète}
-Calcule un graphe non seuillé à partir du jeu de lien \textit{Planar\_Euclid}, calcule 2 métriques locales (Dg et F) sur le graphe créé, ajoute le jeu de point 
+Calcule un graphe sans élagage à partir du jeu de lien \textit{Planar\_Euclid}, calcule 2 métriques locales (Dg et F) sur le graphe créé, ajoute le jeu de point 
 sur le jeu de lien \textit{Planar\_Euclid} et calcule le SDM pour les 2 métriques avec la variable PRESENCE, sans modifier le projet.
 \begin{Verbatim}[tabsize=4]
 	java -jar graphab-2.4.jar -nosave --project sample_project/Project.xml 

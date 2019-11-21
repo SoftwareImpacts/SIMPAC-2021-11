@@ -136,6 +136,7 @@ import org.thema.graphab.metric.local.ConCorrLocalMetric;
 import org.thema.graphab.metric.local.DgLocalMetric;
 import org.thema.graphab.metric.local.EccentricityLocalMetric;
 import org.thema.graphab.metric.local.FLocalMetric;
+import org.thema.graphab.metric.local.IFInterLocalMetric;
 import org.thema.graphab.metric.local.IFLocalMetric;
 import org.thema.graphab.metric.local.LocalMetric;
 import org.thema.graphab.pointset.Pointset;
@@ -2361,17 +2362,17 @@ public final class Project {
             }
             r.dispose();
         } else if(param.isCalcArea()) {
-            if(param.isArea()) {
+            if(!param.isWeightedArea()) {
                 for(DefaultFeature patch : patches) {
-                    setCapacity(patch, patch.getGeometry().getArea());
+                    setCapacity(patch, Math.pow(patch.getGeometry().getArea(), param.exp));
                 }
             } else {
                 // weighted area
+                Raster rPatch = getRasterPatch();
+                Raster land = getImageSource();
                 for(DefaultFeature patch : patches) {
                     int id = (int) patch.getId();
                     double sum = 0;
-                    Raster rPatch = getRasterPatch();
-                    Raster land = getImageSource();
                     Envelope env = getSpace2grid().transform(patch.getGeometry()).getEnvelopeInternal();
                     for(double y = (int)env.getMinY() + 0.5; y <= Math.ceil(env.getMaxY()); y++) {
                         for(double x = (int)env.getMinX() + 0.5; x <= Math.ceil(env.getMaxX()); x++) {
@@ -2381,7 +2382,7 @@ public final class Project {
                             }
                         }
                     }
-                    setCapacity(patch, sum);
+                    setCapacity(patch, Math.pow(sum, param.exp));
                 }
             }
         } else {
@@ -2527,7 +2528,7 @@ public final class Project {
                 new DeltaPCMetric(), new WilksMetric()));
         LOCAL_METRICS = new ArrayList(Arrays.asList((LocalMetric)new FLocalMetric(), new BCLocalMetric(), new IFLocalMetric(), 
                 new CFLocalMetric(), new DgLocalMetric(), new CCLocalMetric(), new ClosenessLocalMetric(), 
-                new ConCorrLocalMetric(), new EccentricityLocalMetric()));
+                new ConCorrLocalMetric(), new EccentricityLocalMetric(), new IFInterLocalMetric()));
     }
     
     /**

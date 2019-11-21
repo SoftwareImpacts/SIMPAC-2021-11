@@ -42,11 +42,12 @@ public class ModGraphGenerator extends GraphGenerator {
     
     /**
      * Creates a new graph based on the graph gen but keeping only intra cluster edges.
+     * @param name graph name, may be null
      * @param gen the parent graph
      * @param cluster the partitionning
      */
-    public ModGraphGenerator(GraphGenerator gen, Set<Cluster> cluster) {
-        super(gen, "mod"+cluster.size());
+    public ModGraphGenerator(String name, GraphGenerator gen, Set<Cluster> cluster) {
+        super(name == null ? "mod"+cluster.size() + "_" + gen.getName() : name, gen);
         clusters = new HashMap<>();
         for(Cluster c : cluster) {
             for(Node n : c.getNodes()) {
@@ -76,5 +77,9 @@ public class ModGraphGenerator extends GraphGenerator {
 
         graph = gen.getGraph();
 
+    }
+    
+    public boolean sameCluster(DefaultFeature patch1, DefaultFeature patch2) {
+        return clusters.get((Integer)patch1.getId()).equals(clusters.get((Integer)patch2.getId()));
     }
 }

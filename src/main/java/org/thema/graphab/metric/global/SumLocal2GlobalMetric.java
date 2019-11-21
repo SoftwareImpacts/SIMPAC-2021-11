@@ -20,6 +20,8 @@
 package org.thema.graphab.metric.global;
 
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.metric.local.IFInterLocalMetric;
+import org.thema.graphab.metric.local.IFLocalMetric;
 import org.thema.graphab.metric.local.LocalSingleMetric;
 
 /**
@@ -55,6 +57,38 @@ public class SumLocal2GlobalMetric extends AbstractLocal2GlobalMetric {
     @Override
     public String getPrefixName() {
         return "Sum";
+    }
+    
+    public static class SumIFMetric extends SumLocal2GlobalMetric {
+        
+        public SumIFMetric() {
+            super(new IFLocalMetric(), TypeElem.NODE);
+        }
+        /**
+         * Constructor for dupplicate method.
+         * Do not use !
+         * @param metric may be IFLocalMetric
+         * @param type may be TypeElem.NODE
+         */
+        public SumIFMetric(LocalSingleMetric metric, TypeElem type) {
+            super(metric, type);
+        }
+    }
+    
+    public static class SumIFInterMetric extends SumLocal2GlobalMetric {
+        
+        public SumIFInterMetric() {
+            super(new IFInterLocalMetric(), TypeElem.NODE);
+        }
+        /**
+         * Constructor for dupplicate method.
+         * Do not use !
+         * @param metric may be IFInterLocalMetric
+         * @param type may be TypeElem.NODE
+         */
+        public SumIFInterMetric(LocalSingleMetric metric, TypeElem type) {
+            super(metric, type);
+        }
     }
     
 }

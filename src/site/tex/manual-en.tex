@@ -55,7 +55,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2019-09-06\\
+	2019-11-21\\
 	}
 	
 \end{titlepage}
@@ -174,7 +174,7 @@ Simplify patch for planar graph: checking the box accelerates the creation of a 
 The third window is for creating a link set for which several parameters must be selected: topology and link weighting. Creating a link set is the final step in starting a Graphab project. However, users may create new link sets within the same project via the Graphs / Create link set menu.
 
 \begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-en_img4.png}
+	\includegraphics[scale=0.5]{img/manual-en_linkset.png}
 \end{figure}
 
 
@@ -249,16 +249,16 @@ Graphs are created from the Graph / Create graph menu.
 	
 First, the new graph must be named.
 
-The user must select one of the link sets created previously (cf. \nameref{linkset}) and then select the type of graph:
+The user must select one of the link sets created previously (cf. \nameref{linkset}) and then select the type of pruning:
 \begin{itemize}
-	\item Thresholded graph: the selected links are less than or equal to the selected threshold distance.
-	\item Non-thresholded graph: all links between patches are validated, regardless of length.
+	\item None: all links between patches are validated, regardless of length.
+	\item Maximum distance: the selected links are less than or equal to the selected maximum distance.	
 	\item Minimum spanning tree: graph connecting all the patches in which the total weight of links is minimal.
 \end{itemize}
 
 “Include intra-patch distances for metrics” option: if the box is checked, the computation of metrics includes the distances between and across patches (recommended). If the box is unchecked, only the distances between (but not across) patches are taken into account.
 
-For a thresholded graph, the unit of the threshold distance depends on the type of distance used in creating the link set. If the link set is created using Euclidean distances, the threshold distance of the graph is in meters. If the link set is created using cost distances and the impedance is cumulative cost, the threshold distance of the graph is given as a cumulative cost. The unit of the distance (cost or meter) is shown just after the "max dist" field.
+For a pruned graph with maximum distance, the unit of the distance depends on the type of distance used in creating the link set. If the link set is created using Euclidean distances, the maximum distance is in meters. If the link set is created using cost distances and the impedance is cumulative cost, the maximum distance is given as a cumulative cost. The unit of the distance (cost or meter) is shown just after the "max dist" field.
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-fr_img7.png}
@@ -270,7 +270,7 @@ $$Dist = e^{intercept + slope . log(DistM)}$$
 
 The estimation can be performed directly in Graphab from the menu "Dist. conversion" available by right-clicking on a link set name.
 
-To perform a multiscale analysis, it is often necessary to create a series of graphs in which increasing thresholds are defined. Users can create this series manually. But if the objective is to analyze the behavior of a metric according to the threshold, the Metrics / Batch graphs menu can be used (see \nameref{batch_graph}).
+To perform a multiscale analysis, it is often necessary to create a series of graphs in which increasing maximum distances are defined. Users can create this series manually. But if the objective is to analyze the behavior of a metric according to the maximum distance, the Metrics / Batch graphs menu can be used (see \nameref{batch_graph}).
 
 
 \subsection{Graph clustering}
@@ -281,7 +281,7 @@ Modularity is calculated with a weight($w_{ij}$) defined for each link of the gr
 $$w_{ij} = (a_i a_j)^\beta e^{-\alpha d_{ij}}$$
 The two parameters $\beta$ et $\alpha$ are used to define respectively the importance of the patch capacity ($a_i a_j$) and the importance of the distance ($d_{ij}$) for the weight of the link $w_{ij}$. If $\alpha = \beta = 0$, then the weights are identical: $w_{ij} = 1$.  
 
-The graph clustering is available by right-clicking on the name of the graph. In the first window, the user defines the paramters $\alpha$ et $\beta$. The parameter $\alpha$ is not defined directly, it is determined from two other parameters: a distance $d$ and a probability $p$ (cf. \nameref{param_weight}). To define $\alpha$ to 0, $p$ must be equal to 1.\\
+The graph clustering is available by right-clicking on the name of the graph. In the first window, the user defines the parameters $\alpha$ et $\beta$. The parameter $\alpha$ is not defined directly, it is determined from two other parameters: a distance $d$ and a probability $p$ (cf. \nameref{param_weight}). To define $\alpha$ to 0, $p$ must be equal to 1.\\
 The right part of the window allows to select which clustering to keep in memory. By default, all clustering are kept in memory to display them after. These settings are useful to avoid memory overflow with large graphs (more than 5,000 nodes). In this case, graphab can keep only the best clustering (ie. with the best modularity) or keep all clustering in a given size interval between 1 and the number of nodes.
 
 \begin{figure}[H]
@@ -344,7 +344,7 @@ Users must define three parameters: type of distance, maximum distance, landscap
 Cost: This is the spatial metric (Euclidean or cost distance) corresponding to one link set available in the project. The use of costs in this procedure amounts to defining an anisotropic neighborhood around patches which may differ greatly from a buffer function. For consistency, it is recommended to use the same type of distance as was
 used in creating the links of the graph. For a link set created with Euclidean distance, the user must select “all costs = 1”.
 
-Max cost: Like the graph threshold distance, the unit of this maximum distance depends on the type of distance used in creating the link set (Euclidean or cost distance).
+Max cost: Like the graph maximum distance, the unit of this maximum distance depends on the type of distance used in creating the link set (Euclidean or cost distance).
 
 Codes included: the user may select one or more landscape categories, other than the habitat category, to be included in calculating capacity.
 
@@ -458,7 +458,7 @@ Whichever the selected level, the user must first specify the graph on which the
 
 \subsubsection{Alpha parameter}
 
-Several metrics include a weighting in their calculation which converts the distance between patches into the probability of movement. These metrics are F, PC, FPC, and BC. The weighting is based on an exponential function:
+Several metrics include a weighting in their calculation which converts the distance between patches into the probability of movement. These metrics are F, IF, PC, EC, BC... The weighting is based on an exponential function:
 \begin{equation*}
 p={e}^{-\mathit{\alpha d}}
 \end{equation*}
@@ -476,7 +476,7 @@ The value of $\alpha$ is automatically obtained from the formula:
 
 \subsubsection{Beta parameter}
 
-The metrics F, PC, FPC, and BC are controlled by the $\beta$ parameter. This parameter is the exponent applied to patch capacity. It adjusts the relative balance between the weight of distances and the weight of patch capacity in the weighting of metrics. Taking the example of the metric F in local computation, whose generic form is:
+The metrics F, IF, CF, and BC are controlled by the $\beta$ parameter. This parameter is the exponent applied to patch capacity. It adjusts the relative balance between the weight of distances and the weight of patch capacity in the weighting of metrics. Taking the example of the metric F in local computation, whose generic form is:
 \begin{equation*}
 F=\sum {{a}^{\beta }}{e}^{-\mathit{\alpha d}}
 \end{equation*}
@@ -493,15 +493,14 @@ In addition to these few examples, any weighting values are possible.
 
 \subsection{Calculating batch metrics}
 
-Every metric compatible with the global level can be calculated following the variation of the scale of distances. This variation may concern either graph thresholding (\ref{batch_graph}), or metric adjustment (\ref{batch_metric}). The type of distance used for thresholding depends on the type of distance used in creating the link set (Euclidean, least-cost
-distance, or least-cost path).
+Every metric compatible with the global level can be calculated following the variation of the scale of distances. This variation may concern either graph pruning (\ref{batch_graph}), or metric adjustment (\ref{batch_metric}). The type of distance used depends on the type of distance used in creating the link set (Euclidean, least-cost distance, or least-cost path).
 
 \subsubsection{Batch graph}
 \label{batch_graph}
-The Metrics / Batch graph menu allows a series of thresholded graphs to be created from a given link set and a metric to be calculated for each graph at global level. The thresholds of successive graphs are increasingly defined in either of two ways:
+The Metrics / Batch graph menu allows a series of pruned graphs to be created from a given link set and a metric to be calculated for each graph at global level. The maximum distance of successive graphs are increasingly defined in either of two ways:
 \begin{itemize}
-	\item distance: a fixed increment of distance is defined between successive graphs. The metric values are therefore calculated inregular intervals of threshold distance.
-	\item number of links: a fixed number of links is defined between successive graphs. This number of links is automatically converted into distance used to threshold the graph. These threshold distances may be unevenly spread.
+	\item distance: a fixed increment of distance is defined between successive graphs. The metric values are therefore calculated inregular intervals of  distance.
+	\item number of links: a fixed number of links is defined between successive graphs. This number of links is automatically converted into distance used to prune the graph. These distances may be unevenly spread.
 \end{itemize}
 
 \begin{figure}[H]
@@ -510,12 +509,12 @@ The Metrics / Batch graph menu allows a series of thresholded graphs to be creat
 
 Graphs are defined following three criteria selected by users:
 \begin{itemize}
-	\item min: smallest threshold used for the first graph in the series. By default, this minimum is 0, corresponding to the total absence of links.
-	\item max: maximum threshold used for the final graph in the series. By default, this maximum corresponds to the maximum distance or to the link number of the selected link set.
+	\item min: smallest distance used for the first graph in the series. By default, this minimum is 0, corresponding to the total absence of links.
+	\item max: maximum distance used for the final graph in the series. By default, this maximum corresponds to the maximum distance or to the link number of the selected link set.
 	\item increment: distance value added between each new graph.
 \end{itemize}
 
-Once the calculation is completed, the software opens a new window displaying the curve of the selected metric versus the threshold distance. The values of this curve can be saved with the “Export” button by selecting text format.
+Once the calculation is completed, the software opens a new window displaying the curve of the selected metric versus the maximum distance. The values of this curve can be saved with the “Export” button by selecting text format.
 
 \subsubsection{Batch parameter}
 \label{batch_metric}
@@ -594,7 +593,7 @@ The metric interpolation is used automatically in calculating species distributi
 
 \section{Patch addition}
 
-The function "Add patches" is available in the menu "Analyses". It is used to test a set of locations to create new habitat patches according to the connectivity gain they provide. Graphab calculates first the selected global connectivity metric, then it adds virtually a patch and the links between this patch and existing patches (only if their distance is less than the thresholding of the graph in the case of a thresholded graph) and calculates the global metric again. Once all locations are tested, the software validates the one for which patch addition produces the biggest increase in the metric value. The process is repeated until the desired number of additional patches is reached by including elements already added at each step.
+The function "Add patches" is available in the menu "Analyses". It is used to test a set of locations to create new habitat patches according to the connectivity gain they provide. Graphab calculates first the selected global connectivity metric, then it adds virtually a patch and the links between this patch and existing patches (only if their distance is less than the maximum distance of the graph in the case of a pruned graph) and calculates the global metric again. Once all locations are tested, the software validates the one for which patch addition produces the biggest increase in the metric value. The process is repeated until the desired number of additional patches is reached by including elements already added at each step.
 
 \begin{figure}[H]
 	\includegraphics[scale=0.5]{img/manual-en_addpatch.png} 
@@ -636,7 +635,7 @@ From the Graph menu, the "Create metapatch project" entry creates a new project 
 	\includegraphics[scale=0.5]{img/manual-en_metapatch.png} 
 \end{figure}
 
-To use this feature, it is necessary to create an initial project and a graph thresholded at the desired distance (eg daily distance). Each component of this thresholded graph correspond to a meta-patch. It is therefore constituted by all interconnected patches.
+To use this feature, it is necessary to create an initial project and a graph pruned at the desired distance (eg daily distance). Each component of this pruned graph correspond to a meta-patch. It is therefore constituted by all interconnected patches.
 
 By default, the metapatch capacity is defined as the sum of the capacity of the patches composing the metapatch. The other option, "Weighted distance", is used to reflect the removal between patches. For this option, you must define the parameter $\alpha$ by giving a distance $d$ and an associated probability $p$ (see \nameref{param_weight}). The resulting capacity ($C$) of a metapatch is:
 
@@ -786,7 +785,7 @@ Properties of a graph are available by right-clicking on the name of the graph. 
 
 The Remove entry can be used to remove the selected graph. The project is saved automatically.
 
-Properties displays the parameters used in constructing the graph: graph name, graph type with the possible threshold used, and the number of links.
+Properties displays the parameters used in constructing the graph: graph name, graph type with the possible maximum distance used, and the number of links.
 
 The OD Matrix (Origin–Destination Matrix) entry creates a table with the distance between each pair of nodes for the given graph. The unit of distance depends on the type of distance used in the graph. The absence of any connection between two nodes is noted NaN (Not a Number). This matrix is saved in the project file in text format named: “graph name-
 odmatrix.txt~”.
@@ -1125,7 +1124,7 @@ Delta &
 {\mathit{dPC}}_{\mathit{area}}=\frac{{a}_{i}^{2}}{{A}^{2}\mathit{PC}}
 \end{equation*}
 \begin{equation*}
-{dPC}_{flux}=\frac{{FPC}_{i}}{PC}-{dPC}_{area}
+{dPC}_{flux}=\frac{{IF}_{i}}{PC}-{dPC}_{area}
 \end{equation*}
 } &
 Rate of variation between the value of PC index and the value of PC’

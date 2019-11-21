@@ -91,6 +91,7 @@ public class LogisticTest {
         System.out.println("getLikelihood");
         double result = log.getLikelihood();
         assertEquals(0.01343191140, result, 1e-10);
+        assertEquals(Math.log(result), log.getLogLikelihood(), 1e-10);
     }
 
     /**

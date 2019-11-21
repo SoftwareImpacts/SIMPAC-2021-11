@@ -1,4 +1,15 @@
 ## Changelog
+##### version 2.5.2 (21/11/2019)
+- Logistic model better numeric precision with many points
+- Corridor calculation optimization with many threads
+- Metric : add IF inter cluster metric and SumIF, SumIFI in plugin (metric on modularity graph only)
+- UI : Show metric in graph contextual menu
+- CLI : --corridor add beta and var parameters for raster output
+- CLI : --pointset add random_absence parameter
+- CLI : --capa add exp parameter for area
+- CLI : --capa bug while reading parameters
+- CLI : --model add other variables from patch (vars) or raster (raster)
+- CLI : show progression in console
 
 ##### version 2.5.1 (06/11/2019)
 - UI : Bug from 2.5 null pointer when loading linkset panel
@@ -9,7 +20,7 @@
 - Planar linkset can be thresholded as complete linkset (UI and CLI)
 - UI : linkset costs can be loaded from another linkset
 - UI : project creation : check if habitat code have been selected
-- UI : new graph is not thresholed by default
+- UI : new graph is not thresholded by default
 - CLI : syntax of --linkset command have been changed for distance threshold (maxcost parameter)
 - CLI : --linkset command check if all codes have a cost assigned
 
