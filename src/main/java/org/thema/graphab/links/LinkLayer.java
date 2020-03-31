@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
@@ -41,10 +43,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import org.apache.commons.math.stat.StatUtils;
+import org.apache.commons.math3.distribution.TDistribution;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.jfree.chart.ChartFrame;
-import org.jfree.chart.annotations.XYTitleAnnotation;
-import org.jfree.chart.title.TextTitle;
-import org.jfree.chart.ui.RectangleAnchor;
 import org.jfree.data.statistics.Regression;
 import org.thema.common.Config;
 import org.thema.common.collection.HashMap2D;
@@ -156,27 +158,74 @@ public class LinkLayer extends FeatureLayer {
         menu.add(new AbstractAction(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Dist2Cost")) {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String res = JOptionPane.showInputDialog(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("DistMetric") + " : ");
-                if(res == null) {
+                DistanceConvDialog dlg = new DistanceConvDialog(null, linkset, true);
+                dlg.setVisible(true);
+                if(!dlg.isOk) {
                     return;
                 }
-                double dist = Double.parseDouble(res);
-                double[][] data = new double[getFeatures().size()][2];
+                List<Feature> paths = new ArrayList<>();
+                if(dlg.costMax != null) {
+                    try {
+                        HashMap2D<Path, Double, Integer> costPaths = linkset.extractCostFromPath();
+                        Set<Double> costs = new TreeSet<>(costPaths.getKeys2()).tailSet(dlg.costMax);
+                        for(Path p : costPaths.getKeys1()) {
+                            boolean include = true;
+                            for(Double cost : costs) {
+                                Integer nb = costPaths.getValue(p, cost);
+                                if(nb != null && nb > 0) {
+                                    include = false;
+                                    break;
+                                }
+                            }
+                            if(include) {
+                                paths.add(p);
+                            }
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(LinkLayer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    paths.addAll(getFeatures());
+                }
+                
+                double dist = dlg.distance;
+                double[][] data = new double[paths.size()][2];
                 int i = 0;
-                for(Feature f : getFeatures()) {
-                    data[i][0] = Math.log(((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue());
-                    data[i][1] = Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue());
+                double sumX = 0;
+                for(Feature f : paths) {
+                    if(dlg.log) {
+                        data[i][0] = Math.log(((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue());
+                        data[i][1] = Math.log(((Number)f.getAttribute(Path.COST_ATTR)).doubleValue());
+                    } else {
+                        data[i][0] = ((Number)f.getAttribute(Path.DIST_ATTR)).doubleValue();
+                        data[i][1] = ((Number)f.getAttribute(Path.COST_ATTR)).doubleValue();
+                    }
+                    sumX += data[i][0];
                     i++;        
                 }
                 
                 double [] coef = Regression.getOLSRegression(data);
-                double cost = linkset.estimCost(dist);
-                final JFrame frm = showScatterPlot(Path.DIST_ATTR, Path.COST_ATTR, true);
-                String result = String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
-                        coef[0], coef[1], dist, cost);
-                
-                ((ChartFrame)frm).getChartPanel().getChart().setTitle(String.format("Regression : cost = exp(%g + log(dist)*%g)\n\ndist %g = cost %g", 
-                        coef[0], coef[1], dist, cost));
+                double x = dlg.log ? Math.log(dlg.distance) : dlg.distance;
+                double cost = coef[0] + coef[1]*x;
+                if(dlg.log) {
+                    cost = Math.exp(cost);
+                } 
+                SimpleRegression reg = new SimpleRegression(true);
+                reg.addData(data);
+                double r2 = reg.getRSquare();
+                double inter = -new TDistribution(reg.getN()-2).inverseCumulativeProbability(0.05/2) * 
+                        Math.sqrt(reg.getMeanSquareError() * (1 + 1/reg.getN() + Math.pow(x-(sumX/reg.getN()), 2) / reg.getXSumSquares()))  ;
+                double min = reg.predict(x)-inter, max = reg.predict(x)+inter;
+                if(dlg.log) {
+                    min = Math.exp(min);
+                    max = Math.exp(max);
+                } 
+                final JFrame frm = FeatureLayer.showScatterPlot(paths, Path.DIST_ATTR, Path.COST_ATTR, dlg.log);
+                String equation = dlg.log ? 
+                        String.format("Regression : cost = exp(%g + log(dist)*%g)\n\n", coef[0], coef[1]) : 
+                        String.format("Regression : cost = %g + dist*%g\n\n", coef[0], coef[1]);
+                String result = String.format("dist %g = cost %g +/- [%g - %g]", dist, cost, min, max);
+                ((ChartFrame)frm).getChartPanel().getChart().setTitle(equation+result);
                 
                 final JTextArea text = new JTextArea(result);
                 text.addComponentListener(new ComponentAdapter() {

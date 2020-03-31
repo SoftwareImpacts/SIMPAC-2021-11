@@ -87,7 +87,7 @@ public class ProjectTest {
     public void testConstructor() throws Exception {
         
         GridCoverage2D cov = IOImage.loadTiff(new File("target/test-classes/org/thema/graphab/source.tif"));
-        Project prj = new Project("test", new File("/tmp"), cov, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), Collections.singleton(1), Double.NaN, false, 0, false);
+        Project prj = new Project("test", new File("/tmp"), cov, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), Collections.singleton(1), Double.NaN, false, 0, 0, false);
         
         assertEquals("Number of patches", 152, prj.getPatches().size());
         double area = 0;
@@ -325,7 +325,7 @@ public class ProjectTest {
         }
         
         GridCoverage2D cov = IOImage.loadTiff(new File("target/test-classes/org/thema/graphab/source.tif"));
-        Project prj = new Project("test", new File("/tmp"), cov, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), new TreeSet(Arrays.asList(1,2)), Double.NaN, false, 0, false);
+        Project prj = new Project("test", new File("/tmp"), cov, new TreeSet(Arrays.asList(1, 2, 3, 4, 5, 6, 8, 9, 10)), new TreeSet(Arrays.asList(1,2)), Double.NaN, false, 0, 0, false);
         param = new CapaPatchDialog.CapaPatchParam();
         param.calcArea = true;
         param.codeWeight = new HashMap<Integer, Double>() {{ put(1, 2.0); put(2, 2.0);}};

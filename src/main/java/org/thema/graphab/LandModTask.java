@@ -193,6 +193,6 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
         // create project
         File dir = new File(project.getDirectory(), id);       
         return new Project(project.getName() + "-" + id, dir, newLand, codes, 
-                project.getPatchCodes(), project.getNoData(), project.isCon8(), project.getMinArea(), project.isSimplify(), voronoi);
+                project.getPatchCodes(), project.getNoData(), project.isCon8(), project.getMinArea(), project.getMaxSize(), project.isSimplify(), voronoi);
     }
 }

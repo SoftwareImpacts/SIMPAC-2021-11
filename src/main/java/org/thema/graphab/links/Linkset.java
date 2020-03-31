@@ -56,8 +56,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.jfree.data.statistics.Regression;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import org.thema.common.Config;
 import org.thema.common.JTS;
 import org.thema.common.ProgressBar;
@@ -149,6 +147,19 @@ public class Linkset {
      * @param distMax max cost distance or 0 for no max
      */
     public Linkset(Project project, String name, int type, boolean realPaths, double distMax) {
+        this(project, name, type, realPaths, distMax, null);
+    }
+    
+    /**
+     * Creates a linkset with 3D euclidean distance from height raster
+     * @param project the project where adding this linkset
+     * @param name linkset name
+     * @param type linkset type (ie. topology) COMPLETE or PLANAR
+     * @param realPaths are real paths stored
+     * @param distMax max cost distance or 0 for no max
+     * @param heightRaster raster with object height
+     */
+    public Linkset(Project project, String name, int type, boolean realPaths, double distMax, File heightRaster) {
         this.project = project;
         this.name = name;
         this.type = type;
@@ -157,6 +168,15 @@ public class Linkset {
         this.distMax = distMax;
         this.realPaths = realPaths;
         this.removeCrossPatch = false;
+        
+        if(heightRaster != null) {
+            String prjPath = project.getDirectory().getAbsolutePath();
+            if(heightRaster.getAbsolutePath().startsWith(prjPath)) {
+                this.extCostFile = new File(heightRaster.getAbsolutePath().substring(prjPath.length()+1));
+            } else {
+                this.extCostFile = heightRaster.getAbsoluteFile();
+            }
+        }
     }
 
 
@@ -860,8 +880,10 @@ public class Linkset {
         paths = task.getResult();
     }
 
-    private void calcEuclidLinkset(ProgressBar progressBar) {
+    private void calcEuclidLinkset(ProgressBar progressBar) throws IOException {
         final boolean allLinks = getTopology() == Linkset.COMPLETE;
+        EuclidePathFinder pathFinder = extCostFile != null ? new Euclide3DPathFinder(project, project.getExtRaster(extCostFile)) : 
+                new EuclidePathFinder(project);
         
         Path.newSetOfPaths();
         
@@ -887,7 +909,7 @@ public class Linkset {
                         
                         for(Feature dest : nearPatches) {
                             if (((Integer)orig.getId()) < (Integer)dest.getId()) {
-                                Path p = Path.createEuclidPath(orig, dest);
+                                Path p = pathFinder.createPath(orig, dest);
                                 if (getDistMax() <= 0 || p.getDist() <= getDistMax()) {
                                     links.add(p);
                                 }
@@ -896,8 +918,8 @@ public class Linkset {
                     } else {
                         for (Integer dId : project.getPlanarLinks().getNeighbors(orig)) {
                             if (((Integer)orig.getId()) < dId) {
-                                Path p = Path.createEuclidPath(orig, project.getPatch(dId));
-                                if (getDistMax() <= 0 || p.getDist() <= getDistMax()) {
+                                Path p = pathFinder.createPath(orig, project.getPatch(dId));
+                                if (getDistMax() <= 0 || p.getDist() <= getDistMax()) {                                   
                                     links.add(p);
                                 }
                             }

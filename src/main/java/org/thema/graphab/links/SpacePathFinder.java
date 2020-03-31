@@ -22,11 +22,9 @@ package org.thema.graphab.links;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import org.thema.data.feature.DefaultFeature;
-import org.thema.data.feature.Feature;
 
 /**
  * Calculates paths between patches or between points.

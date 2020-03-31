@@ -41,6 +41,7 @@ import org.geotools.graph.structure.Node;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.links.Linkset;
 
 /**
  * Calculates electric circuit on graph.
@@ -172,7 +173,7 @@ public class Circuit {
     
     private double getImpedance(Edge edge) {
         if(Double.isNaN(alpha)) {
-            return graph.getCost(edge);
+            return graph.getCost(edge) + (graph.getLinkset().getType_dist() == Linkset.EUCLID ? graph.getProject().getResolution() : 0);
         } else {
             return -Math.log(graph.getFlow(edge, alpha));
         }

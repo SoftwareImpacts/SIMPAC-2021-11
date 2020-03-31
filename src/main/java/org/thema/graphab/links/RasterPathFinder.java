@@ -38,7 +38,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.PriorityQueue;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
@@ -251,6 +250,7 @@ public final class RasterPathFinder implements SpacePathFinder {
      * @param dests destination points
      * @return les couts et longueurs des chemins de p vers les destinations
      */
+    @Override
     public List<double[]> calcPathsInsidePatch(Coordinate p, List<Coordinate> dests) {
         initCoord(p);
         
@@ -710,40 +710,4 @@ public final class RasterPathFinder implements SpacePathFinder {
         wd = w; hd = h;
         ante = bufAnte;
     }
-
-    /**
-     * Node representing a pixel for the PriorityQueue
-     */
-    private static class Node implements Comparable<Node>{
-        private int ind;
-        private double dist;
-
-        public Node(int ind, double dist) {
-            this.ind = ind;
-            this.dist = dist;
-        }
-
-        @Override
-        public final int compareTo(Node o) {
-            return dist == o.dist ? 0 : dist < o.dist ? -1 : 1;
-        }
-
-        @Override
-        public final boolean equals(Object obj) {
-            if (obj == null || getClass() != obj.getClass()) {
-                return false;
-            }
-            
-            return this.ind == ((Node)obj).ind;
-        }
-
-        @Override
-        public final int hashCode() {
-            int hash = 7;
-            hash = 43 * hash + this.ind;
-            return hash;
-        }
-
-    }
-
 }

@@ -19,17 +19,13 @@
 package org.thema.graphab.links;
 
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.linearref.LengthIndexedLine;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
-import org.thema.graphab.util.DistanceOp;
 
 /**
  * A path of a linkset ie. a link between 2 patches.
@@ -195,37 +191,6 @@ public class Path extends DefaultFeature {
         throw new IllegalArgumentException("No common patch between path " + p1.getId() + " and " + p2.getId());
     }
 
-    /**
-     * Creates a path between two patches for euclidean linkset.
-     * Calculates the shortest straight line between the two patches
-     * @param patch1 a patch
-     * @param patch2 another patch
-     * @return a path connecting the two patches with the shortest straight line
-     */
-    public static Path createEuclidPath(Feature patch1, Feature patch2) {
-        Geometry g1 = patch1.getGeometry();
-        Geometry g2 = patch2.getGeometry();
-        LineString path;
-        if(g1 instanceof Point || g2 instanceof Point) {
-            if(g1 instanceof Point && g2 instanceof Point) {
-                path = g1.getFactory().createLineString(new Coordinate[] {
-                    g1.getCoordinate(), g2.getCoordinate()});
-            } else {
-                Geometry g = g1 instanceof Point ? g2 : g1;
-                Point p = (Point) (g1 instanceof Point ? g1 : g2);
-                LengthIndexedLine linearRef = new LengthIndexedLine(g.getBoundary());
-                Coordinate c = linearRef.extractPoint(linearRef.project(p.getCoordinate()));
-                path = g1.getFactory().createLineString(new Coordinate[] {
-                    p.getCoordinate(), c});
-            }
-        } else {
-            Coordinate [] coords = DistanceOp.nearestPoints(g1, g2);    
-            path = g1.getFactory().createLineString(coords);
-        }
-
-        double dist = path.getLength();
-        return new Path(patch1, patch2, dist, path);
-    }
 
     /**
      * Creates a Path from a feature.

@@ -602,23 +602,28 @@ public class GraphGenerator {
         if(saved) {
             try {
                 List<DefaultFeature> features = getProject().loadVoronoiGraph(name);
-                // reorder features
                 compFeatures = new ArrayList<>(features);
-                for(DefaultFeature f : features) {                    
-                    compFeatures.set(((Number)f.getId()).intValue()-1, f);
-                }
-                
                 components = new ArrayList<>();
-                for(Feature f : compFeatures) {
-                    List<Node> nodes = new ArrayList<>();
-                    HashSet<Edge> edges = new HashSet<>();
-                    for(Node n : getNodes()) {
-                        if(f.getGeometry().covers(Project.getPatch(n).getGeometry())) {
-                            nodes.add(n);
-                            edges.addAll(n.getEdges());
-                        }
+                
+                if(compFeatures.size() == 1) {
+                    components.add(new BasicGraph(new ArrayList(getGraph().getNodes()), new ArrayList(getGraph().getEdges())));
+                } else {
+                    // reorder features
+                    for(DefaultFeature f : features) {                    
+                        compFeatures.set(((Number)f.getId()).intValue()-1, f);
                     }
-                    components.add(new BasicGraph(nodes, edges));
+
+                    for(Feature f : compFeatures) {
+                        List<Node> nodes = new ArrayList<>();
+                        HashSet<Edge> edges = new HashSet<>();
+                        for(Node n : getNodes()) {
+                            if(f.getGeometry().covers(Project.getPatch(n).getGeometry())) {
+                                nodes.add(n);
+                                edges.addAll(n.getEdges());
+                            }
+                        }
+                        components.add(new BasicGraph(nodes, edges));
+                    }
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);

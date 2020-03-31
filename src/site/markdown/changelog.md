@@ -1,4 +1,16 @@
 ## Changelog
+
+##### version 2.5.3 (31/03/2020)
+- UI : distance conversion : links containing barrier codes can be removed from the regression
+- UI : distance conversion : regression with or without log transformation
+- UI : distance conversion : add predictive interval
+- CLI : --create add maxsize=val parameter for splitting patches bigger than maxsize in linear unit
+- CLI : --linkset add nopathsaved option for not saving real paths
+- CLI : --linkset add height=rasterfile parameter for pseudo 3D euclidean paths
+- Circuit metrics : add resolution for euclidean paths with zero length
+- Project creation : optimize patch and voronoi vectorizations with parallelization
+- Graph loading : optimize loading when there is only one component
+
 ##### version 2.5.2 (21/11/2019)
 - Logistic model better numeric precision with many points
 - Corridor calculation optimization with many threads

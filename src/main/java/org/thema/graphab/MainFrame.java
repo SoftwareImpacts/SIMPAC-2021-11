@@ -58,7 +58,6 @@ import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.LoggingDialog;
 import org.thema.common.swing.PreferencesDialog;
-import org.thema.common.swing.TaskMonitor;
 import org.thema.data.GlobalDataStore;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.WritableFeature;
@@ -587,7 +586,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 long start = System.currentTimeMillis();
                 GlobalMetricLauncher launcher = new GlobalMetricLauncher(dlg.metric);
-                TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_metrics..."), "", 0, 100);
+                ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_metrics..."));
                 Double[]val = launcher.calcMetric(dlg.graph, true, monitor);
                 String res = dlg.metric.getDetailName() + " : " + Arrays.deepToString(val) + "\n";
 
@@ -615,8 +614,7 @@ public class MainFrame extends javax.swing.JFrame {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_metrics..."), "",
-                    0, 100);
+                ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_metrics..."));
                 GlobalMetric indice = dlg.metric;
 
                 BatchGraphMetricTask task = new BatchGraphMetricTask(monitor, dlg.linkset, dlg.distAbs, 
@@ -895,11 +893,8 @@ public class MainFrame extends javax.swing.JFrame {
         new Thread(new Runnable() {
             @Override
             public void run() {
-               int n = (int)((dlg.max - dlg.min) / dlg.inc) + 1;
                
-               TaskMonitor monitor = new TaskMonitor(MainFrame.this, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_global_metric_") + dlg.metric.getName(), "", 0,
-                        n*100);
-               monitor.popupNow();
+               ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Calc_global_metric_") + dlg.metric.getName());
                
                final List<Double> steps = new ArrayList<>();
                for(double p = dlg.min; p <= dlg.max; p += dlg.inc) {
@@ -907,7 +902,7 @@ public class MainFrame extends javax.swing.JFrame {
                 }
 
                AbstractParallelFTask<TreeMap<Double, Double[]>, TreeMap<Double, Double[]>> task =
-                       new AbstractParallelFTask<TreeMap<Double, Double[]>, TreeMap<Double, Double[]>>(monitor.getSubMonitor(0, 100, 100)) {
+                       new AbstractParallelFTask<TreeMap<Double, Double[]>, TreeMap<Double, Double[]>>(monitor) {
                         TreeMap<Double, Double[]> results;
                         @Override
                         protected TreeMap<Double, Double[]> execute(int start, int end) {
@@ -924,7 +919,7 @@ public class MainFrame extends javax.swing.JFrame {
                                 monitor.setNote(dlg.param + " : " + String.format("%g", p));
                                 GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice);
                                 Double [] res = launcher.calcMetric(dlg.graph, false,
-                                        ((TaskMonitor)monitor).getSubMonitor(0, 100, 100));
+                                        monitor.getSubProgress(100));
                                 result.put(p, res);
                             }
                             return result;

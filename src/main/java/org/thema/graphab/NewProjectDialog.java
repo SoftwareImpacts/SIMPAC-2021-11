@@ -578,7 +578,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
             codes.remove((int)noData);
         }
 
-        Project prj = new Project(prjNameTextField.getText(), prjPath, coverage, codes, getHabitatCodes(), noData, con8, minArea, simplifyCheckBox.isSelected());
+        Project prj = new Project(prjNameTextField.getText(), prjPath, coverage, codes, getHabitatCodes(), noData, con8, minArea, 0, simplifyCheckBox.isSelected());
         panel3.setProject(prj);
         prj.addLinkset(panel3.getLinkset(), true);
 

@@ -52,11 +52,11 @@ import org.geotools.graph.structure.Edge;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.thema.common.Config;
+import org.thema.common.ConsoleProgress;
 import org.thema.common.JTS;
 import org.thema.common.ProgressBar;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
-import org.thema.common.swing.ProgressBarPanel;
 import org.thema.common.swing.TaskMonitor;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
@@ -116,12 +116,12 @@ public class CLITools {
     public void execute(String [] argArray) throws IOException, SchemaException, MathException {
         if(argArray[0].equals("--help")) {
             System.out.println("Usage :\njava -jar graphab.jar --metrics\n" +
-                    "java -jar graphab.jar [-proc n] --create prjname landrasterfile habitat=code1,...,coden [nodata=val] [minarea=val] [con8] [simp] [dir=path]\n" +
+                    "java -jar graphab.jar [-proc n] --create prjname landrasterfile habitat=code1,...,coden [nodata=val] [minarea=val] [maxsize=val] [con8] [simp] [dir=path]\n" +
                     "java -jar graphab.jar [-mpi | -proc n] [-nosave] --project prjfile.xml command1 [command2 ...]\n" +
                     "Commands list :\n" +
                     "--show\n" + 
                     "--dem rasterfile\n" +
-                    "--linkset distance=euclid|cost [name=linkname] [complete] [maxcost=valcost] [slope=coef] [remcrosspath] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
+                    "--linkset distance=euclid|cost [name=linkname] [complete] [maxcost=valcost] [slope=coef] [remcrosspath|nopathsaved] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
                     "--corridor maxcost=[{]min:inc:max[}] [format=raster|vector] [beta=exp|var=name]\n" +
                     "--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]\n" +
@@ -149,6 +149,7 @@ public class CLITools {
         }
         if(argArray[0].equals("--advanced")) {
             System.out.println("Advanced commands :\n" +
+                    "--linkset distance=euclid [name=linkname] [complete] [maxcost=valcost] [nopathsaved] [height=rastefile]\n" +
                     "--linkset distance=circuit [name=linkname] [complete[=dmax]] [slope=coef] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n");
             return;
@@ -344,6 +345,7 @@ public class CLITools {
         }
         double nodata = Double.NaN;
         double minArea = 0;
+        double maxSize = 0;
         boolean con8 = false;
         boolean simp = false;
         File dir = new File(".");
@@ -358,6 +360,9 @@ public class CLITools {
                     break;
                 case "minarea":
                     minArea = Double.parseDouble(tok[1]) * 10000; // ha -> m2
+                    break;
+                case "maxsize":
+                    maxSize = Double.parseDouble(tok[1]); // ha -> m2
                     break;
                 case "con8":
                     con8 = true;
@@ -392,7 +397,7 @@ public class CLITools {
             }
         }
 
-        return new Project(name, new File(dir, name), coverage, new TreeSet<>(codes), patchCodes, nodata, con8, minArea, simp);
+        return new Project(name, new File(dir, name), coverage, new TreeSet<>(codes), patchCodes, nodata, con8, minArea, maxSize, simp);
     }
     
     private void setDEM(List<String> args) throws IOException {
@@ -517,12 +522,20 @@ public class CLITools {
         if(params.containsKey("maxcost")) {
             threshold = Double.parseDouble(params.remove("maxcost"));
         }
+        boolean realPaths = true;
+        if(params.containsKey("nopathsaved")) {
+            realPaths = false;
+        }
         useLinksets.clear();
         if(type_dist == Linkset.EUCLID) {
+            File heightRaster = null;
+            if(params.containsKey("height")) {
+                heightRaster = new File(params.remove("height"));
+            }
             if(linkName == null) {
                 linkName = "euclid_" + (type == Linkset.COMPLETE ? "comp" : "plan")+threshold;
             }
-            Linkset cost = new Linkset(project, linkName, type, true, threshold);
+            Linkset cost = new Linkset(project, linkName, type, realPaths, threshold, heightRaster);
             project.addLinkset(cost, save);
             useLinksets.add(cost);
         } else {
@@ -542,7 +555,7 @@ public class CLITools {
                     linkName = (circuit ? "circ_" : "cost_") + extCost.getName();
                 } 
                 Linkset cost = circuit ? new Linkset(project, linkName, type, null, extCost, true, coefSlope) : 
-                        new Linkset(project, linkName, type, Linkset.COST_LENGTH, true, removeCrossPath, threshold, extCost, coefSlope);
+                        new Linkset(project, linkName, type, Linkset.COST_LENGTH, realPaths, removeCrossPath, threshold, extCost, coefSlope);
                 project.addLinkset(cost, save);
                 useLinksets.add(cost);
             } else {
@@ -590,7 +603,7 @@ public class CLITools {
                     }
                     String s = name + (multi ? "-" + c : "");
                     Linkset cost = circuit ? new Linkset(project, s, type, costs, null, true, coefSlope) : 
-                            new Linkset(project, s, type, costs, Linkset.COST_LENGTH, true, removeCrossPath, threshold, coefSlope);
+                            new Linkset(project, s, type, costs, Linkset.COST_LENGTH, realPaths, removeCrossPath, threshold, coefSlope);
                     project.addLinkset(cost, save);
                     useLinksets.add(cost);
                 }
@@ -1711,94 +1724,4 @@ public class CLITools {
         return params;
     }
     
-    public static class ConsoleProgress implements ProgressBar {
-        private double progress = 0;
-        private int minimum = 0, maximum = 1;
-        private String note = "";
-
-        public ConsoleProgress() {
-        }
-
-        public ConsoleProgress(String note, int max) {
-            this.note = note;
-            this.maximum = max;
-        }
-        
-        @Override
-        public void setMaximum(int max) {
-            maximum = max;
-        }
-
-        @Override
-        public void setMinimum(int min) {
-            minimum = min;
-        }
-
-        @Override
-        public void setProgress(double val) {
-            progress = val;
-            updateText();
-        }
-
-        @Override
-        public void incProgress(double val) {
-            synchronized (this) {
-                progress += val;
-            }
-            updateText();
-        }
-
-        @Override
-        public double getProgress() {
-            return progress;
-        }
-
-        @Override
-        public void setNote(String note) {
-            this.note = note;
-            updateText();
-        }
-
-        @Override
-        public String getNote() {
-            return note;
-        }
-
-        @Override
-        public ProgressBar getSubProgress(double size) {
-            return new ProgressBarPanel.SubProgress(this, size);
-        }
-
-        @Override
-        public void setIndeterminate(boolean bool) {
-            
-        }
-
-        @Override
-        public boolean inProgress() {
-            return progress != minimum && progress != maximum;
-        }
-
-        @Override
-        public boolean isCanceled() {
-            return false;
-        }
-
-        @Override
-        public void reset() {
-            note = "";
-            progress = minimum;
-            System.out.print("\n");
-        }
-
-        @Override
-        public void close() {
-            
-        }
-        
-        private void updateText() {
-            System.out.print(String.format("\r%s : %.1f%%", note, (progress-minimum)/(maximum-minimum)*100));
-        }
-    
-    }
 }

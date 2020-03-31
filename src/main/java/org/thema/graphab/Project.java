@@ -89,6 +89,7 @@ import org.thema.common.io.IOFile;
 import org.thema.common.io.tab.CSVTabReader;
 import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
+import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.data.GlobalDataStore;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
@@ -143,6 +144,7 @@ import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.util.DistanceOp;
 import org.thema.graphab.util.RSTGridReader;
 import org.thema.graphab.util.SpatialOp;
+import static org.thema.graphab.util.SpatialOp.vectorize;
 import org.thema.parallel.AbstractParallelTask;
 import org.thema.parallel.ExecutorService;
 
@@ -197,6 +199,9 @@ public final class Project {
      * donc normalement m2
      */
     private double minArea;
+    
+    private double maxSize;
+    
     private boolean simplify;
     private CapaPatchDialog.CapaPatchParam capacityParams;
 
@@ -241,13 +246,14 @@ public final class Project {
      * @param noData the nodata value or NaN
      * @param con8 is 8 connex or 4 connex for patch extraction ?
      * @param minArea the minimum area for a patch
+     * @param maxSize maximum width or height of patch envelope in pixel
      * @param simplify if patch polygons are simplified for calculating planar topology for faster execution ?
      * @throws IOException
      * @throws SchemaException 
      */
     public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, Set<Integer> patchCodes,
-            double noData, boolean con8, double minArea, boolean simplify) throws IOException, SchemaException {
-        this(name, prjPath, cov, codes, patchCodes, noData, con8, minArea, simplify, true);
+            double noData, boolean con8, double minArea, double maxSize, boolean simplify) throws IOException, SchemaException {
+        this(name, prjPath, cov, codes, patchCodes, noData, con8, minArea, maxSize, simplify, true);
     }
     
     /**
@@ -261,13 +267,14 @@ public final class Project {
      * @param noData the nodata value or NaN
      * @param con8 is 8 connex or 4 connex for patch extraction ?
      * @param minArea the minimum area for a patch
+     * @param maxSize maximum width or height of patch envelope in pixel
      * @param simplify if patch polygons are simplified for calculating planar topology for faster execution ?
      * @param calcVoronoi calculate planar topology ?
      * @throws IOException
      * @throws SchemaException 
      */
     public Project(String name, File prjPath, GridCoverage2D cov, TreeSet<Integer> codes, Set<Integer> patchCodes,
-            double noData, boolean con8, double minArea, boolean simplify, boolean calcVoronoi) throws IOException, SchemaException {
+            double noData, boolean con8, double minArea, double maxSize, boolean simplify, boolean calcVoronoi) throws IOException, SchemaException {
 
         this.name = name;
         this.dir = prjPath;
@@ -289,12 +296,6 @@ public final class Project {
             wktCRS = crs.toWKT();
         }
 
-        TreeMap<Integer, Envelope> envMap = new TreeMap<>();
-
-        WritableRaster rasterPatchs = SpatialOp.extractPatch(cov.getRenderedImage(), patchCodes, noData, con8, envMap);      
-
-        Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb patch : " + envMap.size());
-
         GeometryFactory geomFac = new GeometryFactory();
         GridEnvelope2D range = cov.getGridGeometry().getGridRange2D();
         grid2space = new AffineTransformation(zone.getWidth() / range.getWidth(), 0,
@@ -310,38 +311,54 @@ public final class Project {
 
         Envelope2D extZone = new Envelope2D(crs,
                 gZone.x-resolution, gZone.y-resolution, gZone.width+2*resolution, gZone.height+2*resolution);
+        
+        TreeMap<Integer, Envelope> envMap = new TreeMap<>();
+
+        WritableRaster rasterPatchs = SpatialOp.extractPatch(cov.getRenderedImage(), patchCodes, noData, con8, (int)(maxSize/resolution), envMap);      
+
+        Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb patch : " + envMap.size());
 
         ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Vectorizing..."), envMap.size());
         patches = new ArrayList<>();
-        int n = 1, nbRem = 0;
+
         List<String> attrNames = new ArrayList<>(PATCH_ATTRS);
 
-        for(Integer id : envMap.keySet()) {
-            Geometry g = geomFac.toGeometry(envMap.get(id));
-            g.apply(grid2space);
-            if(minArea == 0 || (g.getArea() / minArea) > (1-1E-9)) {
-                Geometry geom = SpatialOp.vectorize(rasterPatchs, envMap.get(id), id.doubleValue());
-                geom.apply(grid2space);
-                if(minArea == 0 || (geom.getArea() / minArea) > (1-1E-9)) {
-                    List lst = new ArrayList(Arrays.asList(n, geom.getArea(), geom.getLength(), geom.getArea()));
-                    patches.add(new DefaultFeature(n, geom, attrNames, lst));
-                    SpatialOp.recode(rasterPatchs, geom, id, n, space2grid);
-                    n++;
+        SimpleParallelTask<Integer> task = new SimpleParallelTask<Integer>(
+                new ArrayList<Integer>(envMap.keySet()), monitor) {
+            int n = 1;
+            int nbRem = 0;
+            @Override
+            protected void executeOne(Integer id) {
+                Geometry g = geomFac.toGeometry(envMap.get(id));
+                g.apply(grid2space);
+                if(minArea == 0 || (g.getArea() / minArea) > (1-1E-9)) {
+                    Geometry geom = SpatialOp.vectorize(rasterPatchs, envMap.get(id), id.doubleValue());
+                    geom.apply(grid2space);
+                    if(minArea == 0 || (geom.getArea() / minArea) > (1-1E-9)) {
+                        synchronized(Project.this) {
+                            List lst = new ArrayList(Arrays.asList(n, geom.getArea(), geom.getLength(), geom.getArea()));
+                            patches.add(new DefaultFeature(n, geom, attrNames, lst));
+                            SpatialOp.recode(rasterPatchs, geom, id, n, space2grid);
+                            n++;
+                        }
+                    }
+                    else {
+                        synchronized(Project.this) {
+                            SpatialOp.recode(rasterPatchs, geom, id, 0, space2grid);
+                            nbRem++;
+                        }
+                    }
+                } else {
+                    synchronized(Project.this) {
+                        SpatialOp.recode(rasterPatchs, g, id, 0, space2grid);
+                        nbRem++;
+                    }
                 }
-                else {
-                    SpatialOp.recode(rasterPatchs, geom, id, 0, space2grid);
-                    nbRem++;
-                }
-            } else {
-                SpatialOp.recode(rasterPatchs, g, id, 0, space2grid);
-                nbRem++;
-            }
 
-            monitor.incProgress(1);
-            if(monitor.isCanceled()) {
-                throw new CancellationException();
             }
-        }
+            
+        };
+        new ParallelFExecutor(task).executeAndWait();
 
         if(patches.isEmpty()) {
             throw new IllegalStateException("There is no patch in the map. Check patch code and min area.");
@@ -367,7 +384,7 @@ public final class Project {
         clustCov = null;
         covBuilder = null;
 
-        Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb small patch removed : " + nbRem);
+//        Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "Nb small patch removed : " + nbRem);
 
         if(calcVoronoi) {
             WritableRaster voronoiR = rasterPatchs;
@@ -462,6 +479,8 @@ public final class Project {
                 index.insert(geom.getEnvelopeInternal(), f);
             }
         }
+        
+        index.build();
 
         AbstractParallelTask task = new AbstractParallelTask<Void, Void>(monitor) {
             @Override
@@ -509,6 +528,7 @@ public final class Project {
                             voronoi.setSample(x, y, 0, (Integer)nearest.getId());
                         }
                     }
+                    incProgress(1);
                 }
                 return null;
             }
@@ -603,7 +623,7 @@ public final class Project {
      * @return 
      */
     private static PlanarLinks createLinks(Raster voronoiRaster, List<DefaultFeature> patches, ProgressBar monitor) {
-        monitor.setNote("Create link set...");
+        monitor.setNote("Planar topology...");
         monitor.setProgress(0);
 
         Path.newSetOfPaths();
@@ -612,7 +632,6 @@ public final class Project {
 
         for(int y = 1; y < voronoiRaster.getHeight()-1; y++) {
             monitor.setProgress(y);
-            monitor.setNote("" + y + " / " + voronoiRaster.getHeight());
             for(int x = 1; x < voronoiRaster.getWidth()-1; x++) {
                 int id = voronoiRaster.getSample(x, y, 0);
                 if(id <= 0) {
@@ -1707,6 +1726,10 @@ public final class Project {
      */
     public double getMinArea() {
         return minArea;
+    }
+
+    public double getMaxSize() {
+        return maxSize;
     }
 
     /**

@@ -42,7 +42,8 @@ import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import org.thema.common.Config;
 import org.thema.common.ProgressBar;
-import org.thema.common.swing.TaskMonitor;
+import org.thema.common.parallel.ParallelFExecutor;
+import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
@@ -60,11 +61,12 @@ public final class SpatialOp {
      * @param codes the patch codes in the landscape map
      * @param noData nodata value if any, or NaN
      * @param con8 if 8 connex or 4 connex ?
+     * @param maxSize maximum width or height of patch envelope in pixel
      * @param envMap out parameter containing envelope of each extracted patch
      * @return  a raster containing patch id, 0 outside patch and -1 for nodata, the raster is increased of one pixel border to -1
      */
-    public static WritableRaster extractPatch(RenderedImage img, Set<Integer> codes, double noData, boolean con8, Map<Integer, Envelope> envMap) {
-        TaskMonitor monitor = new TaskMonitor(null, java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_patch"), "", 0, img.getHeight());
+    public static WritableRaster extractPatch(RenderedImage img, Set<Integer> codes, double noData, boolean con8, int maxSize, Map<Integer, Envelope> envMap) {
+        ProgressBar monitor = Config.getProgressBar(java.util.ResourceBundle.getBundle("org/thema/graphab/Bundle").getString("Extract_patch"), img.getHeight());
         WritableRaster clust = Raster.createWritableRaster(new BandedSampleModel(DataBuffer.TYPE_INT, img.getWidth()+2, img.getHeight()+2, 1), null);
         int k = 0;
         TreeSet<Integer> set = new TreeSet<>();
@@ -131,7 +133,7 @@ public final class SpatialOp {
             idClust.set(i, m);
         }
 
-
+        int maxId = 0;
         for(int j = 1; j < clust.getHeight()-1; j++) {
             for(int i = 1; i < clust.getWidth()-1; i++) {
                 if(clust.getSample(i, j, 0) > 0) {
@@ -144,10 +146,46 @@ public final class SpatialOp {
                     }
 
                     clust.setSample(i, j, 0, id);
+                    if(maxId < id) {
+                        maxId = id;
+                    }
                 }
             }
         }
 
+        if(maxSize > 0) {
+            Envelope clustEnv = new Envelope(1, clust.getWidth()-2, 1, clust.getHeight()-2);
+            for(int id : new ArrayList<>(envMap.keySet())) {
+                Envelope env = envMap.get(id);
+                if(env.getWidth() <= maxSize && env.getHeight() <= maxSize) {
+                    continue;
+                }
+                int nx = (int)Math.ceil((env.getWidth()+1) / maxSize);
+                int ny = (int)Math.ceil((env.getHeight()+1) / maxSize);
+                int startx = (int)(env.getMinX() - Math.round(nx*maxSize - (env.getWidth()+1)) / 2);
+                int starty = (int)(env.getMinY() - Math.round(ny*maxSize - (env.getHeight()+1)) / 2);
+                for(int j = 0; j < ny; j++) {
+                    for(int i = 0; i < nx; i++) {
+                        Envelope e = new Envelope(startx + i*maxSize, startx + (i+1)*maxSize-1, starty + j*maxSize, starty + (j+1)*maxSize-1);
+                        e = e.intersection(clustEnv);
+                        maxId++;
+                        boolean found = false;
+                        for(int y = (int)e.getMinY(); y <= e.getMaxY(); y++) {
+                            for(int x = (int)e.getMinX(); x <= e.getMaxX(); x++) {
+                                if(clust.getSample(x, y, 0) == id) {
+                                    clust.setSample(x, y, 0, maxId);
+                                    found = true;
+                                }
+                            }
+                        }
+                        if(found) {
+                            envMap.put(maxId, e);
+                        }
+                    }
+                }
+                envMap.remove(id);
+            }
+        }
 
         for(Envelope env : envMap.values()) {
             env.expandBy(0.5);
@@ -221,12 +259,19 @@ public final class SpatialOp {
         }
 
         List<DefaultFeature> features = new ArrayList<>();
-        for(Integer id : envMap.keySet()) {
-            Geometry geom = vectorize(voronoi, envMap.get(id), id);
-            geom.apply(grid2space);
-            features.add(new DefaultFeature(id, geom, null, null));
-            monitor.incProgress(1);
-        }
+        SimpleParallelTask<Integer> task = new SimpleParallelTask<Integer>(
+                new ArrayList<Integer>(envMap.keySet()), monitor) {
+            @Override
+            protected void executeOne(Integer id) {
+                Geometry geom = vectorize(voronoi, envMap.get(id), id);
+                geom.apply(grid2space);
+                synchronized(this) {
+                    features.add(new DefaultFeature(id, geom, null, null));
+                }
+            }
+        };
+        new ParallelFExecutor(task).executeAndWait();
+        
         monitor.close();
 
         return features;

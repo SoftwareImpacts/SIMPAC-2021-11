@@ -1097,12 +1097,12 @@ The command line below is equivalent to the previous one but will run at 3 diffe
 
 Another example with a shapefile points set :
 \begin{Verbatim}
-	--addpatch 5 IIC pointfile=testpoint.shp
+	--addpatch 5 IIC patchfile=testpoint.shp
 \end{Verbatim}
 Results are stored in \textit{addpatch\_n5\_graph\_IIC\_shptestpoint.shp} subfolder.
 
 \subsubsection{Limitations}
-The \verb|--addpatch| command only works with graphs from complete topology linkset.
+The \verb|--addpatch| command only works with graphs from complete topology linkset and without intra-patch distances.
 
 This command changes the number of patches in the project; executing commands after it can lead to inconsistencies.
 Therefore, it is not recommended to add commands after the command \verb|--addpatch|.

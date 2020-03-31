@@ -28,9 +28,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.linearref.LengthIndexedLine;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.graphab.Project;
+import org.thema.graphab.util.DistanceOp;
 
 /**
  * Euclidean pathfinder.
@@ -39,7 +42,7 @@ import org.thema.graphab.Project;
  */
 public class EuclidePathFinder implements SpacePathFinder {
 
-    private Project project;
+    protected Project project;
 
     /**
      * Creates a new Euclidean pathfinder
@@ -84,7 +87,7 @@ public class EuclidePathFinder implements SpacePathFinder {
             double d = patch.getGeometry().distance(geom);
             if(maxCost == 0 || d <= maxCost) {
                 if(realPath) {
-                    paths.put(patch, Path.createEuclidPath(geomPatch, patch));
+                    paths.put(patch, createPath(geomPatch, patch));
                 } else {
                     paths.put(patch, new Path(geomPatch, patch, d, d));
                 }
@@ -121,5 +124,37 @@ public class EuclidePathFinder implements SpacePathFinder {
             }
         }
         return nearestPatch;
+    }
+    
+    /**
+     * Creates a path between two patches for euclidean linkset.
+     * Calculates the shortest straight line between the two patches
+     * @param patch1 a patch
+     * @param patch2 another patch
+     * @return a path connecting the two patches with the shortest straight line
+     */
+    public Path createPath(Feature patch1, Feature patch2) {
+        Geometry g1 = patch1.getGeometry();
+        Geometry g2 = patch2.getGeometry();
+        LineString path;
+        if(g1 instanceof Point || g2 instanceof Point) {
+            if(g1 instanceof Point && g2 instanceof Point) {
+                path = g1.getFactory().createLineString(new Coordinate[] {
+                    g1.getCoordinate(), g2.getCoordinate()});
+            } else {
+                Geometry g = g1 instanceof Point ? g2 : g1;
+                Point p = (Point) (g1 instanceof Point ? g1 : g2);
+                LengthIndexedLine linearRef = new LengthIndexedLine(g.getBoundary());
+                Coordinate c = linearRef.extractPoint(linearRef.project(p.getCoordinate()));
+                path = g1.getFactory().createLineString(new Coordinate[] {
+                    p.getCoordinate(), c});
+            }
+        } else {
+            Coordinate [] coords = DistanceOp.nearestPoints(g1, g2);    
+            path = g1.getFactory().createLineString(coords);
+        }
+
+        double dist = path.getLength();
+        return new Path(patch1, patch2, dist, path);
     }
 }
