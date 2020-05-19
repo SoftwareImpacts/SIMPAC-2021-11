@@ -132,6 +132,12 @@ public final class SpatialOp {
             }
             idClust.set(i, m);
         }
+        
+        // add offset in id to prevent id superposition while vectorization in parallel mode
+        int add = idClust.size();
+        for(int i = 0; i < idClust.size(); i++) {
+            idClust.set(i, idClust.get(i)+add);
+        }
 
         int maxId = 0;
         for(int j = 1; j < clust.getHeight()-1; j++) {

@@ -322,7 +322,10 @@ public final class Project {
         patches = new ArrayList<>();
 
         List<String> attrNames = new ArrayList<>(PATCH_ATTRS);
-
+        // parallelize the recoding may be dangerous if envMap.firstKey() <= envMap.size(), it may have overlay in id while recoding in parallel
+        if(envMap.firstKey() <= envMap.size()) {
+            throw new IllegalStateException("Error in patch extraction, id overlays");
+        }
         SimpleParallelTask<Integer> task = new SimpleParallelTask<Integer>(
                 new ArrayList<Integer>(envMap.keySet()), monitor) {
             int n = 1;

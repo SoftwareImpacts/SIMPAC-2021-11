@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.5.4 (19/05/2020)
+- Bug with previous version in some rare cases at patch extraction
+
 ##### version 2.5.3 (31/03/2020)
 - UI : distance conversion : links containing barrier codes can be removed from the regression
 - UI : distance conversion : regression with or without log transformation
