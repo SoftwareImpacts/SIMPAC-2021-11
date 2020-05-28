@@ -66,7 +66,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -144,7 +143,6 @@ import org.thema.graphab.pointset.Pointset;
 import org.thema.graphab.util.DistanceOp;
 import org.thema.graphab.util.RSTGridReader;
 import org.thema.graphab.util.SpatialOp;
-import static org.thema.graphab.util.SpatialOp.vectorize;
 import org.thema.parallel.AbstractParallelTask;
 import org.thema.parallel.ExecutorService;
 

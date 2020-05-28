@@ -132,12 +132,6 @@ public final class SpatialOp {
             }
             idClust.set(i, m);
         }
-        
-        // add offset in id to prevent id superposition while vectorization in parallel mode
-        int add = idClust.size();
-        for(int i = 0; i < idClust.size(); i++) {
-            idClust.set(i, idClust.get(i)+add);
-        }
 
         int maxId = 0;
         for(int j = 1; j < clust.getHeight()-1; j++) {
@@ -196,6 +190,25 @@ public final class SpatialOp {
         for(Envelope env : envMap.values()) {
             env.expandBy(0.5);
             env.translate(0.5, 0.5);
+        }
+        
+        // add offset in id to prevent id superposition while vectorization in parallel mode
+        final int add = maxId+1;
+        if(2.0*add >= Integer.MAX_VALUE) {
+            throw new RuntimeException("Too many patches !!");
+        }
+        for(int id : new ArrayList<>(envMap.keySet())) {
+            Envelope env = envMap.remove(id);
+            envMap.put(id+add, env);
+        }
+        
+        for(int j = 1; j < clust.getHeight()-1; j++) {
+            for(int i = 1; i < clust.getWidth()-1; i++) {
+                final int id = clust.getSample(i, j, 0);
+                if(id > 0) {
+                    clust.setSample(i, j, 0, id+add);
+                }
+            }
         }
 
         monitor.close();

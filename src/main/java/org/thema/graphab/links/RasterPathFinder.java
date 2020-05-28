@@ -606,7 +606,7 @@ public final class RasterPathFinder implements SpacePathFinder {
         int y = getY(ind)-yd;
         if(x < 0 || x >= wd || y < 0 || y >= hd) {
             resizeDistBuf();
-            return Double.MAX_VALUE;
+            return doublePrec ? Double.MAX_VALUE : Float.MAX_VALUE;
         } else {
             return doublePrec ? distDouble[y*wd+x] : distFloat[y*wd+x];
         }

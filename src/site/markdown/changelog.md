@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.5.6 (28/05/2020)
+- Linkset creation with cost throw exception when calculating intra patch distances if patch is multipolygon (metapatch or maxsize paramater may create disconnected patch)
+- CLI : --create with maxdist parameter, an error may occur if a lot of patches are split
+
 ##### version 2.5.5 (28/05/2020)
 - CLI : --linkset nopathsaved option did not work with cost distance
 - CLI : --linkset when some codes are missing, show them

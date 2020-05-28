@@ -1054,13 +1054,13 @@ public class Linkset {
                 for(Path link : links) {
                     pointSet.add(link.getCoordinate(patch));
                 }
-                
+                boolean multiPoly = patch.getGeometry().getNumGeometries() > 1;
                 List<Coordinate> pointList = new ArrayList<>(pointSet);
                 for(int i = 0; i < pointList.size()-1; i++) { 
                     Coordinate c1 = pointList.get(i);
 
                     List<Coordinate> dests = pointList.subList(i+1, pointList.size());
-                    List<double[]> values = pathFinder.calcPathsInsidePatch(c1, dests);
+                    List<double[]> values = multiPoly ? pathFinder.calcPaths(c1, dests) : pathFinder.calcPathsInsidePatch(c1, dests);
                     for(int k = 0; k < values.size(); k++) {
                         synchronized(mapIntraLinks) {
                             if(c1.compareTo(dests.get(k)) < 0) {

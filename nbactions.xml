@@ -10,10 +10,10 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-Xmx10g -classpath %classpath org.thema.graphab.MainFrame</exec.args>
+                <exec.args>-Xmx10g -classpath %classpath org.thema.graphab.MainFrame -proc 3 --project dijon_foret/foret.xml  --linkset distance=cost name=foret_planaire 11,12,13=1000 14,15,21,31,32,41=100 22=10 331,332,341,342,35=1</exec.args>
                 <exec.executable>java</exec.executable>
                 <skipTests>true</skipTests>
-                <exec.workingdir>/home/gvuidel/Bureau/céline</exec.workingdir>
+                <exec.workingdir>/home/gvuidel/data/Graphab</exec.workingdir>
             </properties>
         </action>
         <action>
@@ -26,11 +26,11 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -Xmx10g -classpath %classpath org.thema.graphab.MainFrame</exec.args>
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -Xmx10g -classpath %classpath org.thema.graphab.MainFrame -proc 3 --project dijon_foret/foret.xml  --linkset distance=cost name=foret_planaire 11,12,13=1000 14,15,21,31,32,41=100 22=10 331,332,341,342,35=1</exec.args>
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
                 <skipTests>true</skipTests>
-                <exec.workingdir>/home/gvuidel/Bureau/céline</exec.workingdir>
+                <exec.workingdir>/home/gvuidel/data/Graphab</exec.workingdir>
             </properties>
         </action>
         <action>
@@ -43,10 +43,10 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-Xmx10g -classpath %classpath org.thema.graphab.MainFrame</exec.args>
+                <exec.args>-Xmx10g -classpath %classpath org.thema.graphab.MainFrame -proc 3 --project dijon_foret/foret.xml  --linkset distance=cost name=foret_planaire 11,12,13=1000 14,15,21,31,32,41=100 22=10 331,332,341,342,35=1</exec.args>
                 <exec.executable>java</exec.executable>
                 <skipTests>true</skipTests>
-                <exec.workingdir>/home/gvuidel/Bureau/céline</exec.workingdir>
+                <exec.workingdir>/home/gvuidel/data/Graphab</exec.workingdir>
             </properties>
         </action>
         <action>
