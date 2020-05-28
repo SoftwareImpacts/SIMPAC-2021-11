@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.5.5 (28/05/2020)
+- CLI : --linkset nopathsaved option did not work with cost distance
+- CLI : --linkset when some codes are missing, show them
+
 ##### version 2.5.4 (19/05/2020)
 - Bug with previous version in some rare cases at patch extraction
 

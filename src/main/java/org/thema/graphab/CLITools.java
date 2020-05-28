@@ -524,6 +524,7 @@ public class CLITools {
         }
         boolean realPaths = true;
         if(params.containsKey("nopathsaved")) {
+            params.remove("nopathsaved");
             realPaths = false;
         }
         useLinksets.clear();
@@ -575,7 +576,7 @@ public class CLITools {
                             codeSet.add(code.intValue());
                         }
                     }
-                    if(rangeCost == null || !cost.isSingle()) {
+                    if(rangeCost == null || !cost .isSingle()) {
                         if(rangeCost != null && !rangeCost.isSingle()) {
                             throw new IllegalArgumentException("Only one range can be defined for linkset");
                         }
@@ -588,7 +589,9 @@ public class CLITools {
                     }
                 }
                 if(!codeSet.containsAll(project.getCodes())){
-                    throw new IllegalArgumentException("--linkset : some codes are missing");
+                    HashSet<Integer> codes = new HashSet<>(project.getCodes());
+                    codes.removeAll(codeSet);
+                    throw new IllegalArgumentException("--linkset : some codes are missing " + Arrays.deepToString(codes.toArray()));
                 }
                 boolean multi = !rangeCost.isSingle();
                 if(linkName == null) {
