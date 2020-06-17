@@ -1,5 +1,8 @@
 ## Changelog
 
+##### version 2.5.7 (17/06/2020)
+- CLI : --capa error with weight option
+
 ##### version 2.5.6 (28/05/2020)
 - Linkset creation with cost throw exception when calculating intra patch distances if patch is multipolygon (metapatch or maxsize paramater may create disconnected patch)
 - CLI : --create with maxdist parameter, an error may occur if a lot of patches are split

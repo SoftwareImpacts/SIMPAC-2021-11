@@ -1401,6 +1401,7 @@ public class CLITools {
                 params.codes.add(Integer.parseInt(tok));
             }
             if(!args.isEmpty() && args.get(0).equals("weight")) {
+                args.remove(0);
                 params.weightCost = true;
             }
         } else if(arg.equals("area")) {
