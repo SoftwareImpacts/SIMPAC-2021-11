@@ -1645,8 +1645,9 @@ public class CLITools {
         }
         for(Pointset pointset : getExos()) {
             if(params.get("type").equals("space")) {
+                ProgressBar mon = Config.getProgressBar(pointset.getName() + " - Distances...", getLinksets().size()*100);
                 for(Linkset linkset : getLinksets()) {
-                    double [][][] distances = pointset.calcSpaceDistanceMatrix(linkset, type, new TaskMonitor.EmptyMonitor());
+                    double [][][] distances = pointset.calcSpaceDistanceMatrix(linkset, type, mon.getSubProgress(100));
                     pointset.saveMatrix(distances, new File(project.getDirectory(), "distance_" + pointset.getName() + "_raster_" + linkset.getName() + "-" + type + ".txt"));
                 }
             } else {
@@ -1654,8 +1655,9 @@ public class CLITools {
                 if(type == Distance.FLOW || type == Distance.CIRCUIT_FLOW) {
                     alpha = AlphaParamMetric.getAlpha(Double.parseDouble(params.get("dist")), Double.parseDouble(params.get("proba")));
                 }
+                ProgressBar mon = Config.getProgressBar(pointset.getName() + " - Distances...", getGraphs().size()*100);
                 for(GraphGenerator graph : getGraphs()) {
-                    double [][][] distances = pointset.calcGraphDistanceMatrix(graph, type, alpha, new TaskMonitor.EmptyMonitor());
+                    double [][][] distances = pointset.calcGraphDistanceMatrix(graph, type, alpha, mon.getSubProgress(100));
                     pointset.saveMatrix(distances, new File(project.getDirectory(), "distance_" + pointset.getName() + "_graph_" + graph.getName() + "-" + type +
                             (Double.isNaN(alpha) ? "" : "-d"+params.get("dist")+"-p"+params.get("proba")) + ".txt"));
                 }

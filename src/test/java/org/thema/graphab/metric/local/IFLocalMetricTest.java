@@ -50,15 +50,15 @@ public class IFLocalMetricTest {
         GraphGenerator all = project.getGraph("all");
         IFLocalMetric metric = new IFLocalMetric();
         metric.setParamFromDetailName("_d3_p0.5_beta1");
-        assertEquals(0.5*4+1, metric.calcSingleMetric(cross.getNode(3), cross), 1e-15);
-        assertEquals(0.5*4+1, metric.calcSingleMetric(all.getNode(3), all), 1e-15);
+        assertEquals(0.5*4+1, metric.calcSingleMetric(cross.getNode(project.getPatch(3)), cross), 1e-15);
+        assertEquals(0.5*4+1, metric.calcSingleMetric(all.getNode(project.getPatch(3)), all), 1e-15);
         
         metric.setParamFromDetailName("_d6_p0.5_beta1");
-        assertEquals(0.7071067811865475+0.5*3+1, metric.calcSingleMetric(cross.getNode(1), cross), 1e-15);
-        assertEquals(0.7071067811865475+0.5*3+1, metric.calcSingleMetric(cross.getNode(2), cross), 1e-15);
-        assertEquals(0.7071067811865475*4+1, metric.calcSingleMetric(cross.getNode(3), cross), 1e-15);
-        assertEquals(0.7071067811865475+0.5*3+1, metric.calcSingleMetric(cross.getNode(4), cross), 1e-15);
-        assertEquals(0.7071067811865475+0.5*3+1, metric.calcSingleMetric(cross.getNode(5), cross), 1e-15);
+        assertEquals(0.7071067811865475+0.5*3+1, metric.calcSingleMetric(cross.getNode(project.getPatch(1)), cross), 1e-15);
+        assertEquals(0.7071067811865475+0.5*3+1, metric.calcSingleMetric(cross.getNode(project.getPatch(2)), cross), 1e-15);
+        assertEquals(0.7071067811865475*4+1, metric.calcSingleMetric(cross.getNode(project.getPatch(3)), cross), 1e-15);
+        assertEquals(0.7071067811865475+0.5*3+1, metric.calcSingleMetric(cross.getNode(project.getPatch(4)), cross), 1e-15);
+        assertEquals(0.7071067811865475+0.5*3+1, metric.calcSingleMetric(cross.getNode(project.getPatch(5)), cross), 1e-15);
         
         metric.setParamFromDetailName("_d1_p1_beta1");
         checkAll(metric, 5);

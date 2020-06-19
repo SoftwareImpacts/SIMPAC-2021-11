@@ -54,10 +54,10 @@ public class F6LocalMetricTest {
         GraphGenerator all = project.getGraph("all");
         F6LocalMetric metric = new F6LocalMetric();
         metric.setParamFromDetailName("_bq1000_dq3_bd1000_dd6");
-        assertArrayEquals(new Double[] {0.5, 0.5, 2.0, 2.0, 1.5, 1.5}, metric.calcMetric(cross.getNode(1), cross));
+        assertArrayEquals(new Double[] {0.5, 0.5, 2.0, 2.0, 1.5, 1.5}, metric.calcMetric(cross.getNode(project.getPatch(1)), cross));
         metric.setParamFromDetailName("_bq1_dq3_bd1000_dd100");
-        assertArrayEquals(new Double[] {2.0, 2.0, 2.0, 2.0, 0.0, 0.0}, metric.calcMetric(cross.getNode(3), cross));
-        assertArrayEquals(new Double[] {2.0, 2.0, 2.0, 2.0, 0.0, 0.0}, metric.calcMetric(all.getNode(3), all));
+        assertArrayEquals(new Double[] {2.0, 2.0, 2.0, 2.0, 0.0, 0.0}, metric.calcMetric(cross.getNode(project.getPatch(3)), cross));
+        assertArrayEquals(new Double[] {2.0, 2.0, 2.0, 2.0, 0.0, 0.0}, metric.calcMetric(all.getNode(project.getPatch(3)), all));
     }
     
     private void checkAll(String params, Double[] expected) {

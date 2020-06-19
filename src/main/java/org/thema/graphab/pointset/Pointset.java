@@ -202,91 +202,106 @@ public class Pointset {
         if(graph.getLinkset() != getLinkset()) {
             throw new IllegalArgumentException("The pointset cannot be used with the linkset of the graph " + graph.getName());
         }
+
+        IterParallelTask task = null;
         
         switch(type) {
         case LEASTCOST:
-            for(int i = 0; i < exos.size(); i++) {
-                Feature exo1 = exos.get(i);
-                Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
-                GraphPathFinder finder = graph.getPathFinder(graph.getNode(patch1));
-                for(int j = 0; j < exos.size(); j++) {
-                    if(i == j) {
-                        continue;
-                    }
-                    Feature exo2 = exos.get(j);
-                    Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
-                    Double dist = finder.getCost(graph.getNode(patch2));
-                    if(dist == null) {
-                        dist = Double.NaN;
-                    } else if(dist == 0) {
-                        try {
-                            List<double[]> paths = graph.getProject().getPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
-                            dist = paths.get(0)[0];
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
+            task = new IterParallelTask(exos.size(), mon) {
+                @Override
+                protected void executeOne(Integer ind) {
+                    Feature exo1 = exos.get(ind);
+                    Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
+                    GraphPathFinder finder = graph.getPathFinder(graph.getNode(patch1));
+                    for(int j = 0; j < exos.size(); j++) {
+                        if(ind == j) {
+                            continue;
                         }
-                    } else {
-                        dist += ((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
-                                ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue();
+                        Feature exo2 = exos.get(j);
+                        Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
+                        Double dist = finder.getCost(graph.getNode(patch2));
+                        if(dist == null) {
+                            dist = Double.NaN;
+                        } else if(dist == 0) {
+                            try {
+                                List<double[]> paths = graph.getProject().getPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
+                                dist = paths.get(0)[0];
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        } else {
+                            dist += ((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
+                                    ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue();
+                        }
+                        distances[ind][j][0] = dist;
                     }
-                    distances[i][j][0] = dist;
+
                 }
-                mon.incProgress(1);
-            }
+            };
             break;
         case FLOW:    
-            for(int i = 0; i < exos.size(); i++) {
-                Feature exo1 = exos.get(i);
-                Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
-                GraphPathFinder finder = graph.getFlowPathFinder(graph.getNode(patch1), alpha);
-                for(int j = 0; j < exos.size(); j++) {
-                    if(i == j) {
-                        continue;
-                    }
-                    Feature exo2 = exos.get(j);
-                    Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
-                    Double dist = finder.getCost(graph.getNode(patch2));
-                    if(dist == null) {
-                        dist = Double.NaN;
-                    } else if(dist == 0) {
-                        try {
-                            List<double[]> paths = graph.getProject().getPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
-                            dist = alpha * paths.get(0)[0];
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
+            task = new IterParallelTask(exos.size(), mon) {
+                @Override
+                protected void executeOne(Integer ind) {
+                    Feature exo1 = exos.get(ind);
+                    Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
+                    GraphPathFinder finder = graph.getFlowPathFinder(graph.getNode(patch1), alpha);
+                    for(int j = 0; j < exos.size(); j++) {
+                        if(ind == j) {
+                            continue;
                         }
-                    } else {
-                        dist += - Math.log(Project.getPatchCapacity(patch1)*Project.getPatchCapacity(patch2)
-                                / Math.pow(project.getTotalPatchCapacity(), 2))
-                            + alpha * (((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
-                            ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue());
+                        Feature exo2 = exos.get(j);
+                        Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
+                        Double dist = finder.getCost(graph.getNode(patch2));
+                        if(dist == null) {
+                            dist = Double.NaN;
+                        } else if(dist == 0) {
+                            try {
+                                List<double[]> paths = graph.getProject().getPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
+                                dist = alpha * paths.get(0)[0];
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        } else {
+                            dist += - Math.log(Project.getPatchCapacity(patch1)*Project.getPatchCapacity(patch2)
+                                    / Math.pow(project.getTotalPatchCapacity(), 2))
+                                + alpha * (((Number)exo1.getAttribute(Project.EXO_COST)).doubleValue() +
+                                ((Number)exo2.getAttribute(Project.EXO_COST)).doubleValue());
+                        }
+                        distances[ind][j][0] = dist;
                     }
-                    distances[i][j][0] = dist;
                 }
-                mon.incProgress(1);
-            }
+            };
             break;
         case CIRCUIT:
         case CIRCUIT_FLOW:
             Circuit circuit = type == Distance.CIRCUIT_FLOW ? new Circuit(graph, alpha) : new Circuit(graph);
 
-            for(int i = 0; i < exos.size(); i++) {
-                Feature exo1 = exos.get(i);
-                Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
+            task = new IterParallelTask(exos.size(), mon) {
+                @Override
+                protected void executeOne(Integer ind) {
+                    Feature exo1 = exos.get(ind);
+                    Feature patch1 = project.getPatch((Integer)exo1.getAttribute(Project.EXO_IDPATCH));
 
-                for(int j = 0; j < exos.size(); j++) {
-                    if(i == j) {
-                        continue;
+                    for(int j = 0; j < exos.size(); j++) {
+                        if(ind == j) {
+                            continue;
+                        }
+                        Feature exo2 = exos.get(j);
+                        Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
+                        if(patch1.equals(patch2)) {
+                            continue;
+                        }
+                        distances[ind][j][0] = circuit.computeR(graph.getNode(patch1), graph.getNode(patch2));
                     }
-                    Feature exo2 = exos.get(j);
-                    Feature patch2 = project.getPatch((Integer)exo2.getAttribute(Project.EXO_IDPATCH));
-                    if(patch1.equals(patch2)) {
-                        continue;
-                    }
-                    distances[i][j][0] = circuit.computeR(graph.getNode(patch1), graph.getNode(patch2));
+                    mon.incProgress(1);
                 }
-                mon.incProgress(1);
-            }
+            };
+        }
+        
+        new ParallelFExecutor(task).executeAndWait();
+        if(task.isCanceled()) {
+            throw new CancellationException();
         }
         
         return distances;

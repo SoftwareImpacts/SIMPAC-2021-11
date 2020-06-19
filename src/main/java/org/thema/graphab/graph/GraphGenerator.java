@@ -83,6 +83,7 @@ public class GraphGenerator {
     protected transient List<DefaultFeature> compFeatures;
     protected transient Graph graph, pathGraph;
     private transient GraphGroupLayer layers;
+    protected transient HashMap<Feature, Node> patchNodes;
     protected transient HashMapList<Node, Node> node2PathNodes;
 
     /**
@@ -237,36 +238,17 @@ public class GraphGenerator {
     }
     
     /**
-     * Attention version très lente
-     * Parcours tous les noeuds pour trouver le bon
      * @param patch the patch
      * @return the node representing the patch in this graph or null
      */
     public Node getNode(Feature patch) {
-        for(Node n : getNodes()) {
-            if(n.getObject().equals(patch)) {
-                return n;
-            }
+        getGraph();
+        if(!patchNodes.containsKey(patch)) {
+            throw new RuntimeException();
         }
+        return patchNodes.get(patch);
+    }
 
-        return null;
-    }
-    
-    /**
-     * Attention version très lente
-     * Parcours tous les noeuds pour trouver le bon
-     * @param patchId the patch identifier
-     * @return the node corresponding to the patch id in this graph
-     * @throws NoSuchElementException if no node correspond to the patch id
-     */
-    public Node getNode(Integer patchId) {
-        for(Node n : getNodes()) {
-            if(((Feature)n.getObject()).getId().equals(patchId)) {
-                return n;
-            }
-        }
-        throw new NoSuchElementException("Patch id : " + patchId);
-    }
     
     /**
      * Attention version très lente
@@ -441,9 +423,9 @@ public class GraphGenerator {
     /**
      * Creates the graph and stores it in graph.
      */
-    protected void createGraph() {
+    protected synchronized void createGraph() {
         BasicGraphBuilder gen = new BasicGraphBuilder();
-        HashMap<DefaultFeature, Node> patchNodes = new HashMap<>();
+        patchNodes = new HashMap<>();
         for(DefaultFeature p : getProject().getPatches()) {
             Node n = gen.buildNode();
             n.setObject(p);
@@ -475,6 +457,11 @@ public class GraphGenerator {
             });
 
             graph = span.calcMST();
+            
+            patchNodes = new HashMap<>();
+            for(Node n : (Collection<Node>)graph.getNodes()) {
+                patchNodes.put((Feature)n.getObject(), n);
+            }
         }
 
     }
@@ -484,7 +471,7 @@ public class GraphGenerator {
      * Stores also the mapping between nodes of the upper graph and the pathgraph nodes.
      * If this graph does not use intrapatch distances set pathGraph to graph and node2PathNodes to null
      */
-    private void createPathGraph() {
+    private synchronized void createPathGraph() {
 
         if(!intraPatchDist) {
             pathGraph = getGraph();
