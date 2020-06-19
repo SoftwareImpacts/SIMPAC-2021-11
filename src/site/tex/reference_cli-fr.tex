@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		21/11/2019\\
+ 		19/06/2020\\
  	}
  	
  \end{titlepage}
@@ -171,7 +171,7 @@ Commands list :
 --cluster d=val p=val [beta=val] [nb=val]
 --pointset pointset.shp [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]
 --usepointset pointset1,...,pointsetn
---pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
+--pointdistance type=space|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
 --capa [area [exp=value] [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden ...
 --gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
@@ -776,12 +776,12 @@ Par défaut, tous les jeux de points sont sélectionnés.
 
 \subsection{--pointdistance : matrice de distances d'un jeu de point}
 \begin{Verbatim}[commandchars=\\\{\}]
---pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=\textit{val} proba=\textit{val}]
+--pointdistance type=space|graph distance=leastcost|circuit|flow|circuitflow [dist=\textit{val} proba=\textit{val}]
 \end{Verbatim}
 
 \subsubsection{Paramètres obligatoires}
 \begin{itemize}
-	\item \verb|type|: le calcul de distance est basé sur le \verb|raster| de coût ou sur un graphe \verb|graph|
+	\item \verb|type|: le calcul de distance est basé sur l'espace continu \verb|space| (euclidien ou raster) ou sur le graphe \verb|graph|
 	\item \verb|distance|: à partir d'un raster, la distance peut être moindre coût (\verb|leastcost|) ou \verb|circuit|, à partir d'un graphe, la distance peut être \verb|leastcost|, \verb|circuit|, \verb|flow| or \verb|circuitflow|
 \end{itemize}
 
@@ -799,7 +799,7 @@ Pour un calcul basé sur un raster de coût, une matrice de distance sera calcul
 \subsubsection{Exemple}
 Dans l'exemple ci-dessous, les distances de moindre coût entre les points sera calculées à partir des raster de coûts de chaque jeu de liens sélectionné et ce, pour chaque jeu de points sélectionné.
 \begin{Verbatim}
---pointdistance type=raster distance=leastcost
+--pointdistance type=space distance=leastcost
 \end{Verbatim}
 
 \subsection{--model : calcul du SDM}

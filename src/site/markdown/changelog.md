@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.5.8 (19/06/2020)
+- CLI : --pointdistance manage euclidean distance in all cases but circuit in euclidean space 
+- CLI : --pointdistance change raster param to space for including euclidean distance
+
 ##### version 2.5.7 (17/06/2020)
 - CLI : --capa error with weight option
 

@@ -138,7 +138,7 @@ public class Pointset {
         return "Name : " + name + "\nLinkset : " + cost.getName();
     }
     
-    public double [][][] calcRasterDistanceMatrix(Linkset costDist, Distance type, ProgressBar mon) {
+    public double [][][] calcSpaceDistanceMatrix(Linkset costDist, Distance type, ProgressBar mon) {
         final List<DefaultFeature> exos = getFeatures();
         final double [][][] distances = new double[exos.size()][exos.size()][2];  
         final List<Coordinate> dests = new ArrayList<>();
@@ -220,7 +220,7 @@ public class Pointset {
                         dist = Double.NaN;
                     } else if(dist == 0) {
                         try {
-                            List<double[]> paths = graph.getProject().getRasterPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
+                            List<double[]> paths = graph.getProject().getPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
                             dist = paths.get(0)[0];
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);
@@ -250,7 +250,7 @@ public class Pointset {
                         dist = Double.NaN;
                     } else if(dist == 0) {
                         try {
-                            List<double[]> paths = graph.getProject().getRasterPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
+                            List<double[]> paths = graph.getProject().getPathFinder(cost).calcPaths(exo1.getGeometry().getCoordinate(), Arrays.asList(exo2.getGeometry().getCoordinate()));
                             dist = alpha * paths.get(0)[0];
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);

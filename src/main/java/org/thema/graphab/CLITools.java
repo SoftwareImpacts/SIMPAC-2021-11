@@ -129,7 +129,7 @@ public class CLITools {
                     "--cluster d=val p=val [beta=val] [nb=val]\n" +                    
                     "--pointset pointset.shp [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
-                    "--pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]\n" +
+                    "--pointdistance type=space|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]\n" +
                     "--capa [area [exp=value] [code1,..,coden=weight ...]] | [file=capacity.csv id=fieldname capa=fieldname] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
                     "--gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
@@ -1644,9 +1644,9 @@ public class CLITools {
                 throw new IllegalArgumentException("Unknown distance type : " + distType);
         }
         for(Pointset pointset : getExos()) {
-            if(params.get("type").equals("raster")) {
+            if(params.get("type").equals("space")) {
                 for(Linkset linkset : getLinksets()) {
-                    double [][][] distances = pointset.calcRasterDistanceMatrix(linkset, type, new TaskMonitor.EmptyMonitor());
+                    double [][][] distances = pointset.calcSpaceDistanceMatrix(linkset, type, new TaskMonitor.EmptyMonitor());
                     pointset.saveMatrix(distances, new File(project.getDirectory(), "distance_" + pointset.getName() + "_raster_" + linkset.getName() + "-" + type + ".txt"));
                 }
             } else {

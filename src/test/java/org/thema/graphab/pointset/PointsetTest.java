@@ -52,7 +52,7 @@ public class PointsetTest {
     
 
     /**
-     * Test of calcRasterDistanceMatrix method, of class Pointset.
+     * Test of calcSpaceDistanceMatrix method, of class Pointset.
      */
     @Test
     public void testCalcDistanceMatrix() throws SchemaException, IOException {
@@ -65,7 +65,7 @@ public class PointsetTest {
                 new DefaultFeature("9", factory.createPoint(new Coordinate(9, -9)))), false);
         
         
-        double[][][] result = pointset.calcRasterDistanceMatrix(pointset.getLinkset(), Distance.LEASTCOST, new TaskMonitor.EmptyMonitor());
+        double[][][] result = pointset.calcSpaceDistanceMatrix(pointset.getLinkset(), Distance.LEASTCOST, new TaskMonitor.EmptyMonitor());
         assertEquals(Math.sqrt(2), result[0][1][0], 1e-6);
         assertEquals(8*Math.sqrt(2), result[0][2][0], 1e-6);
         assertEquals(7*Math.sqrt(2), result[1][2][0], 1e-6);

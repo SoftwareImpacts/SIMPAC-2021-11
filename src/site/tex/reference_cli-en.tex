@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2019-11-21\\
+		2020-06-19\\
 	}
 	
 \end{titlepage}
@@ -774,12 +774,12 @@ By default, all pointsets are selected.
 
 \subsection{--pointdistance : calculate distance matrix of pointsets}
 \begin{Verbatim}[commandchars=\\\{\}]
---pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=\textit{val} proba=\textit{val}]
+--pointdistance type=space|graph distance=leastcost|circuit|flow|circuitflow [dist=\textit{val} proba=\textit{val}]
 \end{Verbatim}
 
 \subsubsection{Required parameters}
 \begin{itemize}
-	\item \verb|type|: distance calculation can be based on \verb|raster| or \verb|graph|
+	\item \verb|type|: distance calculation can be based on the euclidean or raster \verb|space| or on the \verb|graph|
 	\item \verb|distance|: from a raster, the distance can be \verb|leastcost| or \verb|circuit|, from a graph, the distance can be \verb|leastcost|, \verb|circuit|, \verb|flow| or \verb|circuitflow|
 \end{itemize}
 
@@ -797,7 +797,7 @@ For raster based distance, a matrix will be calculated for each selected pointse
 \subsubsection{Example}
 In the following example, the least cost distances between points are calculated based on cost raster of each selected linkset and for each selected pointset.
 \begin{Verbatim}
---pointdistance type=raster distance=leastcost
+--pointdistance type=space distance=leastcost
 \end{Verbatim}
 
 

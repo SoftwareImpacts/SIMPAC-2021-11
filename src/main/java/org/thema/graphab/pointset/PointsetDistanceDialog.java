@@ -373,7 +373,7 @@ public class PointsetDistanceDialog extends javax.swing.JDialog {
 
                 final double [][][] distances;  
                 if(rasterRadioButton.isSelected()) {
-                    distances = pointset.calcRasterDistanceMatrix((Linkset) costComboBox.getSelectedItem(), 
+                    distances = pointset.calcSpaceDistanceMatrix((Linkset) costComboBox.getSelectedItem(), 
                             costRadioButton.isSelected() ? Distance.LEASTCOST : Distance.CIRCUIT, mon);
                 } else {
                     Distance type = simpleRadioButton.isSelected() ? Distance.LEASTCOST : 
