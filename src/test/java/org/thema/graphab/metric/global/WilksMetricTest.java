@@ -55,7 +55,7 @@ public class WilksMetricTest {
         }});
         Double[] result = metric.calcMetric(graph);
         assertEquals(0.9002233972616329, result[0], 1e-10);
-        assertEquals(0.9822583533006123, result[1], 1e-10);
+        assertEquals(0.9827320563424049, result[1], 1e-10);
         assertEquals(14, result[2], 0);
         
         metric.setParams(new HashMap<String, Object>() {{ 
@@ -75,7 +75,7 @@ public class WilksMetricTest {
         }});
         result = metric.calcMetric(graph);
         assertEquals(0.9677880588729856, result[0], 1e-10);
-        assertEquals(0.9829389692802237, result[1], 1e-10);
+        assertEquals(0.9832386267370827, result[1], 1e-10);
         assertEquals(6, result[2], 0);
     }
 }

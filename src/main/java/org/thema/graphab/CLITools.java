@@ -22,7 +22,6 @@ import org.locationtech.jts.geom.Geometry;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
-import java.awt.image.RenderedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -43,8 +42,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.media.jai.iterator.RandomIter;
-import javax.media.jai.iterator.RandomIterFactory;
 import org.apache.commons.math.MathException;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.feature.SchemaException;
@@ -71,6 +68,7 @@ import org.thema.graph.pathfinder.EdgeWeighter;
 import org.thema.graphab.addpatch.AddPatchCommand;
 import org.thema.graphab.graph.DeltaAddGraphGenerator;
 import org.thema.graphab.graph.GraphGenerator;
+import org.thema.graphab.graph.GraphLayers;
 import org.thema.graphab.graph.ModGraphGenerator;
 import org.thema.graphab.links.CircuitRaster;
 import org.thema.graphab.links.Linkset;
@@ -123,20 +121,23 @@ public class CLITools {
                     "--dem rasterfile\n" +
                     "--linkset distance=euclid|cost [name=linkname] [complete] [maxcost=valcost] [slope=coef] [remcrosspath|nopathsaved] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--uselinkset linkset1,...,linksetn\n" +
+                    "--removelinkset [linkset1,...,linksetn]\n" +
                     "--corridor maxcost=[{]min:inc:max[}] [format=raster|vector] [beta=exp|var=name]\n" +
                     "--graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]\n" +
                     "--usegraph graph1,...,graphn\n" +
+                    "--removegraph [graph1,...,graphn]\n" +
                     "--cluster d=val p=val [beta=val] [nb=val]\n" +                    
                     "--pointset pointset.shp [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
+                    "--removepointset [pointset1,...,pointsetn]\n" +
                     "--pointdistance type=space|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]\n" +
                     "--capa [area [exp=value] [code1,..,coden=weight ...]] | [file=capacity.csv id=fieldname capa=fieldname] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden [weight]]\n" +
-                    "--gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
+                    "--gmetric global_metric_name [resfile=file.txt] [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]\n" +
                     "--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]\n" +                    
                     "--model variable distW=min:inc:max [vars=var1,...,varn] [raster=r1,...,rn]\n" +
-                    "--delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +                    
+                    "--delta global_metric_name [maxcost=valcost] [param1=[{]val[}] ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +                    
                     "--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[patchfile=file.shp [capa=capa_field]]\n" +
                     "--remelem nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
                     "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
@@ -149,7 +150,7 @@ public class CLITools {
         }
         if(argArray[0].equals("--advanced")) {
             System.out.println("Advanced commands :\n" +
-                    "--linkset distance=euclid [name=linkname] [complete] [maxcost=valcost] [nopathsaved] [height=rastefile]\n" +
+                    "--linkset distance=euclid [name=linkname] [complete] [maxcost=valcost] [nopathsaved] [height=rasterfile]\n" +
                     "--linkset distance=circuit [name=linkname] [complete[=dmax]] [slope=coef] [[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max | extcost=rasterfile]\n" +
                     "--circuit [corridor=current_max] [optim] [con4] [link=id1,id2,...,idm|flink=file.txt]\n");
             return;
@@ -242,12 +243,16 @@ public class CLITools {
                 interp(args);
             } else if(p.startsWith("--use")) {
                 useObj(p, args);
-            } else if(p.startsWith("--show")) {
+            } else if(p.startsWith("--remove")) {
+                remObj(p, args);
+            } else if(p.equals("--show")) {
                 showProject();
             } else if(p.equals("--dem")) {
                 setDEM(args);
             } else if(p.equals("--pointdistance")) {
                 calcPointDistance(args);
+            } else if(p.equals("--topo")) {
+                createTopoLinks(args);
             } else {
                 throw new IllegalArgumentException("Unknown command " + p);
             }
@@ -322,6 +327,34 @@ public class CLITools {
         }
     }
 
+    private void remObj(String p, List<String> args) throws IOException, SchemaException {
+        Set<String> objNames = null;
+        if(!args.isEmpty() && !args.get(0).startsWith("--")) {
+            String param = args.remove(0);
+            objNames = new HashSet(Arrays.asList(param.split(",")));
+        }
+        switch (p) {
+            case "--removelinkset":
+                for(String tok : objNames == null ? project.getLinksetNames() : objNames) {
+                    if(project.getLinksetNames().contains(tok)) {
+                        project.removeLinkset(project.getLinkset(tok), true);
+                    } 
+                }   break;
+            case "--removegraph":
+                for(String tok : objNames == null ? project.getGraphNames() : objNames) {
+                    if(project.getGraphNames().contains(tok)) {
+                        project.removeGraph(tok);
+                    } 
+                }   break;
+            case "--removepointset":
+                for(String tok : objNames == null ? project.getPointsetNames() : objNames) {
+                    if(project.getPointsetNames().contains(tok)) {
+                        project.removePointset(tok);
+                    } 
+                }   break;
+        }
+    }
+    
     private Collection<Linkset> getLinksets() {
         return useLinksets.isEmpty() ? project.getLinksets() :  useLinksets;
     }
@@ -388,16 +421,9 @@ public class CLITools {
         if(dataType == DataBuffer.TYPE_DOUBLE || dataType == DataBuffer.TYPE_FLOAT) {
             throw new RuntimeException("Image data type is not integer type");
         }
-        HashSet<Integer> codes = new HashSet<>();
-        RenderedImage img = coverage.getRenderedImage();
-        RandomIter r = RandomIterFactory.create(img, null);
-        for(int y = 0; y < img.getHeight(); y++) {
-            for(int x = 0; x < img.getWidth(); x++) {
-                codes.add(r.getSample(x, y, 0));
-            }
-        }
+        TreeSet<Integer> codes = NewProjectDialog.getCodes(coverage);
 
-        return new Project(name, new File(dir, name), coverage, new TreeSet<>(codes), patchCodes, nodata, con8, minArea, maxSize, simp);
+        return new Project(name, new File(dir, name), coverage, codes, patchCodes, nodata, con8, minArea, maxSize, simp);
     }
     
     private void setDEM(List<String> args) throws IOException {
@@ -779,7 +805,7 @@ public class CLITools {
             intra = false;
         }
         if(params.containsKey("threshold")) {
-            type = GraphGenerator.THRESHOLD;
+            type = GraphGenerator.PRUNED;
             range = Range.parse(params.get("threshold"));
         }
         
@@ -848,15 +874,20 @@ public class CLITools {
             throw new IllegalArgumentException("Needs a global metric shortname");
         }
         String indName = args.remove(0);
+        GlobalMetric metric = Project.getGlobalMetric(indName);
+        File resFile = new File(project.getDirectory(), metric.getShortName() + ".txt");
+        if(!args.isEmpty() && args.get(0).startsWith("resfile=")) {
+            resFile = new File(project.getDirectory(), args.remove(0).split("=")[1]);
+        }
         double maxCost = readMaxCost(args);
 
         Map<String, Range> ranges = readMetricParams(args);
 
-        GlobalMetric metric = Project.getGlobalMetric(indName);
+        
         System.out.println("Global metric " + metric.getName());
         List<String> paramNames = new ArrayList<>(ranges.keySet());
         
-        try (FileWriter fw = new FileWriter(new File(project.getDirectory(), metric.getShortName() + ".txt"))) {
+        try (FileWriter fw = new FileWriter(resFile)) {
             fw.write("Graph");
             for(String param : paramNames) {
                 fw.write("\t" + param);
@@ -1015,12 +1046,12 @@ public class CLITools {
     private void calcDeltaMetric(List<String> args) throws IOException {
         String indName = args.remove(0);
         double maxCost = readMaxCost(args);
-        HashMap<String, Object> params = new HashMap<>();
+        HashMap<String, Range> params = new HashMap<>();
         while(!args.get(0).startsWith("obj=")) {
             String [] tok = args.remove(0).split("=");
             Range r = Range.parse(tok[1]);
             if(r.isSingle()) {
-                params.put(tok[0], r.getMin());
+                params.put(tok[0], r);
             } else {
                 throw new IllegalArgumentException("No range for metric params in --delta");
             }
@@ -1041,21 +1072,27 @@ public class CLITools {
                 ids.add(patch ? Integer.parseInt(id) : id);
             }
         }
-
-        GlobalMetric indice = Project.getGlobalMetric(indName);
-        if(indice.hasParams()) {
+        
+        GlobalMetric metric = Project.getGlobalMetric(indName);
+        if(metric.hasParams()) {
             if(params.isEmpty()) {
-                throw new IllegalArgumentException("Params for " + indice.getName() + " not found in --delta");
+                throw new IllegalArgumentException("Params for " + metric.getName() + " not found in --delta");
             }
-            indice.setParams(params);
         }
         
-        GlobalMetricLauncher launcher = new GlobalMetricLauncher(indice, maxCost);
-        System.out.println("Global metric " + indice.getName());
+        System.out.println("Global metric " + metric.getName());
         for(GraphGenerator graph : getGraphs()) {
-            try (FileWriter wd = new FileWriter(new File(project.getDirectory(), "delta-" + indice.getDetailName() + "_" + graph.getName() + ".txt"))) {
+            if(metric.hasParams()) {
+                Map<String, Object> values = new HashMap<>();
+                for(String p : params.keySet()) {
+                    values.put(p, params.get(p).getValue(graph.getLinkset()));
+                }
+                metric.setParams(values);
+            }
+            GlobalMetricLauncher launcher = new GlobalMetricLauncher(metric, maxCost);
+            try (FileWriter wd = new FileWriter(new File(project.getDirectory(), "delta-" + metric.getDetailName() + "_" + graph.getName() + ".txt"))) {
                 wd.write("Id");
-                for(String name : indice.getResultNames()) {
+                for(String name : metric.getResultNames()) {
                     wd.write("\td_" + name);
                 }
                 wd.write("\n");
@@ -1664,6 +1701,15 @@ public class CLITools {
             }
         }
     }
+    
+    private void createTopoLinks(List<String> args) throws IOException, SchemaException {
+        for(GraphGenerator graph : getGraphs()) {
+            GraphLayers layer = new GraphLayers("", graph, project.getCRS());
+            layer.setSpatialView(false);
+            layer.getEdgeLayer().export(new File(project.getDirectory(), graph.getName() + "-topo_links.shp"));
+        }
+    }
+    
     
     private List<String> readFile(File f) throws IOException {
         List<String> list = new ArrayList<>();

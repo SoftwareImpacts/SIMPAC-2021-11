@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		19/06/2020\\
+ 		07/09/2020\\
  	}
  	
  \end{titlepage}
@@ -574,7 +574,7 @@ Après la commande \verb|--cluster|, les graphes sélectionnés correspondent au
 
 \subsection{--gmetric : calcul d'une métrique globale}
 \begin{Verbatim}[commandchars=\\\{\}]
---gmetric \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max} [\textit{param2}=\textit{min:inc:max} ...]]
+--gmetric \textit{global_metric_name} [resfile=\textit{file.txt}] [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max} [\textit{param2}=\textit{min:inc:max} ...]]
 \end{Verbatim}
 
 \subsubsection{Paramètre obligatoire}
@@ -584,6 +584,7 @@ Après la commande \verb|--cluster|, les graphes sélectionnés correspondent au
 
 \subsubsection{Paramètres optionnels}
 \begin{itemize}
+	\item \verb|resfile=file.txt| : fichier contenant le résultat du calcul de la métrique
 	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
 	\item \verb|param1=[{]min:inc:max[}]| : paramètre(s) de la métrique, si elle en a. Entouré d'accolades, les valeurs de distance sont converties en valeur de coût automatiquement.
 	\item ...
@@ -593,7 +594,7 @@ Après la commande \verb|--cluster|, les graphes sélectionnés correspondent au
 Calcule la métrique globale données sur chaque graphe sélectionné.
 Le nom de la métrique est son nom court comme affiché par la commande \verb|--metrics|.
 Si la métrique a besoin de paramètres, ils peuvent être spécifiés dans n'importe quel ordre.
-Les résultats sont enregistrés dans un fichier texte dans le répertoire du projet. Le nom du fichier correspond au nom court de la métrique.
+Les résultats sont enregistrés dans un fichier texte dans le répertoire du projet. Par défaut, le nom du fichier correspond au nom court de la métrique. Un autre nom peut être donné par le paramètre \verb|resfile|.
 
 \subsubsection{Exemples}
 Calcule la métrique NC sur tous les graphes sélectionnés :

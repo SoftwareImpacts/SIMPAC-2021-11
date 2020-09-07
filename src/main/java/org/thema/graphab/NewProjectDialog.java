@@ -502,6 +502,7 @@ public class NewProjectDialog extends javax.swing.JDialog {
                     newCodes.remove((int)noData);
                 }
                 panel3.setCodes(newCodes, null);
+                return true;
 
             default:
                 return true;
@@ -574,9 +575,6 @@ public class NewProjectDialog extends javax.swing.JDialog {
         double minArea = (Double)minAreaSpinner.getValue() * 10000;
         boolean con8 = con8RadioButton.isSelected();
         double noData = noDataComboBox.getSelectedIndex() == 0 ? Double.NaN : ((Number)noDataComboBox.getSelectedItem()).doubleValue();
-        if(!Double.isNaN(noData)) {
-            codes.remove((int)noData);
-        }
 
         Project prj = new Project(prjNameTextField.getText(), prjPath, coverage, codes, getHabitatCodes(), noData, con8, minArea, 0, simplifyCheckBox.isSelected());
         panel3.setProject(prj);

@@ -962,66 +962,67 @@ public class Linkset {
         Path.newSetOfPaths();
         long start = System.currentTimeMillis();
         final CircuitRaster circuit = project.getRasterCircuit(this);
-        final FileWriter w = new FileWriter(new File(project.getDirectory(), getName() + "-stats.csv"));
-        w.write("Id1,Id2,Area1,Area2,W,H,T,Iter,InitSErr,R,MErr,M2Err,SErr\n");
-        ParallelFTask task = new AbstractParallelFTask(progressBar) {
-            @Override
-            protected Object execute(int start, int end) {
-                for(Feature orig : project.getPatches().subList(start, end)) {
-                    if(isCanceled()) {
-                        throw new CancellationException();
-                    }
-                    if(allLinks) {
-                        for(Feature patch : project.getPatches()) {
-                            if((Integer)orig.getId() < (Integer)patch.getId()) {
-                                double r = circuit.getODCircuit(orig, patch).getR();
-                                links.add(new Path(orig, patch, r, Double.NaN));
-                            }
+        ParallelFTask task;
+        try (FileWriter w = new FileWriter(new File(project.getDirectory(), getName() + "-stats.csv"))) {
+            w.write("Id1,Id2,Area1,Area2,W,H,T,Iter,InitSErr,R,MErr,M2Err,SErr\n");
+            task = new AbstractParallelFTask(progressBar) {
+                @Override
+                protected Object execute(int start, int end) {
+                    for(Feature orig : project.getPatches().subList(start, end)) {
+                        if(isCanceled()) {
+                            throw new CancellationException();
                         }
-                    } else {
-                        for(Integer dId : project.getPlanarLinks().getNeighbors(orig)) {
-                            if(((Integer)orig.getId()) < dId) {
-                                DefaultFeature dest = project.getPatch(dId);
-                                long t1 = System.currentTimeMillis();
-                                CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(orig, dest);
-                                odCircuit.solve();
-                                long t2 = System.currentTimeMillis();
-                                double r = odCircuit.getR();
-                                synchronized (Linkset.this) {
-                                    try {
-                                        w.write(orig.getId() + "," + dest.getId() + "," + Project.getPatchArea(orig) + "," + Project.getPatchArea(dest) + "," +
-                                                odCircuit.getZone().getWidth() + "," + odCircuit.getZone().getHeight() + "," + (t2 - t1) / 1000.0 + "," + odCircuit.getNbIter() + "," +
-                                                odCircuit.getInitErrSum() + "," + r + "," + odCircuit.getErrMax() + "," + odCircuit.getErrMaxWithoutFirst() + "," + odCircuit.getErrSum() + "\n");
-                                        w.flush();
-                                    } catch (IOException ex) {
-                                        Logger.getLogger(Linkset.class.getName()).log(Level.WARNING, null, ex);
-                                    }
+                        if(allLinks) {
+                            for(Feature patch : project.getPatches()) {
+                                if((Integer)orig.getId() < (Integer)patch.getId()) {
+                                    double r = circuit.getODCircuit(orig, patch).getR();
+                                    links.add(new Path(orig, patch, r, Double.NaN));
                                 }
-                                links.add(new Path(orig, project.getPatch(dId), r, Double.NaN));
+                            }
+                        } else {
+                            for(Integer dId : project.getPlanarLinks().getNeighbors(orig)) {
+                                if(((Integer)orig.getId()) < dId) {
+                                    DefaultFeature dest = project.getPatch(dId);
+                                    long t1 = System.currentTimeMillis();
+                                    CircuitRaster.PatchODCircuit odCircuit = circuit.getODCircuit(orig, dest);
+                                    odCircuit.solve();
+                                    long t2 = System.currentTimeMillis();
+                                    double r = odCircuit.getR();
+                                    synchronized (Linkset.this) {
+                                        try {
+                                            w.write(orig.getId() + "," + dest.getId() + "," + Project.getPatchArea(orig) + "," + Project.getPatchArea(dest) + "," +
+                                                    odCircuit.getZone().getWidth() + "," + odCircuit.getZone().getHeight() + "," + (t2 - t1) / 1000.0 + "," + odCircuit.getNbIter() + "," +
+                                                    odCircuit.getInitErrSum() + "," + r + "," + odCircuit.getErrMax() + "," + odCircuit.getErrMaxWithoutFirst() + "," + odCircuit.getErrSum() + "\n");
+                                            w.flush();
+                                        } catch (IOException ex) {
+                                            Logger.getLogger(Linkset.class.getName()).log(Level.WARNING, null, ex);
+                                        }
+                                    }
+                                    links.add(new Path(orig, project.getPatch(dId), r, Double.NaN));
+                                }
                             }
                         }
+                        
+                        incProgress(1);
                     }
                     
-                    incProgress(1);
+                    return null;
                 }
-                    
-                return null;
-            }
-            @Override
-            public int getSplitRange() {
-                return project.getPatches().size();
-            }
-            @Override
-            public void finish(Collection results) {
-            }
-            @Override
-            public Object getResult() {
-                throw new UnsupportedOperationException("Not supported.");
-            }
-        };
-
-        new ParallelFExecutor(task).executeAndWait();
-        w.close();
+                @Override
+                public int getSplitRange() {
+                    return project.getPatches().size();
+                }
+                @Override
+                public void finish(Collection results) {
+                }
+                @Override
+                public Object getResult() {
+                    throw new UnsupportedOperationException("Not supported.");
+                }
+            };  
+            new ParallelFExecutor(task).executeAndWait();
+        }
+        
         if(task.isCanceled()) {
             throw new CancellationException();
         }

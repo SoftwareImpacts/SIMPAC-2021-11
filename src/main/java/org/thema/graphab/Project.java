@@ -284,6 +284,10 @@ public final class Project {
         this.simplify = simplify;
         this.capacityParams = new CapaPatchDialog.CapaPatchParam();
         
+        if(!Double.isNaN(noData)) {
+            codes.remove((int)noData);
+        }
+        
         Envelope2D gZone = cov.getEnvelope2D();
         zone = gZone.getBounds2D();
         CoordinateReferenceSystem crs = cov.getCoordinateReferenceSystem2D();
@@ -713,7 +717,7 @@ public final class Project {
     public void removeLinkset(Linkset linkset, boolean force) throws IOException {
         List<String> exoNames = new ArrayList<>();
         for (Pointset exo : getPointsets()) {
-            if (exo.getLinkset().getName().equals(getName())) {
+            if (exo.getLinkset().getName().equals(linkset.getName())) {
                 exoNames.add(exo.getName());
             }
         }
@@ -723,7 +727,7 @@ public final class Project {
         
         List<String> graphNames = new ArrayList<>();
         for (GraphGenerator g : getGraphs()) {
-            if (g.getLinkset().getName().equals(getName())) {
+            if (g.getLinkset().getName().equals(linkset.getName())) {
                 graphNames.add(g.getName());
             }
         }
@@ -733,6 +737,13 @@ public final class Project {
         for(String gName : graphNames) {
             removeGraph(gName);
         }
+        
+        FileFilter filter = (File f) -> f.getName().startsWith(linkset.getName() + "-links.") && f.getName().length()-3 == (linkset.getName() + "-links.").length()
+                || f.getName().equals(linkset.getName() + "-links-intra.csv");
+        for(File f : dir.listFiles(filter)) {
+            f.delete();
+        }
+        
         costLinks.remove(linkset.getName());
         save();
     }
@@ -1183,12 +1194,9 @@ public final class Project {
             Logger.getLogger(Project.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        FileFilter filter = new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                return f.getName().startsWith(name + "-voronoi.") && f.getName().length()-3 == (name + "-voronoi.").length();
-            }
-        };
+        FileFilter filter = (File f) -> 
+                f.getName().startsWith(name + "-voronoi.") && f.getName().length()-3 == (name + "-voronoi.").length()
+                || f.getName().startsWith(name + "-topo_links.") && f.getName().length()-3 == (name + "-topo_links.").length();
         for(File f : dir.listFiles(filter)) {
             f.delete();
         }

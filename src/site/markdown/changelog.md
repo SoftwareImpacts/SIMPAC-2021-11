@@ -1,5 +1,14 @@
 ## Changelog
 
+##### version 2.5.10 (07/09/2020)
+- UI : show metric : patch circle size is kept proportionnal to its capacity
+- UI : distance conversion : hide predictive interval
+- CLI : --create project does not remove nodata code from all codes
+- CLI : add --removelinkset, --removegraph and --removepointset commands
+- CLI : add --topo command for creating topological links shapefile (used for Qgis plugin)
+- CLI : --delta command can convert distances in metric param
+- CLI : --gmetric add resfile parameter
+
 ##### version 2.5.9 (19/06/2020)
 - Optimize and parallelize pointset distance matrix calculation
 

@@ -137,7 +137,7 @@ public class BatchGraphMetricTask extends AbstractParallelFTask<TreeMap<Double, 
                 return null;
             }
             GraphGenerator gen = new GraphGenerator("g", linkset,
-                    GraphGenerator.THRESHOLD, t, intraPatchDist);
+                    GraphGenerator.PRUNED, t, intraPatchDist);
             Double[] res = launcher.calcMetric(gen, false, null);
             results.put(t, res);
             incProgress(1);

@@ -210,21 +210,11 @@ public class LinkLayer extends FeatureLayer {
                 if(dlg.log) {
                     cost = Math.exp(cost);
                 } 
-                SimpleRegression reg = new SimpleRegression(true);
-                reg.addData(data);
-                double r2 = reg.getRSquare();
-                double inter = -new TDistribution(reg.getN()-2).inverseCumulativeProbability(0.05/2) * 
-                        Math.sqrt(reg.getMeanSquareError() * (1 + 1/reg.getN() + Math.pow(x-(sumX/reg.getN()), 2) / reg.getXSumSquares()))  ;
-                double min = reg.predict(x)-inter, max = reg.predict(x)+inter;
-                if(dlg.log) {
-                    min = Math.exp(min);
-                    max = Math.exp(max);
-                } 
                 final JFrame frm = FeatureLayer.showScatterPlot(paths, Path.DIST_ATTR, Path.COST_ATTR, dlg.log);
                 String equation = dlg.log ? 
                         String.format("Regression : cost = exp(%g + log(dist)*%g)\n\n", coef[0], coef[1]) : 
                         String.format("Regression : cost = %g + dist*%g\n\n", coef[0], coef[1]);
-                String result = String.format("dist %g = cost %g +/- [%g - %g]", dist, cost, min, max);
+                String result = String.format("dist %g = cost %g", dist, cost);
                 ((ChartFrame)frm).getChartPanel().getChart().setTitle(equation+result);
                 
                 final JTextArea text = new JTextArea(result);

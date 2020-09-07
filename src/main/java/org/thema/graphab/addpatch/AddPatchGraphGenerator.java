@@ -82,7 +82,7 @@ public class AddPatchGraphGenerator extends GraphGenerator {
         HashMap<DefaultFeature, Path> newLinks = getLinkset().calcNewLinks(patch);
         for(DefaultFeature d : newLinks.keySet()) {
             Path path = new Path(patch, d, newLinks.get(d).getCost(), newLinks.get(d).getDist());  
-            if(getType() != THRESHOLD || getCost(path) <= getThreshold()) {
+            if(getType() != PRUNED || getCost(path) <= getThreshold()) {
                 Node nodeB = null;
                 for(Node n : (Collection<Node>)getGraph().getNodes()) {
                     if(((Feature)n.getObject()).getId().equals(d.getId())) {

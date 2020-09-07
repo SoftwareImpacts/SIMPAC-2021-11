@@ -1104,16 +1104,14 @@ public class MainFrame extends javax.swing.JFrame {
         FeatureLayer nodeLayer = gl.getNodeLayer();
         CircleStyle nodeStyle = (CircleStyle) nodeLayer.getStyle();
         if(node) {
-            Number max = Collections.max(new FeatureAttributeCollection<Double>(nodeLayer.getFeatures(), attr));
-            Number min = Collections.min(new FeatureAttributeCollection<Double>(nodeLayer.getFeatures(), attr));
-            nodeStyle.setCircleAttr(attr, min.doubleValue(), max.doubleValue());
+            Number max = Collections.max(new FeatureAttributeCollection<Double>(nodeLayer.getFeatures(), Project.CAPA_ATTR));
+            Number min = Collections.min(new FeatureAttributeCollection<Double>(nodeLayer.getFeatures(), Project.CAPA_ATTR));
+            nodeStyle.setCircleAttr(Project.CAPA_ATTR, min.doubleValue(), max.doubleValue());
             nodeStyle.setAttrFill(attr);
             nodeStyle.setRampFill(new ColorRamp(ColorRamp.RAMP_SYM_GREEN_RED, 
                     new FeatureAttributeIterator<Number>(nodeLayer.getFeatures(), attr)));
         } else {
             nodeStyle.setCircleAttr(null, 0, 0);
-//            nodeStyle.setMinRadius(3);
-//            nodeStyle.setMaxRadius(3);
             nodeStyle.setAttrFill(null);
             nodeStyle.setRampFill(new ColorRamp(new Color[]{new Color(0xcbcba7)}));
         }

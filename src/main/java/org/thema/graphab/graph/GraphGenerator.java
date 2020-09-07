@@ -65,8 +65,8 @@ public class GraphGenerator {
 
     /** Type of graph without threshold ie. keep all links of the linkset */
     public static final int COMPLETE = 1;
-    /** Type of graph with an edge threshold ie. keep links which cost (or distance) is less than threshold */
-    public static final int THRESHOLD = 2;
+    /** Type of graph with an edge threshold ie. keep links which cost (or distance) is less than a threshold */
+    public static final int PRUNED = 2;
     /** Minimum Spanning Tree graph. */
     public static final int MST = 3;
 
@@ -90,7 +90,7 @@ public class GraphGenerator {
      * Creates a new graph.
      * @param name name of the graph
      * @param linkset the linkset
-     * @param type the type of graph : COMPLETE, THRESHOLD or MST
+     * @param type the type of graph : COMPLETE, PRUNED or MST
      * @param threshold the threshold if any
      * @param intraPatchDist use intra patch distances for path calculation ?
      */
@@ -434,7 +434,7 @@ public class GraphGenerator {
         }
 
         for(Path p : cost.getPaths()) {
-            if(type != THRESHOLD || getCost(p) <= threshold) {
+            if(type != PRUNED || getCost(p) <= threshold) {
                 Edge e = gen.buildEdge(patchNodes.get(p.getPatch1()), patchNodes.get(p.getPatch2()));
                 e.setObject(p);
                 gen.addEdge(e);
@@ -721,7 +721,7 @@ public class GraphGenerator {
     }
 
     /**
-     * May be COMPLETE, THRESHOLD or MST
+     * May be COMPLETE, PRUNED or MST
      * @return the type of the graph
      */
     public int getType() {
@@ -763,7 +763,7 @@ public class GraphGenerator {
             case COMPLETE:
                 info += bundle.getString("NewGraphDialog.completeRadioButton.text");
                 break;
-            case THRESHOLD:
+            case PRUNED:
                 info += bundle.getString("NewGraphDialog.thresholdRadioButton.text") + String.format(" %g", threshold);
                 break;
             case MST:

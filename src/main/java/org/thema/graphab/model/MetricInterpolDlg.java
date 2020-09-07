@@ -388,7 +388,7 @@ public class MetricInterpolDlg extends javax.swing.JDialog {
         GraphGenerator g = (GraphGenerator) graphComboBox.getSelectedItem();
         varComboBox.setModel(new DefaultComboBoxModel(project.getGraphPatchAttr(g.getName()).toArray()));
         varComboBoxActionPerformed(null);
-        if (g.getType() == GraphGenerator.THRESHOLD) { 
+        if (g.getType() == GraphGenerator.PRUNED) { 
             dSpinner.setValue(g.getThreshold());
         }
         

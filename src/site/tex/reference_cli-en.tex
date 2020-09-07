@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2020-06-19\\
+		2020-09-07\\
 	}
 	
 \end{titlepage}
@@ -574,7 +574,7 @@ After \verb|--cluster| command, the selected graphs correspond to the newly crea
 
 \subsection{--gmetric : calculate global metric}
 \begin{Verbatim}[commandchars=\\\{\}]
---gmetric \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max} [\textit{param2}=\textit{min:inc:max} ...]]
+--gmetric \textit{global_metric_name} [resfile=\textit{file.txt}] [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max} [\textit{param2}=\textit{min:inc:max} ...]]
 \end{Verbatim}
 
 \subsubsection{Required parameter}
@@ -584,6 +584,7 @@ After \verb|--cluster| command, the selected graphs correspond to the newly crea
 
 \subsubsection{Optional parameters}
 \begin{itemize}
+	\item \verb|resfile=file.txt| : file containing the resulting values of the metric
 	\item \verb|maxcost=valcost| : limit pathfinding to \textit{valcost} (ie. paths greater than \textit{maxcost} are not calculated). It can reduce the time execution for path-based metric but results may be inaccurate.
 	\item \verb|param1=[{]min:inc:max[}]| : metric parameter(s), if needed. Surrounded by braces, the distance values are converted automatically in cost values.
 	\item ...
@@ -594,6 +595,7 @@ Calculates a given global metric on each selected graph.
 The metric's name is the short name as shown in \verb|--metrics| command.
 If the metric requires parameters, they can be specified in any order.
 Results are stored in a text file in the project folder. The file name corresponds to the metric short name.
+Another file name can be given by the \verb|resfile| parameter.
 
 \subsubsection{Examples}
 To calculate the NC metric on selected graphs:

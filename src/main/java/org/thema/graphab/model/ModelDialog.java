@@ -501,7 +501,7 @@ public class ModelDialog extends javax.swing.JDialog {
         vars.addAll(extVars.keySet());
         varList.setModel(new DefaultComboBoxModel(vars.toArray()));
         GraphGenerator g = (GraphGenerator)graphComboBox.getSelectedItem();
-        if(g.getType() == GraphGenerator.THRESHOLD) {
+        if(g.getType() == GraphGenerator.PRUNED) {
             dSpinner.setValue(g.getThreshold());
         }
 }//GEN-LAST:event_graphComboBoxActionPerformed

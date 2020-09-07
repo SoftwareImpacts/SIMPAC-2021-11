@@ -38,7 +38,7 @@ public class NewGraphDialog extends javax.swing.JDialog {
     public Linkset linkset;
     /** the threshold if any */
     public double threshold;
-    /** type of graph : COMPLETE, THRESHOLD or MST */
+    /** type of graph : COMPLETE, PRUNED or MST */
     public int type;
     /** Use intrapatch distances for path calculation ? */
     public boolean intraPatchDist;
@@ -253,7 +253,7 @@ public class NewGraphDialog extends javax.swing.JDialog {
         if(completeRadioButton.isSelected()) {
             type = GraphGenerator.COMPLETE;
         } else if(thresholdRadioButton.isSelected()) {
-            type = GraphGenerator.THRESHOLD;
+            type = GraphGenerator.PRUNED;
         } else {
             type = GraphGenerator.MST;
         }

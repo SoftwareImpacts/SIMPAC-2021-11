@@ -55,9 +55,9 @@ import org.thema.graphab.MainFrame;
 import org.thema.graphab.Project;
 import static org.thema.graphab.graph.GraphGenerator.COMPLETE;
 import static org.thema.graphab.graph.GraphGenerator.MST;
-import static org.thema.graphab.graph.GraphGenerator.THRESHOLD;
 import org.thema.graphab.links.Linkset;
 import org.thema.graphab.util.SerieFrame;
+import static org.thema.graphab.graph.GraphGenerator.PRUNED;
 
 /**
  * GroupLayer representing a graph.
@@ -89,7 +89,7 @@ public class GraphLayers extends GraphGroupLayer {
                     col = 0xA2705E;
                 }
                 break;
-            case THRESHOLD:
+            case PRUNED:
                 if(graph.getLinkset().getTopology() == Linkset.PLANAR) {
                     col = 0x42407E;
                 } else {

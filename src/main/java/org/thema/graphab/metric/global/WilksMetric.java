@@ -107,7 +107,7 @@ public class WilksMetric extends GlobalMetric {
             RealMatrix totalCov = new Covariance(total.toArray(new double[0][]), false).getCovarianceMatrix();
             totalCov = totalCov.scalarMultiply(weightArea ? totArea : nPatch);
             double indice = intraCov.getDeterminant() / totalCov.getDeterminant();
-            double khi2 = - Math.log(indice) * (nPatch - (nComp+attributes.size()+1) / 2);
+            double khi2 = - Math.log(indice) * (nPatch - (nComp+attributes.size()+1) / 2.0);
             try {
                 double p = 1 - new ChiSquaredDistributionImpl(attributes.size()*nComp).cumulativeProbability(khi2);
                 return new Double[] {indice, p, (double)nComp};

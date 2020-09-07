@@ -156,8 +156,8 @@ public class CLIToolsTest {
         cli.execute(new String[]{"--project", prjFile, "--uselinkset", "Jeulien1", "--graph", "nointra", "name=comptest"});
         checkAndRemoveGraph("comptest", GraphGenerator.COMPLETE, 0, 8, false);
         cli.execute(new String[]{"--project", prjFile, "--uselinkset", "Jeulien1", "--graph", "threshold=3:2:5"});
-        checkAndRemoveGraph("thresh_3.0_Jeulien1", GraphGenerator.THRESHOLD, 3, 4, true);
-        checkAndRemoveGraph("thresh_5.0_Jeulien1", GraphGenerator.THRESHOLD, 5, 8, true);
+        checkAndRemoveGraph("thresh_3.0_Jeulien1", GraphGenerator.PRUNED, 3, 4, true);
+        checkAndRemoveGraph("thresh_5.0_Jeulien1", GraphGenerator.PRUNED, 5, 8, true);
         
         thrown.expect(IllegalArgumentException.class);
         cli.execute(new String[]{"--project", prjFile, "--graph", "name=test", "threshold=1:1:5"});
