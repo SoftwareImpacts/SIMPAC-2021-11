@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		07/09/2020\\
+ 		08/09/2020\\
  	}
  	
  \end{titlepage}
@@ -173,12 +173,12 @@ Commands list :
 --usepointset pointset1,...,pointsetn
 --pointdistance type=space|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
 --capa [area [exp=value] [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden ...
---gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
+--gmetric global_metric_name [resfile=file.txt] [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]
 --model variable distW=min:inc:max [vars=var1,...,varn] [raster=r1,...,rn]
---delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
+--delta global_metric_name [maxcost=valcost] [param1=[{]val[}] ...] obj=patch|link [sel=id1,id2, ...
 --addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] ...
 --remelem nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
 --gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
@@ -460,6 +460,14 @@ Les noms de jeu de liens sont sensibles à la casse et ne peuvent pas contenir d
 
 Par défaut, tous les jeux de liens sont sélectionnés.
 
+\subsection{--removelinkset : suppression de jeux de liens}
+\begin{Verbatim}[commandchars=\\\{\}]
+--removelinkset [\textit{linkset1,..,linksetn}]
+\end{Verbatim}
+Supprime les jeux de liens sélectionnés. Tous les graphes dépendant de ces jeux de liens sont aussi supprimés.\\
+L'option \verb|-nosave| est sans effet sur cette commande.
+
+
 \subsection{--graph : création d'un graphe}
 \begin{Verbatim}
 --graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
@@ -506,9 +514,16 @@ Résultat : cette commande créera 6 graphes élagués (1000, 1100, 1200, 1300, 
 --usegraph \textit{graph1,..,graphn}
 \end{Verbatim}
 Sélectionne les graphes qui seront utilisés dans les commandes suivantes.
-Les noms de graphe sont sensibles à la casse et ne peuvent pas contenir d'espace.
-
+Les noms de graphe sont sensibles à la casse et ne peuvent pas contenir d'espace.\\
 Par défaut, tous les graphes sont sélectionnés.
+
+\subsection{--removegraph : suppression de graphes}
+\begin{Verbatim}[commandchars=\\\{\}]
+--removegraph [\textit{graph1,..,graphn}]
+\end{Verbatim}
+Supprime les graphes sélectionnés.\\
+L'option \verb|-nosave| est sans effet sur cette commande.
+
 
 \subsection{--corridor : calcul de corridors}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -774,6 +789,13 @@ Après la commande \verb|--pointset|, les jeux de points sélectionnés correspo
 \end{Verbatim}
 Sélectionne les jeux de points à utiliser par la commande \verb|--model|.
 Par défaut, tous les jeux de points sont sélectionnés.
+
+\subsection{--removepointset : suppression de jeux de points}
+\begin{Verbatim}[commandchars=\\\{\}]
+--removepointset [\textit{pointset1,..,pointsetn}]
+\end{Verbatim}
+Supprime les jeux de points sélectionnés.\\
+L'option \verb|-nosave| est sans effet sur cette commande.
 
 \subsection{--pointdistance : matrice de distances d'un jeu de point}
 \begin{Verbatim}[commandchars=\\\{\}]

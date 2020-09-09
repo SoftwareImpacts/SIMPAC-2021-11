@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2020-09-07\\
+		2020-09-08\\
 	}
 	
 \end{titlepage}
@@ -172,12 +172,12 @@ Commands list :
 --usepointset pointset1,...,pointsetn
 --pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
 --capa [area [exp=value] [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden ...
---gmetric global_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
+--gmetric global_metric_name [resfile=file.txt] [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --cmetric comp_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --lmetric local_metric_name [maxcost=valcost] [param1=[{]min:inc:max[}] [param2=[{]min:inc:max[}] ...]]
 --interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]
 --model variable distW=min:inc:max [vars=var1,...,varn] [raster=r1,...,rn]
---delta global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
+--delta global_metric_name [maxcost=valcost] [param1=[{]val[}] ...] obj=patch|link [sel=id1,id2, ...
 --addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] ...
 --remelem nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
 --gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2, ...
@@ -450,7 +450,6 @@ or
 Result: the command above created 3 linksets \textit{cost\_1\_2\_3-100.0 cost\_1\_2\_3-150.0 cost\_1\_2\_3-200.0}
 where raster codes 1,2 and 3 were 100, 150 and 200 respectively.
 
- 
 
 \subsection{--uselinkset : select linkset}
 \label{uselinkset}
@@ -460,6 +459,14 @@ where raster codes 1,2 and 3 were 100, 150 and 200 respectively.
 Selects linksets to be used in following commands.\\
 The linkset name is case sensitive and must not contain blank spaces.\\
 By default, all linksets are selected.
+
+\subsection{--removelinkset : remove linkset}
+\begin{Verbatim}[commandchars=\\\{\}]
+--removelinkset [\textit{linkset1,..,linksetn}]
+\end{Verbatim}
+Remove selected linksets from the project. All graphs depending on removed linksets are also removed.\\
+Global option \verb|-nosave| has no effect on this command.
+
 
 \subsection{--graph : create graph}
 \begin{Verbatim}
@@ -500,7 +507,6 @@ or
 \end{Verbatim}
 Result: this command created 6 graphs for each selected linkset.
 
-
 \subsection{--usegraph : select graph}
 \label{usegraph}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -509,6 +515,14 @@ Result: this command created 6 graphs for each selected linkset.
 Selects graphs to be used in following commands.\\
 The graph name is case sensitive and must not contain blank spaces.\\
 By default, all graphs are selected.
+
+\subsection{--removegraph : remove graph}
+\begin{Verbatim}[commandchars=\\\{\}]
+--removegraph [\textit{graph1,..,graphn}]
+\end{Verbatim}
+Remove selected graphs from the project.\\
+Global option \verb|-nosave| has no effect on this command.
+
 
 \subsection{--corridor : calculate corridors}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -773,6 +787,14 @@ After \verb|--pointset| command execution, pointset selection is set to the crea
 \end{Verbatim}
 Selects pointsets to be used in the following \verb|--model| command.
 By default, all pointsets are selected.
+
+\subsection{--removepointset : remove pointset}
+\begin{Verbatim}[commandchars=\\\{\}]
+--removepointset [\textit{pointset1,..,pointsetn}]
+\end{Verbatim}
+Remove selected pointsets from the project.\\
+Global option \verb|-nosave| has no effect on this command.
+
 
 \subsection{--pointdistance : calculate distance matrix of pointsets}
 \begin{Verbatim}[commandchars=\\\{\}]
