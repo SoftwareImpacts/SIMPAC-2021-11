@@ -1,5 +1,9 @@
 ## Changelog
 
+##### version 2.6 (18/12/2020)
+- UI : show metric : default patch circle size reduce from 40 to 20
+- CLI : --graph command crashes when pruning with distance conversion
+
 ##### version 2.5.10 (07/09/2020)
 - UI : show metric : patch circle size is kept proportionnal to its capacity
 - UI : distance conversion : hide predictive interval

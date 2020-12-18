@@ -42,7 +42,7 @@
 	\bigskip	
 	{\Huge
 		\bfseries
-		Graphab 2.5\\
+		Graphab 2.6\\
 		\bigskip
 		Manuel d’utilisation\\
 	}
@@ -55,7 +55,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		21/11/2019\\
+		17/12/2020\\
 	}
 	
 \end{titlepage}
@@ -95,15 +95,15 @@ Graphab fonctionne sur tout ordinateur supportant Java 8 ou supérieur (PC sous 
 
 \subsection{Installation et lancement du programme}
 
-Graphab est téléchargeable à cette adresse : \url{https://sourcesup.renater.fr/graphab}.
+Graphab est téléchargeable à cette adresse : \url{https://sourcesup.renater.fr/www/graphab}.
 
 \begin{itemize}
-	\item Télécharger et installer Java 8 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
-	\item Télécharger graphab-2.4.jar
-	\item Lancer graphab-2.4.jar
+	\item Télécharger et installer Java 8 ou + (\href{http://www.java.com}{java.com}  ou \href{https://adoptopenjdk.net}{adoptopenjdk.net}). Installer de préférence la version 64 bits de Java.
+	\item Télécharger graphab-2.6.jar
+	\item Lancer graphab-2.6.jar
 \end{itemize}
 
-Une fois graphab-2.0.jar lancé, le menu fichier donne accès à 4 rubriques : 
+Une fois graphab-2.6.jar lancé, le menu fichier donne accès à 4 rubriques : 
 \begin{itemize}
 	\item Fichier / Nouveau projet~: pour commencer la création d’un projet dans lequel toutes les données et résultats sont automatiquement enregistrés.
 	\item Fichier / Ouvrir un projet : ouvre un projet déjà créé auparavant.
@@ -255,15 +255,20 @@ Option «~Inclure les distances intra-taches~» : si la case est cochée, le cal
 
 Pour un graphe élagué par une distance maximale, l’unité de cette distance dépend du type de distance utilisé dans la création du jeu de liens. Si le jeu de lien a été créé en distance euclidienne, la distance maximale est exprimée en mètres. Si la création du jeu de lien a été réalisée en distance-coût et que l'impédance est en coût cumulé, la distance maximale est exprimée en coûts cumulés. L'unité (mètre ou coût) du jeu de liens sélectionné est rappelé à côté du champ "Distance maximale".
 
-\begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-fr_img7.png} 
-\end{figure}
 
 Il est possible d’obtenir une approximation de la distance métrique (appelée DistM) exprimée en coûts cumulés (appelée Dist) en représentant tous les liens inclus dans le jeu de liens dans un nuage de points double logarithmique, et en utilisant l'équation ci-dessous pour effectuer cette conversion :
 
 $$Dist = e^{intercept + slope . log(DistM)}$$
 
-L'estimation peut être réalisée directement dans le logiciel à partir du menu Conversion distance présent dans le menu contextuel d'un jeu de lien (clic droit sur le jeu de lien).
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-fr_img7.png} 
+\end{figure}
+
+L'estimation peut être réalisée directement dans le logiciel à partir du menu Conversion distance présent dans le menu contextuel d'un jeu de lien (clic droit sur le jeu de lien). 
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-fr_convdist_dlg.png} 
+\end{figure}
 
 Pour réaliser une analyse multiscalaire, il est souvent nécessaire de créer une série de graphes élagués dont la distance maximale est définie de façon croissante. L’utilisateur peut créer manuellement cette série de graphes, mais si l’objectif est d’analyser le comportement d’une métrique de connectivité en fonction de la distance maximale, il est préférable d’utiliser le menu : Métriques / Graphes par lot (cf. \ref{batch_graph}).
 

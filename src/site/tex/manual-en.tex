@@ -42,7 +42,7 @@
 	\bigskip	
 	{\Huge
 	\bfseries
-	Graphab 2.5\\
+	Graphab 2.6\\
 	\bigskip
 	User Manual\\
 	}
@@ -55,7 +55,7 @@
 	{\Large		
 	Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 	\bigskip
-	2019-11-21\\
+	2020-12-17\\
 	}
 	
 \end{titlepage}
@@ -96,14 +96,14 @@ Graphab runs on any computer supporting Java 8 or later (PC under Linux, Windows
 
 \subsection{Installing the software and launching a project}
 
-Graphab can be downloaded from \url{https://sourcesup.renater.fr/graphab}.
+Graphab can be downloaded from \url{https://sourcesup.renater.fr/www/graphab}.
 
 \begin{itemize}
-	\item Download and install Java 8 or later - \href{http://www.java.com}{java.com}. If you have a 64-bit operating system, it is best to install the 64-bit version of Java.
-	\item Download graphab-2.4.jar
-	\item Launch graphab-2.4.jar
+	\item Download and install Java 8 or later - \href{http://www.java.com}{java.com} or \href{https://adoptopenjdk.net}{adoptopenjdk.net}. It is best to install the 64-bit version of Java.
+	\item Download graphab-2.6.jar
+	\item Launch graphab-2.6.jar
 \end{itemize}
-After launching graphab-2.4.jar, the File menu provides access to four sections:
+After launching graphab-2.6.jar, the File menu provides access to four sections:
 \begin{itemize}
 	\item File / New project: to create a new project in which all data and results are saved automatically.  
 	\item File / Open project: to open an existing project.
@@ -260,15 +260,21 @@ The user must select one of the link sets created previously (cf. \nameref{links
 
 For a pruned graph with maximum distance, the unit of the distance depends on the type of distance used in creating the link set. If the link set is created using Euclidean distances, the maximum distance is in meters. If the link set is created using cost distances and the impedance is cumulative cost, the maximum distance is given as a cumulative cost. The unit of the distance (cost or meter) is shown just after the "max dist" field.
 
-\begin{figure}[H]
-	\includegraphics[scale=0.5]{img/manual-fr_img7.png}
-\end{figure}
+
 
 An approximation of the distance metric (DistM) expressed as a cumulative cost (Dist) can be obtained by displaying the double log plot of the link set and using the equation below to perform the conversion:
 
 $$Dist = e^{intercept + slope . log(DistM)}$$
 
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-fr_img7.png}
+\end{figure}
+
 The estimation can be performed directly in Graphab from the menu "Dist. conversion" available by right-clicking on a link set name.
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{img/manual-en_convdist_dlg.png} 
+\end{figure}
 
 To perform a multiscale analysis, it is often necessary to create a series of graphs in which increasing maximum distances are defined. Users can create this series manually. But if the objective is to analyze the behavior of a metric according to the maximum distance, the Metrics / Batch graphs menu can be used (see \nameref{batch_graph}).
 

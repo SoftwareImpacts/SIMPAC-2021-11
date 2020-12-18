@@ -592,7 +592,7 @@ public class MainFrame extends javax.swing.JFrame {
 
                 monitor.close();
                 System.out.println(res);
-                System.out.println("Temps écoulé : " + (System.currentTimeMillis()-start));
+                System.out.println("Elapsed time : " + (System.currentTimeMillis()-start));
                 JOptionPane.showMessageDialog(MainFrame.this, new JScrollPane(new JTextArea(res, 10, 40)));
             }
         }).start();

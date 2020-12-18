@@ -875,7 +875,7 @@ public class Linkset {
             throw new CancellationException();
         }
         
-        Logger.getLogger(Linkset.class.getName()).info("Temps écoulé : " + (System.currentTimeMillis()-start));
+        Logger.getLogger(Linkset.class.getName()).info("Elapsed time : " + (System.currentTimeMillis()-start));
         
         paths = task.getResult();
     }
@@ -952,7 +952,7 @@ public class Linkset {
         if(task.isCanceled()) {
             throw new CancellationException();
         }
-        Logger.getLogger(Linkset.class.getName()).info("Temps écoulé : " + (System.currentTimeMillis()-start));
+        Logger.getLogger(Linkset.class.getName()).info("Elapsed time : " + (System.currentTimeMillis()-start));
         paths = task.getResult();
     }
        
@@ -1027,7 +1027,7 @@ public class Linkset {
             throw new CancellationException();
         }
         
-        Logger.getLogger(Linkset.class.getName()).info("Temps écoulé : " + (System.currentTimeMillis()-start));
+        Logger.getLogger(Linkset.class.getName()).info("Elapsed time : " + (System.currentTimeMillis()-start));
         
         paths = links;
     }

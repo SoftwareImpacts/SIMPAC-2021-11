@@ -25,7 +25,7 @@
  	\bigskip	
  	{\Huge
  		\bfseries
- 		Graphab 2.5\\
+ 		Graphab 2.6\\
  		\bigskip
  		Manuel de référence\\
  		Ligne de commande\\
@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		08/09/2020\\
+ 		17/12/2020\\
  	}
  	
  \end{titlepage}
@@ -77,21 +77,21 @@ Graphab fonctionne sur n'importe quel ordinateur supportant Java 8 ou supérieur
 Graphab est téléchargeable à cette adresse : \url{https://sourcesup.renater.fr/graphab}.
 
 \begin{itemize}
-	\item Télécharger et installer Java 8 ou + (\href{http://www.java.com}{java.com}). Installer de préférence la version 64 bits de Java.
-	\item Télécharger graphab-2.4.jar
-	\item Lancer graphab-2.4.jar
+	\item Télécharger et installer Java 8 ou + (\href{http://www.java.com}{java.com} ou \href{https://adoptopenjdk.net}{adoptopenjdk.net}). Installer de préférence la version 64 bits de Java.
+	\item Télécharger graphab-2.6.jar
+	\item Lancer graphab-2.6.jar
 \end{itemize}
 
 \section{Lancer Graphab en ligne de commande}
 Il faut tout d'abord ouvrir une fenêtre de terminal, puis aller dans le répertoire contenant Graphab avec la commande \textit{cd}.
 Enfin, vous pouvez saisir la commande suivante pour afficher l'écran d'aide de Graphab :
 \begin{Verbatim}
-	java -jar graphab-2.4.jar --help
+	java -jar graphab-2.6.jar --help
 \end{Verbatim}
 Résultat
 \begin{Verbatim}
 Usage :
-java -jar graphab-2.4.jar --project prjfile.xml
+java -jar graphab-2.6.jar --project prjfile.xml
 ...
 ...
 \end{Verbatim}
@@ -142,7 +142,7 @@ Les commandes \textit{--create} et \textit{--project} peuvent être utilisées u
 Après une de ces deux commandes, toutes les autres commandes seront exécutées séquentiellement dans le même ordre que sur la ligne.
 
 \begin{Verbatim}
-	java -jar graphab-2.4.jar --project prj.xml --graph --gmetric NC  
+	java -jar graphab-2.6.jar --project prj.xml --graph --gmetric NC  
 \end{Verbatim}
 Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la commande \textit{--graph}, puis la commande \textit{--gmetric}.
 
@@ -152,7 +152,7 @@ Cette ligne de commande charge le projet \textit{prj.xml}, puis exécute la comm
 \subsection{--help : affichage de l'aide}
 Commande :
 \begin{Verbatim}
-	java -jar graphab-2.4.jar --help
+	java -jar graphab-2.6.jar --help
 \end{Verbatim}
 Résultat :
 \begin{verbatim}
@@ -194,7 +194,7 @@ Cette commande affiche l'ensemble des métriques disponibles avec leur abréviat
 
 Commande :
 \begin{Verbatim}
-	java -jar graphab-2.4.jar --metrics
+	java -jar graphab-2.6.jar --metrics
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -240,8 +240,8 @@ Résultat :
 \subsection{--create : création d'un projet}
 
 \begin{Verbatim}[commandchars=\\\{\}]
-java -jar graphab-2.4.jar --create \textit{prjname} \textit{landrasterfile} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
-	[minarea=\textit{val}] [con8] [simp] [dir=\textit{path}]
+java -jar graphab-2.6.jar --create \textit{prjname} \textit{landrasterfile} habitat=\textit{code1,...,coden} [nodata=\textit{val}] 
+	[minarea=\textit{val}] [maxsize=\textit{val}] [con8] [simp] [dir=\textit{path}]
 \end{Verbatim}
 
 \subsubsection{Paramètres obligatoires}
@@ -255,6 +255,7 @@ java -jar graphab-2.4.jar --create \textit{prjname} \textit{landrasterfile} habi
 \begin{itemize}
 	\item \verb|nodata=val| : valeur représentant l'absence de données dans l'image raster
 	\item \verb|minarea=val| : taille minimale d'une tache d'habitat en hectare
+	\item \verb|maxsize=val| : découpe les taches dont la longueur ou largeur dépasse \verb|maxsize| sur une grille de taille \verb|maxsize|
 	\item \verb|con8| : connexité aux 8 pixels voisins pour la définition des taches, par défaut la connexité est seulement de 4
 	\item \verb|simp| : simplifie la géométrie des taches pour accélérer le calcul de la topologie planaire (voronoï)
 	\item \verb|dir=path| : chemin où enregistrer le projet, par défaut le projet est enregistré dans le répertoire courant.
@@ -269,7 +270,7 @@ Les commandes suivantes seront exécutées sur le projet nouvellement créé.
 \subsection{--project : chargement d'un projet}
 Cette commande définit le chemin vers le fichier xml du projet à charger.
 \begin{Verbatim}[commandchars=\\\{\}]
-	java -jar graphab-2.4.jar --project \textit{path2myproject/myproject.xml}
+	java -jar graphab-2.6.jar --project \textit{path2myproject/myproject.xml}
 \end{Verbatim}
 Charge le projet \textit{myproject} contenu dans le répertoire \textit{path2myproject}.
 
@@ -282,7 +283,7 @@ Cette commande est utile pour récupérer les noms exacts des éléments pour le
 
 Commande :
 \begin{Verbatim}[commandchars=\\\{\}]
-	java -jar graphab-2.4.jar --project \textit{path2myproject/myproject.xml} --show
+	java -jar graphab-2.6.jar --project \textit{path2myproject/myproject.xml} --show
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -305,7 +306,9 @@ Attention aux noms des éléments : la ligne de commande est sensible à la cass
 
 \subsection{--capa : capacité des taches}
 \begin{Verbatim}[commandchars=\\\{\}]
---capa [area [exp=\textit{value}] [code1,..,coden=weight ...]] | [maxcost=\textit{valcost} codes=\textit{code1,code2,...,coden} [weight]]
+--capa [area [exp=\textit{value}] [\textit{code1,..,coden=weight ...}]] 
+	| [file=\textit{capacity.csv} id=\textit{fieldname} capa=\textit{fieldname}]
+	| [maxcost=[\{]\textit{valcost}[\}] codes=\textit{code1,code2,...,coden} [weight]]
 \end{Verbatim}
 
 \subsubsection{Paramètres optionnels}
@@ -326,15 +329,15 @@ Cette commande supporte la sélection d'un seul jeu de lien (cf. \nameref{uselin
 
 \subsubsection{Exemples}
 \begin{Verbatim}
---capa
+	--capa
 \end{Verbatim}
 \begin{Verbatim}
---capa area
+	--capa area
 \end{Verbatim}
 Les 2 exemples précédents calculent la capacité comme la surface de la tache (en $m^2$).
 
 \begin{Verbatim}
---capa area 1=0.5 5=2
+	--capa area 1=0.5 5=2
 \end{Verbatim}
 Défini la capacité de la tache comme la surface de la tache (en $m^2$) pondérée par 0.5 pour le code d'occupation du sol 1 et pondérée par 2 pour le code d'occupation du sol 5.
 
@@ -387,8 +390,9 @@ Cette commande définit le chemin vers un MNT qui pourra être utilisé dans la 
 
 \subsection{--linkset : création d'un jeu de liens}
 \begin{Verbatim}[commandchars=\\\{\}]
---linkset distance=euclid|cost [name=\textit{linkname}] [complete] [maxcost=\textit{valcost}] [slope=\textit{coef}] [remcrosspath] 
-	[[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} | extcost=\textit{rasterfile}]
+--linkset distance=euclid|cost [name=\textit{linkname}] [complete] [maxcost=\textit{valcost}] [slope=\textit{coef}]
+	[remcrosspath|nopathsaved] [[\textit{code1,..,coden}=\textit{cost1} ...] \textit{codei,..,codej}=\textit{min:inc:max} 
+	| extcost=\textit{rasterfile}]
 \end{Verbatim}
 
 \subsubsection{Paramètre obligatoire}
@@ -407,6 +411,7 @@ Cette commande définit le chemin vers un MNT qui pourra être utilisé dans la 
 \begin{itemize}
 	\item \verb|slope=coef| : pondère les couts par la pente. Pour utiliser cette option, il faut que le projet contienne un MNT.
 	\item \verb|remcrosspath| : supprime les liens traversant une tache
+	\item \verb|nopathsaved| : n'enregistre pas la géométrie des chemins. Utile pour réduire l'utilisation mémoire en topologie complète
 	\item \verb|[code1,..,coden=cost1 ...] codei,..,codej=min:inc:max| : définition des coûts à partir des codes de l'occupation du sol
 	\item \verb|extcost=rasterfile| : définition des coûts à partir d'un raster externe au format tiff, ascii grid ou rst.
 \end{itemize}
@@ -527,12 +532,12 @@ L'option \verb|-nosave| est sans effet sur cette commande.
 
 \subsection{--corridor : calcul de corridors}
 \begin{Verbatim}[commandchars=\\\{\}]
---corridor maxcost=\textit{valcost} [format=raster|vector] [beta=\textit{exp}|var=\textit{name}]
+--corridor maxcost=[\{]\textit{min:inc:max}[\}] [format=raster|vector] [beta=\textit{exp}|var=\textit{name}]
 \end{Verbatim}
 
 \subsubsection{Paramètre obligatoire}
 \begin{itemize}
-	\item \verb|maxcost=[{]valcost[}]| : coût cumulé maximum des chemins formant un corridor. Entouré d'accolades, la distance donnée en mètre est convertie en unité de coût automatiquement.
+	\item \verb|maxcost=[{]min:inc:max[}]| : coût cumulé maximum des chemins formant un corridor. Entouré d'accolades, la distance donnée en mètre est convertie en unité de coût automatiquement.
 \end{itemize}
 
 \subsubsection{Paramètre optionnel}
@@ -589,7 +594,8 @@ Après la commande \verb|--cluster|, les graphes sélectionnés correspondent au
 
 \subsection{--gmetric : calcul d'une métrique globale}
 \begin{Verbatim}[commandchars=\\\{\}]
---gmetric \textit{global_metric_name} [resfile=\textit{file.txt}] [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max} [\textit{param2}=\textit{min:inc:max} ...]]
+--gmetric \textit{global_metric_name} [resfile=\textit{file.txt}] [maxcost=\textit{valcost}] [\textit{param1}=\textit{min:inc:max}
+	[\textit{param2}=\textit{min:inc:max} ...]]
 \end{Verbatim}
 
 \subsubsection{Paramètre obligatoire}
@@ -776,11 +782,19 @@ Si plusieurs jeux de liens sont sélectionnés, une interpolation différente se
 \section{Jeu de points et SDM}
 \subsection{--pointset : import de jeu de points}
 \begin{Verbatim}[commandchars=\\\{\}]
---pointset \textit{pointset.shp}
+--pointset \textit{pointset.shp} [name=\textit{pointname}] [random_absence=\textit{value} [inpatch|outpatch[=\textit{dist}]]]
 \end{Verbatim}
 Importe un nouveau jeu de points à partir du shapefile donné pour chaque jeu de liens sélectionné et enregistre le projet sauf si l'option globale \verb|-nosave| est utilisée.
-Le nom du jeu de point est la concaténation du nom du fichier importé et du nom du jeu de lien.
 
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|name=pointname| : définit le nom du nouveau jeu de points
+	\item \verb|random_absence=value| : génère des points de pseudo absence. \verb|value| entre 0 et 1 représente une estimation de la part de points à générer
+	\item \verb|inpatch| : génère les points de pseudo absence uniquement dans les taches
+	\item \verb|outpatch=dist| : génère les points de pseudo absence à au moins une distance \verb|dist| des taches	
+\end{itemize}
+
+Le nom par défaut du jeu de point est la concaténation du nom du fichier importé et du nom du jeu de lien.
 Après la commande \verb|--pointset|, les jeux de points sélectionnés correspondent à ceux nouvellement créés.
 
 \subsection{--usepointset : sélection de jeux de points}
@@ -827,13 +841,19 @@ Dans l'exemple ci-dessous, les distances de moindre coût entre les points sera 
 
 \subsection{--model : calcul du SDM}
 \begin{Verbatim}[commandchars=\\\{\}]
---model \textit{variable} distW=\textit{min:inc:maxcost}
+--model \textit{variable} distW=\textit{min:inc:maxcost} [vars=\textit{var1,...,varn}] [raster=\textit{r1,...,rn}]
 \end{Verbatim}
 
 \subsubsection{Paramètres obligatoires}
 \begin{itemize}
 	\item \verb|variable| : nom de la variable binaire contenu dans le(s) jeux(x) de points
 	\item \verb|distW=min:inc:maxcost| : pondération de la distance entre la tache et le point avec une probabilité de 0.05	
+\end{itemize}
+
+\subsubsection{Paramètres optionnels}
+\begin{itemize}
+	\item \verb|vars=var1,...,varn| : ajoute d'autres variables de la couche des taches non liées au graphe (Capacity par exemple)
+	\item \verb|raster=r1,...,rn| : ajoute des variables provenant de raster externe
 \end{itemize}
 
 \subsubsection{Description}
@@ -863,7 +883,7 @@ Le résultat est enregistré dans le fichier model-PRESENCE-dW1000,2000.txt dans
 \section{Ajout/Suppression d'élements}
 \subsection{--delta : suppression d'un élément}
 \begin{Verbatim}[commandchars=\\\{\}]
---delta \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=\textit{val} ...] obj=patch|link
+--delta \textit{global_metric_name} [maxcost=\textit{valcost}] [\textit{param1}=[\{]\textit{val}[\}] ...] obj=patch|link
 	[sel=\textit{id1,id2,...,idn} | fsel=\textit{file.txt}]
 \end{Verbatim}
 
@@ -876,7 +896,7 @@ Le résultat est enregistré dans le fichier model-PRESENCE-dW1000,2000.txt dans
 \subsubsection{Paramètres optionnels}
 \begin{itemize}
 	\item \verb|maxcost=valcost| : limite le calcul de chemin à \textit{valcost} (ie. les chemins supérieurs à \textit{valcost} ne seront pas calculés). Ce paramètre peut réduire significativement le temps de calcul d'une métrique basée sur le calcul de chemins, mais le résultat sera moins précis.
-	\item \verb|param1=val| : paramètre(s) de la métrique, si elle en a.
+	\item \verb|param1=[{]val[}]| : paramètre(s) de la métrique, si elle en a.
 	\item \verb|sel=id1,id2,...,idn| : limite le calcul aux éléments (taches ou liens) listés par leur identifiant
 	\item \verb|fsel=file.txt| : limite le calcul aux éléments (taches ou liens) listés dans le fichier \textit{file.txt}. Le fichier doit contenir un identifiant par ligne.
 \end{itemize}
@@ -1056,8 +1076,8 @@ Pour le même graphe, le fichier détaillé se nomme gtest-2000m\_euclid-IIC-det
 \subsection{--addpatch : ajout itératif de taches}
 \begin{Verbatim}[commandchars=\\\{\}]
 --addpatch \textit{npatch} \textit{global_metric_name} [\textit{param1}=\textit{val} ...]
-	[gridres=\textit{min:inc:max} [capa=\textit{capa_file}] [multi=\textit{npatch},\textit{size}]]
-	| [patchfile=\textit{file.shp} [capa=\textit{capa_field}]]
+	gridres=\textit{min:inc:max} [capa=\textit{capa_file}] [multi=\textit{npatch},\textit{size}]
+	| patchfile=\textit{file.shp} [capa=\textit{capa_field}]
 \end{Verbatim}
 
 \subsubsection{Paramètres généraux}
@@ -1191,7 +1211,7 @@ La première ligne (Step 0), correspond à la valeur initiale de la métrique. L
 \subsection{--landmod : changements d'occupation du sol}
 
 \begin{Verbatim}[commandchars=\\\{\}]
---landmod zone=\textit{filezones.shp} id=\textit{fieldname} code=\textit{fieldname}  [selid=\textit{id1,...,idn}] [novoronoi]
+--landmod zone=\textit{filezones.shp} id=\textit{fieldname} code=\textit{fieldname}  [sel=\textit{id1,...,idn}] [novoronoi]
 \end{Verbatim}
 
 \subsubsection{Paramètres obligatoires}
@@ -1203,7 +1223,7 @@ La première ligne (Step 0), correspond à la valeur initiale de la métrique. L
 
 \subsubsection{Paramètre optionnel}
 \begin{itemize}
-	\item \verb|selid=id1,...,idn| : liste des identifiants de polygones à traiter. Si ce paramètre n'est pas renseigné tous les polygones du shapefile sont utilisés.
+	\item \verb|sel=id1,...,idn| : liste des identifiants de polygones à traiter. Si ce paramètre n'est pas renseigné tous les polygones du shapefile sont utilisés.
 	\item \verb|novoronoi| : à la création des nouveaux projets, ne calcule pas la topologie planaire. Cette option peut être utilisée pour diminuer les temps de calcul si la topologie planaire n'est pas utilisée dans les commandes suivantes.
 \end{itemize}
 
@@ -1244,7 +1264,7 @@ Tous les exemples qui suivent peuvent être testés avec le projet exemple fourn
 \section{Afficher le projet}
 Affiche les éléments du projet :
 \begin{Verbatim}
-	java -jar graphab-2.4.jar --project sample_project/Project.xml --show
+	java -jar graphab-2.6.jar --project sample_project/Project.xml --show
 \end{Verbatim}
 Résultat :
 \begin{Verbatim}
@@ -1267,7 +1287,7 @@ Résultat :
 \section{Métrique globale à plusieurs distances}
 Calcule la métrique PC sur le graphe \textit{2000m-3500cost} en faisant varier le paramètre \textit{d} de 1000 à 5000 par pas de 1000 :
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.4.jar --project sample_project/Project.xml
+	java -jar graphab-2.6.jar --project sample_project/Project.xml
 		--usegraph 2000m-3500cost --gmetric PC d=1000:1000:5000 p=0.05 beta=1
 \end{Verbatim}
 Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
@@ -1283,7 +1303,7 @@ Le résultat est stocké dans le fichier PC.txt dans le répertoire du projet :
 \section{Métrique globale sur un graphe élagué à plusieurs distances}
 Crée 6 graphes élagués de 2000 à 2500, à partir du jeu de lien \textit{Complete\_cost} et calcule la métrique IIC pour chaque :
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.4.jar --project sample_project/Project.xml
+	java -jar graphab-2.6.jar --project sample_project/Project.xml
 		--uselinkset Complete_cost --graph threshold=2000:100:2500 --gmetric IIC
 \end{Verbatim}
 Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
@@ -1301,7 +1321,7 @@ Le résultat est stocké dans le fichier IIC.txt dans le répertoire du projet :
 Calcule un graphe sans élagage à partir du jeu de lien \textit{Planar\_Euclid}, calcule 2 métriques locales (Dg et F) sur le graphe créé, ajoute le jeu de point 
 sur le jeu de lien \textit{Planar\_Euclid} et calcule le SDM pour les 2 métriques avec la variable PRESENCE, sans modifier le projet.
 \begin{Verbatim}[tabsize=4]
-	java -jar graphab-2.4.jar -nosave --project sample_project/Project.xml 
+	java -jar graphab-2.6.jar -nosave --project sample_project/Project.xml 
 		--uselinkset Planar_Euclid 
 		--graph 
 		--lmetric Dg --lmetric F d=1000 p=0.05 beta=1 
@@ -1322,7 +1342,7 @@ Le résultat est stocké dans le fichier model-PRESENCE-dW1000.txt dans le répe
 Si votre ordinateur a plus qu'un coeur (la plupart), vous pouvez tirer partie de la parallélisation pour accélérer vos calculs avec Graphab.
 Il faut définir le nombre de coeurs (ou processeurs) que Graphab peut utiliser avec l'option \verb|-proc| après la commande \verb|--project| :
 \begin{Verbatim}
-	java -jar graphab-2.4.jar -proc 8 --project path2myproject/myproject.xml ...
+	java -jar graphab-2.6.jar -proc 8 --project path2myproject/myproject.xml ...
 \end{Verbatim}
 Par défaut, en ligne de commande, le nombre de coeurs utilisés correspond au nombre défini dans la fenêtre Préférences de l'interface graphique.
 
@@ -1331,7 +1351,7 @@ En augmentant le nombre de coeurs utilisés par Graphab, vous augmentez, par la 
 \subsection{Cluster : MPI}
 Graphab peut aussi être utilisé sur des clusters de calcul supportant Java avec OpenMPI.
 \begin{Verbatim}
-	mpirun java -jar graphab-2.4.jar -mpi --project path2myproject/myproject.xml ...
+	mpirun java -jar graphab-2.6.jar -mpi --project path2myproject/myproject.xml ...
 \end{Verbatim}
 Seulement certaines commandes peuvent être utilisées dans l'environnement MPI : \verb|--gmetric|, \verb|--cmetric|, \verb|--lmetric|, \verb|--delta|, \verb|--addpatch|,\verb|--gtest|,\verb|--remelem|,\verb|--landmod|
 
@@ -1342,8 +1362,8 @@ Si l'exécution se termine par une erreur OutOfMemoryError ou GC overhead, vous 
 
 Pour définir manuellement la mémoire maximale utilisable par Graphab, il faut utiliser l'option Java \verb|-Xmx| :
 \begin{Verbatim}
-	java -Xmx4g -jar graphab-2.4.jar ... # 4Gb allocated
-	java -Xmx1500m -jar graphab-2.4.jar ... # 1500 Mb -> 1.5Gb allocated
+	java -Xmx4g -jar graphab-2.6.jar ... # 4Gb allocated
+	java -Xmx1500m -jar graphab-2.6.jar ... # 1500 Mb -> 1.5Gb allocated
 \end{Verbatim}
 Si vous ne pouvez pas allouer plus de 1 GB ou 1.5 GB alors que votre ordinateur a plus de mémoire vive, vous utilisez sûrement une version 32-bit de Java qui est limitée à moins de 2 GB.
 Pour tester votre version de Java :

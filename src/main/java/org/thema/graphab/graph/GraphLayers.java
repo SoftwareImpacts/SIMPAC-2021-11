@@ -280,6 +280,7 @@ public class GraphLayers extends GraphGroupLayer {
             Number max = Collections.max(new FeatureAttributeCollection<Double>(getNodeLayer().getFeatures(), Project.CAPA_ATTR));
             Number min = Collections.min(new FeatureAttributeCollection<Double>(getNodeLayer().getFeatures(), Project.CAPA_ATTR));
             circleStyle = new CircleStyle(Project.CAPA_ATTR, min.doubleValue(), max.doubleValue(), new Color(0xcbcba7/*0x951012*/), new Color(0x212d19));
+            circleStyle.setMaxRadius(20);
         } else {
             circleStyle.setStyle(nodeStyle);
         }

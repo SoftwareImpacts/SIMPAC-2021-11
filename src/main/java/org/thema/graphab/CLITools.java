@@ -138,9 +138,9 @@ public class CLITools {
                     "--interp name resolution var=patch_var_name d=val p=val [multi=dist_max [sum]]\n" +                    
                     "--model variable distW=min:inc:max [vars=var1,...,varn] [raster=r1,...,rn]\n" +
                     "--delta global_metric_name [maxcost=valcost] [param1=[{]val[}] ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +                    
-                    "--addpatch npatch global_metric_name [param1=val ...] [gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size]]|[patchfile=file.shp [capa=capa_field]]\n" +
+                    "--addpatch npatch global_metric_name [param1=val ...] gridres=min:inc:max [capa=capa_file] [multi=nbpatch,size] | patchfile=file.shp [capa=capa_field]\n" +
                     "--remelem nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
-                    "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link [sel=id1,id2,...,idn|fsel=file.txt]\n" +
+                    "--gtest nstep global_metric_name [maxcost=valcost] [param1=val ...] obj=patch|link sel=id1,id2,...,idn|fsel=file.txt\n" +
                     "--gremove global_metric_name [maxcost=valcost] [param1=val ...] [patch=id1,id2,...,idn|fpatch=file.txt] [link=id1,id2,...,idm|flink=file.txt]\n" +
                     "--metapatch [mincapa=value]\n" +
                     "--landmod zone=filezones.shp id=fieldname code=fieldname [sel=id1,id2,...,idn ] [novoronoi]\n" +
@@ -809,7 +809,7 @@ public class CLITools {
             range = Range.parse(params.get("threshold"));
         }
         
-        if(singleName != null && (getLinksets().size() > 1 || range != null && range.getValues().size() > 1)) {
+        if(singleName != null && (getLinksets().size() > 1 || range != null && !range.isSingle())) {
             throw new IllegalArgumentException("name parameter can be used only when creating only one graph");
         }
         
