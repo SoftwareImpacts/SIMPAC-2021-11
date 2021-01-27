@@ -45,6 +45,7 @@ import org.thema.common.ProgressBar;
 import org.thema.common.collection.TreeMapList;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
+import org.thema.data.IOFeature;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
@@ -234,7 +235,7 @@ public class AddPatchCommand {
                 File dir = getResultDir();
                 dir = new File(dir, "detail");
                 dir.mkdirs();
-                DefaultFeature.saveFeatures(debug, new File(dir, "detail_" + step + ".shp"));
+                IOFeature.saveFeatures(debug, new File(dir, "detail_" + step + ".shp"));
             }
 
             Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, 
@@ -255,7 +256,7 @@ public class AddPatchCommand {
      * @throws SchemaException 
      */
     private List<DefaultFeature> addPatchShp(ProgressBar bar, TreeMap<Integer, Double> metricValues, boolean saveDetail) throws IOException, SchemaException  {
-        List<DefaultFeature> points = DefaultFeature.loadFeatures(shapeFile);
+        List<DefaultFeature> points = IOFeature.loadFeatures(shapeFile);
         HashMap<Geometry, Double> testGeoms = new HashMap<>();
         for(Feature f : points) {
             testGeoms.put(f.getGeometry(), 
@@ -368,7 +369,7 @@ public class AddPatchCommand {
                     File dir = getResultDir();
                     dir = new File(dir, "detail");
                     dir.mkdirs();
-                    DefaultFeature.saveFeatures(debug, new File(dir, "detail_" + step + ".shp"));
+                    IOFeature.saveFeatures(debug, new File(dir, "detail_" + step + ".shp"));
                 }
 
                 Logger.getLogger(AddPatchCommand.class.getName()).log(Level.INFO, 
@@ -394,9 +395,9 @@ public class AddPatchCommand {
             }
         }
 
-        DefaultFeature.saveFeatures(addedPatches, new File(dir, "addpatch-" + name + ".shp"));
+        IOFeature.saveFeatures(addedPatches, new File(dir, "addpatch-" + name + ".shp"));
         GraphGenerator newGraph = new GraphGenerator(gen, "");
-        DefaultFeature.saveFeatures(newGraph.getLinks(), new File(dir, "links-" + name + ".shp"));
+        IOFeature.saveFeatures(newGraph.getLinks(), new File(dir, "links-" + name + ".shp"));
         newGraph.getLayers().getEdgeLayer().export(new File(dir, "topo-links-" + name + ".shp"));
         
         new RasterLayer("", new RasterShape(gen.getProject().getImageSource(), gen.getProject().getZone(), new RasterStyle(), true), gen.getProject().getCRS())

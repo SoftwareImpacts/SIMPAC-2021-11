@@ -55,6 +55,7 @@ import org.thema.common.ProgressBar;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.TaskMonitor;
+import org.thema.data.IOFeature;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.DefaultFeatureCoverage;
@@ -127,7 +128,7 @@ public class CLITools {
                     "--usegraph graph1,...,graphn\n" +
                     "--removegraph [graph1,...,graphn]\n" +
                     "--cluster d=val p=val [beta=val] [nb=val]\n" +                    
-                    "--pointset pointset.shp [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]\n" +
+                    "--pointset pointset.shp id=fieldname [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]\n" +
                     "--usepointset pointset1,...,pointsetn\n" +
                     "--removepointset [pointset1,...,pointsetn]\n" +
                     "--pointdistance type=space|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]\n" +
@@ -642,6 +643,7 @@ public class CLITools {
 
     private void createPointset(List<String> args) throws IOException, SchemaException {
         File file = new File(args.remove(0));
+        String idField = args.remove(0).split("=")[1];
         String name = file.getName().substring(0, file.getName().length()-4);
         if(!args.isEmpty() && args.get(0).startsWith("name=")) {
             name = args.remove(0).split("=")[1];
@@ -665,7 +667,7 @@ public class CLITools {
             }
         }
         
-        List<DefaultFeature> features = DefaultFeature.loadFeatures(file);
+        List<DefaultFeature> features = IOFeature.loadFeatures(file, idField);
         final List<String> attrNames;
         if(rand_abs) {
             attrNames = new ArrayList<>(Arrays.asList("presence"));
@@ -759,9 +761,11 @@ public class CLITools {
                         ntest++;
                     }
                     if(good) {
-                        points.add(new DefaultFeature("rand" + i++, new GeometryFactory()
-                                .createPoint(new Coordinate(x, y)), attrNames,
-                                Arrays.asList(new Object[]{0})));
+                        synchronized(points) {
+                            points.add(new DefaultFeature("rand" + i++, new GeometryFactory()
+                                    .createPoint(new Coordinate(x, y)), attrNames,
+                                    Arrays.asList(new Object[]{0})));
+                        }
                     } else {
                        System.err.println("Warning no location for random absence"); 
                     }
@@ -1615,7 +1619,7 @@ public class CLITools {
                 new ParallelFExecutor(task).executeAndWait();
             }
             if(threshold > 0) { 
-                DefaultFeature.saveFeatures(corridors, new File(dir, "corridor-" + threshold + ".shp"), project.getCRS());
+                IOFeature.saveFeatures(corridors, new File(dir, "corridor-" + threshold + ".shp"), project.getCRS());
             }
         }
     }
@@ -1653,7 +1657,7 @@ public class CLITools {
                                 "-corridor-" + maxCost + "-" + (beta != null ? ("beta"+beta) : var != null ? var : "1") + ".tif"));
                 } else {
                     List<Feature> corridors = link.computeCorridor(progress, maxCost);
-                    DefaultFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
+                    IOFeature.saveFeatures(corridors, new File(project.getDirectory(), link.getName() +
                             "-corridor-" + maxCost + ".shp"), project.getCRS());
                 }
             }

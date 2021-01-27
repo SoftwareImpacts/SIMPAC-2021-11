@@ -111,32 +111,32 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>data</artifactId>
-            <version>1.6.1</version>
+            <version>1.8</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>common</artifactId>
-            <version>1.7.2</version>
+            <version>1.8</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>drawshape</artifactId>
-            <version>1.7.3</version>
+            <version>1.8</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>parallel</artifactId>
-            <version>1.5</version>
+            <version>1.5.1</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>graph</artifactId>
-            <version>1.7</version>
+            <version>1.8</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>msca</artifactId>
-            <version>1.6</version>
+            <version>1.8</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

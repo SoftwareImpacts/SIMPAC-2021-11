@@ -59,6 +59,7 @@ import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.common.swing.LoggingDialog;
 import org.thema.common.swing.PreferencesDialog;
 import org.thema.data.GlobalDataStore;
+import org.thema.data.IOFeature;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.WritableFeature;
 import org.thema.drawshape.layer.DefaultGroupLayer;
@@ -540,9 +541,9 @@ public class MainFrame extends javax.swing.JFrame {
         final List<DefaultFeature> features;
         try {
             if(dlg.shpFile) {
-                features = GlobalDataStore.getFeatures(dlg.file, dlg.idAttr, null);
+                features = IOFeature.loadFeatures(dlg.file, dlg.idAttr);
             } else {
-                features = DefaultFeature.loadFeatures(dlg.file, dlg.xAttr, dlg.yAttr, dlg.idAttr);
+                features = IOFeature.loadFeatures(dlg.file, dlg.xAttr, dlg.yAttr, dlg.idAttr);
             }
         } catch (IOException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);

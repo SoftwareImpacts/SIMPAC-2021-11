@@ -39,7 +39,7 @@
  	{\Large		
  		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
  		\bigskip
- 		17/12/2020\\
+ 		26/01/2021\\
  	}
  	
  \end{titlepage}
@@ -169,7 +169,7 @@ Commands list :
 --graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
 --usegraph graph1,...,graphn
 --cluster d=val p=val [beta=val] [nb=val]
---pointset pointset.shp [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]
+--pointset pointset.shp id=fieldname [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]
 --usepointset pointset1,...,pointsetn
 --pointdistance type=space|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
 --capa [area [exp=value] [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden ...
@@ -782,9 +782,15 @@ Si plusieurs jeux de liens sont sélectionnés, une interpolation différente se
 \section{Jeu de points et SDM}
 \subsection{--pointset : import de jeu de points}
 \begin{Verbatim}[commandchars=\\\{\}]
---pointset \textit{pointset.shp} [name=\textit{pointname}] [random_absence=\textit{value} [inpatch|outpatch[=\textit{dist}]]]
+--pointset \textit{pointset.shp} id=\textit{fieldname} [name=\textit{pointname}] [random_absence=\textit{value} [inpatch|outpatch[=\textit{dist}]]]
 \end{Verbatim}
 Importe un nouveau jeu de points à partir du shapefile donné pour chaque jeu de liens sélectionné et enregistre le projet sauf si l'option globale \verb|-nosave| est utilisée.
+
+\subsubsection{Paramètres obligatoires}
+\begin{itemize}
+	\item \verb|pointset.shp| : shapefile des points
+	\item \verb|id=fieldname| : nom du champ identifiant chaque point
+\end{itemize}
 
 \subsubsection{Paramètres optionnels}
 \begin{itemize}

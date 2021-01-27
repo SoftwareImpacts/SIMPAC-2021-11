@@ -325,7 +325,7 @@ public class Circuit {
         }
         int ind1 = indNodes.get(n1);
         double r = 0;
-        List<Edge> edges = n1.getEdges();
+        List<? extends Edge> edges = n1.getEdges();
         for(Edge edge : edges) {
             Node n2 = edge.getOtherNode(n1);
             int ind2 = indNodes.get(n2);
@@ -449,7 +449,7 @@ public class Circuit {
         }
         for(Node node : (Collection<Node>)comp.getNodes()) {
             double in = 0, out = 0;
-            List<Edge> edges = node.getEdges();
+            List<? extends Edge> edges = node.getEdges();
             int iA = indNodes.get(node);
             for(Edge edge : edges) {
                 int iB = indNodes.get(edge.getOtherNode(node));

@@ -35,6 +35,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import org.geotools.feature.SchemaException;
 import org.thema.common.JTS;
+import org.thema.data.IOFeature;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.DefaultFeatureCoverage;
 import org.thema.data.feature.Feature;
@@ -329,7 +330,7 @@ public class RandomPointDlg extends javax.swing.JDialog {
 
     private void shapeSelectFilePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shapeSelectFilePanelActionPerformed
         try {
-            List<DefaultFeature> features = DefaultFeature.loadFeatures(shapeSelectFilePanel.getSelectedFile());
+            List<DefaultFeature> features = IOFeature.loadFeatures(shapeSelectFilePanel.getSelectedFile());
         
             coverage = new DefaultFeatureCoverage(features);
             int nb = features.size();

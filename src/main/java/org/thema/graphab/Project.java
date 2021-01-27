@@ -90,6 +90,7 @@ import org.thema.common.parallel.AbstractParallelFTask;
 import org.thema.common.parallel.ParallelFExecutor;
 import org.thema.common.parallel.SimpleParallelTask;
 import org.thema.data.GlobalDataStore;
+import org.thema.data.IOFeature;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
@@ -384,7 +385,7 @@ public final class Project {
         IOImage.saveTiffCoverage(new File(dir, LAND_RASTER), cov);
         IOImage.saveTiffCoverage(new File(dir, PATCH_RASTER), clustCov);
         
-        DefaultFeature.saveFeatures(patches, new File(dir, PATCH_SHAPE), crs);
+        IOFeature.saveFeatures(patches, new File(dir, PATCH_SHAPE), crs);
         
         clustCov = null;
         covBuilder = null;
@@ -395,10 +396,10 @@ public final class Project {
             WritableRaster voronoiR = rasterPatchs;
             planarLinks = neighborhoodEuclid(patches, simplify, voronoiR, grid2space, resolution);
             monitor.setNote("Saving...");
-            DefaultFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, LINKS_SHAPE), getCRS());
+            IOFeature.saveFeatures(planarLinks.getFeatures(), new File(dir, LINKS_SHAPE), crs);
 
             voronoi = (List<Feature>) SpatialOp.vectorizeVoronoi(voronoiR, grid2space);
-            DefaultFeature.saveFeatures(voronoi, new File(prjPath, VORONOI_SHAPE), crs);
+            IOFeature.saveFeatures(voronoi, new File(prjPath, VORONOI_SHAPE), crs);
         }
         
         exoDatas = new TreeMap<>();
@@ -683,7 +684,7 @@ public final class Project {
         
         if(save) {
             if(linkset.isRealPaths() && !linkset.getPaths().isEmpty()) {
-                DefaultFeature.saveFeatures(linkset.getPaths(), new File(dir, linkset.getName() + "-links.shp"), getCRS());
+                IOFeature.saveFeatures(linkset.getPaths(), new File(dir, linkset.getName() + "-links.shp"), getCRS());
                 linkset.saveIntraLinks();
             }
             linkset.saveLinks();
@@ -881,7 +882,7 @@ public final class Project {
         exoDatas.put(pointset.getName(), pointset);
         
         if(save) {
-            DefaultFeature.saveFeatures(exoFeatures, new File(dir, "Exo-" + pointset.getName() + ".shp"));
+            IOFeature.saveFeatures(exoFeatures, new File(dir, "Exo-" + pointset.getName() + ".shp"));
             savePatch();
             save();
         }
@@ -1104,7 +1105,7 @@ public final class Project {
         progressBar.setIndeterminate(true);
         
         if(save && hasVoronoi()) {
-            DefaultFeature.saveFeatures(graphGen.getComponentFeatures(),
+            IOFeature.saveFeatures(graphGen.getComponentFeatures(),
                     new File(dir, graphGen.getName() + "-voronoi.shp"), getCRS());
 
             graphGen.setSaved(true);
@@ -1589,9 +1590,9 @@ public final class Project {
             }
         }
         
-        DefaultFeature.saveFeatures(metaPatches, new File(dir, PATCH_SHAPE), getCRS());
+        IOFeature.saveFeatures(metaPatches, new File(dir, PATCH_SHAPE), getCRS());
         if(!remPatch && hasVoronoi()) {
-            DefaultFeature.saveFeatures(metaVoronois, new File(dir, VORONOI_SHAPE), getCRS());
+            IOFeature.saveFeatures(metaVoronois, new File(dir, VORONOI_SHAPE), getCRS());
         }
         
         if(hasVoronoi()) {
@@ -1599,7 +1600,7 @@ public final class Project {
             if(remPatch) {
                 links = neighborhoodEuclid(metaPatches, simplify, newRaster, grid2space, resolution);
                 metaVoronois = (List<DefaultFeature>) SpatialOp.vectorizeVoronoi(newRaster, grid2space);
-                DefaultFeature.saveFeatures(metaVoronois, new File(dir, VORONOI_SHAPE), getCRS());
+                IOFeature.saveFeatures(metaVoronois, new File(dir, VORONOI_SHAPE), getCRS());
             } else {
                 links = new PlanarLinks(metaPatches.size());
                 for(Path p : planarLinks.getFeatures()) {
@@ -1614,7 +1615,7 @@ public final class Project {
                 }
             }
             if(!links.getFeatures().isEmpty()) {
-                DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, LINKS_SHAPE), getCRS());
+                IOFeature.saveFeatures(links.getFeatures(), new File(dir, LINKS_SHAPE), getCRS());
             }
         }
         
@@ -1656,7 +1657,7 @@ public final class Project {
             ind++;
         }
         
-        DefaultFeature.saveFeatures(patchList, new File(dir, PATCH_SHAPE), getCRS());
+        IOFeature.saveFeatures(patchList, new File(dir, PATCH_SHAPE), getCRS());
         
         // create new raster patch
         WritableRaster newRaster = getRasterPatch().createCompatibleWritableRaster();
@@ -1694,10 +1695,10 @@ public final class Project {
         if(hasVoronoi()) {
             PlanarLinks links = neighborhoodEuclid(patchList, simplify, newRaster, grid2space, resolution);
             List<? extends Feature> voronois = SpatialOp.vectorizeVoronoi(newRaster, grid2space);
-            DefaultFeature.saveFeatures(voronois, new File(dir, VORONOI_SHAPE), getCRS());
+            IOFeature.saveFeatures(voronois, new File(dir, VORONOI_SHAPE), getCRS());
             
             if(!links.getFeatures().isEmpty()) {
-                DefaultFeature.saveFeatures(links.getFeatures(), new File(dir, LINKS_SHAPE), getCRS());
+                IOFeature.saveFeatures(links.getFeatures(), new File(dir, LINKS_SHAPE), getCRS());
             }
         }
         

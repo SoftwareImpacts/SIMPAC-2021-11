@@ -37,7 +37,7 @@
 	{\Large		
 		Céline Clauzel, Jean-Christophe Foltête, Xavier Girardet, Gilles Vuidel\\
 		\bigskip
-		2020-12-17\\
+		2021-01-26\\
 	}
 	
 \end{titlepage}
@@ -168,7 +168,7 @@ Commands list :
 --graph [name=graphname] [nointra] [threshold=[{]min:inc:max[}]]
 --usegraph graph1,...,graphn
 --cluster d=val p=val [beta=val] [nb=val]
---pointset pointset.shp [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]
+--pointset pointset.shp id=fieldname [name=pointname] [random_absence=value [inpatch|outpatch[=dist]]]
 --usepointset pointset1,...,pointsetn
 --pointdistance type=raster|graph distance=leastcost|circuit|flow|circuitflow [dist=val proba=val]
 --capa [area [exp=value] [code1,..,coden=weight ...]] | [maxcost=[{]valcost[}] codes=code1,code2,...,coden ...
@@ -780,9 +780,15 @@ If several link sets are selected, a interpolation is calculated for each link s
 \section{Pointset and SDM}
 \subsection{--pointset : import pointset}
 \begin{Verbatim}[commandchars=\\\{\}]
---pointset \textit{pointset.shp} [name=\textit{pointname}] [random_absence=\textit{value} [inpatch|outpatch[=\textit{dist}]]]
+--pointset \textit{pointset.shp} id=\textit{fieldname} [name=\textit{pointname}] [random_absence=\textit{value} [inpatch|outpatch[=\textit{dist}]]]
 \end{Verbatim}
 Creates a new pointset from the shapefile parameter for each selected linkset and saves the project unless \verb|-nosave| option is used.
+
+\subsubsection{Required parameters}
+\begin{itemize}
+	\item \verb|pointset.shp| : shapefile of points
+	\item \verb|id=fieldname| : field name identifier
+\end{itemize}
 
 \subsubsection{Optional parameters}
 \begin{itemize}

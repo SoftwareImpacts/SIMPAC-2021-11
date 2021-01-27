@@ -50,6 +50,7 @@ import org.jfree.chart.ChartFrame;
 import org.jfree.data.statistics.Regression;
 import org.thema.common.Config;
 import org.thema.common.collection.HashMap2D;
+import org.thema.data.IOFeature;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.data.feature.Feature;
 import org.thema.data.feature.FeatureGetter;
@@ -142,7 +143,7 @@ public class LinkLayer extends FeatureLayer {
                             linkset.getProject().getAnalysisLayer().addLayerFirst(l);
 
                             try {
-                                DefaultFeature.saveFeatures(corridors, new File(linkset.getProject().getDirectory(), linkset.getName() +
+                                IOFeature.saveFeatures(corridors, new File(linkset.getProject().getDirectory(), linkset.getName() +
                                         "-corridor-" + dlg.maxCost + ".shp"), linkset.getProject().getCRS());
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);

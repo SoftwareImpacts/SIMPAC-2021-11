@@ -37,6 +37,7 @@ import org.geotools.coverage.grid.GridCoverageFactory;
 import org.geotools.feature.SchemaException;
 import org.geotools.geometry.Envelope2D;
 import org.thema.common.collection.HashMapList;
+import org.thema.data.IOFeature;
 import org.thema.data.IOImage;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.mpi.MpiLauncher;
@@ -88,7 +89,7 @@ public class LandModTask extends AbstractParallelTask<Void, Void> implements Ser
             project = MpiLauncher.getProject();
         }
         try {
-            List<DefaultFeature> features = DefaultFeature.loadFeatures(fileZone);
+            List<DefaultFeature> features = IOFeature.loadFeatures(fileZone);
             if(!features.get(0).getAttributeNames().contains(idField)) {
                 throw new IllegalArgumentException("Unknow field : " + idField);
             }

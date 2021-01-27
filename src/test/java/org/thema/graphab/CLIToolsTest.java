@@ -26,6 +26,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
+import org.thema.data.IOFeature;
 import org.thema.data.feature.DefaultFeature;
 import org.thema.graphab.graph.GraphGenerator;
 import org.thema.graphab.links.Linkset;
@@ -132,7 +133,7 @@ public class CLIToolsTest {
         cli.execute(new String[]{"--project", prjFile, "--corridor", "maxcost=3"});
         File f = new File(prjDir, "Jeulien1-corridor-3.0.shp");
         assertTrue(f.exists());
-        assertEquals(4, DefaultFeature.loadFeatures(f).size());
+        assertEquals(4, IOFeature.loadFeatures(f).size());
         
         cli.execute(new String[]{"--project", prjFile, "--corridor", "maxcost=3", "format=raster"});
         f = new File(prjDir, "Jeulien1-corridor-3.0-1.tif");
